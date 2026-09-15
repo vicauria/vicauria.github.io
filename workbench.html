@@ -741,9 +741,16 @@
       userMenu.classList.remove('show');
     }
   });
-  // 滑鼠移開頭像＋選單這整個區域，就自動收起來，不用特地再點一次別的地方關閉
+  // 滑鼠移開頭像＋選單這整個區域，就自動收起來；但先留 0.3 秒緩衝，
+  // 避免滑鼠從頭像斜著移去選單項目時，中間空隙短暫飄出範圍就被誤判成「離開了」
+  let userMenuCloseTimer = null;
   userBox.addEventListener('mouseleave', ()=>{
-    userMenu.classList.remove('show');
+    userMenuCloseTimer = setTimeout(()=>{
+      userMenu.classList.remove('show');
+    }, 300);
+  });
+  userBox.addEventListener('mouseenter', ()=>{
+    clearTimeout(userMenuCloseTimer);
   });
 
   // ---- 升級方案：置中彈窗顯示，不另開分頁 ----
