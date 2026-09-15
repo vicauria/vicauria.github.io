@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資產負債表試算室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F;
+    --teal:#2E7391;
+    --teal-deep:#1F5C73;
+    --teal-tint:#E6F0F2;
+    --warm:#C97B3D;
+    --warm-deep:#A85F27;
+    --warm-tint:#FBEFE2;
+    --ink:#182226;
+    --ink-soft:#5B6B70;
+    --paper:#F5F7F6;
+    --card:#FFFFFF;
+    --line:#E1E7E7;
+    --positive:#2E7D5B;
+    --negative:#B3492F;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif;
+    line-height:1.6;
+    padding-bottom:140px;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:26px 0 30px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-80px; top:-80px; width:320px; height:320px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#BFE0EA;font-weight:700;margin-bottom:8px;}
+  header.hero h1{color:#fff;font-size:clamp(19px,2.4vw,24px);font-weight:700;margin-bottom:0;}
+  header.hero p{max-width:620px;color:#DCEAEE;font-size:13px;margin-top:8px;}
+
+  .report-btn{
+    position:fixed; right:24px; bottom:24px; z-index:60;
+    display:flex; align-items:center; gap:8px;
+    background:var(--navy); color:#fff; border:none;
+    padding:13px 20px; border-radius:30px; font-size:14px; font-weight:700;
+    cursor:pointer; box-shadow:0 8px 24px rgba(22,50,63,0.35);
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .report-btn:hover{background:var(--teal-deep);}
+  .report-btn.hidden{display:none;}
+
+  .generate-wrap{display:flex; justify-content:center; margin:8px 0 32px;}
+  .generate-btn{
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--navy); color:#fff; border:none;
+    padding:16px 40px; border-radius:30px; font-size:16px; font-weight:700;
+    cursor:pointer; box-shadow:0 10px 28px rgba(22,50,63,0.28);
+    font-family:"Noto Sans TC",sans-serif;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .generate-btn:hover{background:var(--teal-deep);}
+  .generate-btn:active{transform:scale(0.98);}
+
+  #resultsPanel, #summaryDock{
+    opacity:0; max-height:0; overflow:hidden; pointer-events:none;
+    transition:opacity .35s ease;
+  }
+  #resultsPanel.show, #summaryDock.show{
+    opacity:1; max-height:none; overflow:visible; pointer-events:auto;
+  }
+  #summaryDock:not(.show){position:static;}
+
+  .placeholder-note{
+    text-align:center; color:var(--ink-soft); font-size:13.5px;
+    padding:18px; border:1px dashed var(--line); border-radius:10px; margin:8px 0 32px;
+    background:var(--card);
+  }
+  .placeholder-note.hide{display:none;}
+
+  .summary-dock{
+    position:sticky; top:0; z-index:50;
+    background:rgba(22,50,63,0.97); backdrop-filter:blur(6px); color:#fff;
+    box-shadow:0 6px 18px rgba(0,0,0,0.15);
+  }
+  .summary-inner{max-width:1180px;margin:0 auto;padding:14px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .sum-item{text-align:center;padding:6px 4px;border-right:1px solid rgba(255,255,255,0.14);}
+  .sum-item:last-child{border-right:none;}
+  .sum-label{font-size:12px;color:#A9C7CF;letter-spacing:.06em;margin-bottom:4px;}
+  .sum-value{font-family:"Roboto Mono",monospace;font-size:clamp(16px,2.4vw,24px);font-weight:800;font-variant-numeric:tabular-nums;}
+  .sum-value.positive{color:#8FE3BE;}
+  .sum-value.negative{color:#F3A98C;}
+
+  main{margin-top:-16px;position:relative;z-index:10;}
+  .panel{background:var(--card);border-radius:var(--radius);box-shadow:0 10px 30px rgba(20,50,60,0.08);border:1px solid var(--line);padding:28px 26px 22px;margin-bottom:26px;}
+  .panel-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+  .panel-head h2{font-size:21px;display:flex;align-items:center;gap:10px;}
+  .tag-asset{color:var(--teal-deep);}
+  .tag-liability{color:var(--warm-deep);}
+  .panel-sub{color:var(--ink-soft);font-size:13.5px;margin-bottom:20px;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+  @media (max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+  .group{border:1px solid var(--line);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+  .group-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--teal-tint);gap:10px;flex-wrap:wrap;}
+  .group.liability .group-head{background:var(--warm-tint);}
+  .group-title{font-weight:700;font-size:15px;color:var(--teal-deep);}
+  .group.liability .group-title{color:var(--warm-deep);}
+  .group-title small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;margin-top:2px;}
+  .group-subtotal{font-family:"Roboto Mono",monospace;font-weight:800;font-size:16px;color:var(--navy);white-space:nowrap;}
+  .group-subtotal span{font-size:11px;font-weight:400;color:var(--ink-soft);display:block;text-align:right;}
+
+  .row-table{width:100%;border-collapse:collapse;}
+  .row-table thead th{font-size:12px;color:var(--ink-soft);font-weight:500;text-align:left;padding:8px 10px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .row-table td{padding:6px 10px;border-bottom:1px dashed var(--line);vertical-align:middle;}
+  .row-table tr:last-child td{border-bottom:none;}
+  .row-table input[type="text"]{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:14px;padding:7px 8px;border-radius:6px;color:var(--ink);}
+  .row-table input[type="text"]:hover,.row-table input[type="text"]:focus{border-color:var(--line);background:#FAFBFB;}
+  .row-table input[type="number"]{width:130px;border:1px solid var(--line);background:#fff;font-family:"Noto Sans TC",sans-serif;font-size:14px;padding:7px 8px;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums;}
+  .row-table input[type="number"]:focus{outline:2px solid var(--teal);outline-offset:1px;}
+  .row-subtotal{font-family:"Roboto Mono",monospace;font-variant-numeric:tabular-nums;font-weight:700;text-align:right;color:var(--navy);min-width:96px;white-space:nowrap;}
+  .col-hint{font-size:10.5px;color:var(--ink-soft);font-weight:400;}
+  .del-btn{border:none;background:none;color:#B7C2C4;cursor:pointer;font-size:16px;padding:4px 6px;line-height:1;border-radius:6px;}
+  .del-btn:hover{color:var(--negative);background:#FBEAE5;}
+
+  .add-row-btn{display:inline-flex;align-items:center;gap:6px;margin:10px 14px 14px;background:none;border:1px dashed var(--teal);color:var(--teal-deep);font-size:13px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;}
+  .group.liability .add-row-btn{border-color:var(--warm);color:var(--warm-deep);}
+  .add-row-btn:hover{background:var(--teal-tint);}
+  .group.liability .add-row-btn:hover{background:var(--warm-tint);}
+
+  .breakdown-grid{display:grid;grid-template-columns:1fr 0.95fr 1fr;gap:22px;}
+  @media (max-width:980px){.breakdown-grid{grid-template-columns:1fr;}}
+
+  .chart-card{display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .chart-card h3{font-size:15px;color:var(--navy);margin-bottom:2px;}
+  .chart-card .chart-sub{font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
+  .donut-wrap{position:relative;width:220px;height:220px;}
+  .donut-wrap svg circle{transition:stroke-dasharray .35s ease, stroke .35s ease;}
+  .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .donut-center .dc-value{font-family:"Noto Serif TC",serif;font-weight:800;font-size:24px;color:var(--navy);line-height:1.1;}
+  .donut-center .dc-value.negative{color:var(--negative);}
+  .donut-center .dc-label{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .legend{width:100%;margin-top:18px;text-align:left;}
+  .legend-row{display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:13px;}
+  .legend-dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .legend-label{flex:1;color:var(--ink);}
+  .legend-pct{font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;min-width:44px;text-align:right;}
+  .legend-amt{font-size:11.5px;color:var(--ink-soft);min-width:76px;text-align:right;font-variant-numeric:tabular-nums;}
+
+  .bd-table{width:100%;border-collapse:collapse;font-size:14px;}
+  .bd-table th{text-align:left;font-size:12px;color:var(--ink-soft);font-weight:500;padding:6px 4px;border-bottom:1px solid var(--line);}
+  .bd-table td{padding:9px 4px;border-bottom:1px solid var(--line);}
+  .bd-table td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  .bd-table tr.total td{border-top:2px solid var(--navy);border-bottom:none;font-weight:800;font-size:15.5px;color:var(--navy);padding-top:12px;}
+  .bd-table tr.net td{font-weight:800;font-size:16.5px;padding-top:10px;}
+
+  .ratio-card{background:var(--teal-tint);border-radius:10px;padding:16px 18px;margin-bottom:10px;}
+  .ratio-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed rgba(46,115,145,0.25);}
+  .ratio-row:last-child{border-bottom:none;}
+  .ratio-name{font-size:13.5px;color:var(--teal-deep);font-weight:500;}
+  .ratio-name small{display:block;color:var(--ink-soft);font-size:11px;font-weight:400;}
+  .ratio-value{font-family:"Noto Serif TC",serif;font-weight:800;font-size:19px;color:var(--navy);}
+  .ratio-value.warn{color:var(--negative);}
+
+  footer{text-align:center;color:var(--ink-soft);font-size:12px;padding:26px 0 10px;}
+
+  .print-only{display:none;}
+
+  @media print{
+    .report-btn{display:none !important;}
+    .summary-dock{position:static;background:var(--navy);}
+    .row-table input[type="number"],.row-table input[type="text"]{border:none;background:none;padding:4px 6px;}
+    .add-row-btn,.del-btn{display:none !important;}
+    header.hero{padding:32px 0 48px;}
+    .panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+    .print-only{display:block;padding:0 0 18px;color:var(--ink-soft);font-size:13px;}
+    body{padding-bottom:0;}
+  }
+
+  @media (max-width:700px){
+    .summary-inner{grid-template-columns:repeat(2,1fr);}
+    .sum-item:nth-child(2){border-right:none;}
+    .panel{padding:20px 16px 16px;}
+
+    /* 表格在窄螢幕改成一張一張卡片，不再硬擠成很窄的欄位 */
+    .row-table thead{display:none;}
+    .row-table, .row-table tbody, .row-table tr, .row-table td{display:block; width:100%;}
+    .row-table tr{
+      border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:10px;
+      background:#fff;
+    }
+    .row-table td{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:7px 0; border-bottom:1px dashed var(--line) !important;
+    }
+    .row-table td:last-child{border-bottom:none !important; justify-content:flex-end;}
+    .row-table td::before{
+      content:attr(data-label); font-size:11.5px; color:var(--ink-soft); font-weight:600;
+      flex-shrink:0;
+    }
+    .row-table td input{width:auto; flex:1; max-width:60%;}
+    .row-table input[type="text"]{text-align:left !important;}
+    .row-table input[type="number"]{width:auto !important; text-align:right;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">財務規劃報告書 · 資產負債模組</div>
+    <h1>資產負債表試算室</h1>
+    <p>把名下每一筆資產（現金、投資、不動產）跟每一筆負債（房貸、信貸、其他借款）列清楚，即時算出淨值、負債比與資產配置結構。</p>
+  </div>
+</header>
+
+<div class="summary-dock" id="summaryDock">
+  <div class="summary-inner">
+    <div class="sum-item"><div class="sum-label">總資產</div><div class="sum-value" id="sumAssets">$0</div></div>
+    <div class="sum-item"><div class="sum-label">總負債</div><div class="sum-value" id="sumLiabilities">$0</div></div>
+    <div class="sum-item"><div class="sum-label">淨值</div><div class="sum-value" id="sumNet">$0</div></div>
+    <div class="sum-item"><div class="sum-label">負債比</div><div class="sum-value" id="sumDebtRatio">0%</div></div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div class="print-only">試算日期：<span id="printDate"></span>　｜　客戶：＿＿＿＿＿＿＿＿＿＿　｜　顧問：Jess</div>
+
+  <div class="two-col">
+    <!-- ================= 資產 ================= -->
+    <section class="panel" id="assetPanel">
+      <div class="panel-head"><h2><span class="tag-asset">●</span> 資產</h2></div>
+      <p class="panel-sub">依流動性由高到低列出，每一類都可以自己增加項目。</p>
+      <div id="assetGroups"></div>
+    </section>
+
+    <!-- ================= 負債 ================= -->
+    <section class="panel" id="liabilityPanel">
+      <div class="panel-head"><h2><span class="tag-liability">●</span> 負債</h2></div>
+      <p class="panel-sub">列出房貸、信貸、車貸及其他借款的目前餘額（非每月還款金額）。</p>
+      <div id="liabilityGroups"></div>
+    </section>
+  </div>
+
+  <div class="placeholder-note" id="placeholderNote">填好左右兩邊的資產與負債金額後，按下方按鈕產生淨值與配置結果。</div>
+  <div class="generate-wrap">
+    <button class="generate-btn" id="generateBtn">產生結果 →</button>
+  </div>
+
+  <!-- ================= 總結 ================= -->
+  <section class="panel" id="resultsPanel">
+    <div class="panel-head"><h2>資產負債總結</h2></div>
+    <p class="panel-sub">總資產、總負債逐項加總後的結果，數字會隨上面表格即時更新。</p>
+
+    <div class="breakdown-grid">
+      <div>
+        <table class="bd-table">
+          <thead><tr><th>資產項目</th><th style="text-align:right">金額</th></tr></thead>
+          <tbody id="bdAssetBody"></tbody>
+          <tbody><tr class="total"><td>總資產</td><td class="num" id="bdAssetTotal">$0</td></tr></tbody>
+        </table>
+
+        <table class="bd-table" style="margin-top:18px;">
+          <thead><tr><th>負債項目</th><th style="text-align:right">金額</th></tr></thead>
+          <tbody id="bdLiabilityBody"></tbody>
+          <tbody>
+            <tr class="total"><td>總負債</td><td class="num" id="bdLiabilityTotal">$0</td></tr>
+            <tr class="net"><td>淨值（總資產－總負債）</td><td class="num" id="bdNet">$0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="chart-card">
+        <h3>資產配置結構</h3>
+        <div class="chart-sub" id="chartSubLabel">占總資產的比例</div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" width="220" height="220">
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
+            <g id="donutSegments" transform="rotate(-90 100 100)"></g>
+          </svg>
+          <div class="donut-center">
+            <div class="dc-value" id="donutCenterValue">$0</div>
+            <div class="dc-label" id="donutCenterLabel">淨值</div>
+          </div>
+        </div>
+        <div class="legend" id="donutLegend"></div>
+      </div>
+
+      <div>
+        <div class="ratio-card">
+          <div class="ratio-row">
+            <div class="ratio-name">負債比<small>總負債 ÷ 總資產，建議 &lt; 50%</small></div>
+            <div class="ratio-value" id="ratioDebt">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">流動性比率<small>理財型資產 ÷ 總負債，衡量短期還款能力</small></div>
+            <div class="ratio-value" id="ratioLiquidity">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">不動產佔比<small>不動產 ÷ 總資產</small></div>
+            <div class="ratio-value" id="ratioRealestate">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">投資資產佔比<small>投資資產 ÷ 總資產，反映資產配置活躍度</small></div>
+            <div class="ratio-value" id="ratioInvest">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<button class="report-btn hidden" id="reportBtn" onclick="window.print()">📄 產出報告（列印／存成 PDF）</button>
+
+<footer>資產負債表試算室 · 僅供財務規劃討論使用，金額皆為試算當下的估計市值／餘額</footer>
+
+<script>
+/* ---------------------------------------------------------
+   資料結構：asset / liability 都是「分組 -> 多列」
+   每一列 row = { name, amount }
+--------------------------------------------------------- */
+
+const assetGroups = [
+  {
+    key:"liquid",
+    title:"理財型資產",
+    hint:"現金、活存、定存等隨時可動用的資金",
+    rows:[
+      {name:"活期存款", amount:0},
+      {name:"定期存款", amount:0}
+    ]
+  },
+  {
+    key:"invest",
+    title:"投資資產",
+    hint:"股票、基金、ETF、保單價值準備金等",
+    rows:[
+      {name:"股票／基金／ETF", amount:0},
+      {name:"保單價值準備金", amount:0}
+    ]
+  },
+  {
+    key:"realestate",
+    title:"不動產",
+    hint:"以目前市值估算，非購入成本",
+    rows:[
+      {name:"自住不動產", amount:0}
+    ]
+  },
+  {
+    key:"other",
+    title:"其他資產",
+    hint:"車輛、珠寶、未上市股權等",
+    rows:[
+      {name:"車輛", amount:0}
+    ]
+  }
+];
+
+const liabilityGroups = [
+  {
+    key:"mortgage",
+    title:"房貸餘額",
+    hint:"目前尚未還清的房貸本金餘額",
+    rows:[
+      {name:"房貸餘額", amount:0}
+    ]
+  },
+  {
+    key:"otherloan",
+    title:"信貸／車貸餘額",
+    hint:"非房貸類貸款的尚未還清本金",
+    rows:[
+      {name:"信貸餘額", amount:0}
+    ]
+  },
+  {
+    key:"shortterm",
+    title:"信用卡及其他短期負債",
+    hint:"卡費循環、親友借款等",
+    rows:[
+      {name:"信用卡循環餘額", amount:0}
+    ]
+  }
+];
+
+/* ---------------- render helpers ---------------- */
+function money(n){
+  const v = Math.round(n || 0);
+  return (v<0?"-$":"$") + Math.abs(v).toLocaleString("zh-TW");
+}
+function pct(n){
+  if(!isFinite(n)) return "0%";
+  return (n*100).toFixed(1) + "%";
+}
+function rowAmt(row){ return Number(row.amount)||0; }
+function groupTotal(group){ return group.rows.reduce((s,r)=>s+rowAmt(r),0); }
+
+function renderGroupTable(group, isLiability){
+  const wrap = document.createElement("div");
+  wrap.className = "group" + (isLiability ? " liability" : "");
+  wrap.dataset.key = group.key;
+
+  wrap.innerHTML = `
+    <div class="group-head">
+      <div class="group-title">${group.title}<small>${group.hint}</small></div>
+      <div class="group-subtotal" data-role="subtotal">$0<span>小計</span></div>
+    </div>
+    <table class="row-table">
+      <thead>
+        <tr>
+          <th style="width:55%">項目名稱</th>
+          <th>金額</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button class="add-row-btn" type="button">＋ 新增項目</button>
+  `;
+
+  const tbody = wrap.querySelector("tbody");
+  group.rows.forEach((row)=> tbody.appendChild(renderRow(group, row)) );
+
+  wrap.querySelector(".add-row-btn").addEventListener("click", ()=>{
+    const newRow = {name:"", amount:0};
+    group.rows.push(newRow);
+    tbody.appendChild(renderRow(group, newRow));
+    recalc();
+  });
+
+  return wrap;
+}
+
+function renderRow(group, row){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td data-label="項目名稱"><input type="text" value="${row.name}" placeholder="輸入項目名稱"></td>
+    <td data-label="金額"><input type="number" min="0" step="1000" value="${row.amount||0}"></td>
+    <td data-label=""><button class="del-btn" type="button" title="刪除">✕</button></td>
+  `;
+  const [nameInput, amtInput] = tr.querySelectorAll("input");
+  nameInput.addEventListener("input", e=>{ row.name = e.target.value; recalc(); });
+  amtInput.addEventListener("input", e=>{ row.amount = Number(e.target.value)||0; recalc(); });
+  tr.querySelector(".del-btn").addEventListener("click", ()=>{
+    const i = group.rows.indexOf(row);
+    if(i>-1) group.rows.splice(i,1);
+    tr.remove();
+    recalc();
+  });
+  return tr;
+}
+
+/* ---------------- initial render ---------------- */
+const assetMount = document.getElementById("assetGroups");
+const liabilityMount = document.getElementById("liabilityGroups");
+assetGroups.forEach(g=> assetMount.appendChild(renderGroupTable(g,false)) );
+liabilityGroups.forEach(g=> liabilityMount.appendChild(renderGroupTable(g,true)) );
+document.getElementById("printDate").textContent = new Date().toLocaleDateString("zh-TW");
+
+/* ---------------- 產生結果 按鈕 ---------------- */
+const generateBtn = document.getElementById("generateBtn");
+const summaryDock = document.getElementById("summaryDock");
+const resultsPanel = document.getElementById("resultsPanel");
+const reportBtn = document.getElementById("reportBtn");
+const placeholderNote = document.getElementById("placeholderNote");
+let resultsGenerated = false;
+
+generateBtn.addEventListener("click", ()=>{
+  resultsGenerated = true;
+  recalc();
+  summaryDock.classList.add("show");
+  resultsPanel.classList.add("show");
+  reportBtn.classList.remove("hidden");
+  placeholderNote.classList.add("hide");
+  resultsPanel.scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+/* ---------------- recalc everything ---------------- */
+function recalc(){
+  document.querySelectorAll("#assetGroups .group, #liabilityGroups .group").forEach(el=>{
+    const key = el.dataset.key;
+    const allGroups = [...assetGroups, ...liabilityGroups];
+    const group = allGroups.find(g=>g.key===key);
+    if(!group) return;
+    el.querySelectorAll(".row-table tbody tr").forEach((tr,i)=>{
+      // amount cell has no dedicated subtotal span per-row (single amount = row value), nothing to update besides subtotal
+    });
+    el.querySelector('[data-role="subtotal"]').innerHTML = money(groupTotal(group)) + "<span>小計</span>";
+  });
+
+  const totalAssets = assetGroups.reduce((s,g)=>s+groupTotal(g),0);
+  const totalLiabilities = liabilityGroups.reduce((s,g)=>s+groupTotal(g),0);
+  const netWorth = totalAssets - totalLiabilities;
+  const debtRatio = totalAssets>0 ? totalLiabilities/totalAssets : 0;
+
+  const liquid = groupTotal(assetGroups.find(g=>g.key==="liquid"));
+  const invest = groupTotal(assetGroups.find(g=>g.key==="invest"));
+  const realestate = groupTotal(assetGroups.find(g=>g.key==="realestate"));
+  const other = groupTotal(assetGroups.find(g=>g.key==="other"));
+
+  const liquidityRatio = totalLiabilities>0 ? liquid/totalLiabilities : (liquid>0 ? Infinity : 0);
+  const realestateRatio = totalAssets>0 ? realestate/totalAssets : 0;
+  const investRatio = totalAssets>0 ? invest/totalAssets : 0;
+
+  // sticky dock
+  document.getElementById("sumAssets").textContent = money(totalAssets);
+  document.getElementById("sumLiabilities").textContent = money(totalLiabilities);
+  const netEl = document.getElementById("sumNet");
+  netEl.textContent = money(netWorth);
+  netEl.className = "sum-value " + (netWorth>=0?"positive":"negative");
+  document.getElementById("sumDebtRatio").textContent = pct(debtRatio);
+
+  // breakdown tables
+  document.getElementById("bdAssetBody").innerHTML = assetGroups.map(g=>
+    `<tr><td>${g.title}</td><td class="num">${money(groupTotal(g))}</td></tr>`
+  ).join("");
+  document.getElementById("bdAssetTotal").textContent = money(totalAssets);
+
+  document.getElementById("bdLiabilityBody").innerHTML = liabilityGroups.map(g=>
+    `<tr><td>${g.title}</td><td class="num">${money(groupTotal(g))}</td></tr>`
+  ).join("");
+  document.getElementById("bdLiabilityTotal").textContent = money(totalLiabilities);
+  const netRow = document.getElementById("bdNet");
+  netRow.textContent = money(netWorth);
+  netRow.style.color = netWorth>=0 ? "var(--positive)" : "var(--negative)";
+
+  // ratios
+  const debtEl = document.getElementById("ratioDebt");
+  debtEl.textContent = pct(debtRatio);
+  debtEl.className = "ratio-value" + (debtRatio>0.5 ? " warn" : "");
+  document.getElementById("ratioLiquidity").textContent = isFinite(liquidityRatio) ? pct(liquidityRatio) : "—";
+  document.getElementById("ratioRealestate").textContent = pct(realestateRatio);
+  document.getElementById("ratioInvest").textContent = pct(investRatio);
+
+  renderDonut({totalAssets, netWorth, liquid, invest, realestate, other});
+}
+
+/* ---------------- donut chart ---------------- */
+const DONUT_R = 80;
+const DONUT_C = 2 * Math.PI * DONUT_R;
+
+const donutCategories = [
+  {key:"liquid",     label:"理財型資產", color:"#5FA8C7"},
+  {key:"invest",     label:"投資資產", color:"#2E7391"},
+  {key:"realestate", label:"不動產",   color:"#1F5C73"},
+  {key:"other",      label:"其他資產", color:"#9FCBDB"}
+];
+
+function renderDonut(d){
+  const segWrap = document.getElementById("donutSegments");
+  const legend = document.getElementById("donutLegend");
+  const centerValue = document.getElementById("donutCenterValue");
+  const centerLabel = document.getElementById("donutCenterLabel");
+  const subLabel = document.getElementById("chartSubLabel");
+
+  segWrap.innerHTML = "";
+  legend.innerHTML = "";
+
+  if(d.totalAssets <= 0){
+    centerValue.className = "dc-value";
+    centerValue.textContent = "$0";
+    centerLabel.textContent = "請先輸入資產";
+    subLabel.textContent = "占總資產的比例";
+    return;
+  }
+
+  const values = {liquid:d.liquid, invest:d.invest, realestate:d.realestate, other:d.other};
+  subLabel.textContent = "占總資產的比例";
+
+  let cumulative = 0;
+  donutCategories.forEach(cat=>{
+    const val = values[cat.key] || 0;
+    if(val <= 0) return;
+    const fraction = val / d.totalAssets;
+    const len = fraction * DONUT_C;
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx","100");
+    circle.setAttribute("cy","100");
+    circle.setAttribute("r", DONUT_R);
+    circle.setAttribute("fill","none");
+    circle.setAttribute("stroke", cat.color);
+    circle.setAttribute("stroke-width","30");
+    circle.setAttribute("stroke-dasharray", `${len} ${DONUT_C-len}`);
+    circle.setAttribute("stroke-dashoffset", `${-cumulative}`);
+    segWrap.appendChild(circle);
+
+    const row = document.createElement("div");
+    row.className = "legend-row";
+    row.innerHTML = `
+      <span class="legend-dot" style="background:${cat.color}"></span>
+      <span class="legend-label">${cat.label}</span>
+      <span class="legend-pct">${pct(fraction)}</span>
+      <span class="legend-amt">${money(val)}</span>
+    `;
+    legend.appendChild(row);
+    cumulative += len;
+  });
+
+  centerValue.className = "dc-value" + (d.netWorth<0 ? " negative" : "");
+  centerValue.textContent = money(d.netWorth);
+  centerLabel.textContent = "淨值";
+}
+
+recalc();
+</script>
+
+</body>
+</html>

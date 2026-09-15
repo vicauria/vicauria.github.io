@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>方案與升級 — Vicauria 顧問工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F;
+    --navy-soft:#20404F;
+    --teal-deep:#1F5C73;
+    --teal:#2E7391;
+    --teal-tint:#E6F0F2;
+    --teal-light-text:#BFE0EA;
+    --warm:#C97B3D;
+    --warm-deep:#A85F27;
+    --warm-tint:#FBEFE2;
+    --plum:#4A3B5C;
+    --plum-deep:#372A46;
+    --plum-tint:#EFEAF2;
+    --paper:#F5F7F6;
+    --card:#FFFFFF;
+    --ink:#182226;
+    --ink-soft:#5B6B70;
+    --positive:#2E7D5B;
+    --line:rgba(22,50,63,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Noto Sans TC", sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.6;
+  }
+  a{color:inherit;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 28px;}
+
+  /* ---------- Page heading ---------- */
+  .page-head{padding:44px 0 32px;}
+  h1{
+    font-family:"Noto Serif TC", serif; font-weight:800;
+    font-size:24px; color:var(--navy); margin:0;
+  }
+
+  /* ---------- Plan cards（三個等比例） ---------- */
+  .plans{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px;
+    align-items:stretch; padding:8px 0 64px;
+  }
+  .plan-card{
+    background:var(--card); border-radius:18px; border:1px solid var(--line);
+    padding:26px 24px; display:flex; flex-direction:column; gap:18px;
+  }
+  .plan-card.master{
+    border-color:var(--plum);
+    background:linear-gradient(180deg, #FFFFFF 0%, var(--plum-tint) 220%);
+  }
+  .plan-tag{
+    font-family:"Roboto Mono", monospace; font-size:10.5px; letter-spacing:.08em;
+    color:var(--plum); background:var(--plum-tint);
+    display:inline-block; padding:4px 10px; border-radius:20px; width:fit-content;
+  }
+  .plan-name{
+    font-family:"Noto Serif TC", serif; font-weight:700; font-size:19px; color:var(--navy);
+  }
+  .plan-pitch{font-size:12.5px; color:var(--ink-soft); line-height:1.7; min-height:36px;}
+  .plan-price{display:flex; align-items:baseline; gap:6px;}
+  .plan-price .num{
+    font-family:"Roboto Mono", monospace; font-weight:600; font-size:30px; color:var(--navy);
+  }
+  .plan-price .unit{font-size:12.5px; color:var(--ink-soft);}
+  .plan-card.master .plan-price .num{color:var(--plum-deep);}
+
+  .plan-features{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
+  .plan-features li{
+    font-size:13px; color:var(--ink); display:flex; gap:8px; align-items:flex-start; line-height:1.6;
+  }
+  .plan-features li::before{
+    content:"·"; font-weight:700; color:var(--teal); flex-shrink:0; margin-top:-1px;
+  }
+  .plan-card.master .plan-features li::before{color:var(--plum);}
+
+  .plan-cta{
+    margin-top:auto; padding-top:6px;
+  }
+  .plan-btn{
+    width:100%; padding:12px; border-radius:22px; border:1.5px solid var(--navy);
+    background:none; color:var(--navy); font-size:13.5px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif; transition:background .15s ease, color .15s ease;
+  }
+  .plan-btn:hover{background:var(--navy); color:#fff;}
+  .plan-btn.current{
+    border-color:var(--line); color:var(--ink-soft); cursor:default;
+  }
+  .plan-btn.current:hover{background:none; color:var(--ink-soft);}
+  .plan-btn.primary{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .plan-btn.primary:hover{background:var(--teal-deep); border-color:var(--teal-deep);}
+  .plan-btn.master-btn{background:var(--plum); border-color:var(--plum); color:#fff;}
+  .plan-btn.master-btn:hover{background:var(--plum-deep); border-color:var(--plum-deep);}
+
+  /* ---------- Ledger comparison ---------- */
+  .ledger-section{padding:0 0 64px;}
+  .ledger-title{
+    font-family:"Noto Serif TC", serif; font-weight:700; font-size:18px; color:var(--navy);
+    margin-bottom:24px;
+  }
+  .ledger{
+    width:100%; border-collapse:collapse; font-size:13px;
+  }
+  .ledger th, .ledger td{
+    padding:14px 12px; text-align:left; border-bottom:1px solid var(--line);
+  }
+  .ledger thead th{
+    font-family:"Roboto Mono", monospace; font-size:11px; letter-spacing:.04em;
+    color:var(--ink-soft); font-weight:600; padding-bottom:12px;
+  }
+  .ledger thead th:not(:first-child){text-align:center;}
+  .ledger tbody th{
+    font-weight:500; color:var(--ink); width:32%;
+  }
+  .ledger td{text-align:center; color:var(--ink-soft); font-family:"Roboto Mono", monospace; font-size:12.5px;}
+  .ledger td.yes{color:var(--positive); font-family:"Noto Sans TC", sans-serif; font-weight:700;}
+  .ledger td.no{color:rgba(24,34,38,0.28); font-family:"Noto Sans TC", sans-serif;}
+  .ledger tbody tr:last-child th, .ledger tbody tr:last-child td{border-bottom:none;}
+
+  /* ---------- FAQ / policy ---------- */
+  .policy-section{padding:0 0 80px; display:grid; grid-template-columns:1fr 1fr; gap:36px;}
+  .policy-item h3{
+    font-size:14px; font-weight:700; color:var(--navy); margin:0 0 8px;
+  }
+  .policy-item p{font-size:13px; color:var(--ink-soft); margin:0; line-height:1.8;}
+
+  footer{
+    border-top:1px solid var(--line); padding:26px 0 40px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:11.5px; color:var(--ink-soft);
+  }
+  footer .tagline{font-family:"Roboto Mono", monospace; letter-spacing:.06em;}
+
+  /* ---------- Toast (升級動作提示) ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:28px; transform:translate(-50%, 20px);
+    background:var(--navy); color:#fff; font-size:13px; padding:12px 20px;
+    border-radius:10px; box-shadow:0 10px 30px rgba(22,50,63,0.3);
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    z-index:99;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0);}
+
+  @media (max-width:820px){
+    .plans{grid-template-columns:1fr;}
+    .policy-section{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>升級方案</h1>
+  </div>
+
+  <section class="plans">
+
+    <div class="plan-card free">
+      <div class="plan-name">Free</div>
+      <div class="plan-pitch">剛開始，先把工具用起來，感受一下。</div>
+      <div class="plan-price"><span class="num">0</span><span class="unit">元 / 月</span></div>
+      <ul class="plan-features">
+        <li>客戶資料最多 20 位</li>
+        <li>試算工具箱全部 5 大模組</li>
+        <li>財富地圖問卷（首次填答）</li>
+        <li>經典藍綠主題</li>
+      </ul>
+      <div class="plan-cta">
+        <button class="plan-btn current" disabled>目前方案</button>
+      </div>
+    </div>
+
+    <div class="plan-card pro">
+      <div class="plan-name">Pro</div>
+      <div class="plan-pitch">客戶量開始起來了，你需要的是效率，不是重複勞動。</div>
+      <div class="plan-price"><span class="num">590</span><span class="unit">元 / 月</span></div>
+      <ul class="plan-features">
+        <li>客戶資料最多 100 位</li>
+        <li>財富地圖追蹤更新＋成長比對——半年後回訪直接帶入舊資料微調，自動比對前後變化</li>
+        <li>3 套主題色系（酒紅穩重／森林穩健／石墨現代）</li>
+        <li>Free 的所有功能</li>
+      </ul>
+      <div class="plan-cta">
+        <button class="plan-btn primary" onclick="showToast('Pro')">升級到 Pro</button>
+      </div>
+    </div>
+
+    <div class="plan-card master">
+      <div class="plan-tag">限定</div>
+      <div class="plan-name">Master</div>
+      <div class="plan-pitch">你不只是顧問，你在帶團隊。</div>
+      <div class="plan-price"><span class="num">1690</span><span class="unit">元 / 月</span></div>
+      <ul class="plan-features">
+        <li>客戶資料無上限</li>
+        <li>團隊工作量監控——看得到底下顧問的案件狀況</li>
+        <li>2 套限定主題色系（墨紫尊爵／黑金尊爵）</li>
+        <li>Pro 的所有功能</li>
+      </ul>
+      <div class="plan-cta">
+        <button class="plan-btn master-btn" onclick="showToast('Master')">升級到 Master</button>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="ledger-section">
+    <div class="ledger-title">完整功能對照</div>
+    <table class="ledger">
+      <thead>
+        <tr><th></th><th>Free</th><th>Pro</th><th>Master</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>客戶資料容量</th><td>20 位</td><td>100 位</td><td>無上限</td></tr>
+        <tr><th>財富地圖首次填答</th><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>追蹤更新＋成長比對</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>試算工具箱（5 大模組）</th><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>主題色系</th><td>經典藍綠</td><td>+ 酒紅／森林／石墨</td><td>+ 墨紫／黑金（限定）</td></tr>
+        <tr><th>團隊工作量監控</th><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="policy-section">
+    <div class="policy-item">
+      <h3>升級之後，可以再降回免費方案嗎？</h3>
+      <p>可以。降級或取消訂閱後，超出免費容量的客戶資料不會被刪除，只是先鎖起來看不到，之後回來升級，資料都還在。</p>
+    </div>
+    <div class="policy-item">
+      <h3>現在怎麼申請帳號？</h3>
+      <p>目前這個工作台只開放給團隊成員邀請加入，還沒有對外開放註冊。如果你是受邀的夥伴，方案異動直接跟我說一聲就好。</p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="tagline">覺醒 × 金錢 × 故事</span>
+    <span>Vicauria 顧問工作台</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(plan){
+    const el = document.getElementById('toast');
+    el.textContent = '已收到升級到 ' + plan + ' 的請求，我確認後會幫你開通。';
+    el.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=>el.classList.remove('show'), 3200);
+  }
+</script>
+
+</body>
+</html>

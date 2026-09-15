@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>登入｜資產配置工作台</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16323F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vicauria">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16323F; --ink-deep:#0F232C; --paper:#F5F7F6;
+    --brass:#2E7391; --brass-light:#8FC4D8;
+    --line:#E1E7E7; --ink-soft:#5B6B70; --negative:#B3492F; --positive:#2E7D5B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:"Noto Sans TC", sans-serif;
+    background:linear-gradient(135deg, var(--ink) 0%, var(--ink-deep) 100%);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .card{
+    width:100%; max-width:400px;
+    background:#fff; border-radius:16px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.35);
+    padding:44px 36px 36px;
+  }
+  .logo{
+    font-family:"Roboto Mono", monospace; font-size:11px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--brass); margin-bottom:16px; text-align:center;
+  }
+  h1{
+    font-family:"Noto Serif TC", serif; font-weight:800; font-size:22px;
+    color:var(--ink); text-align:center; margin:0 0 6px;
+  }
+  .sub{ text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:32px; }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:block; font-size:12.5px; font-weight:700; color:var(--ink);
+    margin-bottom:7px;
+  }
+  .field input{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:9px;
+    font-size:14px; font-family:"Noto Sans TC", sans-serif; color:var(--ink);
+    background:var(--paper);
+  }
+  .field input:focus{ outline:none; border-color:var(--brass); }
+
+  .remember-row{ margin:-8px 0 18px; }
+  .remember-check{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft);
+    cursor:pointer; user-select:none;
+  }
+  .remember-check input{ width:15px; height:15px; cursor:pointer; accent-color:var(--brass); }
+
+  .login-btn{
+    width:100%; margin-top:8px; padding:13px; border:none; border-radius:9px;
+    background:var(--ink); color:#fff; font-size:14.5px; font-weight:700;
+    cursor:pointer; font-family:"Noto Sans TC", sans-serif;
+    transition:background .15s ease;
+  }
+  .login-btn:hover{ background:var(--brass); }
+  .login-btn:disabled{ opacity:.6; cursor:default; }
+
+  .error-msg{
+    display:none; background:rgba(179,73,47,0.08); border:1px solid rgba(179,73,47,0.25);
+    color:var(--negative); font-size:12.5px; padding:10px 12px; border-radius:8px;
+    margin-bottom:16px;
+  }
+  .error-msg.show{ display:block; }
+
+  .info-msg{
+    display:none; background:rgba(46,125,91,0.08); border:1px solid rgba(46,125,91,0.25);
+    color:var(--positive); font-size:12.5px; padding:10px 12px; border-radius:8px;
+    margin-bottom:16px; line-height:1.7;
+  }
+  .info-msg.show{ display:block; }
+
+  .links-row{
+    display:flex; justify-content:space-between; margin-top:16px; font-size:12.5px;
+  }
+  .links-row a{ color:var(--brass); text-decoration:none; font-weight:600; }
+  .links-row a:hover{ text-decoration:underline; }
+
+  .back-home{
+    display:block; text-align:center; margin-top:22px; font-size:12.5px;
+    color:var(--ink-soft); text-decoration:none;
+  }
+  .back-home:hover{ color:var(--brass); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">Vicauria</div>
+  <h1>登入資產配置工作台</h1>
+  <p class="sub">輸入帳號密碼進入你的工作空間</p>
+
+  <div class="error-msg" id="errorMsg"></div>
+  <div class="info-msg" id="infoMsg"></div>
+
+  <form id="loginForm">
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="password">密碼</label>
+      <input type="password" id="password" placeholder="輸入密碼" autocomplete="current-password">
+    </div>
+    <div class="remember-row">
+      <label class="remember-check">
+        <input type="checkbox" id="rememberMe">
+        <span>記住此帳號</span>
+      </label>
+    </div>
+    <button type="submit" class="login-btn" id="submitBtn">登入</button>
+  </form>
+
+  <div class="links-row">
+    <a href="register.html">還沒有帳號？註冊</a>
+    <a href="forgot-password.html">忘記密碼？</a>
+  </div>
+
+  <a href="index.html" class="back-home">← 回首頁</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+  const errorMsg = document.getElementById('errorMsg');
+  const infoMsg = document.getElementById('infoMsg');
+
+  function showError(text){
+    infoMsg.classList.remove('show');
+    errorMsg.textContent = text;
+    errorMsg.classList.add('show');
+  }
+  function showInfo(text){
+    errorMsg.classList.remove('show');
+    infoMsg.textContent = text;
+    infoMsg.classList.add('show');
+  }
+
+  // 如果是從註冊頁剛完成、或密碼剛重設完成跳轉過來，顯示對應提示
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('registered') === '1'){
+    showInfo('註冊成功！請先到你的信箱點擊驗證信裡的連結，完成驗證後才能登入。');
+  } else if(params.get('reset') === '1'){
+    showInfo('密碼已重設成功，請用新密碼登入。');
+  }
+
+  // ---- 記住此帳號：頁面載入時，如果之前記過，自動帶入並勾選 ----
+  const REMEMBERED_EMAIL_KEY = 'jk_remembered_email';
+  (function initRememberedEmail(){
+    const saved = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+    if(saved){
+      document.getElementById('email').value = saved;
+      document.getElementById('rememberMe').checked = true;
+    }
+  })();
+
+  document.getElementById('loginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const rememberMe = document.getElementById('rememberMe').checked;
+    const submitBtn = document.getElementById('submitBtn');
+
+    if(!email || !password){
+      showError('請輸入 Email 與密碼');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '登入中…';
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if(error){
+      submitBtn.disabled = false;
+      submitBtn.textContent = '登入';
+      if(error.message.includes('Email not confirmed')){
+        showError('這個帳號還沒完成信箱驗證，請先到信箱點擊驗證信裡的連結。');
+      } else if(error.message.includes('Invalid login credentials')){
+        showError('Email 或密碼錯誤，請再確認一次。');
+      } else {
+        showError('登入失敗：' + error.message);
+      }
+      return;
+    }
+
+    // 登入成功後才真的存／清除，依照這次勾選的狀態為準
+    if(rememberMe){
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+    } else {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
+
+    window.location.href = 'workbench.html';
+  });
+</script>
+
+</body>
+</html>

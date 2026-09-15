@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>財富地圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2; --teal-light-text:#BFE0EA;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --positive:#2E7D5B; --negative:#B3492F; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff;padding:24px 0 34px;position:relative;overflow:hidden;
+  }
+  header.hero::after{
+    content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;
+    border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal-light-text);font-weight:700;margin-bottom:8px;}
+  header.hero h1{color:#fff;font-size:clamp(18px,2.4vw,24px);font-weight:700;margin-bottom:4px;}
+  header.hero p{max-width:640px;color:var(--teal-light-text);font-size:13px;}
+
+  main{margin-top:-22px;position:relative;z-index:10;padding-bottom:140px;}
+  .panel{background:var(--card);border-radius:var(--radius);box-shadow:0 10px 30px rgba(20,50,60,0.08);border:1px solid var(--line);padding:34px 32px;}
+
+  #screen-consent .panel{max-width:760px;margin:0 auto;}
+  .consent-title{font-size:20px;margin-bottom:8px;}
+  .consent-lede{color:var(--ink-soft);font-size:13.5px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--line);}
+  .consent-body{max-height:320px;overflow-y:auto;font-size:13.5px;color:var(--ink);line-height:2;padding-right:10px;margin-bottom:22px;}
+  .consent-body p{margin:0 0 12px;}
+  .consent-body strong{color:var(--navy);}
+  .consent-check{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:var(--teal-tint);border-radius:10px;margin-bottom:20px;cursor:pointer;}
+  .consent-check input{margin-top:3px;width:18px;height:18px;accent-color:var(--teal);cursor:pointer;flex-shrink:0;}
+  .consent-check span{font-size:13.5px;color:var(--navy);font-weight:500;}
+  .consent-actions{display:flex;gap:12px;}
+  .btn-ghost{flex:1;padding:14px;border-radius:30px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:14.5px;font-weight:700;cursor:pointer;font-family:"Noto Sans TC",sans-serif;}
+  .btn-primary{flex:1;padding:14px;border-radius:30px;border:none;background:var(--line);color:#fff;font-size:14.5px;font-weight:700;cursor:not-allowed;font-family:"Noto Sans TC",sans-serif;transition:background .2s ease, box-shadow .2s ease;box-shadow:none;}
+  .btn-primary.enabled{background:var(--navy);cursor:pointer;box-shadow:0 10px 24px rgba(22,50,63,0.28);}
+  .btn-primary.enabled:hover{background:var(--teal-deep);}
+
+  .progress-label{text-align:center;font-family:"Roboto Mono",monospace;font-size:12px;color:var(--ink-soft);margin-bottom:8px;letter-spacing:.06em;}
+  .progress-label .stage-tag{color:var(--teal-deep);font-weight:700;}
+  .accuracy-hint{text-align:center;font-size:11px;color:var(--ink-soft);opacity:.75;margin-bottom:14px;font-style:italic;}
+  .progress-bar{max-width:400px;margin:0 auto 6px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--warm));border-radius:3px;transition:width .4s ease;}
+
+  #screen-stage h2{font-size:21px;margin:18px 0 6px;}
+  #screen-stage .stage-sub{color:var(--ink-soft);font-size:13.5px;margin-bottom:26px;}
+
+  .field{margin-bottom:22px;}
+  .field label{display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:9px;}
+  .field .hint{font-size:11.5px;color:var(--ink-soft);margin-top:6px;}
+  .field input[type=text],.field input[type=number],.field select,.field textarea{
+    width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:8px;
+    font-family:"Noto Sans TC",sans-serif;font-size:14px;color:var(--ink);background:var(--paper);
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--teal);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){.field-row{grid-template-columns:1fr;}}
+  .dob-row{display:flex;gap:10px;}
+  .dob-row select{flex:1;}
+
+  .choice-group{display:flex;flex-wrap:wrap;gap:10px;}
+  .choice-pill{padding:10px 18px;border-radius:24px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;color:var(--ink);cursor:pointer;user-select:none;transition:all .15s ease;}
+  .choice-pill:hover{border-color:var(--teal);}
+  .choice-pill.selected{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700;}
+
+  .scale-row{display:flex;align-items:center;gap:14px;}
+  .scale-row input[type=range]{flex:1;accent-color:var(--teal);}
+  .scale-value{font-family:"Roboto Mono",monospace;font-weight:700;color:var(--navy);min-width:36px;text-align:center;}
+
+  .likert-q{padding:16px 0;border-bottom:1px dashed var(--line);}
+  .likert-q:last-child{border-bottom:none;}
+  .likert-q-text{font-size:13.5px;color:var(--ink);margin-bottom:12px;line-height:1.7;}
+  .likert-scale{display:flex;gap:8px;justify-content:space-between;max-width:320px;}
+  .likert-btn{
+    width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:#fff;
+    font-family:"Roboto Mono",monospace;font-weight:700;font-size:15px;color:var(--ink-soft);cursor:pointer;
+    transition:all .15s ease;
+  }
+  .likert-btn:hover{border-color:var(--teal);}
+  .likert-btn.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+  .rank-group .choice-pill{position:relative;padding-left:34px;}
+  .rank-badge{
+    position:absolute;left:8px;top:50%;transform:translateY(-50%);
+    width:18px;height:18px;border-radius:50%;background:var(--warm);color:#fff;
+    font-family:"Roboto Mono",monospace;font-size:10.5px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .choice-pill.selected .rank-badge{background:#fff;color:var(--teal-deep);}
+
+  .repeat-block{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--paper);}
+  .repeat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .repeat-head .t{font-size:13px;font-weight:700;color:var(--teal-deep);}
+  .repeat-del{border:none;background:none;color:var(--ink-soft);cursor:pointer;font-size:15px;}
+  .add-member-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px dashed var(--teal);color:var(--teal-deep);font-size:13px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;margin-top:4px;}
+
+  .group{border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+  .group-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--teal-tint);gap:10px;flex-wrap:wrap;}
+  .group-title{font-weight:700;font-size:14px;color:var(--teal-deep);}
+  .group-title small{display:block;font-weight:400;color:var(--ink-soft);font-size:11.5px;margin-top:2px;}
+  .group-subtotal{font-family:"Roboto Mono",monospace;font-weight:700;font-size:15px;color:var(--navy);white-space:nowrap;}
+  .group.warm .group-head{background:var(--warm-tint);}
+  .group.warm .group-title{color:var(--warm-deep);}
+  .group.warm .group-subtotal{color:var(--warm-deep);}
+  .row-table{width:100%;border-collapse:collapse;}
+  .row-table thead th{font-size:11.5px;color:var(--ink-soft);font-weight:500;text-align:left;padding:8px 10px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  .row-table td{padding:6px 8px;border-bottom:1px dashed var(--line);vertical-align:middle;}
+  .row-table tr:last-child td{border-bottom:none;}
+  .row-table input[type=text]{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13.5px;padding:7px 8px;border-radius:6px;color:var(--ink);}
+  .row-table input[type=text]:hover,.row-table input[type=text]:focus{border-color:var(--line);background:#fff;}
+  .row-table input[type=number]{width:108px;border:1px solid var(--line);background:#fff;font-size:13.5px;padding:7px 8px;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums;}
+  .row-del{border:none;background:none;color:#B7C2C4;cursor:pointer;font-size:15px;}
+  .row-del:hover{color:var(--negative);}
+  .add-row-btn{display:inline-flex;align-items:center;gap:6px;margin:10px 12px 12px;background:none;border:1px dashed var(--teal);color:var(--teal-deep);font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;}
+  .group-total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--navy);border-radius:10px;color:#fff;margin-top:8px;}
+  .group-total-row .k{font-size:13.5px;font-weight:700;color:var(--teal-light-text);}
+  .group-total-row .v{font-family:"Roboto Mono",monospace;font-weight:800;font-size:19px;}
+  .group-total-row.warm{background:var(--warm-deep);}
+  .group-total-row.warm .k{color:var(--warm-tint);}
+
+  .mini-calc-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--teal-tint);border-radius:10px;margin-top:6px;}
+  .mini-calc-row .k{font-size:13px;font-weight:700;color:var(--teal-deep);}
+  .mini-calc-row .v{font-family:"Roboto Mono",monospace;font-weight:800;font-size:17px;color:var(--navy);}
+  .field-sub{font-size:11.5px;color:var(--ink-soft);margin:2px 0 14px;}
+
+  .goal-calc-card{border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:14px;background:var(--paper);}
+  .goal-calc-title{font-size:13.5px;font-weight:700;color:var(--teal-deep);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .goal-calc-title .t{display:flex;align-items:center;gap:8px;}
+  .goal-del-btn{border:none;background:none;color:var(--ink-soft);cursor:pointer;font-size:16px;padding:4px 6px;line-height:1;border-radius:6px;}
+  .goal-del-btn:hover{color:var(--negative);background:rgba(179,73,47,0.08);}
+  .calc-link{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--teal-deep);text-decoration:none;font-weight:700;border-bottom:1px dashed var(--teal-deep);padding-bottom:2px;}
+  .calc-link:hover{color:var(--teal);}
+
+  .stage-nav{display:flex;justify-content:space-between;margin-top:34px;padding-top:22px;border-top:1px solid var(--line);}
+  .validate-warn{
+    display:flex; align-items:flex-start; gap:10px; margin-top:24px; padding:14px 16px;
+    background:#FBEFE2; border:1px solid #E3B98A; border-radius:10px;
+    color:#A85F27; font-size:13px; line-height:1.8;
+  }
+  .validate-warn::before{content:"⚠"; font-size:16px; flex-shrink:0; line-height:1.5;}
+  .stage-nav button{padding:13px 28px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;font-family:"Noto Sans TC",sans-serif;}
+  .btn-back{background:none;border:1px solid var(--line);color:var(--ink-soft);}
+  .btn-next{background:var(--navy);border:none;color:#fff;box-shadow:0 10px 24px rgba(22,50,63,0.24);}
+  .btn-next:hover{background:var(--teal-deep);}
+  .btn-generate{background:linear-gradient(90deg,var(--teal),var(--warm-deep));border:none;color:#fff;box-shadow:0 10px 24px rgba(22,50,63,0.28);}
+
+  .summary-block{margin-bottom:22px;padding-bottom:18px;border-bottom:1px dashed var(--line);}
+  .summary-block:last-child{border-bottom:none;}
+  .summary-block h3{font-size:14.5px;color:var(--teal-deep);margin-bottom:10px;}
+  .summary-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
+  .summary-row .k{color:var(--ink-soft);}
+  .summary-row .v{font-weight:600;color:var(--navy);}
+
+  #screen-loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:100;color:#fff;}
+  #screen-loading.active{display:flex;}
+  .loading-icon{font-size:52px;margin-bottom:18px;animation:pulse 1.1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+  .loading-title{font-family:"Noto Serif TC",serif;font-size:22px;font-weight:700;margin-bottom:6px;}
+  .loading-msg{font-size:13.5px;color:var(--teal-light-text);margin-bottom:30px;min-height:20px;font-family:"Roboto Mono",monospace;}
+  .loading-bar-wrap{width:320px;max-width:80vw;}
+  .loading-bar{height:14px;border-radius:7px;background:rgba(255,255,255,0.15);overflow:hidden;position:relative;}
+  .loading-bar-fill{height:100%;background:linear-gradient(90deg,#8FC4D8,var(--warm));border-radius:7px;width:0%;transition:width .18s linear;}
+  .loading-pct{text-align:center;margin-top:12px;font-family:"Roboto Mono",monospace;font-size:22px;font-weight:700;letter-spacing:.05em;}
+  .loading-sub{text-align:center;margin-top:22px;font-size:12px;color:rgba(255,255,255,0.55);line-height:1.8;}
+
+  .report-toggle{display:flex;gap:8px;margin-bottom:24px;justify-content:center;}
+  .report-toggle button{padding:10px 22px;border-radius:24px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;font-weight:700;color:var(--ink-soft);cursor:pointer;}
+  .report-toggle button.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .report-view{display:none;}
+  .report-view.active{display:block;}
+  .report-section{margin-bottom:26px;padding-bottom:22px;border-bottom:1px dashed var(--line);}
+
+  /* ---------- 報告封面 ---------- */
+  .report-cover{
+    position:relative; overflow:hidden; border-radius:16px;
+    min-height:520px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(150deg, var(--navy) 0%, var(--teal-deep) 55%, var(--teal) 100%);
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    margin-bottom:0; padding-bottom:0; border-bottom:none;
+  }
+  .cover-bg-lines{position:absolute; inset:0; width:100%; height:100%;}
+  .cover-content{position:relative; z-index:2; text-align:center; padding:40px 30px; color:#fff;}
+  .cover-eyebrow{
+    font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--teal-light-text); margin-bottom:30px;
+  }
+  .cover-title{
+    font-family:"Noto Serif TC",serif; font-weight:700; color:#fff;
+    font-size:clamp(24px,3.6vw,36px); line-height:1.6; margin-bottom:28px;
+  }
+  .cover-brand-marks{
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    font-family:'Roboto Mono',monospace; font-size:12px; letter-spacing:.14em;
+    color:rgba(255,255,255,0.65); margin-bottom:34px;
+  }
+  .cover-brand-marks .dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.4);}
+  .cover-meta{
+    font-family:'Roboto Mono',monospace; font-size:12px; color:rgba(255,255,255,0.7);
+    line-height:2.2;
+  }
+  .report-section:last-child{border-bottom:none;}
+  .report-section h3{font-size:15px;color:var(--teal-deep);margin-bottom:12px;}
+  .report-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;}
+  .report-row .k{color:var(--ink-soft);}
+  .report-row .v{font-weight:600;color:var(--navy);font-family:"Roboto Mono",monospace;}
+  .report-note{background:var(--warm-tint);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--warm-deep);margin-top:10px;line-height:1.8;}
+  .report-btn{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
+  .report-btn-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  .report-btn-home{
+    display:inline-flex;align-items:center;gap:6px;background:none;color:var(--teal-deep);
+    border:1.5px solid var(--teal);padding:12px 22px;border-radius:30px;font-size:13.5px;font-weight:700;
+    cursor:pointer;margin-top:8px;font-family:"Noto Sans TC",sans-serif;
+  }
+  .report-btn-home:hover{background:var(--teal-tint);}
+
+  /* 報告書內：彩色收支／資產負債總結面板 */
+  .breakdown-grid{display:grid;grid-template-columns:1fr 0.9fr 1fr;gap:22px;margin-top:6px;}
+  .breakdown-grid.no-ratio{grid-template-columns:1fr 1fr;}
+  @media (max-width:980px){.breakdown-grid{grid-template-columns:1fr;}}
+  .bd-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .bd-table th{text-align:left;font-size:11.5px;color:var(--ink-soft);font-weight:500;padding:6px 4px;border-bottom:1px solid var(--line);}
+  .bd-table td{padding:8px 4px;border-bottom:1px solid var(--line);}
+  .bd-table td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  .bd-table tr.total td{border-top:2px solid var(--navy);border-bottom:none;font-weight:800;font-size:14.5px;color:var(--navy);padding-top:11px;}
+  .bd-table tr.net td{font-weight:800;font-size:15px;padding-top:9px;}
+  .chart-card{display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .chart-card h4{font-size:14px;color:var(--navy);margin-bottom:2px;font-family:"Noto Serif TC",serif;}
+  .chart-card .chart-sub{font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;}
+  .donut-wrap{position:relative;width:190px;height:190px;}
+  .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;}
+  .donut-center .dc-value{font-family:"Roboto Mono",monospace;font-weight:800;font-size:22px;color:var(--navy);}
+  .donut-center .dc-value.negative{color:var(--negative);}
+  .donut-center .dc-label{font-size:10.5px;color:var(--ink-soft);margin-top:3px;}
+  .legend{width:100%;margin-top:14px;text-align:left;}
+  .legend-row{display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:12px;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .legend-label{flex:1;color:var(--ink);}
+  .legend-pct{font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;min-width:40px;text-align:right;}
+  .legend-amt{font-size:10.5px;color:var(--ink-soft);min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
+  .ratio-card{background:var(--teal-tint);border-radius:10px;padding:14px 16px;}
+  .ratio-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px dashed rgba(46,115,145,0.25);}
+  .ratio-row:last-child{border-bottom:none;}
+  .ratio-name{font-size:12px;color:var(--teal-deep);font-weight:500;}
+  .ratio-name small{display:block;color:var(--ink-soft);font-size:10px;font-weight:400;margin-top:1px;}
+  .ratio-value{font-family:"Roboto Mono",monospace;font-weight:800;font-size:16px;color:var(--navy);}
+
+  .risk-type-body{margin-top:14px;}
+  .risk-type-body h4{font-size:13.5px;color:var(--teal-deep);margin:18px 0 8px;font-family:"Noto Serif TC",serif;}
+  .risk-type-body h4:first-child{margin-top:0;}
+  .risk-type-body p{font-size:13px;color:var(--ink);line-height:1.9;margin:0 0 10px;}
+  .risk-type-body ul{margin:0 0 12px;padding-left:20px;}
+  .risk-type-body li{font-size:13px;color:var(--ink);line-height:1.9;}
+
+  /* ---------- 財務分析（narrative） ---------- */
+  .fa-section h3{font-size:16px;margin-bottom:16px;}
+  .fa-subhead{font-size:14px;color:var(--teal-deep);font-family:"Noto Serif TC",serif;margin:22px 0 10px;padding-top:16px;border-top:1px solid var(--line);}
+  .fa-subhead:first-of-type{border-top:none;padding-top:0;margin-top:8px;}
+  .fa-p{font-size:13.5px;color:var(--ink);line-height:2;margin:0 0 12px;}
+  .fa-priority-card{display:flex;gap:14px;background:var(--paper);border-radius:10px;padding:18px 20px;margin-bottom:14px;}
+  .fa-priority-num{
+    flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;
+    font-family:"Roboto Mono",monospace;font-weight:700;font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fa-priority-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px;font-family:"Noto Serif TC",serif;}
+  .fa-path-label{font-size:12.5px;font-weight:700;color:var(--teal-deep);margin-top:10px;margin-bottom:4px;}
+  .fa-path-list{margin:0 0 10px;padding-left:18px;}
+  .fa-path-list li{font-size:13px;color:var(--ink);line-height:1.9;}
+  .fa-options{margin:8px 0 10px;padding-left:18px;}
+  .fa-options li{font-size:13px;color:var(--ink);line-height:1.9;}
+  .fa-impact{font-size:12.5px;color:var(--warm-deep);background:var(--warm-tint);border-radius:8px;padding:8px 12px;margin-top:6px;}
+  .fa-protect-item{font-size:13.5px;color:var(--ink);line-height:2;margin-bottom:12px;}
+  .fa-protect-item b{color:var(--navy);}
+  .fa-quote{
+    text-align:center;padding:24px 20px;margin:22px 0 16px;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 100%);border-radius:12px;color:#fff;
+  }
+  .fa-quote-text{font-family:"Noto Serif TC",serif;font-size:15px;line-height:1.9;margin-bottom:10px;}
+  .fa-quote-author{font-size:12px;color:var(--teal-light-text);}
+  .fa-disclaimer{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+
+  #screen-report .panel{position:relative;overflow:hidden;}
+  #screen-report .panel::before{
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='83'%3E%3Ctext x='0' y='53' font-size='27' font-family='sans-serif' fill='rgba(22,50,63,0.055)' transform='rotate(-28 64 41)'%3EVicauria%3C/text%3E%3C/svg%3E");
+    background-repeat:repeat;
+  }
+  #screen-report .panel > *{position:relative;z-index:1;}
+
+  .report-page{display:block;}
+  .report-page + .report-page{margin-top:8px;padding-top:28px;border-top:2px solid var(--line);}
+
+  @media print{
+    header.hero{display:none !important;}
+    main{margin-top:0 !important;}
+    .report-page{page-break-before:always; break-before:page;}
+    .report-page:first-child{page-break-before:auto; break-before:auto;}
+    .report-page + .report-page{margin-top:0;padding-top:0;border-top:none;}
+    .report-btn{display:none !important;}
+    .report-btn-home{display:none !important;}
+    .report-toggle{display:none !important;}
+    .report-view{display:block !important;}
+    .report-view:not(.active){display:none !important;}
+    #reportClient .ratio-wrap{display:none !important;}
+    #reportClient .breakdown-grid{grid-template-columns:1fr 1fr !important;}
+  }
+
+  .report-timestamp{
+    position:fixed; top:8px; right:14px; z-index:150;
+    font-family:"Roboto Mono",monospace; font-size:10px; color:var(--ink-soft);
+    background:rgba(245,247,246,0.85); padding:2px 8px; border-radius:4px;
+    letter-spacing:.02em; pointer-events:none;
+  }
+  @media print{
+    #screen-report .panel::before{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .report-timestamp{
+      position:fixed; top:6px; right:10px; color:#8B979C; background:none;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    @page{ size:A4; margin:14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-consent">
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Wealth Map · 財富地圖</div>
+      <h1>在開始之前，先說明資料怎麼用</h1>
+      <p>請把這頁出示給客戶閱讀，確認無誤後由客戶勾選同意，才能開始建立財富地圖。</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="panel">
+      <div class="consent-title">個人資料蒐集告知暨同意書</div>
+      <div class="consent-lede">請詳閱以下內容，確認同意後即可開始填寫。</div>
+      <div class="consent-body">
+        <p><strong>一、蒐集者：</strong>提供財務諮詢服務之顧問本人；資料以電子化方式蒐集與儲存。</p>
+        <p><strong>二、蒐集目的：</strong>財務狀況了解、財務規劃建議之研擬，及後續追蹤服務。</p>
+        <p><strong>三、個人資料類別：</strong>基本資料、家庭與扶養狀況、收入與支出、資產與負債配置、風險承受偏好、人生財務目標等相關資料。</p>
+        <p><strong>四、利用之期間、地區、對象及方式：</strong></p>
+        <p>（一）期間：自您同意之日起，至您要求停止提供服務或本服務終止之日止。<br>
+        （二）地區：資料儲存與處理均在本人服務範圍內進行。<br>
+        （三）對象：僅供提供本次諮詢服務之顧問本人使用，不會提供予無關第三人。<br>
+        （四）方式：電子化蒐集、儲存及處理，並採取合理之安全維護措施。</p>
+        <p><strong>五、您得自由選擇是否提供；</strong>若不提供全部或部分資料，可能無法進行完整的財務規劃分析。</p>
+        <p><strong>六、依個資法第三條，</strong>您得就您的個人資料行使查詢、閱覽、複製、補充、更正、停止蒐集處理利用或刪除等權利，請隨時與顧問聯繫。</p>
+      </div>
+      <label class="consent-check">
+        <input type="checkbox" id="consentCheckbox">
+        <span>我已詳閱並同意本服務蒐集、處理及利用本人之個人資料。</span>
+      </label>
+      <div class="consent-actions">
+        <button class="btn-ghost" onclick="goToWorkbenchHome()">不同意，離開</button>
+        <button class="btn-primary" id="consentBtn" disabled>同意並開始</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="screen" id="screen-stage">
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Wealth Map · 財富地圖</div>
+      <h1 id="stageHeroTitle">問題</h1>
+      <p id="stageHeroSub"></p>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="panel">
+      <div class="progress-label" id="progressLabel"></div>
+      <div class="accuracy-hint" id="accuracyHint">越接近真實狀況，報告生成會更加精準</div>
+      <div class="progress-bar"><div class="progress-bar-fill" id="progressBarFill" style="width:0%"></div></div>
+      <h2 id="stageTitle"></h2>
+      <div class="stage-sub" id="stageSub"></div>
+      <div id="stageBody"></div>
+      <div class="validate-warn" id="validateWarn" style="display:none;"></div>
+      <div class="stage-nav">
+        <button class="btn-back" id="stageBackBtn">← 上一步</button>
+        <button class="btn-next" id="stageNextBtn">下一步 →</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="screen-loading">
+  <div class="loading-icon">🧭</div>
+  <div class="loading-title">正在繪製你的財富地圖…</div>
+  <div class="loading-msg" id="loadingMsg">整理基本資料中</div>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+    <div class="loading-pct" id="loadingPct">0%</div>
+    <div class="loading-sub">評估計算中，等待時間約30-60秒，請稍後</div>
+  </div>
+</div>
+
+<div class="screen" id="screen-report">
+  <div class="report-timestamp" id="reportTimestamp"></div>
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Wealth Map · 財富地圖</div>
+      <h1>你的財富地圖，完成了</h1>
+      <p>這是根據所有回答整理出來的結果，分成客戶版跟顧問版兩種呈現方式。</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="panel">
+      <div class="report-toggle">
+        <button class="active" data-view="client">客戶版・財富畫像</button>
+        <button data-view="advisor">顧問版・分析筆記</button>
+      </div>
+      <div class="report-view active" id="reportClient"></div>
+      <div class="report-view" id="reportAdvisor"></div>
+      <div class="report-btn-row">
+        <button class="report-btn" onclick="handleGenerateReport()">📄 產出報告（列印／存成 PDF）</button>
+        <button class="report-btn-home" onclick="goToWorkbenchHome()">回首頁 →</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../theme-config.js"></script>
+<script src="../plan-utils.js"></script>
+<script>
+jkApplySavedTheme();
+
+/* =========================================================
+   狀態物件（module-level，換頁不會遺失）
+========================================================= */
+const basicA = {lifeStage:[], dobY:"", dobM:"", dobD:"", gender:"", location:"", job:"", jobOther:""};
+const backerA = {marital:"", hasChildren:"", children:[], supportParents:""};
+const riskA = {likert:new Array(10).fill(3)};
+const decisionA = {order:[]};
+const moneyA = {order:[]};
+const eventsA = {selected:[]};
+const visionA = {goals:[], customGoalName:"", calc:{}};
+let investCostBasis = 0;
+let investHoldYears = 0;
+let loadedClientName = '';
+
+const incomeGroups = [
+  {key:"active", title:"工作收入（主動）", hint:"薪資、接案等持續性主動收入",
+   rows:[{name:"薪資所得", monthly:0, once:0},{name:"年終獎金／分紅", monthly:0, once:0}]},
+  {key:"passive", title:"理財收入（被動）", hint:"房租、股息等不用花額外時間就有的收入",
+   rows:[{name:"房租收入", monthly:0, once:0},{name:"股息／利息收入", monthly:0, once:0}]}
+];
+const expenseGroups = [
+  {key:"necessary", title:"必要支出", hint:"食衣住行等生活必需",
+   rows:[{name:"房貸／房租", monthly:0, once:0},{name:"三餐飲食", monthly:0, once:0},{name:"交通費", monthly:0, once:0},{name:"水電瓦斯／電信", monthly:0, once:0}]},
+  {key:"flexible", title:"浮動支出", hint:"娛樂、治裝等非必要消費",
+   rows:[{name:"娛樂消費", monthly:0, once:0},{name:"治裝／美容", monthly:0, once:0}]},
+  {key:"insurance", title:"保費支出", hint:"壽險、醫療、意外等保障型保費",
+   rows:[{name:"壽險／醫療險", monthly:0, once:0},{name:"意外險", monthly:0, once:0}]},
+  {key:"dependent", title:"撫養支出", hint:"子女教育、孝親費等家庭責任支出",
+   rows:[{name:"子女教育費", monthly:0, once:0},{name:"孝親費", monthly:0, once:0}]},
+  {key:"loan", title:"貸款支出", hint:"信貸、車貸等非房貸類貸款月付金",
+   rows:[{name:"信貸／車貸", monthly:0, once:0}]}
+];
+const assetGroups = [
+  {key:"liquid", title:"理財型資產", hint:"現金、活存、定存",
+   rows:[{name:"活期存款", amount:0},{name:"定期存款", amount:0}]},
+  {key:"invest", title:"投資資產", hint:"股票、基金、保單價值準備金",
+   rows:[{name:"股票／基金／ETF", amount:0},{name:"保單價值準備金", amount:0}]},
+  {key:"realestate", title:"不動產", hint:"以目前市值估算",
+   rows:[{name:"自住不動產", amount:0}]},
+  {key:"other", title:"其他資產", hint:"車輛、其他",
+   rows:[{name:"車輛", amount:0}]}
+];
+const liabilityGroups = [
+  {key:"mortgage", title:"房貸餘額", hint:"尚未還清的房貸本金餘額",
+   rows:[{name:"房貸餘額", amount:0}]},
+  {key:"otherloan", title:"信貸／車貸餘額", hint:"非房貸類貸款的尚未還清本金",
+   rows:[{name:"信貸餘額", amount:0}]},
+  {key:"shortterm", title:"信用卡及其他短期負債", hint:"卡費循環、親友借款等",
+   rows:[{name:"信用卡循環餘額", amount:0}]}
+];
+
+function money(n){const v=Math.round(n||0);return (v<0?"-$":"$")+Math.abs(v).toLocaleString("zh-TW");}
+
+/* ---------------- 金額輸入框：邊打邊加千分位逗號 ---------------- */
+// 讀取數字一律要用這個，不能直接用 el.value（因為欄位現在存的是帶逗號的文字）
+function parseNum(str){
+  return Number(String(str==null?'':str).replace(/,/g,'')) || 0;
+}
+// 只保留數字字元，加上千分位逗號（金額都是整數，不處理小數點）
+function formatThousands(str){
+  const clean = String(str==null?'':str).replace(/[^\d]/g,'');
+  if(!clean) return '';
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+// 綁在 input 的 input 事件上：邊打邊格式化，同時保住游標位置不會跳來跳去
+function formatOnInput(e){
+  const el = e.target;
+  const cursorFromEnd = el.value.length - el.selectionStart;
+  const formatted = formatThousands(el.value);
+  el.value = formatted;
+  const pos = Math.max(0, formatted.length - cursorFromEnd);
+  el.setSelectionRange(pos, pos);
+  return formatted;
+}
+function getCurrentAge(){const y=parseInt(basicA.dobY);if(!y)return null;return new Date().getFullYear()-y;}
+function yearsUntil(targetAge){
+  const age = getCurrentAge();
+  if(age===null || !targetAge) return null;
+  return Math.max(0, targetAge - age);
+}
+
+/* =========================================================
+   共用：分組表格（雙欄位＝收支／單欄位＝資產負債）
+========================================================= */
+function rowAnnual(row){ return (row.monthly||0)*12 + (row.once||0); }
+function groupAnnualTotal(g){ return g.rows.reduce((s,r)=>s+rowAnnual(r),0); }
+function groupAmountTotal(g){ return g.rows.reduce((s,r)=>s+(r.amount||0),0); }
+
+function renderDualGroups(groups, mountId, totalId, opts){
+  opts = opts || {};
+  const monthLabel = opts.monthLabel || "每月";
+  const onceLabel = opts.onceLabel || "單次／年終";
+  const warm = !!opts.warm;
+  const mount = document.getElementById(mountId);
+  mount.innerHTML = "";
+  groups.forEach(g=>{
+    const wrap = document.createElement("div");
+    wrap.className = "group" + (warm ? " warm" : "");
+    wrap.innerHTML = `
+      <div class="group-head">
+        <div class="group-title">${g.title}<small>${g.hint}</small></div>
+        <div class="group-subtotal" data-role="subtotal">$0</div>
+      </div>
+      <table class="row-table">
+        <thead><tr><th style="width:40%">項目</th><th>${monthLabel}</th><th>${onceLabel}</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button class="add-row-btn" type="button">＋ 新增項目</button>
+    `;
+    const tbody = wrap.querySelector("tbody");
+    function addRow(row){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input type="text" value="${row.name}" placeholder="項目名稱"></td>
+        <td><input type="text" inputmode="numeric" value="${row.monthly?formatThousands(row.monthly):''}" placeholder="0"></td>
+        <td><input type="text" inputmode="numeric" value="${row.once?formatThousands(row.once):''}" placeholder="0"></td>
+        <td><button class="row-del" type="button">✕</button></td>
+      `;
+      const [nameI, mI, oI] = tr.querySelectorAll("input");
+      nameI.addEventListener("input", e=>{row.name=e.target.value;});
+      mI.addEventListener("input", e=>{row.monthly=parseNum(formatOnInput(e)); updateSubtotal();});
+      oI.addEventListener("input", e=>{row.once=parseNum(formatOnInput(e)); updateSubtotal();});
+      tr.querySelector(".row-del").addEventListener("click", ()=>{
+        const i=g.rows.indexOf(row); if(i>-1) g.rows.splice(i,1);
+        tr.remove(); updateSubtotal();
+      });
+      tbody.appendChild(tr);
+    }
+    g.rows.forEach(addRow);
+    wrap.querySelector(".add-row-btn").addEventListener("click", ()=>{
+      const r={name:"",monthly:0,once:0}; g.rows.push(r); addRow(r); updateSubtotal();
+    });
+    function updateSubtotal(){
+      wrap.querySelector('[data-role="subtotal"]').textContent = money(groupAnnualTotal(g))+" /年";
+      updateGrandTotal();
+    }
+    updateSubtotal();
+    mount.appendChild(wrap);
+  });
+  function updateGrandTotal(){
+    const total = groups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+    document.getElementById(totalId).textContent = money(total)+" /年（約 "+money(total/12)+" /月）";
+  }
+  updateGrandTotal();
+}
+
+function renderSingleGroups(groups, mountId, totalId, opts){
+  opts = opts || {};
+  const warm = !!opts.warm;
+  const mount = document.getElementById(mountId);
+  mount.innerHTML = "";
+  groups.forEach(g=>{
+    const wrap = document.createElement("div");
+    wrap.className = "group" + (warm ? " warm" : "");
+    wrap.innerHTML = `
+      <div class="group-head">
+        <div class="group-title">${g.title}<small>${g.hint}</small></div>
+        <div class="group-subtotal" data-role="subtotal">$0</div>
+      </div>
+      <table class="row-table">
+        <thead><tr><th style="width:60%">項目</th><th>金額</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button class="add-row-btn" type="button">＋ 新增項目</button>
+    `;
+    const tbody = wrap.querySelector("tbody");
+    function addRow(row){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input type="text" value="${row.name}" placeholder="項目名稱"></td>
+        <td><input type="text" inputmode="numeric" value="${row.amount?formatThousands(row.amount):''}" placeholder="0"></td>
+        <td><button class="row-del" type="button">✕</button></td>
+      `;
+      const [nameI, aI] = tr.querySelectorAll("input");
+      nameI.addEventListener("input", e=>{row.name=e.target.value;});
+      aI.addEventListener("input", e=>{row.amount=parseNum(formatOnInput(e)); updateSubtotal();});
+      tr.querySelector(".row-del").addEventListener("click", ()=>{
+        const i=g.rows.indexOf(row); if(i>-1) g.rows.splice(i,1);
+        tr.remove(); updateSubtotal();
+      });
+      tbody.appendChild(tr);
+    }
+    g.rows.forEach(addRow);
+    wrap.querySelector(".add-row-btn").addEventListener("click", ()=>{
+      const r={name:"",amount:0}; g.rows.push(r); addRow(r); updateSubtotal();
+    });
+    function updateSubtotal(){
+      wrap.querySelector('[data-role="subtotal"]').textContent = money(groupAmountTotal(g));
+      updateGrandTotal();
+    }
+    updateSubtotal();
+    mount.appendChild(wrap);
+  });
+  function updateGrandTotal(){
+    const total = groups.reduce((s,g)=>s+groupAmountTotal(g),0);
+    document.getElementById(totalId).textContent = money(total);
+  }
+  updateGrandTotal();
+}
+
+/* =========================================================
+   選項資料
+========================================================= */
+const LIFE_STAGES = ["剛起步","事業衝刺期","兩人世界","育兒階段","子女已成年／穩定期","準備退休／退休生活"];
+const JOBS = ["軍公教","醫療／護理","科技／工程師","金融／保險","製造業／生產技術","業務／銷售","行銷／廣告",
+  "餐飲／零售服務","教育／補教","法律／會計","設計／創意產業","媒體／傳播","物流／運輸","營建／建築",
+  "農林漁牧","自由業／接案","企業主／創業者","家管","學生","已退休"];
+const GOALS = ["樂活退休","購屋計劃","子女教育","旅遊基金","第一桶金","緊急預備金"];
+const GOAL_TEMPLATE_A = ["樂活退休","旅遊基金"];
+
+const RISK_QUESTIONS = [
+  "只要長期方向合理，我可以接受資產短期出現波動。",
+  "為了爭取更好的長期成果，我願意接受一定程度的不確定性。",
+  "即使帳面暫時出現虧損，我通常不會因此立刻改變原本的規劃。",
+  "只要風險是我理解且可以承擔的，我願意嘗試不同的財務工具或配置方式。",
+  "比起把所有資金都放在安全的地方，我願意讓部分資金承擔波動來換取成長機會。",
+  "我可以接受一筆錢在 5 年以上暫時不動用，讓它有時間累積成長。",
+  "當市場明顯下跌時，我會先了解發生什麼事，而不是急著把資產賣掉。",
+  "如果一項規劃的長期潛力夠好，我可以接受它短期的表現不如預期。",
+  "做財務決策時，我除了考慮安全性，也很重視資產未來的成長空間。",
+  "如果風險在我的承受範圍內，我願意犧牲一部分短期穩定，換取更大的長期成長可能。"
+];
+const DECISION_OPTIONS = ["詢問專家或顧問","自己研究／自己決定","看身邊人或是市場風向"];
+const MONEY_MEANING_OPTIONS = ["自由","安全感","照顧家人","享受當下","傳承","成就感"];
+const LIFE_EVENTS = ["婚姻變動","財務變動","家庭變動","健康事件","職業變動"];
+
+function riskScore(){ return riskA.likert.reduce((s,v)=>s+(v||0),0); }
+const RISK_TYPES = [
+  {min:10, max:17, emoji:"🛡️", name:"安心守護型",
+   bodyHTML:`
+     <h4>你的財務個性</h4>
+     <p>對你來說，錢最重要的功能，不是賺更多，而是讓你安心。</p>
+     <p>你通常不喜歡太大的不確定性。比起「可以賺多少」，你會先問：「最壞的情況會怎樣？」</p>
+     <p>你不是沒有理財觀念，反而可能是因為你很重視自己辛苦累積下來的成果，所以不希望承擔看不懂的風險。</p>
+     <p>你通常：</p>
+     <ul><li>不容易被高報酬誘惑</li><li>很重視本金</li><li>做決定相對謹慎</li><li>對財務安全感需求高</li><li>適合先建立穩定的財務地基</li></ul>
+     <p>最大的問題不是虧錢，而可能是：為了避免虧損，連合理的成長機會也一起放棄。</p>
+     <p>如果大量資金長期只停留在現金或低報酬工具，真正需要注意的反而是：通膨與購買力下降。</p>
+     <h4>給你的建議</h4>
+     <p>你的規劃順序應該是：安全感 → 流動性 → 長期成長。不用逼自己突然變積極。</p>
+     <p>更適合先保留足夠的緊急預備金，再把真正長期不用的資金慢慢做不同層次的配置。</p>
+     <p>你不是太保守，你只是需要先知道「最壞會怎樣」，才有辦法安心往前。</p>
+   `},
+  {min:18, max:25, emoji:"🌱", name:"穩穩累積型",
+   bodyHTML:`
+     <h4>你的財務個性</h4>
+     <p>你願意讓錢成長，但前提是：不要讓自己晚上睡不著。</p>
+     <p>你不追求一夜翻倍，也不希望所有資產完全不動。你的理想狀態是：可以成長，但不要太刺激。</p>
+     <p>你通常具備：</p>
+     <ul><li>不錯的風險意識</li><li>願意長期累積</li><li>不容易追高殺低</li><li>重視安全與報酬的平衡</li><li>財務紀律通常相對穩定</li></ul>
+     <p>你最大的問題可能是：什麼都想要一點、安全也要、流動性也要、報酬也不能太低。</p>
+     <p>最後很容易變成很多工具都有，但不知道每一筆錢到底負責什麼。</p>
+     <h4>給你的建議</h4>
+     <p>可以開始把資產分成不同任務：短期用的錢、安全的錢、長期成長的錢。不要要求同一筆資產同時完成所有功能。</p>
+     <p>真正的穩健，不是所有錢都不動，而是每一筆錢，都知道自己在做什麼。</p>
+   `},
+  {min:26, max:33, emoji:"⚖️", name:"平衡配置型",
+   bodyHTML:`
+     <h4>你的財務個性</h4>
+     <p>你的核心不是「怕不怕風險」，而是：這個風險值不值得承擔？</p>
+     <p>你通常可以接受合理波動，也理解資產不可能完全沒有起伏。相比單純追求安全，你更在意：風險與報酬是不是合理。</p>
+     <p>這通常是很適合進行完整資產配置的一類人。你通常：</p>
+     <ul><li>可以接受合理波動</li><li>有一定長期思維</li><li>願意分散配置</li><li>不容易因短期市場變化亂掉</li><li>比較能理解不同工具有不同用途</li></ul>
+     <p>因為你「什麼都懂一點」，很容易發生：配置很多，但沒有核心策略。基金一點、股票一點、現金一點、房產一點……看起來很分散，但不代表真的有規劃。</p>
+     <h4>給你的建議</h4>
+     <p>你的重點已經不是「要不要開始理財」，而是：讓不同資產形成一個系統。</p>
+     <p>例如：防守資產負責安全，成長資產負責增值，現金流資產負責未來生活。</p>
+     <p>你需要的不是更多商品，而是一張知道每一筆錢要去哪裡的資產地圖。</p>
+   `},
+  {min:34, max:41, emoji:"🚀", name:"成長探索型",
+   bodyHTML:`
+     <h4>你的財務個性</h4>
+     <p>你比較能接受一件事：想得到更多，本來就必須承擔一些不確定性。</p>
+     <p>短期市場波動通常不會讓你太慌。只要你理解背後邏輯，而且長期方向沒有改變，你願意繼續執行。</p>
+     <p>你通常：</p>
+     <ul><li>長期思維較強</li><li>能接受市場波動</li><li>願意探索不同工具</li><li>比較不容易因短期虧損恐慌</li><li>重視資產成長效率</li></ul>
+     <p>你的問題通常不是「太膽小」，反而是：太相信自己可以承受。</p>
+     <p>真正的風險承受能力，不是市場好的時候覺得自己敢，而是市場真的跌 20%、30%，甚至遇上工作收入下降時，你還能不能繼續執行。</p>
+     <h4>給你的建議</h4>
+     <p>你可以積極，但一定要先建立：現金流安全邊際。</p>
+     <p>真正適合承擔風險的錢，應該是：即使短期下跌，也不會影響生活、不會逼你在最低點賣掉的資金。</p>
+     <p>敢承擔風險不是優勢，能在風險真的發生時還活得好好的，才是。</p>
+   `},
+  {min:42, max:50, emoji:"🔥", name:"機會進攻型",
+   bodyHTML:`
+     <h4>你的財務個性</h4>
+     <p>對你而言，最大的風險，有時候反而是錯過機會。</p>
+     <p>你對波動、不確定性以及新機會的接受程度都比較高。只要邏輯成立，你很願意行動。</p>
+     <p>而且相比一般人，你可能更在意：資金效率、報酬率與機會成本。</p>
+     <p>你通常：</p>
+     <ul><li>決策速度快</li><li>敢抓住機會</li><li>長期成長導向強</li><li>能接受較大的資產波動</li><li>不容易因市場短期情緒退出</li></ul>
+     <p>你最需要小心的不是膽子太小，而是：高估報酬，低估風險。</p>
+     <p>尤其要注意：「我可以承受虧損」和「我的財務結構真的承受得起虧損」是完全不同的兩件事情。</p>
+     <h4>給你的建議</h4>
+     <p>你需要的不是叫自己更保守，而是做好：風險隔離。</p>
+     <p>把生活資金、家庭責任、未來必要支出與高風險資金分開。</p>
+     <p>可以進攻，但不要拿整個人生一起下注。真正厲害的進攻，不是敢押大，而是就算判斷錯了，你還有下一局。</p>
+   `}
+];
+
+function riskType(){
+  const score = riskScore();
+  if(score===0) return null;
+  return RISK_TYPES.find(t=>score>=t.min && score<=t.max) || RISK_TYPES[RISK_TYPES.length-1];
+}
+
+function yearOptions(){
+  const cur = new Date().getFullYear();
+  let opts = '<option value="">年</option>';
+  for(let y=cur-18; y>=cur-90; y--){ opts += `<option value="${y}">${y}</option>`; }
+  return opts;
+}
+function monthOptions(){
+  let opts = '<option value="">月</option>';
+  for(let m=1;m<=12;m++){ opts += `<option value="${m}">${m}</option>`; }
+  return opts;
+}
+function daysInMonth(year, month){
+  if(!month) return 31; // 還沒選月份時，先給最大範圍，避免卡住
+  const y = year || new Date().getFullYear(); // 還沒選年份時，先用今年判斷（主要影響2月是否閏年）
+  return new Date(Number(y), Number(month), 0).getDate();
+}
+function dayOptions(year, month, selectedDay){
+  const maxDay = daysInMonth(year, month);
+  let opts = '<option value="">日</option>';
+  for(let d=1; d<=maxDay; d++){
+    opts += `<option value="${d}"${Number(selectedDay)===d?' selected':''}>${d}</option>`;
+  }
+  return opts;
+}
+
+/* =========================================================
+   題目定義
+========================================================= */
+const PAGES = [
+  {id:"lifeStage", stage:"你的輪廓", icon:"👤", n:1,
+   title:"你目前的人生階段？", sub:"可以複選，選出最貼近你現況的階段。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group" data-mode="multi" data-bind="lifeStage">
+         ${LIFE_STAGES.map(s=>`<div class="choice-pill">${s}</div>`).join("")}
+       </div>
+     </div>
+   `},
+  {id:"profileDetails", stage:"你的輪廓", icon:"👤", n:2,
+   title:"基本資料", sub:"出生年月日會用來估算你的年齡跟目標年數。",
+   render: ()=>`
+     <div class="field">
+       <label>出生年月日</label>
+       <div class="dob-row">
+         <select data-bind="dobY">${yearOptions()}</select>
+         <select data-bind="dobM">${monthOptions()}</select>
+         <select data-bind="dobD" id="dobDSelect">${dayOptions(basicA.dobY, basicA.dobM, basicA.dobD)}</select>
+       </div>
+       <div class="hint" id="dobAgeHint">${basicA.dobY ? "今年 "+getCurrentAge()+" 歲" : ""}</div>
+     </div>
+     <div class="field" style="margin-top:26px;">
+       <label>性別</label>
+       <div class="choice-group" data-mode="single" data-bind="gender">
+         <div class="choice-pill">男</div><div class="choice-pill">女</div><div class="choice-pill">其他</div>
+       </div>
+     </div>
+     <div class="field" style="margin-top:26px;">
+       <label>居住地</label>
+       <div class="choice-group" data-mode="single" data-bind="location">
+         <div class="choice-pill">台灣</div><div class="choice-pill">其他</div>
+       </div>
+     </div>
+   `},
+  {id:"job", stage:"你的輪廓", icon:"👤", n:3,
+   title:"職業", sub:"選最接近的類別就好。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group" data-mode="single" data-bind="job">
+         ${JOBS.map(j=>`<div class="choice-pill">${j}</div>`).join("")}
+         <div class="choice-pill">以上都不是</div>
+       </div>
+       <div id="jobOtherWrap" style="display:${basicA.job==="以上都不是"?"block":"none"};margin-top:14px;">
+         <input type="text" data-bind="jobOther" placeholder="請輸入你的職業" value="${basicA.jobOther}">
+       </div>
+     </div>
+   `},
+
+  {id:"maritalChildren", stage:"你的後盾", icon:"🏠", n:4,
+   title:"婚姻與子女", sub:"",
+   render: ()=>`
+     <div class="field">
+       <label>婚姻狀況</label>
+       <div class="choice-group" data-mode="single" data-bind="marital">
+         <div class="choice-pill">未婚</div><div class="choice-pill">已婚</div><div class="choice-pill">離異</div><div class="choice-pill">喪偶</div>
+       </div>
+     </div>
+     <div class="field" style="margin-top:26px;">
+       <label>有沒有子女？</label>
+       <div class="choice-group" data-mode="single" data-bind="hasChildren">
+         <div class="choice-pill">有</div><div class="choice-pill">無</div>
+       </div>
+     </div>
+     <div id="childrenListWrap" style="display:${backerA.hasChildren==="有"?"block":"none"};margin-top:16px;">
+       <div id="childrenList"></div>
+       <button class="add-member-btn" id="addChildBtn" type="button">＋ 新增子女</button>
+     </div>
+   `},
+  {id:"supportParents", stage:"你的後盾", icon:"🏠", n:5,
+   title:"需要撫養父母嗎？", sub:"",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group" data-mode="single" data-bind="supportParents">
+         <div class="choice-pill">是</div><div class="choice-pill">否</div>
+       </div>
+     </div>
+   `},
+
+  {id:"income", stage:"錢都去哪了", icon:"💧", n:6,
+   title:"你的收入", sub:"不用精確到每一塊錢，抓大概的數字就好。",
+   render: ()=>`
+     <div id="incomeMount"></div>
+     <div class="group-total-row"><span class="k">年收入合計</span><span class="v" id="incomeTotal">$0</span></div>
+   `},
+  {id:"expense", stage:"錢都去哪了", icon:"💧", n:7,
+   title:"你的支出", sub:"",
+   render: ()=>`
+     <div id="expenseMount"></div>
+     <div class="group-total-row warm"><span class="k">年支出合計</span><span class="v" id="expenseTotal">$0</span></div>
+   `},
+
+  {id:"assets", stage:"你的起點", icon:"⚖️", n:8,
+   title:"你擁有的資產", sub:"以目前的估計市值填寫。",
+   render: ()=>`
+     <div id="assetMount"></div>
+     <div class="group-total-row"><span class="k">資產合計</span><span class="v" id="assetTotal">$0</span></div>
+     <div class="group" style="margin-top:24px;">
+       <div class="group-head">
+         <div class="group-title">你的股票／基金／ETF等投資部位<small>用來對比「真正的損益」，選填但強烈建議填寫</small></div>
+       </div>
+       <div class="report-note" style="margin-bottom:16px;margin-top:0;">這裡的損益對比，會拿上方「投資資產」分類裡「股票／基金／ETF」那一格填的<b>目前市值</b>，跟下面填的原始成本做比較——請確保上面那一格已經填了正確的市值，不是留空或 0，否則會誤判成全部虧光。</div>
+       <div class="field-row">
+         <div class="field">
+           <label>目前市值（自動抓取，供核對用）</label>
+           <input type="text" id="in-investCurrentPreview" disabled style="background:var(--paper);color:var(--ink-soft);">
+         </div>
+         <div class="field">
+           <label>原始投入成本（總共投入多少本金，不是市值）</label>
+           <input type="text" inputmode="numeric" id="in-investCostBasis" placeholder="0">
+         </div>
+       </div>
+       <div class="field-row" style="margin-top:16px;">
+         <div class="field">
+           <label>大約已經持有這些部位幾年</label>
+           <input type="number" id="in-investHoldYears" min="0" step="0.5" placeholder="0">
+         </div>
+       </div>
+     </div>
+   `},
+  {id:"liabilities", stage:"你的起點", icon:"⚖️", n:9,
+   title:"你目前的負債", sub:"",
+   render: ()=>`
+     <div id="liabilityMount"></div>
+     <div class="group-total-row warm"><span class="k">負債合計</span><span class="v" id="liabilityTotal">$0</span></div>
+   `},
+
+  {id:"risk", stage:"財務個性", icon:"🎯", n:10,
+   title:"關於金錢，你的真實感受？", sub:"1 = 非常不像我　　5 = 非常像我。沒有標準答案，憑直覺回答就好。",
+   render: ()=>`
+     ${RISK_QUESTIONS.map((q,i)=>`
+       <div class="likert-q">
+         <div class="likert-q-text">${q}</div>
+         <div class="likert-scale" data-likert-index="${i}">
+           ${[1,2,3,4,5].map(v=>`<button type="button" class="likert-btn ${riskA.likert[i]===v?'selected':''}" data-val="${v}">${v}</button>`).join('')}
+         </div>
+       </div>
+     `).join('')}
+   `},
+  {id:"decisionStyle", stage:"財務個性", icon:"🎯", n:11,
+   title:"平時怎麼做財務決定的？", sub:"依你最常用的方式，依序點選（第一次點＝最常用）。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group rank-group" id="decisionRankGroup">
+         ${DECISION_OPTIONS.map(o=>`<div class="choice-pill" data-val="${o}">${o}</div>`).join('')}
+       </div>
+     </div>
+   `},
+  {id:"moneyMeaning", stage:"財務個性", icon:"🎯", n:12,
+   title:"對你來說，錢最重要的意義是？", sub:"憑直覺依序點選，最重要的先點。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group rank-group" id="moneyRankGroup">
+         ${MONEY_MEANING_OPTIONS.map(o=>`<div class="choice-pill" data-val="${o}">${o}</div>`).join('')}
+       </div>
+     </div>
+   `},
+  {id:"lifeEvents", stage:"財務個性", icon:"🎯", n:13,
+   title:"最近一年，是否經歷這些事？", sub:"可複選。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group" id="eventsGroup">
+         ${LIFE_EVENTS.map(o=>`<div class="choice-pill ${eventsA.selected.includes(o)?'selected':''}" data-val="${o}">${o}</div>`).join('')}
+         <div class="choice-pill ${eventsA.selected.includes('以上皆無')?'selected':''}" data-val="以上皆無">以上皆無</div>
+       </div>
+     </div>
+   `},
+
+  {id:"vision", stage:"財富願景", icon:"🧭", n:14,
+   title:"你想抵達的地方", sub:"選出你最想達成的財務目標，選了下方會出現輸入欄位。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group" data-mode="multi" data-bind="goals">
+         ${GOALS.map(g=>`<div class="choice-pill">${g}</div>`).join("")}
+         <div class="choice-pill">自行輸入</div>
+       </div>
+       <div id="customGoalWrap" style="display:${visionA.goals.includes("自行輸入")?"block":"none"};margin-top:14px;">
+         <input type="text" id="customGoalInput" placeholder="輸入你的目標" value="${visionA.customGoalName}">
+       </div>
+     </div>
+     <div id="goalCalcMount"></div>
+   `},
+
+  {id:"summary", isSummary:true, stage:"總覽", icon:"✅", n:15,
+   title:"填寫完成，來看一下總覽", sub:"確認沒問題後，就可以生成完整報告書。",
+   render: ()=>renderSummaryHTML()}
+];
+
+let currentIndex = -1;
+const TOTAL_QUESTIONS = PAGES.filter(p=>!p.isSummary).length;
+
+/* ---------------- 畫面切換 ---------------- */
+/* ---------------- 回工作台首頁（相容內嵌 iframe 與獨立分頁打開兩種情境） ---------------- */
+function goToWorkbenchHome(){
+  try{
+    if(window.parent && window.parent !== window && typeof window.parent.goToHome === 'function'){
+      window.parent.goToHome();
+      return;
+    }
+  }catch(e){ /* 跨網域或無法存取父視窗時，走下面的備援 */ }
+  // 備援：非內嵌情境（例如從「客戶資料」開新分頁查看報告），直接導向工作台
+  window.location.href = '../workbench.html';
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---------------- 同意書 ---------------- */
+const consentCheckbox = document.getElementById('consentCheckbox');
+const consentBtn = document.getElementById('consentBtn');
+consentCheckbox.addEventListener('change', ()=>{
+  consentBtn.disabled = !consentCheckbox.checked;
+  consentBtn.classList.toggle('enabled', consentCheckbox.checked);
+});
+consentBtn.addEventListener('click', ()=>{
+  if(consentBtn.disabled) return;
+  enterPage(0);
+});
+
+/* ---------------- 逐題渲染 ---------------- */
+function enterPage(idx){
+  currentIndex = idx;
+  const p = PAGES[idx];
+  document.getElementById('stageHeroTitle').textContent = p.icon + '  ' + p.stage;
+  document.getElementById('stageHeroSub').textContent = p.isSummary ? '再檢查一次，就能生成完整報告。' : ('第 '+p.n+' 題，共 '+TOTAL_QUESTIONS+' 題');
+  document.getElementById('progressLabel').innerHTML = p.isSummary
+    ? '<span class="stage-tag">全部完成</span>'
+    : `<span class="stage-tag">${p.stage}</span> ・ 第 ${p.n} 題／共 ${TOTAL_QUESTIONS} 題`;
+  document.getElementById('progressBarFill').style.width = p.isSummary ? '100%' : ((p.n)/TOTAL_QUESTIONS*100)+'%';
+  document.getElementById('stageTitle').textContent = p.title;
+  document.getElementById('stageSub').textContent = p.sub;
+  document.getElementById('stageBody').innerHTML = p.render();
+  bindPageInputs(p.id);
+  showValidateWarn(null);
+
+  const backBtn = document.getElementById('stageBackBtn');
+  backBtn.style.visibility = idx === 0 ? 'hidden' : 'visible';
+
+  const nextBtn = document.getElementById('stageNextBtn');
+  if(p.isSummary){
+    nextBtn.textContent = '開始生成報告書 →';
+    nextBtn.className = 'btn-next btn-generate';
+  } else {
+    nextBtn.textContent = '下一步 →';
+    nextBtn.className = 'btn-next';
+  }
+  showScreen('screen-stage');
+}
+
+document.getElementById('stageBackBtn').addEventListener('click', ()=>{
+  if(currentIndex > 0) enterPage(currentIndex-1);
+});
+
+/* ---------------- 換頁前驗證：收支／資產必填，貸款支出須對應負債 ---------------- */
+function groupHasData(g){
+  return g.rows.some(r => (r.monthly>0) || (r.once>0) || (r.amount>0));
+}
+function validateCurrentPage(){
+  const id = PAGES[currentIndex].id;
+  if(id==='income' && !incomeGroups.some(groupHasData)){
+    return '請至少填寫一筆收入資料，才能繼續下一步。';
+  }
+  if(id==='expense' && !expenseGroups.some(groupHasData)){
+    return '請至少填寫一筆支出資料，才能繼續下一步。';
+  }
+  if(id==='assets' && !assetGroups.some(groupHasData)){
+    return '請至少填寫一筆資產資料，才能繼續下一步。';
+  }
+  if(id==='liabilities'){
+    const loanGroup = expenseGroups.find(g=>g.key==='loan');
+    const hasLoanExpense = loanGroup && groupHasData(loanGroup);
+    if(hasLoanExpense){
+      const otherLoanGroup = liabilityGroups.find(g=>g.key==='otherloan');
+      const hasOtherLoanLiability = otherLoanGroup && groupHasData(otherLoanGroup);
+      if(!hasOtherLoanLiability){
+        return '你在「錢都去哪了」填了貸款支出，代表應該有對應的貸款餘額——請在「信貸／車貸餘額」填上對應數字，才能繼續下一步。';
+      }
+    }
+  }
+  return null;
+}
+function showValidateWarn(msg){
+  const el = document.getElementById('validateWarn');
+  if(!msg){ el.style.display = 'none'; el.textContent = ''; return; }
+  el.textContent = msg;
+  el.style.display = 'flex';
+  el.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+document.getElementById('stageNextBtn').addEventListener('click', ()=>{
+  if(!PAGES[currentIndex].isSummary){
+    const warnMsg = validateCurrentPage();
+    if(warnMsg){ showValidateWarn(warnMsg); return; }
+  }
+  showValidateWarn(null);
+  if(PAGES[currentIndex].isSummary){
+    runLoadingThenReport();
+  } else if(currentIndex < PAGES.length-1){
+    enterPage(currentIndex+1);
+  }
+});
+
+/* ---------------- 綁定各題輸入 ---------------- */
+function bindRankGroup(el, orderArr){
+  function updateBadges(){
+    el.querySelectorAll('.choice-pill').forEach(p=>{
+      const val = p.dataset.val;
+      const rank = orderArr.indexOf(val);
+      p.classList.toggle('selected', rank>-1);
+      let badge = p.querySelector('.rank-badge');
+      if(rank>-1){
+        if(!badge){ badge=document.createElement('span'); badge.className='rank-badge'; p.prepend(badge); }
+        badge.textContent = rank+1;
+      } else if(badge){ badge.remove(); }
+    });
+  }
+  el.querySelectorAll('.choice-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=>{
+      const val = pill.dataset.val;
+      const i = orderArr.indexOf(val);
+      if(i>-1) orderArr.splice(i,1); else orderArr.push(val);
+      updateBadges();
+    });
+  });
+  updateBadges();
+}
+
+function bindChoiceGroup(el, stateObj, key){
+  const mode = el.dataset.mode;
+  el.querySelectorAll('.choice-pill').forEach(pill=>{
+    const val = pill.textContent;
+    if(mode==='multi'){
+      if((stateObj[key]||[]).includes(val)) pill.classList.add('selected');
+    } else {
+      if(stateObj[key]===val) pill.classList.add('selected');
+    }
+    pill.addEventListener('click', ()=>{
+      if(mode==='multi'){
+        const arr = stateObj[key];
+        const i = arr.indexOf(val);
+        if(i>-1){ arr.splice(i,1); pill.classList.remove('selected'); }
+        else { arr.push(val); pill.classList.add('selected'); }
+        onMultiChoiceChanged(el, stateObj, key);
+      } else {
+        stateObj[key] = val;
+        el.querySelectorAll('.choice-pill').forEach(p2=>p2.classList.remove('selected'));
+        pill.classList.add('selected');
+        onSingleChoiceChanged(el, stateObj, key);
+      }
+    });
+  });
+}
+
+function onSingleChoiceChanged(el, stateObj, key){
+  if(key==='job'){
+    document.getElementById('jobOtherWrap').style.display = (basicA.job==='以上都不是') ? 'block' : 'none';
+  }
+  if(key==='hasChildren'){
+    document.getElementById('childrenListWrap').style.display = (backerA.hasChildren==='有') ? 'block' : 'none';
+    if(backerA.hasChildren==='有' && backerA.children.length===0) addChild();
+  }
+  if(key==='tolerance'){ /* handled by range input separately */ }
+}
+function onMultiChoiceChanged(el, stateObj, key){
+  if(key==='goals'){
+    document.getElementById('customGoalWrap').style.display = visionA.goals.includes('自行輸入') ? 'block' : 'none';
+    renderGoalCalcCards();
+  }
+}
+
+function addChild(){
+  const child = {gender:"", age:""};
+  backerA.children.push(child);
+  renderChildRow(child);
+}
+function renderChildRow(child){
+  const list = document.getElementById('childrenList');
+  const block = document.createElement('div');
+  block.className = 'repeat-block';
+  block.innerHTML = `
+    <div class="repeat-head"><span class="t">子女</span><button class="repeat-del" type="button">✕ 刪除</button></div>
+    <div class="field-row">
+      <div class="field">
+        <label>性別</label>
+        <div class="choice-group" data-mode="single-child">
+          <div class="choice-pill ${child.gender==='男'?'selected':''}">男</div>
+          <div class="choice-pill ${child.gender==='女'?'selected':''}">女</div>
+        </div>
+      </div>
+      <div class="field"><label>年齡</label><input type="number" min="0" value="${child.age}" placeholder="歲"></div>
+    </div>
+  `;
+  block.querySelectorAll('.choice-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=>{
+      block.querySelectorAll('.choice-pill').forEach(p=>p.classList.remove('selected'));
+      pill.classList.add('selected');
+      child.gender = pill.textContent;
+    });
+  });
+  block.querySelector('input[type=number]').addEventListener('input', e=>{ child.age = e.target.value; });
+  block.querySelector('.repeat-del').addEventListener('click', ()=>{
+    const i = backerA.children.indexOf(child);
+    if(i>-1) backerA.children.splice(i,1);
+    block.remove();
+  });
+  list.appendChild(block);
+}
+
+function bindPageInputs(id){
+  document.querySelectorAll('#stageBody .choice-group[data-bind]').forEach(el=>{
+    const key = el.dataset.bind;
+    const stateObj = id==='lifeStage'||id==='profileDetails'||id==='job' ? basicA
+      : id==='maritalChildren'||id==='supportParents' ? backerA
+      : id==='vision' ? visionA : basicA;
+    bindChoiceGroup(el, stateObj, key);
+  });
+
+  document.querySelectorAll('#stageBody select[data-bind]').forEach(sel=>{
+    const key = sel.dataset.bind;
+    sel.value = basicA[key] || "";
+    sel.addEventListener('change', e=>{
+      basicA[key] = e.target.value;
+      // 年或月改變時，重新計算天數選項（例如2月只有28或29天），
+      // 如果原本選的日期超出新的範圍，就清空日期讓使用者重選，避免留著一個不合法的日期
+      if(key === 'dobY' || key === 'dobM'){
+        const dSelect = document.getElementById('dobDSelect');
+        if(dSelect){
+          const maxDay = daysInMonth(basicA.dobY, basicA.dobM);
+          if(basicA.dobD && Number(basicA.dobD) > maxDay) basicA.dobD = '';
+          dSelect.innerHTML = dayOptions(basicA.dobY, basicA.dobM, basicA.dobD);
+        }
+      }
+      const hintEl = document.getElementById('dobAgeHint');
+      if(hintEl) hintEl.textContent = basicA.dobY ? "今年 "+getCurrentAge()+" 歲" : "";
+    });
+  });
+
+  document.querySelectorAll('#stageBody input[data-bind]').forEach(inp=>{
+    const key = inp.dataset.bind;
+    inp.addEventListener('input', e=>{
+      if(id==='job') basicA[key] = e.target.value;
+    });
+  });
+
+  if(id==='risk'){
+    document.querySelectorAll('#stageBody .likert-scale').forEach(scale=>{
+      const qi = parseInt(scale.dataset.likertIndex);
+      scale.querySelectorAll('.likert-btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          riskA.likert[qi] = parseInt(btn.dataset.val);
+          scale.querySelectorAll('.likert-btn').forEach(b=>b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    });
+  }
+
+  if(id==='decisionStyle') bindRankGroup(document.getElementById('decisionRankGroup'), decisionA.order);
+  if(id==='moneyMeaning') bindRankGroup(document.getElementById('moneyRankGroup'), moneyA.order);
+
+  if(id==='lifeEvents'){
+    const el = document.getElementById('eventsGroup');
+    el.querySelectorAll('.choice-pill').forEach(pill=>{
+      pill.addEventListener('click', ()=>{
+        const val = pill.dataset.val;
+        if(val==='以上皆無'){
+          if(eventsA.selected.includes('以上皆無')){ eventsA.selected = []; }
+          else { eventsA.selected = ['以上皆無']; }
+        } else {
+          eventsA.selected = eventsA.selected.filter(v=>v!=='以上皆無');
+          const i = eventsA.selected.indexOf(val);
+          if(i>-1) eventsA.selected.splice(i,1); else eventsA.selected.push(val);
+        }
+        el.querySelectorAll('.choice-pill').forEach(p=>{
+          p.classList.toggle('selected', eventsA.selected.includes(p.dataset.val));
+        });
+      });
+    });
+  }
+
+  if(id==='maritalChildren'){
+    document.getElementById('childrenList').innerHTML = '';
+    backerA.children.forEach(renderChildRow);
+    document.getElementById('addChildBtn').addEventListener('click', addChild);
+  }
+
+  if(id==='income') renderDualGroups(incomeGroups, 'incomeMount', 'incomeTotal', {monthLabel:"月收入", onceLabel:"單筆收入"});
+  if(id==='expense') renderDualGroups(expenseGroups, 'expenseMount', 'expenseTotal', {monthLabel:"月支出", onceLabel:"單筆支出", warm:true});
+  if(id==='assets'){
+    renderSingleGroups(assetGroups, 'assetMount', 'assetTotal');
+    const costEl = document.getElementById('in-investCostBasis');
+    const yearsEl = document.getElementById('in-investHoldYears');
+    const previewEl = document.getElementById('in-investCurrentPreview');
+    costEl.value = investCostBasis ? formatThousands(investCostBasis) : '';
+    yearsEl.value = investHoldYears || '';
+    costEl.addEventListener('input', e=>{ investCostBasis = parseNum(formatOnInput(e)); });
+    yearsEl.addEventListener('input', e=>{ investHoldYears = Number(e.target.value)||0; });
+
+    function updateInvestPreview(){
+      const investGroup = assetGroups.find(g=>g.key==='invest');
+      const currentValue = investGroup ? groupAmountTotal(investGroup) : 0;
+      previewEl.value = money(currentValue) + (currentValue===0 ? '（尚未填寫，請往上填入市值）' : '');
+    }
+    updateInvestPreview();
+    // 資產表格裡任何欄位一有變動，這裡的即時預覽就跟著更新，讓客戶當下就能核對填對了沒有
+    document.getElementById('assetMount').addEventListener('input', updateInvestPreview);
+  }
+  if(id==='liabilities') renderSingleGroups(liabilityGroups, 'liabilityMount', 'liabilityTotal', {warm:true});
+
+  if(id==='vision'){
+    const customInput = document.getElementById('customGoalInput');
+    if(customInput) customInput.addEventListener('input', e=>{ visionA.customGoalName = e.target.value; });
+    renderGoalCalcCards();
+  }
+}
+
+/* ---------------- 財富願景：動態試算卡 ---------------- */
+function removeGoal(goalName){
+  const i = visionA.goals.indexOf(goalName);
+  if(i>-1) visionA.goals.splice(i,1);
+  delete visionA.calc[goalName];
+  const groupEl = document.querySelector('.choice-group[data-bind="goals"]');
+  if(groupEl){
+    groupEl.querySelectorAll('.choice-pill').forEach(p=>{
+      if(p.textContent===goalName) p.classList.remove('selected');
+    });
+    if(goalName==='自行輸入'){
+      const w = document.getElementById('customGoalWrap');
+      if(w) w.style.display = 'none';
+    }
+  }
+  renderGoalCalcCards();
+}
+
+function renderGoalCalcCards(){
+  const mount = document.getElementById('goalCalcMount');
+  if(!mount) return;
+  mount.innerHTML = '';
+  visionA.goals.forEach(goalName=>{
+    if(!visionA.calc[goalName]) visionA.calc[goalName] = {};
+    const c = visionA.calc[goalName];
+    const isTemplateA = GOAL_TEMPLATE_A.includes(goalName);
+    const card = document.createElement('div');
+    card.className = 'goal-calc-card';
+
+    if(goalName === "樂活退休"){
+      card.innerHTML = `
+        <div class="goal-calc-title"><span class="t">🎯 樂活退休</span><button type="button" class="goal-del-btn" title="移除">✕</button></div>
+        <div class="field-row">
+          <div class="field"><label>預計幾歲開始退休？</label><input type="number" class="ga" placeholder="例如 55"></div>
+          <div class="field"><label>希望每月有多少生活費／預算？</label><input type="text" inputmode="numeric" class="gm" placeholder="例如 40,000"></div>
+        </div>
+        <a href="simulation.html?tab=retirement" target="_blank" rel="noopener" class="calc-link">🔗 計算機試算</a>
+      `;
+      const ageI = card.querySelector('.ga'), monI = card.querySelector('.gm');
+      ageI.value = c.age||''; monI.value = c.monthly?formatThousands(c.monthly):'';
+      ageI.addEventListener('input', e=>{ c.age = e.target.value; });
+      monI.addEventListener('input', e=>{ c.monthly = formatOnInput(e); });
+    } else if(goalName === "旅遊基金"){
+      card.innerHTML = `
+        <div class="goal-calc-title"><span class="t">🎯 旅遊基金</span><button type="button" class="goal-del-btn" title="移除">✕</button></div>
+        <div class="field-row">
+          <div class="field"><label>預計幾歲開始一直旅遊？</label><input type="number" class="ga" placeholder="例如 50"></div>
+          <div class="field"><label>希望每年有多少旅遊基金／預算？</label><input type="text" inputmode="numeric" class="gy2" placeholder="例如 150,000"></div>
+        </div>
+        <a href="simulation.html?tab=invest" target="_blank" rel="noopener" class="calc-link">🔗 計算機試算</a>
+      `;
+      const ageI = card.querySelector('.ga'), yearI = card.querySelector('.gy2');
+      ageI.value = c.age||''; yearI.value = c.yearly?formatThousands(c.yearly):'';
+      ageI.addEventListener('input', e=>{ c.age = e.target.value; });
+      yearI.addEventListener('input', e=>{ c.yearly = formatOnInput(e); });
+    } else {
+      const label = goalName==='自行輸入' ? (visionA.customGoalName||'自訂目標') : goalName;
+      const tabMap = {"購屋計劃":"house", "子女教育":"education", "第一桶金":"invest", "緊急預備金":"invest"};
+      const targetTab = tabMap[goalName] || "invest";
+      card.innerHTML = `
+        <div class="goal-calc-title"><span class="t">🎯 ${label}</span><button type="button" class="goal-del-btn" title="移除">✕</button></div>
+        <div class="field-row">
+          <div class="field"><label>預計幾歲要達成？</label><input type="number" class="ga" placeholder="例如 40"></div>
+          <div class="field"><label>大概需要準備多少錢？</label><input type="text" inputmode="numeric" class="gt" placeholder="例如 2,000,000"></div>
+        </div>
+        <a href="simulation.html?tab=${targetTab}" target="_blank" rel="noopener" class="calc-link">🔗 計算機試算</a>
+      `;
+      const ageI = card.querySelector('.ga'), targetI = card.querySelector('.gt');
+      ageI.value = c.age||''; targetI.value = c.target?formatThousands(c.target):'';
+      ageI.addEventListener('input', e=>{ c.age = e.target.value; });
+      targetI.addEventListener('input', e=>{ c.target = formatOnInput(e); });
+    }
+    card.querySelector('.goal-del-btn').addEventListener('click', ()=> removeGoal(goalName));
+    mount.appendChild(card);
+  });
+}
+
+/* ---------------- 財富願景：目標金額與達成率（報告用） ---------------- */
+function computeGoalTarget(goalName){
+  const c = visionA.calc[goalName] || {};
+  if(goalName === "樂活退休"){ return parseNum(c.monthly) * 12 * 25; }
+  if(goalName === "旅遊基金"){ return parseNum(c.yearly) * 25; }
+  return parseNum(c.target);
+}
+function computeGoalAchievement(goalName){
+  const c = visionA.calc[goalName] || {};
+  const target = computeGoalTarget(goalName);
+  const netWorth = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0) - liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const annualSurplus = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0) - expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const years = yearsUntil(parseInt(c.age)) || 0;
+  const projected = netWorth + annualSurplus*years;
+  const rate = target>0 ? Math.min(100, Math.max(0, projected/target*100)) : null;
+  return {target, projected, years, rate};
+}
+
+function buildVisionGoalListHTML(){
+  const currentAge = getCurrentAge();
+  return visionA.goals.map(g=>{
+    const label = g==='自行輸入' ? (visionA.customGoalName||'自訂目標') : g;
+    const c = visionA.calc[g] || {};
+    const r = computeGoalAchievement(g);
+    const color = r.rate===null ? 'var(--ink-soft)' : (r.rate>=100 ? 'var(--positive)' : (r.rate>=60 ? 'var(--warm-deep)' : 'var(--negative)'));
+    const ageText = c.age ? c.age+'歲・' : '';
+    return `<div class="report-row"><span class="k"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:7px;"></span>${label}（${ageText}目標 ${money(r.target)}）</span><span class="v" style="color:${color};font-weight:700;">${r.rate===null?'—':r.rate.toFixed(0)+'%'}</span></div>`;
+  }).join('') || '<div class="report-row"><span class="k">尚未選擇目標</span></div>';
+}
+
+/* ---------------- 財務分析（依客戶資料自動生成的敘述型報告） ---------------- */
+const FINANCE_QUOTES = [
+  {text:"人生想成功，其實只要做到兩件事：不做愚蠢的事，並且活得夠久。", author:"查理・蒙格"},
+  {text:"風險來自於你不知道自己在做什麼。", author:"華倫・巴菲特"},
+  {text:"省小錢是好習慣，但決定財富高度的，是你怎麼處理大錢。", author:"財富規劃筆記"},
+  {text:"時間是複利最好的朋友，越早開始，走得越輕鬆。", author:"財富規劃筆記"},
+  {text:"財富多半不是靠神來一筆，而是長期避開重大錯誤、穩穩走下去。時間夠長，複利自然會發揮威力。", author:"財富規劃筆記"}
+];
+function pickQuote(){
+  const seed = (parseInt(basicA.dobY)||0) + (parseInt(basicA.dobM)||0) + (parseInt(basicA.dobD)||0) + backerA.children.length;
+  return FINANCE_QUOTES[Math.abs(seed) % FINANCE_QUOTES.length];
+}
+
+/* ---------------- 投資真實損益：戳破「感覺有賺錢」的迷思 ---------------- */
+function buildInvestRealityCheckHTML(){
+  if(!investCostBasis || investCostBasis<=0) return '';
+
+  const investGroup = assetGroups.find(g=>g.key==='invest');
+  const currentValue = investGroup ? groupAmountTotal(investGroup) : 0;
+
+  // 防呆：填了成本，但「你的起點」裡股票／基金／ETF的市值卻是0，代表很可能是漏填市值，
+  // 不是真的全部虧光——這種情況不算損益，改成提醒，避免算出誤導的「-100%」。
+  if(currentValue<=0){
+    return `
+      <div class="report-section">
+        <h3>你的投資，真的如你以為的好嗎？</h3>
+        <div class="report-note">你在「你的起點」填了原始投入成本 ${money(investCostBasis)}，但「股票／基金／ETF」目前市值還是 0——請回到「你的起點」那一頁，把目前市值也填上，才能算出正確的損益對比。</div>
+      </div>
+    `;
+  }
+
+  const gain = currentValue - investCostBasis;
+  const gainPct = (gain/investCostBasis)*100;
+  const tier = gainPct>=15 ? 'pos' : (gainPct>=0 ? 'warn' : 'neg');
+  const tierColor = tier==='pos' ? 'var(--positive)' : (tier==='warn' ? 'var(--warm-deep)' : 'var(--negative)');
+
+  const years = investHoldYears>0 ? investHoldYears : null;
+  const annualReturn = years ? (Math.pow(currentValue/investCostBasis, 1/years)-1)*100 : null;
+
+  let benchmarkHTML = '';
+  if(years){
+    const benchmarkValue = investCostBasis * Math.pow(1.06, years);
+    const benchmarkDiff = benchmarkValue - currentValue;
+    benchmarkHTML = `
+      <div class="report-row"><span class="k">若當初改做穩健配置（假設年化6%），${years}年後應有</span><span class="v">${money(benchmarkValue)}</span></div>
+      <div class="report-row"><span class="k">跟實際現值相比</span><span class="v" style="color:${benchmarkDiff>0?'var(--negative)':'var(--positive)'};">${benchmarkDiff>0?'少了 '+money(benchmarkDiff):'多了 '+money(-benchmarkDiff)}</span></div>
+    `;
+  }
+
+  return `
+    <div class="report-section">
+      <h3>你的投資，真的如你以為的好嗎？</h3>
+      <p style="color:var(--ink-soft);font-size:13.5px;line-height:1.9;margin-bottom:16px;">
+        很多人投資股票，感覺自己是有賺錢的，所以就一直做下去——但很少人真正算過，把所有投入的成本跟現在的市值放在一起看，整體到底是賺是賠、賺賠多少。這裡幫你算清楚：
+      </p>
+      <div class="report-row"><span class="k">目前市值</span><span class="v">${money(currentValue)}</span></div>
+      <div class="report-row"><span class="k">原始投入成本</span><span class="v">${money(investCostBasis)}</span></div>
+      <div class="report-row"><span class="k">累積損益</span><span class="v" style="color:${tierColor};font-weight:700;">${gain>=0?'+':''}${money(gain)}（${gainPct>=0?'+':''}${gainPct.toFixed(1)}%）</span></div>
+      ${years ? `<div class="report-row"><span class="k">持有約 ${years} 年，換算年化報酬率約</span><span class="v" style="color:${tierColor};font-weight:700;">${annualReturn>=0?'+':''}${annualReturn.toFixed(1)}%</span></div>` : ''}
+      ${benchmarkHTML}
+      <div class="report-note">${
+        tier==='neg' ? '整體來看目前是虧損狀態，這是很值得跟顧問一起重新檢視配置方式的訊號。'
+        : tier==='warn' ? '整體是賺錢的，但年化報酬率不一定跑贏穩健配置的水準，值得重新檢視資產配置的效率。'
+        : '整體表現不錯，但仍建議定期檢視，確保這個報酬率是可以長期維持、而不是短期波動的結果。'
+      }此處僅以總成本與目前市值粗估，未考慮個別進出場時間點與交易成本，實際報酬率仍需以對帳單資料精算為準。</div>
+    </div>
+  `;
+}
+
+/* ---------------- 儲蓄 vs 定期定額投資：複利成長對比圖 ---------------- */
+function futureValueAnnuity(monthlyRatePMT, annualRate, years){
+  const r = annualRate/12;
+  const n = years*12;
+  if(r===0) return monthlyRatePMT*n;
+  return monthlyRatePMT * (Math.pow(1+r, n) - 1) / r;
+}
+
+function buildInvestGrowthChartSVG(monthly, years){
+  const SERIES = [
+    {rate:0.01, label:'銀行儲蓄(年化1%)', color:'#B3492F'},
+    {rate:0.04, label:'定期定額投資(年化4%)', color:'#8FC4D8'},
+    {rate:0.06, label:'定期定額投資(年化6%)', color:'#4A7E94'},
+    {rate:0.08, label:'定期定額投資(年化8%)', color:'#16323F'}
+  ];
+  const dataSets = SERIES.map(s=>{
+    const points = [];
+    for(let y=1; y<=years; y++){
+      points.push({y, v: futureValueAnnuity(monthly, s.rate, y)});
+    }
+    return {...s, points};
+  });
+  const maxVal = Math.max(...dataSets[dataSets.length-1].points.map(p=>p.v)) * 1.08;
+
+  const W=760, H=380, padL=90, padR=20, padT=20, padB=40;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
+  const xPos = y => padL + (y-1)/(years-1)*plotW;
+  const yPos = v => padT + (1-v/maxVal)*plotH;
+
+  let yGrid = '';
+  for(let i=0;i<=5;i++){
+    const val = maxVal*i/5;
+    const yy = yPos(val);
+    yGrid += `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="#E1E7E7" stroke-width="1" stroke-dasharray="${i===0?'0':'3,3'}"/>`;
+    yGrid += `<text x="${padL-10}" y="${(yy+4).toFixed(1)}" text-anchor="end" font-size="11" fill="#5B6B70" font-family="Roboto Mono, monospace">$${Math.round(val/10000)}萬</text>`;
+  }
+  let xLabels = '';
+  for(let y=1; y<=years; y++){
+    if(y%2===1 || y===years){
+      xLabels += `<text x="${xPos(y).toFixed(1)}" y="${H-padB+18}" text-anchor="middle" font-size="10" fill="#5B6B70" font-family="Roboto Mono, monospace">${y}</text>`;
+    }
+  }
+
+  const lines = dataSets.map(s=>{
+    const d = s.points.map((p,i)=> (i===0?'M':'L')+xPos(p.y).toFixed(1)+','+yPos(p.v).toFixed(1)).join(' ');
+    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.5"/>`;
+  }).join('');
+
+  const legend = dataSets.map((s,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:6px;margin-right:18px;font-size:11.5px;color:#182226;">
+      <span style="display:inline-block;width:14px;height:3px;background:${s.color};"></span>${s.label}
+    </span>`).join('');
+
+  const finalVals = dataSets.map(s=> `<div class="report-row"><span class="k">${s.label}，第${years}年累積約</span><span class="v" style="color:${s.color};">${money(s.points[s.points.length-1].v)}</span></div>`).join('');
+
+  return `
+    <div style="margin-bottom:14px;">${legend}</div>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">
+      ${yGrid}
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#5B6B70" stroke-width="1"/>
+      <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#5B6B70" stroke-width="1"/>
+      ${xLabels}
+      <text x="${(padL+W-padR)/2}" y="${H-6}" text-anchor="middle" font-size="11" fill="#5B6B70">年期</text>
+      ${lines}
+    </svg>
+    <div style="margin-top:14px;">${finalVals}</div>
+  `;
+}
+
+function buildInvestGrowthSectionHTML(){
+  const m = computeFinanceMetrics();
+  const years = 30;
+  let monthly = Math.round(m.monthlySavings);
+  let usedFallback = false;
+  if(monthly <= 0){
+    monthly = 5000;
+    usedFallback = true;
+  }
+  const chartHTML = buildInvestGrowthChartSVG(monthly, years);
+  return `
+    <div class="report-section">
+      <h3>把錢放在哪裡，30年後差多少？</h3>
+      <p style="color:var(--ink-soft);font-size:13.5px;line-height:1.9;margin-bottom:16px;">
+        ${usedFallback
+          ? `以下以每月投入 ${money(monthly)} 元為例（尚未計算出實際月儲蓄金額，先用此金額示範）：`
+          : `以你目前每月結餘約 ${money(monthly)} 元為基礎，同樣一筆錢，放在銀行儲蓄跟做定期定額投資，${years} 年後的差距會是這樣：`}
+      </p>
+      ${chartHTML}
+      <div class="report-note">此圖僅為示意，以固定月投入金額、固定年化報酬率簡化試算，不代表任何實際商品之保證報酬；銀行儲蓄利率、投資報酬率均會隨市場變動，實際結果可能與圖中不同。理財應先於投資：建議先配置保本型工具建立安全水位，再視風險承受度決定投資部位。</div>
+    </div>
+  `;
+}
+
+function computeFinanceMetrics(){
+  const age = getCurrentAge();
+  const incomeTotal = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const expenseTotal = expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const assetTotal = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const netWorth = assetTotal - liabilityTotal;
+  const monthlyIncome = incomeTotal/12;
+  const monthlyExpense = expenseTotal/12;
+  const monthlySavings = monthlyIncome - monthlyExpense;
+  const savingsRate = incomeTotal>0 ? (incomeTotal-expenseTotal)/incomeTotal : 0;
+  const liquidGroup = assetGroups.find(g=>g.key==='liquid');
+  const liquidAssets = liquidGroup ? groupAmountTotal(liquidGroup) : 0;
+  const emergencyMonths = monthlyExpense>0 ? liquidAssets/monthlyExpense : null;
+  const insuranceGroup = expenseGroups.find(g=>g.key==='insurance');
+  const insuranceAnnual = insuranceGroup ? groupAnnualTotal(insuranceGroup) : 0;
+  const hasInsurance = insuranceAnnual > 0;
+  const activeGroup = incomeGroups.find(g=>g.key==='active');
+  const bonusRow = activeGroup ? activeGroup.rows.find(r=>r.name.includes('年終')) : null;
+  const annualBonus = bonusRow ? (bonusRow.once||0) : 0;
+  const investGroup = assetGroups.find(g=>g.key==='invest');
+  const investAssets = investGroup ? groupAmountTotal(investGroup) : 0;
+  const investConcentration = assetTotal>0 ? investAssets/assetTotal : 0;
+  return {age, incomeTotal, expenseTotal, assetTotal, liabilityTotal, netWorth,
+    monthlyIncome, monthlyExpense, monthlySavings, savingsRate,
+    liquidAssets, emergencyMonths, hasInsurance, annualBonus,
+    investAssets, investConcentration};
+}
+
+function buildFinancialAnalysisHTML(){
+  const m = computeFinanceMetrics();
+  const familyDesc = (backerA.marital||'') + (backerA.hasChildren==='有' ? '並育有 '+backerA.children.length+' 位子女' : '');
+
+  let overview = '';
+  if(m.age!==null){
+    overview += `我看到您目前每個月有 ${money(Math.round(m.monthlySavings))} 元的儲蓄`;
+    overview += m.incomeTotal>0 ? `，儲蓄率達到 ${(m.savingsRate*100).toFixed(1)}%` : '';
+    overview += m.monthlySavings>=0 ? '，這是一個很好的開始，代表您有能力為未來累積財富。' : '，目前收支較為緊繃，這是我們可以一起優先改善的地方。';
+    overview += m.liabilityTotal===0 ? '同時，您沒有任何負債，這讓您的財務基礎非常穩固。' : `目前您還有 ${money(m.liabilityTotal)} 元的負債需要留意，會影響資金運用的彈性。`;
+    overview += `然而，以您 ${m.age} 歲的年紀，${familyDesc ? familyDesc+'，' : ''}肩上承擔著重要的家庭責任，有幾個地方值得我們一起多加留意。`;
+  } else {
+    overview = '以下是根據您目前提供的資料，為您整理的財務全貌與建議方向。';
+  }
+
+  const concernParts = [];
+  if(m.emergencyMonths!==null && m.emergencyMonths<6){
+    concernParts.push(`您現有的 ${money(Math.round(m.liquidAssets))} 元活存，大約只能支撐家庭 ${m.emergencyMonths.toFixed(1)} 個月的開銷`);
+  }
+  let overview2 = '';
+  if(concernParts.length>0){
+    overview2 = `目前最值得優先思考的是，${concernParts.join('；此外，')}。`;
+    overview2 += '考量到收入可能會有波動，加上家庭日常開銷的不確定性，這筆緊急備用金可能還不足以應付生活中的突發狀況。';
+  }
+
+  const priorityCards = [];
+  const cashflowNegative = m.monthlySavings < 0;
+  const cashflowTight = !cashflowNegative && m.incomeTotal>0 && m.savingsRate < 0.1;
+
+  if(cashflowNegative){
+    priorityCards.push({
+      title:'先讓收支打平，站穩腳步',
+      body:`目前每月支出比收入多出 ${money(Math.abs(Math.round(m.monthlySavings)))} 元，長期下來會持續消耗積蓄或增加負債。在往下一步規劃緊急備用金或長期目標之前，建議先把收支調整到不再持續虧空，這是所有後續財務目標能夠往前走的基礎。`,
+      short:'盤點浮動支出（娛樂、治裝等非必要消費），找出可以立即減少的項目。',
+      mid:'檢視必要支出結構（房貸房租、保費、貸款），評估是否有調整空間，目標讓每月收支至少打平。',
+      long:'收支穩定轉正、有結餘可存之後，再依序規劃緊急備用金與長期目標，避免同時多線作戰。',
+      impact:'收支打平後，才有餘裕談儲蓄與投資，這是財務規劃能往前走的第一步。'
+    });
+  }
+
+  if(m.emergencyMonths!==null && m.emergencyMonths<6 && !cashflowNegative){
+    const emergencyGoal = visionA.goals.includes('緊急預備金') ? visionA.calc['緊急預備金'] : null;
+    const targetAmt = emergencyGoal && emergencyGoal.target ? parseNum(emergencyGoal.target) : m.monthlyExpense*6;
+    priorityCards.push({
+      title:'補足緊急備用金，讓生活更有底氣',
+      body:`您目前有 ${money(Math.round(m.liquidAssets))} 元的活存，但考量到家庭每月 ${money(Math.round(m.monthlyExpense))} 元的支出，這筆錢大約只能支撐 ${m.emergencyMonths.toFixed(1)} 個月。面對生活中的不確定性，例如工作轉換、家庭成員生病或突發意外，建議您可以將緊急備用金逐步累積到至少能支撐 6 到 12 個月的家庭開銷。${m.annualBonus>0 ? `您可以將每年 ${money(m.annualBonus)} 元的獎金，撥出一部分來加速這個目標的達成。` : (cashflowTight ? `目前月儲蓄率約 ${(m.savingsRate*100).toFixed(1)}%，可以先從固定提撥一小部分開始累積。` : '')}`,
+      short:'先將活存增加到能支撐 6 個月的家庭開銷。',
+      mid:'逐步累積到能支撐 9 個月的家庭開銷。',
+      long: targetAmt>0 ? `朝您設定的 ${money(targetAmt)} 元目標邁進，讓家庭面對任何狀況都能更從容。` : '持續累積到您安心的水準，讓家庭面對任何狀況都能更從容。',
+      impact:'補足後，緊急金可撐滿 6 個月以上，面對突發狀況更有底氣。'
+    });
+  }
+  if(visionA.goals.length>0 && !cashflowNegative){
+    const goalLabels = visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g);
+    priorityCards.push({
+      title:'規劃長期目標，讓夢想藍圖更清晰',
+      body:`您設定了${goalLabels.map(g=>'「'+g+'」').join('、')}等目標，這都非常棒。${m.investAssets>0?`目前您有 ${money(m.investAssets)} 元的投資資產，佔總資產的 ${(m.investConcentration*100).toFixed(1)}%，這顯示您對資產成長有積極的期待。`:''}在追求效率的同時，我們可以一起思考，如何透過穩健的資產配置，讓您的投資組合在成長與風險之間取得平衡，同時兼顧短期財務彈性，讓這些目標能更順利地達成。`,
+      short: m.annualBonus>0 ? '將部分年終獎金投入優先目標的累積。' : `維持目前約 ${(m.savingsRate*100).toFixed(1)}% 的月儲蓄率，固定撥一部分投入優先目標。`,
+      mid:'在補足緊急備用金後，可以考慮將部分資金配置於分散風險的投資工具，追求長期穩健成長。',
+      long:'定期檢視您的投資組合，確保其與您的長期目標和風險承受度保持一致。',
+      impact:'透過穩健的資產配置，有助於您在追求長期目標的同時，也能兼顧短期的財務彈性。'
+    });
+  }
+  if(priorityCards.length===0){
+    priorityCards.push({
+      title:'持續維持，穩健前行',
+      body:'依目前的資料來看，您的緊急備用金已有一定基礎，財務狀況相對穩健。建議可以開始把重心放在長期目標的資產配置上，讓資源運用更有效率。',
+      short:'檢視目前的資產配置是否符合風險承受度。',
+      mid:'視市場狀況調整投資比例。',
+      long:'定期回顧目標進度，讓財務規劃與人生階段同步。',
+      impact:'持續優化配置，讓已經打下的良好基礎發揮更大效益。'
+    });
+  }
+
+  const quote = pickQuote();
+
+  return `
+    <div class="fa-section">
+      <h3>給你的財務小結</h3>
+      <h4 class="fa-subhead">你目前的財務全貌</h4>
+      <p class="fa-p">${overview}</p>
+      ${overview2 ? `<p class="fa-p">${overview2}</p>` : ''}
+
+      <h4 class="fa-subhead">可以先顧的幾件事</h4>
+      <p class="fa-p">依您目前的家庭狀況與財務目標，我會建議您優先關注以下幾個方向，為您和家人建立更穩固的財務基礎：</p>
+      ${priorityCards.map((c,i)=>`
+        <div class="fa-priority-card">
+          <div class="fa-priority-num">${i+1}</div>
+          <div style="flex:1;">
+            <div class="fa-priority-title">${c.title}</div>
+            <p class="fa-p">${c.body}</p>
+            ${c.options
+              ? `<ul class="fa-options">${c.options.map(o=>`<li>${o}</li>`).join('')}</ul>`
+              : `<div class="fa-path-label">短中長期路徑：</div>
+                 <ul class="fa-path-list">
+                   <li><b>短期：</b>${c.short}</li>
+                   <li><b>中期：</b>${c.mid}</li>
+                   <li><b>長期：</b>${c.long}</li>
+                 </ul>`}
+            <div class="fa-impact"><b>預期影響：</b>${c.impact}</div>
+          </div>
+        </div>
+      `).join('')}
+
+      <div class="fa-quote">
+        <div class="fa-quote-text">「${quote.text}」</div>
+        <div class="fa-quote-author">— ${quote.author}</div>
+      </div>
+
+      <div class="fa-disclaimer">教育性規劃參考，非特定商品推薦、非保險招攬；具體規劃歡迎與你的顧問一起討論。</div>
+    </div>
+  `;
+}
+
+
+/* ---------------- 總覽頁 ---------------- */
+/* ---------------- 顧問版專用：每題答題簡表 ---------------- */
+function buildFullAnswerSummaryHTML(){
+  const incomeTotal = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const expenseTotal = expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const assetTotal = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const rType = riskType();
+  const score = riskScore();
+
+  const childrenText = backerA.hasChildren==='有'
+    ? (backerA.children.length>0 ? backerA.children.map((c,i)=>`子女${i+1}（${c.gender||'—'}・${c.age||'—'}歲）`).join('、') : '有，但未填寫詳細資料')
+    : (backerA.hasChildren||'—');
+
+  const likertText = RISK_QUESTIONS.map((q,i)=>`Q${i+1}：${riskA.likert[i]}分`).join('　');
+
+  const goalsText = visionA.goals.map(g=>{
+    const label = g==='自行輸入' ? (visionA.customGoalName||'自訂目標') : g;
+    const c = visionA.calc[g] || {};
+    const parts = [];
+    if(c.age) parts.push(c.age+'歲');
+    if(c.monthly) parts.push('月被動收入'+money(parseNum(c.monthly)));
+    if(c.yearly) parts.push('年花費'+money(parseNum(c.yearly)));
+    if(c.target) parts.push('目標'+money(parseNum(c.target)));
+    return `${label}${parts.length?'（'+parts.join('・')+'）':''}`;
+  }).join('、') || '—';
+
+  return `
+    <div class="report-section">
+      <h3>每題答題簡表</h3>
+      <div class="summary-row"><span class="k">Q1 人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q2 出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD?basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD:'—'}</span></div>
+      <div class="summary-row"><span class="k">Q3 性別</span><span class="v">${basicA.gender||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q4 居住地</span><span class="v">${basicA.location||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q5 職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
+      <div class="summary-row"><span class="k">Q6 婚姻狀況</span><span class="v">${backerA.marital||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q7 子女</span><span class="v">${childrenText}</span></div>
+      <div class="summary-row"><span class="k">Q8 需撫養父母</span><span class="v">${backerA.supportParents||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q9-10 年收入／年支出</span><span class="v">${money(incomeTotal)} ／ ${money(expenseTotal)}</span></div>
+      <div class="summary-row"><span class="k">Q11-12 總資產／總負債</span><span class="v">${money(assetTotal)} ／ ${money(liabilityTotal)}</span></div>
+      <div class="summary-row" style="align-items:flex-start;"><span class="k">Q13 財務個性測驗</span><span class="v" style="text-align:right;max-width:60%;">${likertText}<br>總分 ${score} 分・${rType?rType.emoji+' '+rType.name:'—'}</span></div>
+      <div class="summary-row"><span class="k">Q14 財務決策方式排序</span><span class="v">${decisionA.order.join('　→　')||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q15 金錢意義排序</span><span class="v">${moneyA.order.join('　→　')||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q16 近一年重大事件</span><span class="v">${eventsA.selected.join('、')||'—'}</span></div>
+      <div class="summary-row" style="align-items:flex-start;"><span class="k">Q17 財富願景</span><span class="v" style="text-align:right;max-width:60%;">${goalsText}</span></div>
+    </div>
+  `;
+}
+
+function renderSummaryProfileHTML(){
+  return `
+    <div class="report-section">
+      <h3>你的輪廓</h3>
+      <div class="report-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
+      <div class="report-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
+      <div class="report-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
+      <div class="report-row"><span class="k">居住地</span><span class="v">${basicA.location||'—'}</span></div>
+      <div class="report-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
+    </div>
+    <div class="report-section">
+      <h3>你的後盾</h3>
+      <div class="report-row"><span class="k">婚姻狀況</span><span class="v">${backerA.marital||'—'}</span></div>
+      <div class="report-row"><span class="k">子女</span><span class="v">${backerA.hasChildren==='有' ? backerA.children.length+' 位' : (backerA.hasChildren||'—')}</span></div>
+      <div class="report-row"><span class="k">需撫養父母</span><span class="v">${backerA.supportParents||'—'}</span></div>
+    </div>
+  `;
+}
+
+function renderSummaryHTML(){
+  const incomeTotal = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const expenseTotal = expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const assetTotal = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  return `
+    <div class="summary-block">
+      <h3>你的輪廓</h3>
+      <div class="summary-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
+      <div class="summary-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
+      <div class="summary-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
+      <div class="summary-row"><span class="k">居住地</span><span class="v">${basicA.location||'—'}</span></div>
+      <div class="summary-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
+    </div>
+    <div class="summary-block">
+      <h3>你的後盾</h3>
+      <div class="summary-row"><span class="k">婚姻狀況</span><span class="v">${backerA.marital||'—'}</span></div>
+      <div class="summary-row"><span class="k">子女</span><span class="v">${backerA.hasChildren==='有' ? backerA.children.length+' 位' : (backerA.hasChildren||'—')}</span></div>
+      <div class="summary-row"><span class="k">需撫養父母</span><span class="v">${backerA.supportParents||'—'}</span></div>
+    </div>
+    <div class="summary-block">
+      <h3>錢都去哪了 ／ 你的起點</h3>
+      <div class="summary-row"><span class="k">年收入</span><span class="v">${money(incomeTotal)}</span></div>
+      <div class="summary-row"><span class="k">年支出</span><span class="v">${money(expenseTotal)}</span></div>
+      <div class="summary-row"><span class="k">總資產</span><span class="v">${money(assetTotal)}</span></div>
+      <div class="summary-row"><span class="k">總負債</span><span class="v">${money(liabilityTotal)}</span></div>
+      <div class="summary-row"><span class="k">淨值</span><span class="v">${money(assetTotal-liabilityTotal)}</span></div>
+    </div>
+    <div class="summary-block">
+      <h3>財富願景</h3>
+      <div class="summary-row"><span class="k">選擇的目標</span><span class="v">${visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g).join('、')||'—'}</span></div>
+    </div>
+  `;
+}
+
+/* ---------------- 讀取動畫 → 報告 ---------------- */
+const LOADING_MESSAGES = ["整理基本資料中","描繪家庭關係圖","計算現金流向","盤點資產與負債","分析財務個性","對齊財富願景","繪製地圖最後一筆線條"];
+
+/* ---------------- 客戶資料：真正存進雲端資料庫（Supabase） ----------------
+   資料分兩層：
+   - client_records：客戶本身（姓名／狀態／筆記），一位客戶一列，不會重複新增
+   - client_reports：每一次填答的完整快照，一位客戶可以有很多列，
+     「查看報告」讀某一筆、「追蹤更新」帶入最新一筆但送出時永遠是新增一筆
+------------------------------------------------------------------------- */
+let isViewingSavedRecord = false;  // true＝純檢視某一份舊報告，不可編輯、不會存檔
+let currentSessionRecordId = null; // 目前檢視中的 report id（client_reports.id）
+let trackingClientId = null;       // 追蹤更新模式下，這是哪一位客戶（client_records.id）
+
+const PLAN_LIMITS = { free: 20, pro: 100, master: null };
+
+async function checkClientLimitBeforeSave(){
+  // 純檢視舊報告、或針對既有客戶做追蹤更新，都不算新增一位客戶，不用檢查容量
+  if(isViewingSavedRecord || trackingClientId) return true;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session) return true;
+  const effective = await fetchEffectivePlan();
+  const limit = PLAN_LIMITS[effective.plan];
+  if(!limit) return true; // 不限
+  const { count } = await supabaseClient
+    .from('client_records')
+    .select('id', { count: 'exact', head: true })
+    .eq('advisor_id', session.user.id)
+    .is('deleted_at', null);
+  return (count||0) < limit;
+}
+
+async function handleGenerateReport(){
+  const canSave = await checkClientLimitBeforeSave();
+  if(!canSave){
+    alert('這個帳號的客戶資料已達目前方案的容量上限，這筆問卷不會被存進「客戶資料」清單，但報告仍然可以正常查看與列印／存成PDF。想繼續保留更多客戶紀錄，需要升級方案。');
+  } else {
+    await saveClientRecord();
+  }
+  window.print();
+}
+
+async function saveClientRecord(){
+  if(isViewingSavedRecord) return; // 純檢視舊報告，不寫入
+  try{
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session) return; // 沒登入的狀態不會存檔
+    const stateSnapshot = {
+      basicA, backerA, riskA, decisionA, moneyA, eventsA, visionA,
+      incomeGroups, expenseGroups, assetGroups, liabilityGroups,
+      investCostBasis, investHoldYears
+    };
+
+    let clientId = trackingClientId;
+    if(!clientId){
+      // 全新客戶：先建立 client_records 這一列，之後同一個 session 都用這個 id，不會重複新增
+      const { data, error } = await supabaseClient
+        .from('client_records')
+        .insert({ advisor_id: session.user.id, client_name: '' })
+        .select('id')
+        .single();
+      if(error){ console.error('新增客戶紀錄失敗', error); return; }
+      clientId = data.id;
+      trackingClientId = clientId;
+    }
+
+    // 不論全新客戶或追蹤更新，這裡永遠是「新增一筆報告」，不會覆蓋舊資料
+    const { data: reportRow, error: reportError } = await supabaseClient
+      .from('client_reports')
+      .insert({ client_id: clientId, advisor_id: session.user.id, state: stateSnapshot })
+      .select('id')
+      .single();
+    if(reportError){ console.error('新增報告紀錄失敗', reportError); return; }
+    currentSessionRecordId = reportRow.id;
+  }catch(e){ console.error('儲存客戶紀錄失敗', e); }
+}
+
+function replaceArrayInPlace(target, source){
+  target.length = 0;
+  (source||[]).forEach(item=>target.push(item));
+}
+
+function applyStateToForm(s){
+  if(!s) return;
+  Object.assign(basicA, s.basicA);
+  Object.assign(backerA, s.backerA);
+  Object.assign(riskA, s.riskA);
+  Object.assign(decisionA, s.decisionA);
+  Object.assign(moneyA, s.moneyA);
+  Object.assign(eventsA, s.eventsA);
+  Object.assign(visionA, s.visionA);
+  investCostBasis = s.investCostBasis || 0;
+  investHoldYears = s.investHoldYears || 0;
+  replaceArrayInPlace(incomeGroups, s.incomeGroups);
+  replaceArrayInPlace(expenseGroups, s.expenseGroups);
+  replaceArrayInPlace(assetGroups, s.assetGroups);
+  replaceArrayInPlace(liabilityGroups, s.liabilityGroups);
+}
+
+/* 網址帶 ?reportId=  → 純檢視某一份已存的報告（唯讀，直接跳到報告畫面）
+   網址帶 ?trackClientId= → 追蹤更新：帶入該客戶最新一份報告，從問卷第一題開始、可編輯，
+                             送出後會新增一筆報告，不會動到舊的 */
+async function tryLoadRecordFromQuery(){
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('reportId');
+  const trackClientId = params.get('trackClientId');
+
+  if(reportId){
+    try{
+      const { data: report, error } = await supabaseClient
+        .from('client_reports')
+        .select('id, client_id, state')
+        .eq('id', reportId)
+        .single();
+      if(error || !report) return false;
+      const { data: client } = await supabaseClient
+        .from('client_records')
+        .select('client_name')
+        .eq('id', report.client_id)
+        .single();
+      applyStateToForm(report.state);
+      loadedClientName = client ? (client.client_name || '') : '';
+      isViewingSavedRecord = true;
+      currentSessionRecordId = report.id;
+      return { mode: 'view' };
+    }catch(e){ console.error('讀取報告失敗', e); return false; }
+  }
+
+  if(trackClientId){
+    try{
+      const effective = await fetchEffectivePlan();
+      if(effective.plan === 'free'){
+        alert('追蹤更新是 Pro 以上方案才能使用的功能，升級之後就能使用囉。');
+        return false;
+      }
+      const { data: latestReport, error } = await supabaseClient
+        .from('client_reports')
+        .select('state')
+        .eq('client_id', trackClientId)
+        .is('deleted_at', null)
+        .order('saved_at', { ascending:false })
+        .limit(1)
+        .single();
+      if(error || !latestReport) return false;
+      const { data: client } = await supabaseClient
+        .from('client_records')
+        .select('client_name')
+        .eq('id', trackClientId)
+        .single();
+      applyStateToForm(latestReport.state);
+      loadedClientName = client ? (client.client_name || '') : '';
+      isViewingSavedRecord = false;
+      trackingClientId = trackClientId;
+      return { mode: 'track' };
+    }catch(e){ console.error('讀取追蹤更新資料失敗', e); return false; }
+  }
+
+  return false;
+}
+
+function runLoadingThenReport(){
+  showScreen('screen-loading');
+  document.getElementById('screen-loading').classList.add('active');
+  const fill = document.getElementById('loadingBarFill');
+  const pct = document.getElementById('loadingPct');
+  const msg = document.getElementById('loadingMsg');
+  const TOTAL_MS = 20000; // 故意拉長到20秒，讓使用者感受到「有在認真計算」
+  const startTime = Date.now();
+  msg.textContent = LOADING_MESSAGES[0];
+
+  const timer = setInterval(()=>{
+    const elapsed = Date.now() - startTime;
+    let p = Math.min(100, (elapsed/TOTAL_MS)*100);
+    if(p >= 100){
+      p = 100;
+      clearInterval(timer);
+      setTimeout(()=>{
+        document.getElementById('screen-loading').classList.remove('active');
+        renderReport();
+        showScreen('screen-report');
+      }, 400);
+    }
+    fill.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+    const msgIdx = Math.min(LOADING_MESSAGES.length-1, Math.floor(p/100*LOADING_MESSAGES.length));
+    msg.textContent = LOADING_MESSAGES[msgIdx];
+  }, 150);
+}
+
+function buildCashflowBreakdownHTML(uid, opts){
+  opts = opts || {};
+  const hideRatios = !!opts.hideRatios;
+  const ratioBlock = hideRatios ? '' : `
+        <div class="ratio-wrap">
+          <div class="ratio-card">
+            <div class="ratio-row"><div class="ratio-name">名目儲蓄率<small>年度結餘 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioSavings-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">理財收入比<small>理財(被動)收入 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioFinIncome-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">必要支出比<small>必要支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioNecessary-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">浮動支出比<small>浮動支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioFlexible-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">保費支出比<small>保費支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioInsurance-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">貸款壓力比<small>貸款支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioLoan-${uid}">0%</div></div>
+          </div>
+        </div>`;
+  return `
+    <div class="report-section">
+      <h3>收支總結</h3>
+      <div class="breakdown-grid${hideRatios?' no-ratio':''}">
+        <div>
+          <table class="bd-table">
+            <thead><tr><th>收入項目</th><th style="text-align:right">年度合計</th></tr></thead>
+            <tbody>${incomeGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAnnualTotal(g))}</td></tr>`).join('')}</tbody>
+            <tbody><tr class="total"><td>總收入</td><td class="num" id="bdIncomeTotal-${uid}">$0</td></tr></tbody>
+          </table>
+          <table class="bd-table" style="margin-top:16px;">
+            <thead><tr><th>支出項目</th><th style="text-align:right">年度合計</th></tr></thead>
+            <tbody>${expenseGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAnnualTotal(g))}</td></tr>`).join('')}</tbody>
+            <tbody>
+              <tr class="total"><td>總支出</td><td class="num" id="bdExpenseTotal-${uid}">$0</td></tr>
+              <tr class="net"><td>年度現金流結餘</td><td class="num" id="bdNet-${uid}">$0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="chart-card">
+          <h4>整體收支結構</h4>
+          <div class="chart-sub" id="cfChartSub-${uid}">占總收入的比例</div>
+          <div class="donut-wrap">
+            <svg viewBox="0 0 200 200" width="190" height="190">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
+              <g id="cfDonutSeg-${uid}" transform="rotate(-90 100 100)"></g>
+            </svg>
+            <div class="donut-center">
+              <div class="dc-value" id="cfDonutVal-${uid}">0%</div>
+              <div class="dc-label" id="cfDonutLabel-${uid}">年度儲蓄率</div>
+            </div>
+          </div>
+          <div class="legend" id="cfLegend-${uid}"></div>
+        </div>
+        ${ratioBlock}
+      </div>
+    </div>`;
+}
+
+function buildBalanceBreakdownHTML(uid, opts){
+  opts = opts || {};
+  const hideRatios = !!opts.hideRatios;
+  const ratioBlock = hideRatios ? '' : `
+        <div class="ratio-wrap">
+          <div class="ratio-card">
+            <div class="ratio-row"><div class="ratio-name">負債比<small>總負債 ÷ 總資產</small></div><div class="ratio-value" id="baRatioDebt-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">流動性比率<small>理財型資產 ÷ 總負債</small></div><div class="ratio-value" id="baRatioLiquidity-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">不動產佔比<small>不動產 ÷ 總資產</small></div><div class="ratio-value" id="baRatioRealestate-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">投資資產佔比<small>投資資產 ÷ 總資產</small></div><div class="ratio-value" id="baRatioInvest-${uid}">0%</div></div>
+          </div>
+        </div>`;
+  return `
+    <div class="report-section">
+      <h3>資產負債總結</h3>
+      <div class="breakdown-grid${hideRatios?' no-ratio':''}">
+        <div>
+          <table class="bd-table">
+            <thead><tr><th>資產項目</th><th style="text-align:right">金額</th></tr></thead>
+            <tbody>${assetGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAmountTotal(g))}</td></tr>`).join('')}</tbody>
+            <tbody><tr class="total"><td>總資產</td><td class="num" id="baAssetTotal-${uid}">$0</td></tr></tbody>
+          </table>
+          <table class="bd-table" style="margin-top:16px;">
+            <thead><tr><th>負債項目</th><th style="text-align:right">金額</th></tr></thead>
+            <tbody>${liabilityGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAmountTotal(g))}</td></tr>`).join('')}</tbody>
+            <tbody>
+              <tr class="total"><td>總負債</td><td class="num" id="baLiabilityTotal-${uid}">$0</td></tr>
+              <tr class="net"><td>淨值</td><td class="num" id="baNet-${uid}">$0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="chart-card">
+          <h4>資產配置結構</h4>
+          <div class="chart-sub">占總資產的比例</div>
+          <div class="donut-wrap">
+            <svg viewBox="0 0 200 200" width="190" height="190">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
+              <g id="baDonutSeg-${uid}" transform="rotate(-90 100 100)"></g>
+            </svg>
+            <div class="donut-center">
+              <div class="dc-value" id="baDonutVal-${uid}">$0</div>
+              <div class="dc-label">淨值</div>
+            </div>
+          </div>
+          <div class="legend" id="baLegend-${uid}"></div>
+        </div>
+        ${ratioBlock}
+      </div>
+    </div>`;
+}
+
+const CF_DONUT_R = 80, CF_DONUT_C = 2*Math.PI*80;
+function fillCashflowBreakdown(uid){
+  const totalIncome = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const necessary = groupAnnualTotal(expenseGroups.find(g=>g.key==="necessary"));
+  const flexible = groupAnnualTotal(expenseGroups.find(g=>g.key==="flexible"));
+  const insurance = groupAnnualTotal(expenseGroups.find(g=>g.key==="insurance"));
+  const dependent = groupAnnualTotal(expenseGroups.find(g=>g.key==="dependent"));
+  const loan = groupAnnualTotal(expenseGroups.find(g=>g.key==="loan"));
+  const totalExpense = necessary+flexible+insurance+dependent+loan;
+  const net = totalIncome - totalExpense;
+  const savingsRate = totalIncome>0 ? net/totalIncome : 0;
+  const passive = groupAnnualTotal(incomeGroups.find(g=>g.key==="passive"));
+  const finIncomeRatio = totalIncome>0 ? passive/totalIncome : 0;
+
+  const el = id => document.getElementById(id+'-'+uid);
+  const setText = (id, val) => { const n = el(id); if(n) n.textContent = val; };
+  setText('bdIncomeTotal', money(totalIncome));
+  setText('bdExpenseTotal', money(totalExpense));
+  const netEl = el('bdNet'); if(netEl){ netEl.textContent = money(net); netEl.style.color = net>=0?'var(--positive)':'var(--negative)'; }
+  setText('cfRatioSavings', pctStr(savingsRate));
+  setText('cfRatioFinIncome', pctStr(finIncomeRatio));
+  setText('cfRatioNecessary', pctStr(totalIncome>0?necessary/totalIncome:0));
+  setText('cfRatioFlexible', pctStr(totalIncome>0?flexible/totalIncome:0));
+  setText('cfRatioInsurance', pctStr(totalIncome>0?insurance/totalIncome:0));
+  setText('cfRatioLoan', pctStr(totalIncome>0?loan/totalIncome:0));
+
+  const segWrap = el('cfDonutSeg'), legend = el('cfLegend'), dv = el('cfDonutVal'), dl = el('cfDonutLabel'), sub = el('cfChartSub');
+  segWrap.innerHTML = ''; legend.innerHTML = '';
+  if(totalIncome<=0){ dv.textContent='0%'; dl.textContent='請先輸入收入'; return; }
+  const cats = [
+    {k:necessary,label:"必要支出",color:"#1F5C73"}, {k:flexible,label:"浮動支出",color:"#2E7391"},
+    {k:insurance,label:"保費支出",color:"#5FA8C7"}, {k:dependent,label:"撫養支出",color:"#9FCBDB"},
+    {k:loan,label:"貸款支出",color:"#C97B3D"}, {k:Math.max(net,0),label:"年度結餘（儲蓄）",color:"#2E7D5B"}
+  ];
+  const base = net>=0 ? totalIncome : totalExpense;
+  sub.textContent = net>=0 ? "占總收入的比例" : "占總支出的比例（收支不足）";
+  let cum=0;
+  cats.forEach(c=>{
+    if(c.k<=0) return;
+    const frac = c.k/base, len = frac*CF_DONUT_C;
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx","100"); circle.setAttribute("cy","100"); circle.setAttribute("r",CF_DONUT_R);
+    circle.setAttribute("fill","none"); circle.setAttribute("stroke",c.color); circle.setAttribute("stroke-width","30");
+    circle.setAttribute("stroke-dasharray", `${len} ${CF_DONUT_C-len}`);
+    circle.setAttribute("stroke-dashoffset", `${-cum}`);
+    segWrap.appendChild(circle);
+    const row = document.createElement("div"); row.className="legend-row";
+    row.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span><span class="legend-label">${c.label}</span><span class="legend-pct">${pctStr(frac)}</span><span class="legend-amt">${money(c.k)}</span>`;
+    legend.appendChild(row);
+    cum += len;
+  });
+  dv.textContent = pctStr(net>=0?savingsRate:net/totalIncome);
+  dv.className = "dc-value"+(net<0?" negative":"");
+  dl.textContent = net>=0 ? "年度儲蓄率" : "收支缺口";
+}
+
+function fillBalanceBreakdown(uid){
+  const assetTotal = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const netWorth = assetTotal - liabilityTotal;
+  const liquid = groupAmountTotal(assetGroups.find(g=>g.key==="liquid"));
+  const invest = groupAmountTotal(assetGroups.find(g=>g.key==="invest"));
+  const realestate = groupAmountTotal(assetGroups.find(g=>g.key==="realestate"));
+  const other = groupAmountTotal(assetGroups.find(g=>g.key==="other"));
+
+  const el = id => document.getElementById(id+'-'+uid);
+  const setText = (id, val) => { const n = el(id); if(n) n.textContent = val; };
+  setText('baAssetTotal', money(assetTotal));
+  setText('baLiabilityTotal', money(liabilityTotal));
+  const netEl = el('baNet'); if(netEl){ netEl.textContent = money(netWorth); netEl.style.color = netWorth>=0?'var(--positive)':'var(--negative)'; }
+  setText('baRatioDebt', pctStr(assetTotal>0?liabilityTotal/assetTotal:0));
+  setText('baRatioLiquidity', liabilityTotal>0 ? pctStr(liquid/liabilityTotal) : '—');
+  setText('baRatioRealestate', pctStr(assetTotal>0?realestate/assetTotal:0));
+  setText('baRatioInvest', pctStr(assetTotal>0?invest/assetTotal:0));
+
+  const segWrap = el('baDonutSeg'), legend = el('baLegend'), dv = el('baDonutVal');
+  segWrap.innerHTML=''; legend.innerHTML='';
+  if(assetTotal<=0){ dv.textContent='$0'; return; }
+  const cats = [
+    {k:liquid,label:"理財型資產",color:"#9C7A3C"}, {k:invest,label:"投資資產",color:"#2E7391"},
+    {k:realestate,label:"不動產",color:"#1F5C73"}, {k:other,label:"其他資產",color:"#5FA8C7"}
+  ];
+  let cum=0;
+  cats.forEach(c=>{
+    if(c.k<=0) return;
+    const frac = c.k/assetTotal, len = frac*CF_DONUT_C;
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx","100"); circle.setAttribute("cy","100"); circle.setAttribute("r",CF_DONUT_R);
+    circle.setAttribute("fill","none"); circle.setAttribute("stroke",c.color); circle.setAttribute("stroke-width","30");
+    circle.setAttribute("stroke-dasharray", `${len} ${CF_DONUT_C-len}`);
+    circle.setAttribute("stroke-dashoffset", `${-cum}`);
+    segWrap.appendChild(circle);
+    const row = document.createElement("div"); row.className="legend-row";
+    row.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span><span class="legend-label">${c.label}</span><span class="legend-pct">${pctStr(frac)}</span><span class="legend-amt">${money(c.k)}</span>`;
+    legend.appendChild(row);
+    cum += len;
+  });
+  dv.textContent = money(netWorth);
+  dv.className = "dc-value"+(netWorth<0?" negative":"");
+}
+
+function pctStr(n){ if(!isFinite(n)) return "0%"; return (n*100).toFixed(1)+"%"; }
+
+function formatTimestamp(d){
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+/* ---------------- 報告封面 ---------------- */
+function buildReportCoverHTML(){
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+  const namePart = loadedClientName ? loadedClientName+' ' : '';
+  const advisorLine = currentAdvisorName ? `顧問：${currentAdvisorName}` : '';
+  return `
+    <div class="report-cover">
+      <svg class="cover-bg-lines" viewBox="0 0 400 560" preserveAspectRatio="none">
+        <polyline points="0,420 60,380 110,400 170,320 230,340 400,220" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+        <circle cx="340" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
+        <circle cx="40" cy="480" r="46" fill="none" stroke="rgba(243,201,138,0.16)" stroke-width="1.5"/>
+      </svg>
+      <div class="cover-content">
+        <div class="cover-eyebrow">Vicauria · Financial Health Check</div>
+        <h1 class="cover-title">${namePart}財務健檢報告書</h1>
+        <div class="cover-brand-marks">
+          <span>覺醒</span><span class="dot"></span><span>金錢</span><span class="dot"></span><span>故事</span>
+        </div>
+        <div class="cover-meta">
+          ${advisorLine ? `<div>${advisorLine}</div>` : ''}
+          <div>產出日期：${dateStr}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildReportPages(uid, opts){
+  opts = opts || {};
+  const includeProfile = !!opts.includeProfile;
+  const hideRatios = !!opts.hideRatios;
+
+  const rType = riskType();
+  const riskSection = rType ? `
+    <div class="report-section">
+      <h3>財務個性</h3>
+      <div class="report-row"><span class="k">你的類型</span><span class="v">${rType.emoji} ${rType.name}</span></div>
+      <div class="risk-type-body">${rType.bodyHTML}</div>
+    </div>` : `<div class="report-section"><h3>財務個性</h3><p style="color:var(--ink-soft);font-size:13px;">尚未完成測驗。</p></div>`;
+
+  const visionSection = `
+    <div class="report-section">
+      <h3>財富願景・達成率</h3>
+      ${buildVisionGoalListHTML()}
+      <div class="report-note">達成率為粗估：以目前淨值加上距目標年數的預估年結餘累積，對比目標金額計算；綠色代表已達標、橘色代表接近、紅色代表落差較大。實際規劃仍需顧問依市場狀況細算。</div>
+    </div>`;
+
+  const financialAnalysisSection = buildFinancialAnalysisHTML();
+  const investGrowthSection = buildInvestGrowthSectionHTML();
+  const investRealityCheckSection = buildInvestRealityCheckHTML();
+
+  const pages = [];
+  pages.push(buildReportCoverHTML());
+  if(includeProfile){
+    pages.push(`<div class="report-section"><h3>你的財富畫像</h3><p style="color:var(--ink-soft);font-size:13.5px;line-height:1.9;">所有題目都完成了，這是根據你的回答整理出的財富現況。</p></div>` + renderSummaryProfileHTML());
+    pages.push(buildFullAnswerSummaryHTML());
+  }
+  pages.push(buildCashflowBreakdownHTML(uid, {hideRatios}));
+  pages.push(buildBalanceBreakdownHTML(uid, {hideRatios}));
+  pages.push(riskSection);
+  pages.push(visionSection);
+  if(investRealityCheckSection) pages.push(investRealityCheckSection);
+  pages.push(investGrowthSection);
+  pages.push(financialAnalysisSection);
+  return pages;
+}
+
+function renderReport(){
+  const ts = document.getElementById('reportTimestamp');
+  if(ts) ts.textContent = '填表日期：' + formatTimestamp(new Date());
+
+  const clientPages = buildReportPages('c', {includeProfile:false, hideRatios:false});
+  document.getElementById('reportClient').innerHTML =
+    clientPages.map(html=>`<div class="report-page">${html}</div>`).join('');
+  fillCashflowBreakdown('c'); fillBalanceBreakdown('c');
+
+  const advisorPages = buildReportPages('a', {includeProfile:true, hideRatios:false});
+  document.getElementById('reportAdvisor').innerHTML =
+    advisorPages.map(html=>`<div class="report-page">${html}</div>`).join('');
+  fillCashflowBreakdown('a'); fillBalanceBreakdown('a');
+
+  checkClientLimitBeforeSave().then(canSave=>{ if(canSave) saveClientRecord(); });
+}
+
+document.querySelectorAll('.report-toggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.report-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.report-view').forEach(v=>v.classList.remove('active'));
+    document.getElementById(btn.dataset.view === 'client' ? 'reportClient' : 'reportAdvisor').classList.add('active');
+  });
+});
+
+/* ---------------- 初始化：
+   ?reportId=       → 直接載入那份報告，跳到報告畫面（唯讀）
+   ?trackClientId=  → 帶入最新一份報告的答案，從問卷第一題開始（可編輯）
+   都沒有            → 全新問卷，走原本的同意畫面開始 ---------------- */
+let currentAdvisorName = '';
+(async function initFromQuery(){
+  try{
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(session){
+      currentAdvisorName = session.user.user_metadata?.display_name || session.user.email || '';
+    }
+  }catch(e){}
+  const loaded = await tryLoadRecordFromQuery();
+  if(loaded && loaded.mode === 'view'){
+    renderReport();
+    showScreen('screen-report');
+  } else if(loaded && loaded.mode === 'track'){
+    enterPage(0);
+  }
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Jess 財務顧問工作台</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16323F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vicauria">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F;
+    --teal-deep:#1F5C73;
+    --teal:#2E7391;
+    --teal-tint:#E6F0F2;
+    --teal-light-text:#BFE0EA;
+    --warm:#C97B3D;
+    --warm-deep:#A85F27;
+    --warm-tint:#FBEFE2;
+    --paper:#F5F7F6;
+    --card:#FFFFFF;
+    --ink:#182226;
+    --ink-soft:#5B6B70;
+    --positive:#2E7D5B;
+    --negative:#B3492F;
+    --line:rgba(245,247,246,0.10);
+    --text-dim:rgba(245,247,246,0.62);
+    --plum:#4A3B5C;
+    --plum-deep:#372A46;
+    --plum-tint:#EFEAF2;
+    --line-card:rgba(22,50,63,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:"Noto Sans TC", sans-serif;
+    background:var(--paper);
+    overflow:hidden;
+  }
+
+  .shell{display:flex; height:100vh; width:100vw;}
+  .mobile-topbar{display:none;}
+  .drawer-overlay{display:none;}
+
+  /* ---------- Sidebar ---------- */
+  aside.sidebar{
+    width:260px; flex-shrink:0;
+    background:linear-gradient(180deg, var(--navy) 0%, var(--navy) 100%);
+    color:var(--paper);
+    display:flex; flex-direction:column;
+    border-right:1px solid var(--line);
+    transition:width .2s ease;
+  }
+  aside.sidebar.pinned-collapsed{width:68px;}
+
+  .pin-toggle-btn{
+    position:absolute; top:16px; right:12px;
+    background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.25); color:#fff;
+    width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:11px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pin-toggle-btn:hover{background:rgba(255,255,255,0.24); border-color:rgba(255,255,255,0.4);}
+
+  /* ---------- 收合狀態：只留圖示，畫面空間讓給主內容 ---------- */
+  .collapsed-icon{display:none;}
+  aside.sidebar.pinned-collapsed .brand{display:flex; flex-direction:column; align-items:center; padding:16px 6px;}
+  aside.sidebar.pinned-collapsed .brand-home-link,
+  aside.sidebar.pinned-collapsed .eyebrow,
+  aside.sidebar.pinned-collapsed h1,
+  aside.sidebar.pinned-collapsed .who{display:none;}
+  aside.sidebar.pinned-collapsed .pin-toggle-btn{position:static;}
+
+  aside.sidebar.pinned-collapsed .nav-group-header{display:none;}
+  aside.sidebar.pinned-collapsed .nav-group-body{max-height:none !important; display:block !important;}
+
+  aside.sidebar.pinned-collapsed .mod-btn{padding:11px 0; text-align:center;}
+  aside.sidebar.pinned-collapsed .mod-btn .name,
+  aside.sidebar.pinned-collapsed .mod-btn .desc{display:none;}
+  aside.sidebar.pinned-collapsed .mod-btn .collapsed-icon{display:block; font-size:19px; line-height:1;}
+
+  aside.sidebar.pinned-collapsed .user-info{display:none;}
+  aside.sidebar.pinned-collapsed .user-box{justify-content:center; padding:14px 6px;}
+  aside.sidebar.pinned-collapsed .user-menu{left:8px; transform:none;}
+  .brand{
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .brand-home-link{
+    display:inline-block; font-size:10px; color:rgba(245,247,246,0.5);
+    text-decoration:none; margin-bottom:8px; transition:color .15s ease;
+  }
+  .brand-home-link:hover{color:var(--teal-light-text);}
+  .brand .eyebrow{
+    font-family:"Roboto Mono", monospace;
+    font-size:9px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--teal-light-text); margin-bottom:6px;
+  }
+  .brand h1{
+    font-family:"Noto Serif TC", serif;
+    font-weight:800; font-size:15px; margin:0 0 4px; line-height:1.3;
+    letter-spacing:.01em;
+  }
+  .brand .who{font-size:10.5px; color:var(--text-dim);}
+
+  nav.modules{flex:1; overflow-y:auto; padding:16px 12px;}
+  .nav-group{margin-bottom:6px;}
+  .nav-group-header{
+    width:100%; display:flex; flex-direction:row; align-items:center; justify-content:space-between;
+    appearance:none; border:none; background:none; cursor:pointer;
+    font-family:"Roboto Mono", monospace; font-size:10px; letter-spacing:.14em;
+    color:rgba(245,247,246,0.5); text-transform:uppercase;
+    padding:10px 10px 8px;
+  }
+  .nav-group-header:hover{color:rgba(245,247,246,0.8);}
+  .nav-group-header .chevron{font-size:10px; transition:transform .18s ease; color:rgba(245,247,246,0.4);}
+  .nav-group.collapsed .nav-group-header .chevron{transform:rotate(-90deg);}
+  .nav-group-body{overflow:hidden; max-height:600px; transition:max-height .22s ease;}
+  .nav-group.collapsed .nav-group-body{max-height:0;}
+  nav.modules button{
+    width:100%; text-align:left; appearance:none; border:none; background:none;
+    color:var(--text-dim); cursor:pointer;
+    padding:12px 12px; border-radius:8px; margin-bottom:4px;
+    display:flex; flex-direction:column; gap:2px;
+    transition:background .15s ease, color .15s ease;
+    border-left:2px solid transparent;
+  }
+  nav.modules button .name{
+    font-size:14px; font-weight:600; color:inherit;
+    display:flex; align-items:center; gap:9px;
+  }
+  nav.modules button .name .num{
+    font-family:"Roboto Mono", monospace; font-size:10.5px; color:var(--teal);
+    width:16px; flex-shrink:0;
+  }
+  nav.modules button .desc{
+    font-size:11px; color:rgba(245,247,246,0.4);
+    padding-left:25px; line-height:1.5;
+  }
+  nav.modules button:hover{background:rgba(245,247,246,0.05); color:var(--paper);}
+  nav.modules button.active{
+    background:rgba(46,115,145,0.18);
+    color:var(--paper);
+    border-left-color:var(--teal);
+  }
+  nav.modules button.active .desc{color:rgba(245,247,246,0.6);}
+
+  .user-box{
+    display:flex; align-items:center; gap:10px;
+    padding:14px 22px; border-top:1px solid var(--line);
+    position:relative;
+  }
+
+  /* ---------- 頭像選單（登出／帳號設定／字體大小） ---------- */
+  .user-menu{
+    display:none; position:absolute; bottom:calc(100% + 8px); left:14px; width:220px;
+    background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(20,50,60,0.2);
+    border:1px solid var(--line); padding:8px; z-index:250;
+  }
+  .user-menu.show{display:block;}
+  /* ---------- 升級方案（置中彈窗，非新分頁） ---------- */
+  .upgrade-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,35,44,0.55);
+    z-index:300; align-items:center; justify-content:center; padding:24px;
+  }
+  .upgrade-overlay.show{display:flex;}
+  .upgrade-box{
+    background:#fff; border-radius:20px; padding:32px 36px;
+    width:min(960px, 100%); max-height:88vh; overflow-y:auto;
+    box-shadow:0 24px 70px rgba(20,50,60,0.3);
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .upgrade-header{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;
+  }
+  .upgrade-header h4{
+    font-family:"Noto Serif TC", serif; font-size:19px; font-weight:700; color:var(--navy); margin:0;
+  }
+  .upgrade-close{
+    appearance:none; border:none; background:var(--paper); color:var(--ink-soft);
+    width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:15px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .upgrade-close:hover{background:var(--teal-tint); color:var(--teal-deep);}
+  .upgrade-plans{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:26px; align-items:stretch;}
+  .upgrade-card{
+    background:#fff; border:1px solid var(--line-card); border-radius:16px;
+    padding:20px 18px; display:flex; flex-direction:column; gap:12px;
+  }
+  .upgrade-card.master{border-color:var(--plum); background:var(--plum-tint);}
+  .upgrade-card .u-title-row{display:flex; align-items:center; gap:8px;}
+  .upgrade-card .u-name{font-family:"Noto Serif TC", serif; font-weight:700; font-size:17px; color:var(--navy);}
+  .upgrade-card .u-tag{
+    font-family:"Roboto Mono", monospace; font-size:10px; letter-spacing:.06em;
+    color:var(--plum); background:#fff; padding:2px 9px; border-radius:20px; width:fit-content;
+  }
+  .upgrade-card .u-pitch{font-size:12.5px; color:var(--ink-soft); line-height:1.7; min-height:38px;}
+  .upgrade-card .u-price{font-family:"Roboto Mono", monospace; font-size:22px; font-weight:600; color:var(--navy);}
+  .upgrade-card.master .u-price{color:var(--plum-deep);}
+  .upgrade-card .u-price span{font-family:"Noto Sans TC", sans-serif; font-size:12px; font-weight:400; color:var(--ink-soft);}
+  .upgrade-card ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; flex:1;}
+  .upgrade-card li{font-size:12.5px; color:var(--ink); display:flex; gap:7px; line-height:1.6;}
+  .upgrade-card li::before{content:"·"; font-weight:700; color:var(--teal); flex-shrink:0;}
+  .upgrade-card.master li::before{color:var(--plum);}
+  .upgrade-btn{
+    margin-top:auto; width:100%; padding:11px; border-radius:20px; border:1.5px solid var(--navy);
+    background:none; color:var(--navy); font-size:13px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .upgrade-btn:hover{background:var(--navy); color:#fff;}
+  .upgrade-btn.current{border-color:var(--line-card); color:var(--ink-soft); cursor:default;}
+  .upgrade-btn.current:hover{background:none; color:var(--ink-soft);}
+  .upgrade-btn.primary{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .upgrade-btn.primary:hover{background:var(--teal-deep); border-color:var(--teal-deep);}
+  .upgrade-btn.master-btn{background:var(--plum); border-color:var(--plum); color:#fff;}
+  .upgrade-btn.master-btn:hover{background:var(--plum-deep); border-color:var(--plum-deep);}
+  .upgrade-ledger{width:100%; border-collapse:collapse; font-size:13px; margin-bottom:18px;}
+  .upgrade-ledger th, .upgrade-ledger td{padding:11px 10px; text-align:left; border-bottom:1px solid var(--line-card);}
+  .upgrade-ledger thead th{font-family:"Roboto Mono", monospace; font-size:11px; color:var(--ink-soft); font-weight:600;}
+  .upgrade-ledger thead th:not(:first-child){text-align:center;}
+  .upgrade-ledger tbody th{font-weight:500; color:var(--ink); width:34%;}
+  .upgrade-ledger td{text-align:center; color:var(--ink-soft); font-family:"Roboto Mono", monospace; font-size:12px;}
+  .upgrade-ledger td.yes{color:var(--positive); font-family:"Noto Sans TC", sans-serif; font-weight:700;}
+  .upgrade-ledger td.no{color:rgba(24,34,38,0.28); font-family:"Noto Sans TC", sans-serif;}
+  .upgrade-ledger tbody tr:last-child th, .upgrade-ledger tbody tr:last-child td{border-bottom:none;}
+  .upgrade-note{font-size:11.5px; color:var(--ink-soft); line-height:1.8; margin:0;}
+  @media (max-width:720px){
+    .upgrade-plans{grid-template-columns:1fr;}
+    .upgrade-box{padding:24px 20px;}
+  }
+
+  .jk-toast{
+    position:fixed; left:50%; bottom:28px; transform:translate(-50%, 20px);
+    background:var(--navy); color:#fff; font-size:13px; padding:12px 20px;
+    border-radius:10px; box-shadow:0 10px 30px rgba(22,50,63,0.3);
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    z-index:400; max-width:calc(100vw - 40px); text-align:center;
+  }
+  .jk-toast.show{opacity:1; transform:translate(-50%, 0);}
+  .user-menu-item{
+    width:100%; display:flex; align-items:center; gap:9px; text-align:left;
+    padding:10px 12px; border:none; background:none; border-radius:8px;
+    font-size:13px; font-weight:600; color:var(--navy); cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .user-menu-item:hover{background:var(--paper);}
+  .user-menu-item.danger{color:#B3492F;}
+  .user-menu-item .icon{font-size:13px; width:16px; text-align:center;}
+  .trial-badge{
+    background:var(--teal-tint); color:var(--teal-deep); font-size:11.5px; font-weight:700;
+    padding:8px 12px; border-radius:8px; margin-bottom:8px; text-align:center; line-height:1.6;
+  }
+
+  .user-menu-fontsize{padding:8px 12px 10px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:4px 0;}
+  .user-menu-label{font-size:11px; font-weight:700; color:var(--navy); margin-bottom:8px;}
+  .font-size-pills{display:flex; gap:6px;}
+  .font-size-pill{
+    flex:1; padding:7px 0; border:1.5px solid var(--navy); border-radius:8px; background:#fff;
+    font-size:12px; font-weight:700; color:var(--navy); cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .font-size-pill:hover{border-color:var(--teal); color:var(--teal);}
+  .font-size-pill.active{background:var(--navy); border-color:var(--navy); color:#fff;}
+
+  .theme-swatch-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .theme-swatch{
+    position:relative; height:34px; border-radius:8px; cursor:pointer;
+    border:2px solid transparent; overflow:hidden;
+  }
+  .theme-swatch.active{border-color:var(--navy);}
+  .theme-swatch.active::after{
+    content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:13px; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,0.4);
+  }
+  .theme-swatch .half{position:absolute; top:0; bottom:0; width:50%;}
+  .theme-swatch .half.l{left:0;} .theme-swatch .half.r{right:0;}
+  .theme-swatch-lock{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.45); color:#fff; font-size:11px;
+  }
+
+  /* ---------- 帳號設定彈窗 ---------- */
+  .settings-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,35,44,0.55);
+    z-index:300; align-items:center; justify-content:center; padding:20px;
+  }
+  .settings-overlay.show{display:flex;}
+  .settings-box{
+    background:#fff; border-radius:16px; padding:28px; max-width:400px; width:100%;
+    box-shadow:0 20px 60px rgba(20,50,60,0.3); color:var(--navy);
+    font-family:"Noto Sans TC", sans-serif; max-height:88vh; overflow-y:auto;
+  }
+  .settings-box h3{
+    font-family:"Noto Serif TC", serif; font-size:17px; color:var(--navy); margin-bottom:6px;
+  }
+  .settings-current-email{font-size:12px; color:rgba(24,34,38,0.6); margin-bottom:22px;}
+  .settings-error{
+    display:none; background:rgba(179,73,47,0.08); border:1px solid rgba(179,73,47,0.25);
+    color:#B3492F; font-size:12px; padding:9px 12px; border-radius:8px; margin-bottom:14px;
+  }
+  .settings-error.show{display:block;}
+  .settings-success{
+    display:none; background:rgba(46,125,91,0.08); border:1px solid rgba(46,125,91,0.25);
+    color:#2E7D5B; font-size:12px; padding:9px 12px; border-radius:8px; margin-bottom:14px;
+  }
+  .settings-success.show{display:block;}
+  .settings-field{margin-bottom:22px; padding-bottom:22px; border-bottom:1px solid var(--line);}
+  .settings-field:last-of-type{border-bottom:none; margin-bottom:8px; padding-bottom:0;}
+  .settings-field label{
+    display:block; font-size:12px; font-weight:700; color:var(--navy); margin-bottom:8px;
+  }
+  .settings-field input{
+    width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:13.5px; font-family:"Noto Sans TC", sans-serif; color:var(--navy);
+    background:var(--paper); box-sizing:border-box;
+  }
+  .settings-field input:focus{outline:none; border-color:var(--teal);}
+  .settings-btn{
+    width:100%; margin-top:10px; padding:11px; border:none; border-radius:20px;
+    background:var(--navy); color:#fff; font-size:13px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .settings-btn:hover{background:var(--teal);}
+  .settings-btn:disabled{opacity:.6; cursor:default;}
+  .settings-close-btn{
+    width:100%; padding:11px; border:1px solid var(--line); border-radius:20px;
+    background:none; color:rgba(24,34,38,0.6); font-size:13px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC", sans-serif;
+  }
+  .settings-close-btn:hover{border-color:var(--teal); color:var(--teal);}
+  .user-avatar{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-light-text) 100%);
+    color:var(--navy); font-weight:800; font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Noto Serif TC", serif;
+  }
+  .user-info{flex:1; min-width:0;}
+  .user-name{font-size:13px; font-weight:600; color:var(--paper); margin-bottom:2px;}
+  .user-plan-badge{
+    display:inline-block; font-family:"Roboto Mono", monospace; font-size:9.5px; font-weight:700;
+    letter-spacing:.06em; padding:2px 8px; border-radius:10px; text-transform:uppercase;
+  }
+  .user-plan-badge.free{background:rgba(245,247,246,0.12); color:var(--text-dim);}
+  .user-plan-badge.pro{background:rgba(46,115,145,0.28); color:var(--teal-light-text);}
+  .user-plan-badge.master{background:rgba(201,151,90,0.22); color:#E3C99A;}
+  .logout-btn{
+    appearance:none; border:none; background:none; padding:0;
+    font-size:11px; color:rgba(245,247,246,0.45); cursor:pointer;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+  .logout-btn:hover{color:var(--teal-light-text);}
+
+  .sidebar-footer{
+    padding:16px 22px 22px; border-top:1px solid var(--line);
+    font-size:11px; color:rgba(245,247,246,0.34); line-height:1.7;
+  }
+  .sidebar-footer .plus{color:var(--teal-light-text); font-weight:600;}
+
+  /* ---------- Main content ---------- */
+  main{flex:1; height:100vh; position:relative; background:var(--paper);}
+  iframe{
+    width:100%; height:100%; border:none; display:none;
+    position:absolute; top:0; left:0;
+  }
+  iframe.active{display:block;}
+
+  .loading{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:10px; color:#8B8168; font-family:"Roboto Mono", monospace;
+    font-size:12px; background:var(--paper); pointer-events:none; opacity:0; transition:opacity .15s; z-index:5;
+  }
+  .loading.show{opacity:1;}
+
+  @media (max-width:820px){
+    body{display:flex; flex-direction:column;}
+    .shell{height:auto; flex:1; min-height:0;}
+    .pin-toggle-btn{display:none;}
+    aside.sidebar.pinned-collapsed{width:100%;} /* 手機版不套用收合窄化，維持原本抽屜邏輯 */
+
+    /* ---------- 手機頂部窄列：漢堡按鈕 + 目前模組名稱 ---------- */
+    .mobile-topbar{
+      display:flex; align-items:center; gap:12px; flex-shrink:0;
+      background:var(--navy); color:var(--paper);
+      padding:12px 16px; padding-top:calc(12px + env(safe-area-inset-top));
+      border-bottom:1px solid var(--line);
+    }
+    .mobile-menu-btn{
+      appearance:none; border:none; background:none; color:var(--paper);
+      font-size:22px; line-height:1; cursor:pointer; padding:4px 6px;
+      flex-shrink:0;
+    }
+    .mobile-current-name{
+      font-family:"Noto Serif TC", serif; font-weight:700; font-size:14px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+
+    /* 桌機版側邊欄在手機上完全隱藏，改用抽屜疊層顯示 */
+    aside.sidebar{
+      position:fixed; inset:0; z-index:200; width:100%; height:100%;
+      flex-direction:column; transform:translateX(-100%); transition:transform .22s ease;
+      overflow-y:auto;
+    }
+    aside.sidebar.drawer-open{transform:translateX(0);}
+
+    .brand{flex-shrink:0; padding-top:calc(18px + env(safe-area-inset-top));}
+    nav.modules{display:block; flex:1; padding:16px 12px;}
+    nav.modules button{width:100%; white-space:normal; margin-bottom:4px; border-left:2px solid transparent; border-bottom:none;}
+    nav.modules button .desc{display:block;}
+    nav.modules button.active{border-left-color:var(--teal); border-bottom-color:transparent;}
+    .nav-group-body{max-height:2000px;} /* 手機抽屜是整頁捲動，不需要靠max-height限制高度 */
+    .nav-group.collapsed .nav-group-body{max-height:0;}
+    .user-box{flex-shrink:0;}
+
+    .drawer-overlay{
+      display:none; position:fixed; inset:0; background:rgba(15,35,44,0.5); z-index:190;
+    }
+    .drawer-overlay.show{display:block;}
+
+    main{height:auto; flex:1; min-height:0;}
+  }
+</style>
+</head>
+<body>
+<div class="jk-toast" id="jkToast"></div>
+
+<div class="mobile-topbar">
+  <button class="mobile-menu-btn" id="btnMobileMenu" aria-label="開啟選單">☰</button>
+  <div class="mobile-current-name" id="mobileCurrentName">首頁</div>
+</div>
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <a href="index.html" class="brand-home-link" title="離開工作台，回到官網">← 離開工作台</a>
+      <button class="pin-toggle-btn" id="pinToggleBtn" title="收合側邊欄">⟨⟨</button>
+      <div class="eyebrow">Financial Advisor Workspace</div>
+      <h1 id="brandHomeBtn" style="cursor:pointer;" title="回到工作台首頁">資產配置工作台</h1>
+      <div class="who">覺醒 × 金錢 × 故事</div>
+    </div>
+
+    <nav class="modules" id="nav">
+      <div class="nav-group" data-group="explore">
+        <button class="nav-group-header">
+          <span>客戶探索</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-blueprint">
+            <span class="collapsed-icon">🗺️</span>
+            <span class="name"><span class="num">◆</span>財富地圖</span>
+            <span class="desc">顧問式引導問卷／財富畫像報告</span>
+          </button>
+          <button class="mod-btn" data-target="frame-clientrecords">
+            <span class="collapsed-icon">🗂️</span>
+            <span class="name"><span class="num">◆</span>客戶資料</span>
+            <span class="desc">已填答的財富地圖紀錄</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="market">
+        <button class="nav-group-header">
+          <span>市場情報</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-marketnews">
+            <span class="collapsed-icon">📰</span>
+            <span class="name"><span class="num">◆</span>市場快訊</span>
+            <span class="desc">即時財經新聞／自動分類／標明出處</span>
+          </button>
+          <button class="mod-btn" data-target="frame-marketoverview">
+            <span class="collapsed-icon">📊</span>
+            <span class="name"><span class="num">◆</span>市場概況</span>
+            <span class="desc">即時匯率／全球指數／大盤走勢</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="tools">
+        <button class="nav-group-header">
+          <span>試算工具箱</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-simulation">
+            <span class="collapsed-icon">🎯</span>
+            <span class="name"><span class="num">01</span>沙盤推演必勝</span>
+            <span class="desc">退休／購屋／教育／遺贈／投資試算機</span>
+          </button>
+          <button class="mod-btn" data-target="frame-cashflow">
+            <span class="collapsed-icon">💧</span>
+            <span class="name"><span class="num">02</span>收支現金流</span>
+            <span class="desc">收入／支出／年度結餘／儲蓄率</span>
+          </button>
+          <button class="mod-btn" data-target="frame-balance">
+            <span class="collapsed-icon">⚖️</span>
+            <span class="name"><span class="num">03</span>資產負債表</span>
+            <span class="desc">資產／負債／淨值／負債比</span>
+          </button>
+          <button class="mod-btn" data-target="frame-loan">
+            <span class="collapsed-icon">🏦</span>
+            <span class="name"><span class="num">04</span>貸款試算室</span>
+            <span class="desc">車貸信貸／房貸／寬限期／利差</span>
+          </button>
+          <button class="mod-btn" data-target="frame-efficiency">
+            <span class="collapsed-icon">📈</span>
+            <span class="name"><span class="num">05</span>資金效率健檢</span>
+            <span class="desc">通膨與資金效率快篩</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="team">
+        <button class="nav-group-header">
+          <span>團隊</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-team">
+            <span class="collapsed-icon">👥</span>
+            <span class="name"><span class="num">◆</span>團隊</span>
+            <span class="desc">工作量監控／加入其他顧問的團隊</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-group" data-group="feedback">
+        <button class="nav-group-header">
+          <span>意見回饋</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-feedback">
+            <span class="collapsed-icon">📮</span>
+            <span class="name"><span class="num">◆</span>意見箱</span>
+            <span class="desc">功能異常回報／改進建議</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="user-box" id="userBox">
+      <div class="user-avatar" id="userAvatar" title="選單" style="cursor:pointer;">J</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">Jess</div>
+        <span class="user-plan-badge free" id="userPlanBadge">Free</span>
+      </div>
+
+      <div class="user-menu" id="userMenu">
+        <div class="trial-badge" id="trialBadge" style="display:none;"></div>
+        <button class="user-menu-item" id="menuAccountSettings">
+          <span class="icon">⚙️</span> 帳號設定
+        </button>
+        <button class="user-menu-item" id="menuUpgrade">
+          <span class="icon">⬆</span> 升級方案
+        </button>
+        <div class="user-menu-fontsize">
+          <div class="user-menu-label">字體大小</div>
+          <div class="font-size-pills" id="fontSizePills">
+            <button class="font-size-pill" data-size="small">小</button>
+            <button class="font-size-pill" data-size="medium">中</button>
+            <button class="font-size-pill" data-size="large">大</button>
+          </div>
+        </div>
+        <div class="user-menu-fontsize">
+          <div class="user-menu-label">主題色系</div>
+          <div class="theme-swatch-grid" id="themeSwatchGrid"></div>
+        </div>
+        <button class="user-menu-item danger" id="menuLogout">
+          <span class="icon">↩</span> 登出
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="loading show" id="loading">載入模組中…</div>
+    <iframe class="active" id="frame-home" src="modules/home.html" title="首頁"></iframe>
+    <iframe id="frame-cashflow" src="modules/cashflow.html" title="收支現金流"></iframe>
+    <iframe id="frame-blueprint" src="modules/blueprint.html" title="財富地圖"></iframe>
+    <iframe id="frame-clientrecords" src="modules/client-records.html" title="客戶資料"></iframe>
+    <iframe id="frame-balance" src="modules/balance.html" title="資產負債表"></iframe>
+    <iframe id="frame-loan" src="modules/loan.html" title="貸款試算室"></iframe>
+    <iframe id="frame-efficiency" src="modules/efficiency.html" title="資金效率健檢"></iframe>
+    <iframe id="frame-team" src="modules/team.html" title="團隊"></iframe>
+    <iframe id="frame-feedback" src="modules/feedback.html" title="意見箱"></iframe>
+    <iframe id="frame-marketnews" src="modules/market-news.html" title="市場快訊"></iframe>
+    <iframe id="frame-marketoverview" src="modules/market-overview.html" title="市場概況"></iframe>
+    <iframe id="frame-simulation" src="modules/simulation.html" title="沙盤推演必勝"></iframe>
+  </main>
+</div>
+
+<div class="upgrade-overlay" id="upgradeOverlay">
+  <div class="upgrade-box">
+    <div class="upgrade-header">
+      <h4>升級方案</h4>
+      <button class="upgrade-close" id="upgradeClose" title="關閉">✕</button>
+    </div>
+
+    <div class="upgrade-plans">
+      <div class="upgrade-card">
+        <div class="u-title-row"><div class="u-name">Free</div></div>
+        <div class="u-pitch">剛開始，先把工具用起來，感受一下。</div>
+        <div class="u-price">0<span> 元/月</span></div>
+        <ul>
+          <li>客戶資料最多 20 位</li>
+          <li>試算工具箱全部 5 大模組</li>
+          <li>財富地圖問卷（首次填答）</li>
+          <li>經典藍綠主題</li>
+        </ul>
+        <button class="upgrade-btn current" id="planBtnFree" disabled>目前方案</button>
+      </div>
+
+      <div class="upgrade-card">
+        <div class="u-title-row"><div class="u-name">Pro</div></div>
+        <div class="u-pitch">客戶量開始起來了，你需要的是效率，不是重複勞動。升級解鎖全面提升工作效率。</div>
+        <div class="u-price">590<span> 元/月</span></div>
+        <ul>
+          <li>客戶資料最多 100 位</li>
+          <li>財富地圖追蹤更新＋成長比對</li>
+          <li>3 套主題色系（酒紅／森林／石墨）</li>
+          <li>Free 的所有功能</li>
+        </ul>
+        <button class="upgrade-btn primary" id="planBtnPro" onclick="jkUpgradeRequest('Pro')">升級到 Pro</button>
+      </div>
+
+      <div class="upgrade-card master">
+        <div class="u-title-row"><div class="u-name">Master</div><div class="u-tag">限定</div></div>
+        <div class="u-pitch">你不只是顧問，你在帶團隊。升級解鎖全面提升管理效率。</div>
+        <div class="u-price">1690<span> 元/月</span></div>
+        <ul>
+          <li>客戶資料無上限</li>
+          <li>團隊工作量監控</li>
+          <li>2 套限定主題色系（墨紫／黑金）</li>
+          <li>Pro 的所有功能</li>
+        </ul>
+        <button class="upgrade-btn master-btn" id="planBtnMaster" onclick="jkUpgradeRequest('Master')">升級到 Master</button>
+      </div>
+    </div>
+
+    <table class="upgrade-ledger">
+      <thead><tr><th></th><th>Free</th><th>Pro</th><th>Master</th></tr></thead>
+      <tbody>
+        <tr><th>客戶資料容量</th><td>20 位</td><td>100 位</td><td>無上限</td></tr>
+        <tr><th>追蹤更新＋成長比對</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>主題色系</th><td>經典藍綠</td><td>+酒紅／森林／石墨</td><td>+墨紫／黑金（限定）</td></tr>
+        <tr><th>團隊工作量監控</th><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+      </tbody>
+    </table>
+
+    <p class="upgrade-note">降級或取消訂閱不會刪除超出容量的客戶資料，只會先鎖起來，回來升級隨時復原。目前金流串接申請中，升級請求會先送給我確認開通。</p>
+  </div>
+</div>
+
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-box">
+    <h3>帳號設定</h3>
+    <div class="settings-current-email" id="settingsCurrentEmail"></div>
+
+    <div class="settings-error" id="settingsError"></div>
+    <div class="settings-success" id="settingsSuccess"></div>
+
+    <div class="settings-field">
+      <label>更新密碼</label>
+      <input type="password" id="newPasswordInput" placeholder="新密碼（至少6個字元）">
+      <input type="password" id="confirmPasswordInput" placeholder="再輸入一次新密碼" style="margin-top:8px;">
+      <button class="settings-btn" id="btnUpdatePassword">更新密碼</button>
+    </div>
+
+    <div class="settings-field">
+      <label>更新 Email</label>
+      <input type="email" id="newEmailInput" placeholder="新的 Email 地址">
+      <button class="settings-btn" id="btnUpdateEmail">更新 Email</button>
+    </div>
+
+    <button class="settings-close-btn" id="btnCloseSettings">關閉</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="theme-config.js"></script>
+<script src="plan-utils.js"></script>
+<script>
+  /* ---------- 登入狀態驗證（真正串接 Supabase） ---------- */
+  (async function checkAuth(){
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){
+      window.location.href = 'login.html';
+      return;
+    }
+    const user = session.user;
+    const name = user.user_metadata?.display_name || user.email || '顧問';
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('settingsCurrentEmail').textContent = '目前登入：' + user.email;
+    window.currentAdvisorId = user.id; // 讓內嵌的模組（例如客戶資料）之後可以用這個 id 存取自己的資料
+  })();
+
+  document.getElementById('menuLogout').addEventListener('click', async ()=>{
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+  });
+
+  // ---- 帳號設定彈窗：點頭像開啟，可以更新密碼或 Email ----
+  const settingsOverlay = document.getElementById('settingsOverlay');
+  const settingsError = document.getElementById('settingsError');
+  const settingsSuccess = document.getElementById('settingsSuccess');
+  function showSettingsError(text){
+    settingsSuccess.classList.remove('show');
+    settingsError.textContent = text;
+    settingsError.classList.add('show');
+  }
+  function showSettingsSuccess(text){
+    settingsError.classList.remove('show');
+    settingsSuccess.textContent = text;
+    settingsSuccess.classList.add('show');
+  }
+  // ---- 頭像選單：登出／帳號設定／字體大小 ----
+  const userMenu = document.getElementById('userMenu');
+  document.getElementById('userAvatar').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    userMenu.classList.toggle('show');
+  });
+  document.addEventListener('click', (e)=>{
+    if(userMenu.classList.contains('show') && !userMenu.contains(e.target) && e.target.id!=='userAvatar'){
+      userMenu.classList.remove('show');
+    }
+  });
+
+  // ---- 升級方案：置中彈窗顯示，不另開分頁 ----
+  const upgradeOverlay = document.getElementById('upgradeOverlay');
+  document.getElementById('menuUpgrade').addEventListener('click', ()=>{
+    userMenu.classList.remove('show');
+    upgradeOverlay.classList.add('show');
+  });
+  document.getElementById('upgradeClose').addEventListener('click', ()=>{
+    upgradeOverlay.classList.remove('show');
+  });
+  upgradeOverlay.addEventListener('click', (e)=>{
+    if(e.target.id==='upgradeOverlay') upgradeOverlay.classList.remove('show');
+  });
+  function jkUpgradeRequest(planName){
+    // TODO：綠界金流申請通過後，這裡改接真正的付款/升級流程
+    jkShowToast('已收到升級到 ' + planName + ' 的請求，我確認後會幫你開通。');
+  }
+  const jkToastEl = document.getElementById('jkToast');
+  function jkShowToast(msg){
+    jkToastEl.textContent = msg;
+    jkToastEl.classList.add('show');
+    clearTimeout(window.__jkToastTimer);
+    window.__jkToastTimer = setTimeout(()=>jkToastEl.classList.remove('show'), 3200);
+  }
+
+  document.getElementById('menuAccountSettings').addEventListener('click', ()=>{
+    userMenu.classList.remove('show');
+    settingsError.classList.remove('show');
+    settingsSuccess.classList.remove('show');
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('confirmPasswordInput').value = '';
+    document.getElementById('newEmailInput').value = '';
+    settingsOverlay.classList.add('show');
+  });
+  document.getElementById('btnCloseSettings').addEventListener('click', ()=>{
+    settingsOverlay.classList.remove('show');
+  });
+  settingsOverlay.addEventListener('click', (e)=>{
+    if(e.target.id==='settingsOverlay') settingsOverlay.classList.remove('show');
+  });
+
+  document.getElementById('btnUpdatePassword').addEventListener('click', async ()=>{
+    const newPw = document.getElementById('newPasswordInput').value;
+    const confirmPw = document.getElementById('confirmPasswordInput').value;
+    const btn = document.getElementById('btnUpdatePassword');
+    if(!newPw || !confirmPw){ showSettingsError('請完整填寫兩個密碼欄位'); return; }
+    if(newPw.length < 6){ showSettingsError('密碼至少要 6 個字元'); return; }
+    if(newPw !== confirmPw){ showSettingsError('兩次輸入的密碼不一致'); return; }
+    btn.disabled = true; btn.textContent = '更新中…';
+    const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+    btn.disabled = false; btn.textContent = '更新密碼';
+    if(error){ showSettingsError('更新失敗：' + error.message); return; }
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('confirmPasswordInput').value = '';
+    showSettingsSuccess('密碼已更新成功。');
+  });
+
+  document.getElementById('btnUpdateEmail').addEventListener('click', async ()=>{
+    const newEmail = document.getElementById('newEmailInput').value.trim();
+    const btn = document.getElementById('btnUpdateEmail');
+    if(!newEmail){ showSettingsError('請輸入新的 Email 地址'); return; }
+    btn.disabled = true; btn.textContent = '更新中…';
+    const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
+    btn.disabled = false; btn.textContent = '更新 Email';
+    if(error){ showSettingsError('更新失敗：' + error.message); return; }
+    document.getElementById('newEmailInput').value = '';
+    showSettingsSuccess('請至新信箱收信，點擊確認連結後 Email 才會正式生效。');
+  });
+
+  const buttons = document.querySelectorAll('.mod-btn');
+  const frames = document.querySelectorAll('main iframe');
+  const loading = document.getElementById('loading');
+
+  // ---- 字體大小：用 zoom 縮放每個模組 iframe 的內容，小=目前風格(基準) ----
+  const FONT_SCALE_KEY = 'jk_font_scale';
+  const FONT_SCALE_MAP = {small:1, medium:1.15, large:1.3};
+  function applyFontScale(size){
+    const scale = FONT_SCALE_MAP[size] || 1;
+    frames.forEach(f=>{ f.style.zoom = scale; });
+    document.querySelectorAll('.font-size-pill').forEach(p=>{
+      p.classList.toggle('active', p.dataset.size===size);
+    });
+    localStorage.setItem(FONT_SCALE_KEY, size);
+  }
+  document.querySelectorAll('.font-size-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=> applyFontScale(pill.dataset.size));
+  });
+  applyFontScale(localStorage.getItem(FONT_SCALE_KEY) || 'small');
+
+  // ---- 主題色系：套用到工作台自己，也注入每個同源iframe，並依方案鎖定超出權限的選項 ----
+  const THEME_KEY = 'jk_theme';
+  const TIER_RANK = { free:0, pro:1, master:2 };
+  let myPlan = 'free';
+
+  // ---- 帳號旁的方案小方框，跟升級彈窗裡每張卡片的按鈕狀態，都照目前實際方案顯示 ----
+  function applyCurrentPlanToAccountUI(plan){
+    const rank = TIER_RANK[plan] ?? 0;
+    const PLAN_LABEL = { free:'Free', pro:'Pro', master:'Master' };
+    const badge = document.getElementById('userPlanBadge');
+    if(badge){
+      badge.textContent = PLAN_LABEL[plan] || 'Free';
+      badge.className = 'user-plan-badge ' + plan;
+    }
+    ['free','pro','master'].forEach(tier=>{
+      const btn = document.getElementById('planBtn' + tier.charAt(0).toUpperCase() + tier.slice(1));
+      if(!btn) return;
+      btn.classList.remove('current','primary','master-btn');
+      btn.disabled = false;
+      btn.onclick = null;
+      if(tier === plan){
+        btn.textContent = '目前方案';
+        btn.classList.add('current');
+        btn.disabled = true;
+      } else if(TIER_RANK[tier] < rank){
+        btn.textContent = '已包含';
+        btn.classList.add('current');
+        btn.disabled = true;
+      } else {
+        const label = PLAN_LABEL[tier];
+        btn.textContent = '升級到 ' + label;
+        btn.classList.add(tier==='pro' ? 'primary' : 'master-btn');
+        btn.onclick = ()=> jkUpgradeRequest(label);
+      }
+    });
+  }
+
+  function applyThemeEverywhere(themeKey){
+    const t = JK_THEMES[themeKey];
+    if(!t || TIER_RANK[t.tier] > TIER_RANK[myPlan]) return; // 超出方案權限，擋下來不套用
+    jkApplyTheme(themeKey, document);
+    frames.forEach(f=>{
+      try{
+        if(f.contentDocument) jkApplyTheme(themeKey, f.contentDocument);
+      }catch(e){}
+    });
+    document.querySelectorAll('.theme-swatch').forEach(s=>{
+      s.classList.toggle('active', s.dataset.theme===themeKey);
+    });
+    localStorage.setItem(THEME_KEY, themeKey);
+  }
+  // iframe 各自的載入時機不一定跟主題套用同步，載入完成時要重新套用一次目前選的主題
+  frames.forEach(f=>{
+    f.addEventListener('load', ()=>{
+      const current = localStorage.getItem(THEME_KEY) || 'free';
+      try{ if(f.contentDocument) jkApplyTheme(current, f.contentDocument); }catch(e){}
+    });
+  });
+  const themeGrid = document.getElementById('themeSwatchGrid');
+
+  (async function initTheme(){
+    const effective = await fetchEffectivePlan();
+    myPlan = effective.plan;
+    applyCurrentPlanToAccountUI(myPlan);
+    const trialBadge = document.getElementById('trialBadge');
+    if(effective.inTrial){
+      const left = daysLeft(effective.trialEndsAt);
+      trialBadge.textContent = `🎁 試用中，還剩 ${left} 天（比照 Pro 方案）`;
+      trialBadge.style.display = 'block';
+    }
+    themeGrid.innerHTML = Object.entries(JK_THEMES).map(([key, t])=>{
+      const locked = TIER_RANK[t.tier] > TIER_RANK[myPlan];
+      return `
+        <div class="theme-swatch" data-theme="${key}" data-locked="${locked}" title="${locked ? t.label+'（需要'+(t.tier==='pro'?'Pro':'Master')+'方案）' : t.label}">
+          <div class="half l" style="background:${t.navy};"></div>
+          <div class="half r" style="background:${t.teal};"></div>
+          ${locked ? '<div class="theme-swatch-lock">🔒</div>' : ''}
+        </div>
+      `;
+    }).join('');
+    themeGrid.querySelectorAll('.theme-swatch').forEach(sw=>{
+      sw.addEventListener('click', ()=>{
+        if(sw.dataset.locked==='true'){
+          alert('「'+JK_THEMES[sw.dataset.theme].label+'」需要升級方案才能使用。');
+          return;
+        }
+        applyThemeEverywhere(sw.dataset.theme);
+      });
+    });
+    // 如果之前選的主題現在超出方案權限（例如被降級），退回預設主題
+    let savedTheme = localStorage.getItem(THEME_KEY) || 'free';
+    if(TIER_RANK[JK_THEMES[savedTheme]?.tier] > TIER_RANK[myPlan]) savedTheme = 'free';
+    applyThemeEverywhere(savedTheme);
+  })();
+
+
+  // 只要「目前要顯示的那一頁」載入完成就先讓畫面出現，不用等其他背景模組全部載完，
+  // 避免手機網路較慢時，某一個模組卡住就讓整個畫面一直停在「載入模組中」出不來。
+  const initialFrame = document.getElementById('frame-home');
+  function hideLoading(){ loading.classList.remove('show'); }
+  initialFrame.addEventListener('load', hideLoading, {once:true});
+  // 保險：就算真的卡住，最多 8 秒後還是強制讓畫面出現，不讓使用者被永遠卡住
+  setTimeout(hideLoading, 8000);
+
+  function activateFrame(targetId, opts){
+    opts = opts || {};
+    buttons.forEach(b=> b.classList.toggle('active', b.dataset.target === targetId));
+    frames.forEach(f=> f.classList.toggle('active', f.id === targetId));
+    const activeBtn = Array.from(buttons).find(b=> b.dataset.target === targetId);
+    const nameEl = document.getElementById('mobileCurrentName');
+    if(nameEl){
+      nameEl.textContent = activeBtn ? activeBtn.querySelector('.name').textContent : '首頁';
+    }
+    closeMobileDrawer();
+    // 記錄瀏覽器歷史，這樣使用者按「上一頁」會退回工作台內部的上一步，
+    // 而不是直接跳出工作台、回到登入畫面
+    if(!opts.skipHistory){
+      history.pushState({frame: targetId}, '', '#' + targetId.replace('frame-',''));
+    }
+  }
+
+  // 使用者按瀏覽器「上一頁／下一頁」時，切換回對應的模組
+  window.addEventListener('popstate', (e)=>{
+    const targetId = (e.state && e.state.frame) || 'frame-home';
+    activateFrame(targetId, {skipHistory:true});
+  });
+  // 進工作台的第一筆歷史紀錄，設為首頁
+  history.replaceState({frame:'frame-home'}, '', '#home');
+
+  buttons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(btn.classList.contains('active')) return;
+      activateFrame(btn.dataset.target);
+    });
+  });
+
+  // 點「資產配置工作台」標題 → 回到工作台內部首頁（不對應任何選單項目，所以不會有按鈕被反白）
+  document.getElementById('brandHomeBtn').addEventListener('click', ()=>{
+    activateFrame('frame-home');
+  });
+  // 讓內嵌的 iframe（例如財富地圖）可以呼叫這個函式跳回首頁
+  window.goToHome = ()=> activateFrame('frame-home');
+  // 讓內嵌的 iframe（例如工作台首頁的捷徑卡片）可以呼叫這個函式切換到任何模組
+  window.goToModule = (targetId)=> activateFrame(targetId);
+
+  // ---- 手機版：漢堡選單開關全螢幕抽屜 ----
+  const sidebarEl = document.querySelector('aside.sidebar');
+  const drawerOverlayEl = document.getElementById('drawerOverlay');
+  function openMobileDrawer(){
+    sidebarEl.classList.add('drawer-open');
+    drawerOverlayEl.classList.add('show');
+  }
+  function closeMobileDrawer(){
+    sidebarEl.classList.remove('drawer-open');
+    drawerOverlayEl.classList.remove('show');
+  }
+  document.getElementById('btnMobileMenu').addEventListener('click', ()=>{
+    if(sidebarEl.classList.contains('drawer-open')) closeMobileDrawer();
+    else openMobileDrawer();
+  });
+  drawerOverlayEl.addEventListener('click', closeMobileDrawer);
+
+  // ---- 側邊欄釘選收合：讓畫面更大，收合後只留圖示 ----
+  const SIDEBAR_COLLAPSE_KEY = 'jk_sidebar_collapsed';
+  const pinToggleBtn = document.getElementById('pinToggleBtn');
+  function applySidebarCollapse(collapsed){
+    sidebarEl.classList.toggle('pinned-collapsed', collapsed);
+    pinToggleBtn.textContent = collapsed ? '⟩⟩' : '⟨⟨';
+    pinToggleBtn.title = collapsed ? '展開側邊欄' : '收合側邊欄';
+    localStorage.setItem(SIDEBAR_COLLAPSE_KEY, collapsed ? '1' : '0');
+  }
+  pinToggleBtn.addEventListener('click', ()=>{
+    applySidebarCollapse(!sidebarEl.classList.contains('pinned-collapsed'));
+  });
+  applySidebarCollapse(localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1');
+
+
+  // ---- 側邊欄分類：展開／收起，每次進工作台一律預設全部收合（不記憶跨次狀態） ----
+  document.querySelectorAll('.nav-group').forEach(group=>{
+    group.classList.add('collapsed');
+    group.querySelector('.nav-group-header').addEventListener('click', ()=>{
+      group.classList.toggle('collapsed');
+    });
+  });
+
+  // ---- PWA：註冊 Service Worker（讓「加到主畫面」可以像 App 一樣全螢幕開啟） ----
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+</script>
+
+</body>
+</html>

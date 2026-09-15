@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貸款試算室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16323F;
+    --paper:#F5F7F6;
+    --paper-line:#E1E7E7;
+    --brass:#2E7391;
+    --brass-deep:#1F5C73;
+    --teal:#2E7D5B;
+    --brick:#B3492F;
+    --text:#182226;
+    --text-soft:rgba(24,34,38,0.66);
+    --white:#FFFFFF;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--text);font-family:'Noto Sans TC', sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'Roboto Mono', monospace;}
+
+  .grid-ink{
+    background-color:var(--ink);
+    background-image:linear-gradient(rgba(245,247,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(245,247,246,0.05) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--paper);
+  }
+  .grid-paper{
+    background-image:linear-gradient(rgba(46,115,145,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(46,115,145,0.10) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+
+  header.hero{
+    background:linear-gradient(135deg,var(--ink) 0%,var(--brass-deep) 60%,var(--brass) 100%);
+    color:#fff;
+    padding:26px 0 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-80px; top:-80px; width:320px; height:320px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+  header.hero .eyebrow{
+    font-family:'Roboto Mono', monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:#BFE0EA; font-weight:700; margin-bottom:8px;
+  }
+  header.hero h1{
+    font-family:'Noto Serif TC'; color:#fff; font-weight:700; font-size:clamp(19px,2.4vw,24px);
+    line-height:1.4; margin:0;
+  }
+  header.hero h1 .accent{color:#8FC4D8;}
+  header.hero p{max-width:640px; color:#DCEAEE; font-size:13px; margin:8px 0 0;}
+
+  .crop{position:absolute; width:18px; height:18px; border-color:var(--brass);}
+  .crop.tl{top:20px;left:20px;border-top:2px solid var(--brass);border-left:2px solid var(--brass);}
+  .crop.tr{top:20px;right:20px;border-top:2px solid var(--brass);border-right:2px solid var(--brass);}
+
+  .eyebrow{font-family:'Roboto Mono'; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass); margin-bottom:16px; display:flex; gap:10px; align-items:center;}
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--brass);display:inline-block;}
+
+  nav.tabs{position:sticky; top:0; z-index:50; background:rgba(245,247,246,0.94); backdrop-filter:blur(6px); border-bottom:1px solid var(--paper-line); display:flex; overflow-x:auto; padding:0 6vw;}
+  nav.tabs button{font-family:'Roboto Mono'; font-size:12.5px; white-space:nowrap; padding:15px 16px; text-decoration:none; color:var(--text-soft); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer;}
+  nav.tabs button span{color:var(--brass); margin-right:6px;}
+  nav.tabs button.active, nav.tabs button:hover{color:var(--ink); border-bottom-color:var(--brass);}
+
+  main{max-width:1120px;margin:0 auto;padding-bottom:140px;}
+  section.sheet{padding:64px 6vw 26px; border-bottom:none; scroll-margin-top:56px; display:none;}
+  section.sheet.active{display:block;}
+  .sheet-head{display:flex; align-items:baseline; gap:14px; margin-bottom:8px;}
+  .sheet-num{font-family:'Roboto Mono'; font-size:13px; color:var(--brass-deep); border:1px solid var(--brass); padding:2px 8px; border-radius:20px;}
+  h2.sheet-title{font-family:'Noto Serif TC'; font-weight:700; font-size:clamp(20px,2.4vw,28px); margin:0;}
+  .sheet-desc{color:var(--text-soft); max-width:64ch; margin:12px 0 34px; font-size:14.5px;}
+
+  .panel{display:grid; grid-template-columns:1.05fr 0.95fr; border:1px solid var(--paper-line); background:var(--white);}
+  @media (max-width:860px){ .panel{grid-template-columns:1fr;} }
+  .inputs{padding:28px 30px; border-right:1px solid var(--paper-line);}
+  @media (max-width:860px){ .inputs{border-right:none;border-bottom:1px solid var(--paper-line);} }
+
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  label{display:block; font-size:12.5px; font-weight:500; margin-bottom:6px;}
+  label .hint{color:var(--text-soft); font-weight:400; font-size:11.5px;}
+  .input-wrap{position:relative;}
+  input[type=number]{width:100%; font-family:'Roboto Mono'; font-size:14.5px; padding:10px 46px 10px 12px; border:1px solid var(--paper-line); border-radius:var(--radius); background:var(--paper); color:var(--ink);}
+  input[type=number]:focus{outline:none;border-color:var(--brass); box-shadow:0 0 0 3px rgba(46,115,145,0.18);}
+  .unit{position:absolute; right:12px; top:50%; transform:translateY(-50%); font-family:'Roboto Mono'; font-size:11.5px; color:var(--text-soft);}
+  .checkline{display:flex;align-items:flex-start;gap:9px;margin-top:4px;}
+  .checkline input{width:16px;height:16px;margin-top:3px;accent-color:var(--brass);}
+  .checkline label{margin:0;font-size:13px;}
+  .stepper-note{font-size:11.5px; color:var(--text-soft); margin-top:10px;}
+
+  .results{padding:28px 30px; background:#E6F0F2; color:var(--text); display:flex; flex-direction:column; border-left:1px solid var(--paper-line);}
+  .result-label{font-family:'Roboto Mono'; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-soft); margin-bottom:8px;}
+
+  .dim-line{position:relative; padding:22px 0 18px; margin-bottom:20px;}
+  .dim-line::before{content:""; position:absolute; left:0; right:0; top:12px; height:1px; background:var(--paper-line);}
+  .dim-line::after{content:""; position:absolute; left:0; top:6px; bottom:6px; width:1px; background:var(--paper-line);}
+  .dim-tick-r{position:absolute; right:0; top:6px; bottom:6px; width:1px; background:var(--paper-line);}
+  .dim-value{font-family:'Roboto Mono'; font-weight:700; font-size:clamp(26px,2.6vw,36px); color:var(--ink); margin-top:4px;}
+  .dim-value .cur{font-size:0.48em; color:var(--text-soft); margin-right:6px;}
+  .dim-value .sub-unit{font-size:0.38em; color:var(--text-soft); margin-left:4px;}
+
+  /* 三色達成度系統：正向=綠／警示=橘黃／嚴重=紅，中性目標值固定深藍 */
+  .dim-value.tier-pos, .cmp-diff.tier-pos, .flag.tier-pos{color:var(--teal) !important;}
+  .dim-value.tier-warn, .cmp-diff.tier-warn, .flag.tier-warn{color:#B8791E !important;}
+  .dim-value.tier-neg, .cmp-diff.tier-neg, .flag.tier-neg{color:var(--brick) !important;}
+  .flag.tier-pos{border-color:var(--teal); background:rgba(46,125,91,0.1);}
+  .flag.tier-warn{border-color:#B8791E; background:rgba(184,121,30,0.1);}
+  .flag.tier-neg{border-color:var(--brick); background:rgba(179,73,47,0.1);}
+
+  .breakdown{font-family:'Roboto Mono'; font-size:12px; margin-top:auto;}
+  .bd-row{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--paper-line); color:var(--text-soft);}
+  .bd-row:last-child{border-bottom:none;}
+  .bd-row.total{color:var(--ink); font-weight:700; border-top:1px solid var(--paper-line); margin-top:4px; padding-top:10px;}
+  .bd-row .neg{color:var(--brick);}
+  .bd-row .pos{color:var(--teal);}
+
+  .flag{display:inline-block; font-family:'Roboto Mono'; font-size:11px; padding:4px 10px; border-radius:20px; margin-bottom:12px; border:1px solid;}
+  .flag.ok{color:var(--teal); border-color:var(--teal); background:rgba(46,125,91,0.1);}
+  .flag.warn{color:var(--brick); border-color:var(--brick); background:rgba(179,73,47,0.1);}
+
+  /* comparison bars */
+  .cmp-wrap{margin-top:6px;}
+  .cmp-item{margin-bottom:18px;}
+  .cmp-item .cmp-head{display:flex; justify-content:space-between; font-family:'Roboto Mono'; font-size:12px; margin-bottom:6px; color:var(--text-soft);}
+  .cmp-bar-track{height:14px; background:var(--paper-line); border-radius:2px; overflow:hidden;}
+  .cmp-bar-fill{height:100%; transition:width .3s ease;}
+  .cmp-bar-fill.a{background:var(--brass);}
+  .cmp-bar-fill.b{background:var(--teal);}
+  .cmp-diff{margin-top:16px; padding-top:14px; border-top:1px solid var(--paper-line); font-family:'Roboto Mono'; font-size:13px; color:var(--ink);}
+
+  /* spread visual */
+  .spread-track{position:relative; height:34px; margin:18px 0 8px;}
+  .spread-base{position:absolute; left:0; right:0; top:16px; height:1px; background:var(--paper-line);}
+  .spread-pt{position:absolute; top:0; width:2px; height:34px; background:var(--ink);}
+  .spread-pt .lbl{position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-family:'Roboto Mono'; font-size:10.5px; white-space:nowrap; color:var(--text);}
+  .spread-fill{position:absolute; top:15px; height:3px; background:var(--brass);}
+  .spread-fill.tier-pos{background:var(--teal);}
+  .spread-fill.tier-warn{background:#B8791E;}
+  .spread-fill.tier-neg{background:var(--brick);}
+
+  .closer{background:var(--ink); color:var(--paper); padding:64px 6vw 56px; position:relative;}
+  .closer h3{font-family:'Noto Serif TC'; font-weight:900; font-size:clamp(22px,3vw,34px); max-width:20ch; line-height:1.3; margin:0 0 16px;}
+  .closer h3 .accent{color:var(--brass);}
+  .closer p{max-width:58ch; color:rgba(245,247,246,0.75); margin-bottom:26px; font-size:14.5px;}
+  .btn{display:inline-flex; align-items:center; gap:8px; font-family:'Noto Sans TC'; font-weight:700; font-size:15px; padding:13px 24px; border-radius:var(--radius); text-decoration:none; border:1px solid transparent; cursor:pointer;}
+  .btn-brass{background:var(--brass); color:var(--ink);}
+  .btn-brass:hover{background:#3F8AA8;}
+
+  footer{padding:22px 6vw 36px; background:var(--ink); color:rgba(245,247,246,0.4); font-size:11px; font-family:'Roboto Mono'; border-top:1px solid rgba(245,247,246,0.14); line-height:1.9;}
+
+  @media (max-width:640px){ .field-row{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">貸款試算室 · Module A</div>
+    <h1>先把<span class="accent">借錢的成本</span>算清楚，才知道怎麼配置。</h1>
+    <p>車貸、信貸、房貸、寬限期、跨方案比較，加上貸款資金投入配置工具後的利差試算——把每一筆借款的月付金、總利息、跟資金運用效率，一次算給你看。</p>
+  </div>
+</header>
+
+<nav class="tabs" id="tabnav">
+  <button type="button" data-target="m1" class="active"><span>01</span>車貸／信貸</button>
+  <button type="button" data-target="m2"><span>02</span>房貸</button>
+  <button type="button" data-target="m3"><span>03</span>寬限期試算</button>
+  <button type="button" data-target="m4"><span>04</span>利率比較</button>
+  <button type="button" data-target="m5"><span>05</span>貸款利差試算</button>
+  <button type="button" data-target="m6"><span>06</span>抵押資金運用計算</button>
+</nav>
+
+<main>
+
+  <!-- 01 車貸/信貸 -->
+  <section class="sheet grid-paper active" id="m1">
+    <div class="sheet-head"><span class="sheet-num">01</span><h2 class="sheet-title">車貸／信貸試算</h2></div>
+    <p class="sheet-desc">採等額本息（每月還款金額固定）計算，適用一般車貸、信貸方案。</p>
+    <div class="panel">
+      <div class="inputs">
+        <div class="field">
+          <label>貸款金額</label>
+          <div class="input-wrap"><input type="number" id="c_amount" value="100" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>年利率</label>
+            <div class="input-wrap"><input type="number" id="c_rate" value="3.5" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label>貸款年限</label>
+            <div class="input-wrap"><input type="number" id="c_years" value="5" min="0.5" step="0.5"><span class="unit">年</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="results">
+        <div class="result-label">每月應繳金額</div>
+        <div class="dim-line"><div class="dim-tick-r"></div>
+          <div class="dim-value"><span class="cur">NT$</span><span id="c_monthly">0</span><span class="sub-unit">元／月</span></div>
+        </div>
+        <div class="breakdown">
+          <div class="bd-row"><span>貸款本金</span><span id="c_bd_p" class="mono">0 元</span></div>
+          <div class="bd-row"><span>總還款金額</span><span id="c_bd_total" class="mono">0 元</span></div>
+          <div class="bd-row total"><span>總利息支出</span><span id="c_bd_interest" class="mono">0 元</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 房貸 -->
+  <section class="sheet" id="m2">
+    <div class="sheet-head"><span class="sheet-num">02</span><h2 class="sheet-title">房貸試算</h2></div>
+    <p class="sheet-desc">同樣採等額本息，年限與金額級距較大，適合抓房貸每月負擔。</p>
+    <div class="panel">
+      <div class="inputs">
+        <div class="field">
+          <label>貸款金額</label>
+          <div class="input-wrap"><input type="number" id="m_amount" value="1000" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>年利率</label>
+            <div class="input-wrap"><input type="number" id="m_rate" value="2.1" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label>貸款年限</label>
+            <div class="input-wrap"><input type="number" id="m_years" value="30" min="1" step="1"><span class="unit">年</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="results">
+        <div class="result-label">每月應繳金額</div>
+        <div class="dim-line"><div class="dim-tick-r"></div>
+          <div class="dim-value"><span class="cur">NT$</span><span id="m_monthly">0</span><span class="sub-unit">元／月</span></div>
+        </div>
+        <div class="breakdown">
+          <div class="bd-row"><span>貸款本金</span><span id="m_bd_p" class="mono">0 元</span></div>
+          <div class="bd-row"><span>總還款金額</span><span id="m_bd_total" class="mono">0 元</span></div>
+          <div class="bd-row total"><span>總利息支出</span><span id="m_bd_interest" class="mono">0 元</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 寬限期 -->
+  <section class="sheet grid-paper" id="m3">
+    <div class="sheet-head"><span class="sheet-num">03</span><h2 class="sheet-title">寬限期試算</h2></div>
+    <p class="sheet-desc">寬限期內只還利息、不還本金；期滿後本金攤還壓縮到剩餘年限，月付金會跳升。這裡幫你算出兩段式月付金，以及寬限期讓你多付了多少總利息。</p>
+    <div class="panel">
+      <div class="inputs">
+        <div class="field">
+          <label>貸款金額</label>
+          <div class="input-wrap"><input type="number" id="g_amount" value="1000" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>年利率</label>
+            <div class="input-wrap"><input type="number" id="g_rate" value="2.1" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label>總貸款年限</label>
+            <div class="input-wrap"><input type="number" id="g_years" value="30" min="1" step="1"><span class="unit">年</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>寬限期</label>
+          <div class="input-wrap"><input type="number" id="g_grace" value="3" min="0" step="0.5"><span class="unit">年</span></div>
+        </div>
+      </div>
+      <div class="results">
+        <div class="result-label">寬限期內 / 期滿後 月付金</div>
+        <div class="breakdown" style="margin-top:6px;">
+          <div class="bd-row"><span>寬限期內（只繳利息）</span><span id="g_bd_grace" class="mono">0 元／月</span></div>
+          <div class="bd-row"><span>寬限期後（本利攤還）</span><span id="g_bd_after" class="mono">0 元／月</span></div>
+        </div>
+
+        <div class="result-label" style="margin-top:22px;">總利息比較</div>
+        <div class="breakdown">
+          <div class="bd-row"><span>有寬限期・總利息</span><span id="g_bd_totalWith" class="mono">0 元</span></div>
+          <div class="bd-row total"><span>無寬限期・總利息</span><span id="g_bd_totalWithout" class="mono">0 元</span></div>
+        </div>
+
+        <div class="dim-line" style="margin-top:20px;"><div class="dim-tick-r"></div>
+          <div class="dim-value"><span class="cur">＋</span><span id="g_extra">0</span><span class="sub-unit">元</span></div>
+        </div>
+        <div class="stepper-note" style="color:rgba(245,247,246,0.55); margin-top:-14px;">比起完全不設寬限期，多付出的總利息</div>
+
+        <div class="result-label" style="margin-top:22px;">總還款金額（本金＋利息）</div>
+        <div class="breakdown">
+          <div class="bd-row"><span>有寬限期・總還款</span><span id="g_bd_repayWith" class="mono">0 元</span></div>
+          <div class="bd-row total"><span>無寬限期・總還款</span><span id="g_bd_repayWithout" class="mono">0 元</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 利率比較 -->
+  <section class="sheet" id="m4">
+    <div class="sheet-head"><span class="sheet-num">04</span><h2 class="sheet-title">利率比較</h2></div>
+    <p class="sheet-desc">同一筆貸款需求，放兩個銀行方案進來比一比：誰的月付金低、誰的總利息少，一眼看懂。</p>
+    <div class="panel">
+      <div class="inputs">
+        <div class="field-row">
+          <div class="field">
+            <label>方案 A・貸款金額</label>
+            <div class="input-wrap"><input type="number" id="cmp_a_amount" value="1000" min="0"><span class="unit">萬元</span></div>
+          </div>
+          <div class="field">
+            <label>方案 B・貸款金額</label>
+            <div class="input-wrap"><input type="number" id="cmp_b_amount" value="1000" min="0"><span class="unit">萬元</span></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>方案 A・年利率</label>
+            <div class="input-wrap"><input type="number" id="cmp_a_rate" value="2.1" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label>方案 B・年利率</label>
+            <div class="input-wrap"><input type="number" id="cmp_b_rate" value="2.6" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>方案 A・年限</label>
+            <div class="input-wrap"><input type="number" id="cmp_a_years" value="30" min="1"><span class="unit">年</span></div>
+          </div>
+          <div class="field">
+            <label>方案 B・年限</label>
+            <div class="input-wrap"><input type="number" id="cmp_b_years" value="30" min="1"><span class="unit">年</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="results">
+        <div class="result-label">月付金比較</div>
+        <div class="cmp-wrap">
+          <div class="cmp-item">
+            <div class="cmp-head"><span>方案 A</span><span id="cmp_a_m_label" class="mono">0 元</span></div>
+            <div class="cmp-bar-track"><div class="cmp-bar-fill a" id="cmp_a_m_bar" style="width:0%"></div></div>
+          </div>
+          <div class="cmp-item">
+            <div class="cmp-head"><span>方案 B</span><span id="cmp_b_m_label" class="mono">0 元</span></div>
+            <div class="cmp-bar-track"><div class="cmp-bar-fill b" id="cmp_b_m_bar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="result-label" style="margin-top:16px;">總利息比較</div>
+        <div class="cmp-wrap">
+          <div class="cmp-item">
+            <div class="cmp-head"><span>方案 A</span><span id="cmp_a_i_label" class="mono">0 元</span></div>
+            <div class="cmp-bar-track"><div class="cmp-bar-fill a" id="cmp_a_i_bar" style="width:0%"></div></div>
+          </div>
+          <div class="cmp-item">
+            <div class="cmp-head"><span>方案 B</span><span id="cmp_b_i_label" class="mono">0 元</span></div>
+            <div class="cmp-bar-track"><div class="cmp-bar-fill b" id="cmp_b_i_bar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="result-label" style="margin-top:16px;">總還款比較（本金＋利息）</div>
+        <div class="cmp-wrap">
+          <div class="cmp-item">
+            <div class="cmp-head"><span>方案 A</span><span id="cmp_a_t_label" class="mono">0 元</span></div>
+            <div class="cmp-bar-track"><div class="cmp-bar-fill a" id="cmp_a_t_bar" style="width:0%"></div></div>
+          </div>
+          <div class="cmp-item">
+            <div class="cmp-head"><span>方案 B</span><span id="cmp_b_t_label" class="mono">0 元</span></div>
+            <div class="cmp-bar-track"><div class="cmp-bar-fill b" id="cmp_b_t_bar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="cmp-diff" id="cmp_diff">總利息差距：0 元</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 貸款利差試算 -->
+  <section class="sheet grid-paper" id="m5">
+    <div class="sheet-head"><span class="sheet-num">05</span><h2 class="sheet-title">貸款利差試算</h2></div>
+    <p class="sheet-desc">把「借出來的錢」拿去配置金融工具，中間的利差是多少？貸款金額不一定全部投入配置——有人會留一部分當緊急預備金、或放在非保本工具，所以這裡把「貸款總額」跟「實際配置金額」分開輸入，算出來的才是實際狀況。注意：配置報酬率為假設輸入值，並非保證收益，僅供試算與諮詢討論參考。</p>
+    <div class="panel">
+      <div class="inputs">
+        <div class="field">
+          <label>貸款金額</label>
+          <div class="input-wrap"><input type="number" id="s_amount" value="500" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>貸款年利率</label>
+            <div class="input-wrap"><input type="number" id="s_loanRate" value="2.5" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label>貸款年限</label>
+            <div class="input-wrap"><input type="number" id="s_years" value="10" min="1"><span class="unit">年</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>實際投入配置工具金額 <span class="hint">（可小於貸款金額，其餘視為預備金／其他用途）</span></label>
+          <div class="input-wrap"><input type="number" id="s_deployed" value="500" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field">
+          <label>配置工具假設年化報酬率 <span class="hint">（試算用假設值，非保證）</span></label>
+          <div class="input-wrap"><input type="number" id="s_investRate" value="6" min="0" step="0.01"><span class="unit">%</span></div>
+        </div>
+        <div class="stepper-note">貸款總利息以「貸款金額」實際攤還計算（不論資金如何運用，利息照付）；配置成長只用「實際投入配置工具金額」複利估算，兩者計算基礎不同，僅供抓大方向參考。</div>
+      </div>
+      <div class="results">
+        <div id="s_flag"></div>
+        <div class="result-label">年化利差（配置報酬率 － 貸款利率）</div>
+        <div class="dim-line"><div class="dim-tick-r"></div>
+          <div class="dim-value"><span id="s_spread">0</span><span class="sub-unit">個百分點</span></div>
+        </div>
+
+        <div class="spread-track">
+          <div class="spread-base"></div>
+          <div class="spread-pt" id="s_pt_loan"><div class="lbl mono">貸款 <span id="s_loanLabel">0%</span></div></div>
+          <div class="spread-pt" id="s_pt_invest"><div class="lbl mono">配置 <span id="s_investLabel">0%</span></div></div>
+          <div class="spread-fill" id="s_fill"></div>
+        </div>
+
+        <div class="breakdown" style="margin-top:20px;">
+          <div class="bd-row"><span>貸款金額</span><span id="s_bd_loanAmt" class="mono">0 元</span></div>
+          <div class="bd-row"><span>實際投入配置金額</span><span id="s_bd_deployed" class="mono">0 元</span></div>
+          <div class="bd-row"><span>未投入配置金額（預備金／其他）</span><span id="s_bd_idle" class="mono">0 元</span></div>
+        </div>
+        <div class="breakdown" style="margin-top:14px;">
+          <div class="bd-row"><span>貸款總利息（實際攤還）</span><span id="s_bd_loanInterest" class="mono neg">0 元</span></div>
+          <div class="bd-row"><span>配置估算總收益（僅計入投入部分）</span><span id="s_bd_investGain" class="mono pos">0 元</span></div>
+          <div class="bd-row total"><span>估算淨利差金額</span><span id="s_bd_net" class="mono">0 元</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 抵押資金運用計算試算 -->
+  <section class="sheet grid-paper" id="m6">
+    <div class="sheet-head"><span class="sheet-num">06</span><h2 class="sheet-title">抵押資金運用計算試算</h2></div>
+    <p class="sheet-desc">理財型房貸（循環動用型週轉金貸款）核准的是一筆「額度」，實際動用金額可以小於額度；動用出來的錢，也不一定全部投入金融工具——可能留一部分在身上、繳其他支出，或做別的用途。這裡把「額度、動用、投入」三層分開算，聚焦在只繳息期間，看這筆套利空間到底有多大。</p>
+    <div class="panel">
+      <div class="inputs">
+        <div class="field">
+          <label>貸款額度總額 <span class="hint">（銀行核准可動用上限）</span></label>
+          <div class="input-wrap"><input type="number" id="p_limit" value="10000" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field">
+          <label>實際動用金額</label>
+          <div class="input-wrap"><input type="number" id="p_amount" value="6000" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field">
+          <label>實際投入金融工具金額 <span class="hint">（動用金額中，真正拿去配置的部分）</span></label>
+          <div class="input-wrap"><input type="number" id="p_deployed" value="5000" min="0"><span class="unit">萬元</span></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>貸款年利率</label>
+            <div class="input-wrap"><input type="number" id="p_rate" value="2.6" min="0" step="0.01"><span class="unit">%</span></div>
+          </div>
+          <div class="field">
+            <label>只繳息期間 <span class="hint">（循環動用期）</span></label>
+            <div class="input-wrap"><input type="number" id="p_ioYears" value="5" min="1" step="1"><span class="unit">年</span></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>保本工具假設年化報酬率 <span class="hint">（試算用假設值，非保證）</span></label>
+          <div class="input-wrap"><input type="number" id="p_investRate" value="6" min="0" step="0.01"><span class="unit">%</span></div>
+        </div>
+        <div class="stepper-note">常見循環動用期：3／5／7／10 年；VIP 客戶最長可達 20 年，實際依銀行核定與續約審核為準。週轉金貸款通常僅就「實際動用金額」計息，未動用額度不計息。</div>
+      </div>
+      <div class="results">
+        <div id="p_flag"></div>
+        <div class="result-label">額度・動用・投入</div>
+        <div class="breakdown" style="margin-top:6px;">
+          <div class="bd-row"><span>貸款額度總額</span><span id="p_bd_limit" class="mono">0 元</span></div>
+          <div class="bd-row"><span>實際動用金額</span><span id="p_bd_amount" class="mono">0 元</span></div>
+          <div class="bd-row"><span>未動用額度</span><span id="p_bd_unused" class="mono">0 元</span></div>
+          <div class="bd-row"><span>實際投入金融工具金額</span><span id="p_bd_deployed" class="mono">0 元</span></div>
+          <div class="bd-row total"><span>未投入金融工具金額（現金／其他用途）</span><span id="p_bd_idle" class="mono">0 元</span></div>
+        </div>
+
+        <div class="result-label" style="margin-top:22px;">只繳息期間・套利空間</div>
+        <div class="breakdown">
+          <div class="bd-row"><span>每月只繳利息</span><span id="p_bd_monthly" class="mono">0 元／月</span></div>
+          <div class="bd-row"><span>該期間總利息支出</span><span id="p_bd_interest" class="mono neg">0 元</span></div>
+          <div class="bd-row"><span>保本工具估算總收益</span><span id="p_bd_gain" class="mono pos">0 元</span></div>
+          <div class="bd-row total"><span>套利階段淨利差</span><span id="p_bd_net" class="mono">0 元</span></div>
+        </div>
+
+        <div class="dim-line" style="margin-top:20px;"><div class="dim-tick-r"></div>
+          <div class="dim-value"><span id="p_spread">0</span><span class="sub-unit">個百分點</span></div>
+        </div>
+        <div class="stepper-note" style="color:rgba(245,247,246,0.55); margin-top:-14px;">年化利差（保本工具報酬率 － 貸款利率）</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="closer">
+  <div class="eyebrow">貸款試算室 · 總覽</div>
+  <h3>把<span class="accent">借貸成本</span>跟<span class="accent">資金運用效率</span>，放在同一張表上看。</h3>
+  <p>這個工具涵蓋車貸、信貸、房貸、寬限期、跨方案比較，加上信貸資金與理財型房貸（抵押品貸款）投入配置工具後的利差／套利試算——從「借多少、還多少」到「這筆錢能不能替你賺回來」，都在這裡算給你看。</p>
+</div>
+
+<footer>
+  ＊ 本工具採「等額本息」（月付金固定）方式試算，實際銀行方案可能採等額本金或其他還款方式，數字僅供參考，實際金額以貸款銀行核定為準。<br>
+  ＊ Module 05、06 之配置／保本工具報酬率均為使用者輸入之假設值，非任何金融商品之保證收益，投資有賺有賠，實際規劃仍須綜合個人風險屬性評估。<br>
+  ＊ Module 06 理財型房貸（循環動用型貸款）之核准額度、動用與續約與否，依銀行徵信與內部政策而定，銀行有權於到期時不予續約並轉為本利攤還，實際額度、年限、利率應以貸款銀行核定與合約條款為準；本模組僅試算只繳息期間之利差空間。<br>
+  ＊ 貸款試算室 — 個人理財顧問服務工具，非官方貸款系統。
+</footer>
+
+<script>
+function fmt(n){ n = Math.round(n*100)/100; return n.toLocaleString('zh-Hant', {maximumFractionDigits:2}); }
+// 將「萬元」數值換算成「元」並四捨五入到個位數，加上千分位
+function fmtYuan(wan){
+  const yuan = Math.round(wan*10000);
+  return yuan.toLocaleString('zh-Hant-TW');
+}
+function num(id){ return parseFloat(document.getElementById(id).value) || 0; }
+
+function monthlyPayment(P, annualRatePct, months){
+  const r = annualRatePct/100/12;
+  if(months <= 0) return 0;
+  if(r === 0) return P/months;
+  const factor = Math.pow(1+r, months);
+  return P*r*factor/(factor-1);
+}
+
+function calcLoan(prefix){
+  const P = num(prefix+'_amount');
+  const rate = num(prefix+'_rate');
+  const years = num(prefix+'_years');
+  const months = years*12;
+  const M = monthlyPayment(P, rate, months);
+  const total = M*months;
+  const interest = total - P;
+  document.getElementById(prefix+'_monthly').textContent = fmtYuan(M);
+  document.getElementById(prefix+'_bd_p').textContent = fmtYuan(P)+' 元';
+  document.getElementById(prefix+'_bd_total').textContent = fmtYuan(total)+' 元';
+  document.getElementById(prefix+'_bd_interest').textContent = fmtYuan(interest)+' 元';
+  return {M, total, interest};
+}
+
+function calcGrace(){
+  const P = num('g_amount');
+  const rate = num('g_rate');
+  const years = num('g_years');
+  const grace = num('g_grace');
+  const totalMonths = years*12;
+  const graceMonths = Math.round(grace*12);
+  const remainMonths = Math.max(0, totalMonths - graceMonths);
+
+  const r = rate/100/12;
+  const gracePayment = P*r;
+  const afterPayment = monthlyPayment(P, rate, remainMonths);
+
+  const totalWith = gracePayment*graceMonths + afterPayment*remainMonths;
+  const interestWith = totalWith - P;
+
+  const noGraceM = monthlyPayment(P, rate, totalMonths);
+  const interestWithout = noGraceM*totalMonths - P;
+
+  const extra = interestWith - interestWithout;
+
+  document.getElementById('g_bd_grace').textContent = fmtYuan(gracePayment)+' 元／月';
+  document.getElementById('g_bd_after').textContent = fmtYuan(afterPayment)+' 元／月';
+  document.getElementById('g_extra').textContent = fmtYuan(extra);
+  document.getElementById('g_bd_totalWith').textContent = fmtYuan(interestWith)+' 元';
+  document.getElementById('g_bd_totalWithout').textContent = fmtYuan(interestWithout)+' 元';
+  document.getElementById('g_bd_repayWith').textContent = fmtYuan(totalWith)+' 元';
+  document.getElementById('g_bd_repayWithout').textContent = fmtYuan(noGraceM*totalMonths)+' 元';
+}
+
+function calcCompare(){
+  const a = {P:num('cmp_a_amount'), rate:num('cmp_a_rate'), years:num('cmp_a_years')};
+  const b = {P:num('cmp_b_amount'), rate:num('cmp_b_rate'), years:num('cmp_b_years')};
+  const aM = monthlyPayment(a.P, a.rate, a.years*12);
+  const bM = monthlyPayment(b.P, b.rate, b.years*12);
+  const aTotal = aM*a.years*12, bTotal = bM*b.years*12;
+  const aInterest = aTotal - a.P, bInterest = bTotal - b.P;
+
+  const maxM = Math.max(aM, bM, 0.0001);
+  const maxI = Math.max(aInterest, bInterest, 0.0001);
+  const maxT = Math.max(aTotal, bTotal, 0.0001);
+
+  document.getElementById('cmp_a_m_label').textContent = fmtYuan(aM)+' 元';
+  document.getElementById('cmp_b_m_label').textContent = fmtYuan(bM)+' 元';
+  document.getElementById('cmp_a_m_bar').style.width = (aM/maxM*100)+'%';
+  document.getElementById('cmp_b_m_bar').style.width = (bM/maxM*100)+'%';
+
+  document.getElementById('cmp_a_i_label').textContent = fmtYuan(aInterest)+' 元';
+  document.getElementById('cmp_b_i_label').textContent = fmtYuan(bInterest)+' 元';
+  document.getElementById('cmp_a_i_bar').style.width = (aInterest/maxI*100)+'%';
+  document.getElementById('cmp_b_i_bar').style.width = (bInterest/maxI*100)+'%';
+
+  document.getElementById('cmp_a_t_label').textContent = fmtYuan(aTotal)+' 元';
+  document.getElementById('cmp_b_t_label').textContent = fmtYuan(bTotal)+' 元';
+  document.getElementById('cmp_a_t_bar').style.width = (aTotal/maxT*100)+'%';
+  document.getElementById('cmp_b_t_bar').style.width = (bTotal/maxT*100)+'%';
+
+  const diff = Math.abs(aInterest - bInterest);
+  const cheaper = aInterest <= bInterest ? 'A' : 'B';
+  document.getElementById('cmp_diff').textContent = `總利息差距：${fmtYuan(diff)} 元（方案 ${cheaper} 較低）`;
+}
+
+function calcSpread(){
+  const P = num('s_amount');
+  const loanRate = num('s_loanRate');
+  const investRate = num('s_investRate');
+  const years = num('s_years');
+  const deployed = num('s_deployed');
+  const months = years*12;
+
+  const M = monthlyPayment(P, loanRate, months);
+  const loanInterest = M*months - P;
+
+  const idle = P - deployed;
+  const investGain = deployed*(Math.pow(1+investRate/100, years) - 1);
+
+  const spread = investRate - loanRate;
+  const netDiff = investGain - loanInterest;
+
+  document.getElementById('s_spread').textContent = (spread>=0?'+':'') + fmt(spread);
+  document.getElementById('s_bd_loanAmt').textContent = fmtYuan(P)+' 元';
+  document.getElementById('s_bd_deployed').textContent = fmtYuan(deployed)+' 元';
+  document.getElementById('s_bd_idle').textContent = fmtYuan(idle)+' 元';
+  document.getElementById('s_bd_loanInterest').textContent = '－'+fmtYuan(loanInterest)+' 元';
+  document.getElementById('s_bd_investGain').textContent = '＋'+fmtYuan(investGain)+' 元';
+  document.getElementById('s_bd_net').textContent = (netDiff>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
+
+  const maxRate = Math.max(loanRate, investRate, 1);
+  const loanPct = (loanRate/maxRate)*80 + 10;
+  const investPct = (investRate/maxRate)*80 + 10;
+  document.getElementById('s_pt_loan').style.left = loanPct+'%';
+  document.getElementById('s_pt_invest').style.left = investPct+'%';
+  document.getElementById('s_loanLabel').textContent = loanRate+'%';
+  document.getElementById('s_investLabel').textContent = investRate+'%';
+  const left = Math.min(loanPct, investPct);
+  const right = Math.max(loanPct, investPct);
+  const fillEl = document.getElementById('s_fill');
+  fillEl.style.left = left+'%';
+  fillEl.style.width = (right-left)+'%';
+
+  const sTier = spread>=1 ? 'pos' : (spread>=0 ? 'warn' : 'neg');
+  fillEl.className = 'spread-fill tier-'+sTier;
+  const flagEl = document.getElementById('s_flag');
+  const sFlagText = sTier==='pos' ? '假設報酬率明顯高於貸款利率，理論上有正向利差空間'
+    : sTier==='warn' ? '假設報酬率略高於貸款利率，利差空間有限，需留意波動'
+    : '假設報酬率低於貸款利率，屬於負向利差，需留意虧損風險';
+  flagEl.innerHTML = '<span class="flag tier-'+sTier+'">'+sFlagText+'</span>';
+}
+
+function calcPledge(){
+  const limit = num('p_limit');
+  const P = num('p_amount');
+  const deployed = num('p_deployed');
+  const rate = num('p_rate');
+  const ioYears = num('p_ioYears');
+  const investRate = num('p_investRate');
+
+  const unused = Math.max(0, limit - P);
+  const idle = Math.max(0, P - deployed);
+
+  // 只繳息期間・套利空間（週轉金貸款僅就「實際動用金額」計息）
+  const r = rate/100/12;
+  const monthlyInterest = P*r;
+  const ioMonths = ioYears*12;
+  const totalInterestIO = monthlyInterest*ioMonths;
+  const gain = deployed*(Math.pow(1+investRate/100, ioYears) - 1);
+  const netDiff = gain - totalInterestIO;
+  const spread = investRate - rate;
+
+  document.getElementById('p_bd_limit').textContent = fmtYuan(limit)+' 元';
+  document.getElementById('p_bd_amount').textContent = fmtYuan(P)+' 元';
+  document.getElementById('p_bd_unused').textContent = fmtYuan(unused)+' 元';
+  document.getElementById('p_bd_deployed').textContent = fmtYuan(deployed)+' 元';
+  document.getElementById('p_bd_idle').textContent = fmtYuan(idle)+' 元';
+
+  document.getElementById('p_bd_monthly').textContent = fmtYuan(monthlyInterest)+' 元／月';
+  document.getElementById('p_bd_interest').textContent = '－'+fmtYuan(totalInterestIO)+' 元';
+  document.getElementById('p_bd_gain').textContent = '＋'+fmtYuan(gain)+' 元';
+  document.getElementById('p_bd_net').textContent = (netDiff>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
+  document.getElementById('p_spread').textContent = (spread>=0?'+':'') + fmt(spread);
+
+  const pTier = spread>=1 ? 'pos' : (spread>=0 ? 'warn' : 'neg');
+  const flagEl = document.getElementById('p_flag');
+  const pFlagText = pTier==='pos' ? '假設報酬率明顯高於貸款利率，只繳息期間具正向利差空間'
+    : pTier==='warn' ? '假設報酬率略高於貸款利率，利差空間有限，需留意波動'
+    : '假設報酬率低於貸款利率，屬於負向利差，需留意虧損風險';
+  flagEl.innerHTML = '<span class="flag tier-'+pTier+'">'+pFlagText+'</span>';
+}
+
+['c_amount','c_rate','c_years'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>calcLoan('c')));
+['m_amount','m_rate','m_years'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>calcLoan('m')));
+['g_amount','g_rate','g_years','g_grace'].forEach(id=>document.getElementById(id).addEventListener('input', calcGrace));
+['cmp_a_amount','cmp_a_rate','cmp_a_years','cmp_b_amount','cmp_b_rate','cmp_b_years'].forEach(id=>document.getElementById(id).addEventListener('input', calcCompare));
+['s_amount','s_loanRate','s_years','s_deployed','s_investRate'].forEach(id=>document.getElementById(id).addEventListener('input', calcSpread));
+['p_limit','p_amount','p_deployed','p_rate','p_ioYears','p_investRate'].forEach(id=>document.getElementById(id).addEventListener('input', calcPledge));
+
+calcLoan('c'); calcLoan('m'); calcGrace(); calcCompare(); calcSpread(); calcPledge();
+
+const navLinks = document.querySelectorAll('#tabnav button');
+const sections = Array.from(navLinks).map(a => document.getElementById(a.dataset.target));
+
+function switchTab(targetId){
+  sections.forEach(s => s.classList.toggle('active', s.id === targetId));
+  navLinks.forEach(a => a.classList.toggle('active', a.dataset.target === targetId));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+navLinks.forEach(a => {
+  a.addEventListener('click', () => switchTab(a.dataset.target));
+});
+</script>
+
+</body>
+</html>

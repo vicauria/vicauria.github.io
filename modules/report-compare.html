@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>報告比對</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff;padding:28px 0 34px;
+  }
+  header.hero .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#BFE0EA;font-weight:700;margin-bottom:8px;}
+  header.hero h1{color:#fff;font-size:clamp(19px,2.4vw,24px);font-weight:700;margin-bottom:10px;}
+  .compare-dates{display:flex;align-items:center;gap:12px;font-size:13px;color:#DCEAEE;font-family:"Roboto Mono",monospace;flex-wrap:wrap;}
+  .compare-dates .arrow{color:var(--teal-light-text);}
+
+  main{margin-top:-16px;position:relative;z-index:10;padding-bottom:100px;}
+
+  .panel{
+    background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(20,50,60,0.05);padding:22px 24px;margin-bottom:18px;
+  }
+  .panel h2{font-size:15px;margin-bottom:16px;}
+
+  table.ledger{width:100%;border-collapse:collapse;font-size:13px;}
+  table.ledger th, table.ledger td{padding:11px 8px;text-align:left;border-bottom:1px solid var(--line);}
+  table.ledger thead th{
+    font-family:"Roboto Mono",monospace;font-size:10.5px;color:var(--ink-soft);font-weight:700;
+    letter-spacing:.03em;padding-bottom:10px;
+  }
+  table.ledger thead th:not(:first-child){text-align:right;}
+  table.ledger tbody th{font-weight:500;color:var(--ink);width:28%;}
+  table.ledger td{text-align:right;font-family:"Roboto Mono",monospace;color:var(--ink);}
+  table.ledger td.change{font-family:"Noto Sans TC",sans-serif;font-weight:700;white-space:nowrap;}
+  table.ledger td.change.up{color:var(--positive);}
+  table.ledger td.change.down{color:var(--negative);}
+  table.ledger td.change.flat{color:var(--ink-soft);}
+  table.ledger tbody tr:last-child th, table.ledger tbody tr:last-child td{border-bottom:none;}
+
+  .qual-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;}
+  .qual-row:last-child{margin-bottom:0;}
+  .qual-col .qual-label{font-size:10.5px;color:var(--ink-soft);font-family:"Roboto Mono",monospace;margin-bottom:4px;}
+  .qual-col .qual-value{font-size:13px;color:var(--ink);}
+
+  .state-box{
+    background:var(--card);border-radius:var(--radius);border:1px dashed var(--line);
+    padding:50px 30px;text-align:center;color:var(--ink-soft);font-size:13.5px;margin-top:20px;
+  }
+
+  .back-link{
+    display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);
+    text-decoration:none;margin-bottom:14px;
+  }
+  .back-link:hover{color:var(--teal-deep);}
+
+  @media (max-width:600px){
+    .qual-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Report Compare · 報告比對</div>
+    <h1 id="clientTitle">載入中…</h1>
+    <div class="compare-dates" id="dateRow"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <a class="back-link" href="client-records.html">← 回客戶資料</a>
+  <div id="content"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script>
+function money(n){const v=Math.round(n||0);return (v<0?"-$":"$")+Math.abs(v).toLocaleString("zh-TW");}
+function rowAnnual(row){ return (row.monthly||0)*12 + (row.once||0); }
+function groupAnnualTotal(g){ return (g.rows||[]).reduce((s,r)=>s+rowAnnual(r),0); }
+function groupAmountTotal(g){ return (g.rows||[]).reduce((s,r)=>s+(r.amount||0),0); }
+
+function formatDate(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '—';
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())}`;
+}
+
+function riskScoreOf(s){
+  if(!s.riskA || !s.riskA.likert) return null;
+  return s.riskA.likert.reduce((sum,v)=>sum+(v||0),0);
+}
+const RISK_TYPE_NAMES = [
+  {min:10,max:17,emoji:"🛡️",name:"安心守護型"},
+  {min:18,max:25,emoji:"🌱",name:"穩穩累積型"},
+  {min:26,max:33,emoji:"⚖️",name:"平衡配置型"},
+  {min:34,max:41,emoji:"🚀",name:"成長探索型"},
+  {min:42,max:50,emoji:"🔥",name:"機會進攻型"}
+];
+function riskTypeLabel(score){
+  if(score===null) return '—';
+  const t = RISK_TYPE_NAMES.find(t=>score>=t.min && score<=t.max) || RISK_TYPE_NAMES[RISK_TYPE_NAMES.length-1];
+  return t.emoji+' '+t.name;
+}
+
+function metricsOf(s){
+  const incomeGroups = s.incomeGroups||[];
+  const expenseGroups = s.expenseGroups||[];
+  const assetGroups = s.assetGroups||[];
+  const liabilityGroups = s.liabilityGroups||[];
+  const incomeTotal = incomeGroups.reduce((sum,g)=>sum+groupAnnualTotal(g),0);
+  const expenseTotal = expenseGroups.reduce((sum,g)=>sum+groupAnnualTotal(g),0);
+  const assetTotal = assetGroups.reduce((sum,g)=>sum+groupAmountTotal(g),0);
+  const liabilityTotal = liabilityGroups.reduce((sum,g)=>sum+groupAmountTotal(g),0);
+  return {
+    incomeTotal, expenseTotal, assetTotal, liabilityTotal,
+    netWorth: assetTotal - liabilityTotal,
+    savingsRate: incomeTotal>0 ? (incomeTotal-expenseTotal)/incomeTotal : null,
+    riskScore: riskScoreOf(s)
+  };
+}
+
+function changeCell(before, after, opts){
+  opts = opts||{};
+  if(before===null || after===null || before===undefined || after===undefined){
+    return `<td class="change flat">—</td>`;
+  }
+  const diff = after - before;
+  if(Math.abs(diff) < (opts.epsilon||0.001)){
+    return `<td class="change flat">持平</td>`;
+  }
+  const dir = diff > 0 ? 'up' : 'down';
+  const arrow = diff > 0 ? '↑' : '↓';
+  const text = opts.percent ? (Math.abs(diff*100).toFixed(1)+'%') : money(Math.abs(diff));
+  return `<td class="change ${dir}">${arrow} ${text}</td>`;
+}
+
+function visionGoalsText(s){
+  const v = s.visionA;
+  if(!v || !v.goals || v.goals.length===0) return '—';
+  return v.goals.map(g=> g==='自行輸入' ? (v.customGoalName||'自訂目標') : g).join('、');
+}
+function lifeStageText(s){
+  return (s.basicA && s.basicA.lifeStage && s.basicA.lifeStage.length) ? s.basicA.lifeStage.join('、') : '—';
+}
+
+async function fetchReport(id){
+  const { data, error } = await supabaseClient
+    .from('client_reports')
+    .select('id, client_id, saved_at, state')
+    .eq('id', id)
+    .single();
+  if(error || !data) return null;
+  return data;
+}
+
+async function fetchClientName(clientId){
+  const { data } = await supabaseClient
+    .from('client_records')
+    .select('client_name')
+    .eq('id', clientId)
+    .single();
+  return data ? (data.client_name || '') : '';
+}
+
+(async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const id1 = params.get('reportId1');
+  const id2 = params.get('reportId2');
+  const content = document.getElementById('content');
+
+  if(!id1 || !id2){
+    document.getElementById('clientTitle').textContent = '報告比對';
+    content.innerHTML = `<div class="state-box">網址缺少要比對的報告，請從客戶資料頁點「開始比對」進來。</div>`;
+    return;
+  }
+
+  const [reportA, reportB] = await Promise.all([fetchReport(id1), fetchReport(id2)]);
+  if(!reportA || !reportB){
+    document.getElementById('clientTitle').textContent = '報告比對';
+    content.innerHTML = `<div class="state-box">找不到其中一份報告，可能已經被刪除。</div>`;
+    return;
+  }
+
+  // 依填答時間排序，比較舊的當作「之前」，比較新的當作「現在」
+  const [before, after] = new Date(reportA.saved_at) <= new Date(reportB.saved_at)
+    ? [reportA, reportB] : [reportB, reportA];
+
+  const clientName = await fetchClientName(after.client_id);
+  document.getElementById('clientTitle').textContent = (clientName || '（未命名客戶）') + ' ・ 成長比對';
+  document.getElementById('dateRow').innerHTML =
+    `${formatDate(before.saved_at)} <span class="arrow">→</span> ${formatDate(after.saved_at)}`;
+
+  const mBefore = metricsOf(before.state);
+  const mAfter = metricsOf(after.state);
+
+  content.innerHTML = `
+    <div class="panel">
+      <h2>財務數字對照</h2>
+      <table class="ledger">
+        <thead>
+          <tr><th></th><th>${formatDate(before.saved_at)}</th><th>${formatDate(after.saved_at)}</th><th>變化</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>淨資產</th>
+            <td>${money(mBefore.netWorth)}</td>
+            <td>${money(mAfter.netWorth)}</td>
+            ${changeCell(mBefore.netWorth, mAfter.netWorth)}
+          </tr>
+          <tr>
+            <th>年收入</th>
+            <td>${money(mBefore.incomeTotal)}</td>
+            <td>${money(mAfter.incomeTotal)}</td>
+            ${changeCell(mBefore.incomeTotal, mAfter.incomeTotal)}
+          </tr>
+          <tr>
+            <th>年支出</th>
+            <td>${money(mBefore.expenseTotal)}</td>
+            <td>${money(mAfter.expenseTotal)}</td>
+            ${changeCell(mBefore.expenseTotal, mAfter.expenseTotal)}
+          </tr>
+          <tr>
+            <th>總資產</th>
+            <td>${money(mBefore.assetTotal)}</td>
+            <td>${money(mAfter.assetTotal)}</td>
+            ${changeCell(mBefore.assetTotal, mAfter.assetTotal)}
+          </tr>
+          <tr>
+            <th>總負債</th>
+            <td>${money(mBefore.liabilityTotal)}</td>
+            <td>${money(mAfter.liabilityTotal)}</td>
+            ${changeCell(mBefore.liabilityTotal, mAfter.liabilityTotal)}
+          </tr>
+          <tr>
+            <th>儲蓄率</th>
+            <td>${mBefore.savingsRate!==null ? (mBefore.savingsRate*100).toFixed(1)+'%' : '—'}</td>
+            <td>${mAfter.savingsRate!==null ? (mAfter.savingsRate*100).toFixed(1)+'%' : '—'}</td>
+            ${changeCell(mBefore.savingsRate, mAfter.savingsRate, {percent:true, epsilon:0.0001})}
+          </tr>
+          <tr>
+            <th>風險評估</th>
+            <td>${riskTypeLabel(mBefore.riskScore)}</td>
+            <td>${riskTypeLabel(mAfter.riskScore)}</td>
+            ${changeCell(mBefore.riskScore, mAfter.riskScore)}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>質性內容對照</h2>
+      <div class="qual-row">
+        <div class="qual-col">
+          <div class="qual-label">${formatDate(before.saved_at)} · 人生階段</div>
+          <div class="qual-value">${lifeStageText(before.state)}</div>
+        </div>
+        <div class="qual-col">
+          <div class="qual-label">${formatDate(after.saved_at)} · 人生階段</div>
+          <div class="qual-value">${lifeStageText(after.state)}</div>
+        </div>
+      </div>
+      <div class="qual-row">
+        <div class="qual-col">
+          <div class="qual-label">${formatDate(before.saved_at)} · 財富願景目標</div>
+          <div class="qual-value">${visionGoalsText(before.state)}</div>
+        </div>
+        <div class="qual-col">
+          <div class="qual-label">${formatDate(after.saved_at)} · 財富願景目標</div>
+          <div class="qual-value">${visionGoalsText(after.state)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+})();
+</script>
+
+</body>
+</html>

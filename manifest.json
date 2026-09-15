@@ -1,0 +1,38 @@
+{
+  "name": "Vicauria 資產配置工作台",
+  "short_name": "Vicauria",
+  "description": "財務顧問的資產配置工作台：財富地圖、試算工具箱、客戶資料、市場情報。",
+  "start_url": "./workbench.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#16323F",
+  "theme_color": "#16323F",
+  "lang": "zh-Hant-TW",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

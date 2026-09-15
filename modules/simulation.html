@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沙盤推演必勝</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:26px 0 30px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:#BFE0EA; font-weight:700; margin-bottom:8px;
+  }
+  header.hero h1{color:#fff; font-size:clamp(19px,2.4vw,24px); font-weight:700; margin-bottom:0;}
+  header.hero p{max-width:660px; color:#DCEAEE; font-size:13px; line-height:1.8; margin-top:8px;}
+  header.hero p strong{color:#fff;}
+
+  main{margin-top:-16px; position:relative; z-index:10; padding-bottom:140px;}
+
+  nav.tabs{
+    display:flex; gap:4px; margin:0 0 22px;
+    background:var(--card); border-radius:14px; border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08);
+    padding:8px; overflow-x:auto;
+  }
+  nav.tabs button{
+    flex:1; min-width:120px; appearance:none; border:none; background:none;
+    font-family:"Noto Sans TC",sans-serif; font-size:13.5px; font-weight:700;
+    color:var(--ink-soft); padding:13px 14px; border-radius:9px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s ease, color .15s ease; white-space:nowrap;
+  }
+  nav.tabs button .ic{font-size:15px;}
+  nav.tabs button:hover{background:var(--teal-tint); color:var(--teal-deep);}
+  nav.tabs button.active{background:var(--navy); color:#fff;}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block; animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .placeholder{
+    background:var(--card); border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); border:1px solid var(--line);
+    padding:60px 40px; text-align:center;
+  }
+  .placeholder .icon{font-size:36px; margin-bottom:16px;}
+  .placeholder h2{font-size:19px; margin-bottom:10px;}
+  .placeholder p{color:var(--ink-soft); font-size:13.5px; max-width:480px; margin:0 auto; line-height:2;}
+  .placeholder .tag{
+    display:inline-block; margin-top:18px; padding:6px 16px; border-radius:20px;
+    background:var(--teal-tint); color:var(--teal-deep); font-size:12px; font-weight:700;
+  }
+
+  /* ---------- shared calculator layout ---------- */
+  .grid2{display:grid; grid-template-columns:1.1fr 1fr; gap:20px; align-items:start;}
+  @media (max-width:900px){.grid2{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--card); border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); border:1px solid var(--line);
+    padding:26px 24px; margin-bottom:20px;
+  }
+  .card h3{
+    font-size:13px; font-weight:700; letter-spacing:.03em; color:var(--teal-deep);
+    margin:0 0 18px; padding-bottom:10px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:8px;
+  }
+  .card h3::before{content:""; width:6px; height:6px; background:var(--warm); border-radius:50%; display:inline-block;}
+  .card h3.second{margin-top:24px;}
+
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  .field-label{display:flex; justify-content:space-between; align-items:baseline; font-size:13px; font-weight:500; margin-bottom:8px;}
+  .field-label .fv{font-family:"Roboto Mono",monospace; font-weight:700; color:var(--warm-deep); font-size:14px;}
+  input[type=range]{-webkit-appearance:none; width:100%; height:4px; background:var(--line); border-radius:2px; outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:16px;height:16px;border-radius:50%; background:var(--teal); border:3px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%; background:var(--teal); border:3px solid #fff; cursor:pointer;}
+
+  .field input[type=number]{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:7px;
+    font-family:"Roboto Mono",monospace; font-size:14px; background:var(--paper); color:var(--ink);
+  }
+  .field input[type=number]:focus{outline:2px solid var(--teal-tint); border-color:var(--teal);}
+  .input-suffix{position:relative;}
+  .input-suffix input{padding-right:34px;}
+  .input-suffix::after{content:"元"; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--ink-soft); pointer-events:none;}
+
+  .timeline{position:relative; height:56px; margin:4px 0 24px;}
+  .timeline-track{position:absolute; top:24px; left:2%; right:2%; height:3px; background:var(--line); border-radius:2px;}
+  .timeline-fill{position:absolute; top:24px; height:3px; background:var(--teal); border-radius:2px;}
+  .timeline-dot{position:absolute; top:17px; width:16px; height:16px; border-radius:50%; background:var(--card); border:3px solid var(--teal); transform:translateX(-50%); z-index:2;}
+  .timeline-dot.end{border-color:var(--warm);}
+  .timeline-label{position:absolute; top:32px; font-size:10.5px; color:var(--ink-soft); transform:translateX(-50%); white-space:nowrap; text-align:center;}
+  .timeline-label b{display:block; color:var(--navy); font-family:"Roboto Mono",monospace; font-size:12.5px;}
+
+  .result-card{
+    background:var(--navy); color:#fff; border-radius:var(--radius); padding:26px;
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); position:sticky; top:20px;
+  }
+  .result-card h3{color:#F0EAD8; border-bottom-color:rgba(255,255,255,.15); font-size:13px;}
+  .result-card h3::before{background:var(--warm);}
+  .ledger-row{display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px dashed rgba(255,255,255,.14); font-size:13px; gap:10px;}
+  .ledger-row .lbl{color:rgba(240,234,216,.75);}
+  .ledger-row .val{font-family:"Roboto Mono",monospace; font-weight:600; text-align:right; white-space:nowrap;}
+  .ledger-row .val.warn{color:#F3A98C;}
+  .ledger-total{margin-top:14px; padding-top:16px; border-top:1px solid rgba(255,255,255,.25);}
+  .ledger-total .lbl{font-size:13px; color:#F0EAD8;}
+  .ledger-total .big{font-family:"Roboto Mono",monospace; font-weight:700; font-size:26px; color:#F3C98A; line-height:1.2; margin-top:6px;}
+  .ledger-total .big small{font-size:14px; font-weight:500; margin-left:4px; color:rgba(240,234,216,.7);}
+  .achieve-bar{height:8px; border-radius:4px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:10px;}
+  .achieve-fill{height:100%; background:linear-gradient(90deg,var(--teal),var(--warm)); border-radius:4px; transition:width .3s ease;}
+
+  .sub-tabs{display:flex; gap:8px; margin-bottom:20px;}
+  .sub-tabs button{
+    flex:1; padding:12px; border-radius:9px; border:1px solid var(--line); background:var(--card);
+    font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .sub-tabs button.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .sub-tabs button .stat-note{margin-top:3px; font-size:11px; font-weight:400; color:var(--ink-soft);}
+  .sub-tabs button.active .stat-note{color:rgba(255,255,255,0.7);}
+  .sub-tabs.narrow{max-width:440px;}
+
+  .house-sub{display:none;}
+  .house-sub.active{display:block;}
+
+  .toggle-row{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:4px 0;}
+  .toggle-row .tr-label{font-size:13px;}
+  .toggle-row .tr-sub{font-size:11px; color:var(--ink-soft); display:block; margin-top:2px;}
+  .toggle{width:42px;height:24px;border-radius:12px;background:var(--line);position:relative;cursor:pointer;border:none;flex-shrink:0;}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s ease;}
+  .toggle.on{background:var(--teal);}
+  .toggle.on::after{transform:translateX(18px);}
+
+  .note-box{background:var(--teal-tint); border-radius:8px; padding:12px 14px; font-size:11.5px; color:var(--teal-deep); line-height:1.7; margin-top:16px;}
+
+  /* ---------- 退休基金專用 ---------- */
+  .grid1200{display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; margin-bottom:20px;}
+  @media (max-width:980px){.grid1200{grid-template-columns:1fr;}}
+  .field-row2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:520px){.field-row2{grid-template-columns:1fr;}}
+  .labor-card{background:linear-gradient(180deg,#fff 0%, var(--warm-tint) 130%);}
+  .labor-head h3{color:var(--warm-deep); border-bottom:none; padding-bottom:0; margin-bottom:16px;}
+  .labor-head h3::before{display:none;}
+
+  .calc-btn{
+    display:block; width:100%; padding:18px; margin:4px 0 28px; border:none; border-radius:14px;
+    background:linear-gradient(90deg,var(--navy) 0%, var(--teal-deep) 60%, var(--teal) 100%); color:#fff;
+    font-size:16px; font-weight:800; letter-spacing:.03em; cursor:pointer;
+    box-shadow:0 12px 28px rgba(22,50,63,0.28); font-family:"Noto Sans TC",sans-serif;
+    transition:transform .12s ease;
+  }
+  .calc-btn:hover{transform:translateY(-1px);}
+  .calc-btn:active{transform:translateY(0px);}
+
+  .result-section{display:none;}
+  .result-section.show{display:block; animation:fade .3s ease;}
+
+  .status-banner{
+    background:var(--card); border-radius:var(--radius); border:2px solid var(--positive,#2E7D5B);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); padding:28px 30px; margin-bottom:20px;
+    display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap;
+  }
+  .status-banner.short{border-color:var(--negative);}
+  .status-badge{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px;
+    background:rgba(46,125,91,.12); color:var(--positive,#2E7D5B); font-size:13px; font-weight:700; margin-bottom:12px;
+  }
+  .status-banner.short .status-badge{background:rgba(179,73,47,.12); color:var(--negative);}
+  .status-diff-label{font-size:12.5px; color:var(--ink-soft); margin-bottom:4px;}
+  .status-diff{font-family:"Roboto Mono",monospace; font-weight:800; font-size:32px; color:var(--positive,#2E7D5B);}
+  .status-banner.short .status-diff{color:var(--negative);}
+  .status-desc{font-size:12.5px; color:var(--ink-soft); max-width:440px; margin:10px 0 0; line-height:1.8;}
+  .status-rate-box{text-align:center; min-width:220px;}
+  .rate-label{font-size:12px; color:var(--ink-soft); margin-bottom:4px;}
+  .rate-big{font-family:"Roboto Mono",monospace; font-weight:800; font-size:44px; color:var(--warm-deep); line-height:1;}
+  .rate-big small{font-size:20px;}
+  .rate-sub{font-size:11.5px; color:var(--ink-soft); margin-top:6px;}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+  .stat-grid.two{grid-template-columns:repeat(2,1fr);}
+  @media (max-width:900px){.stat-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.stat-grid{grid-template-columns:1fr;}}
+
+  .rt-grid-2col{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+  @media (max-width:520px){.rt-grid-2col{grid-template-columns:1fr;}}
+
+  /* 退休試算專用：把原本橫幅樣式的狀態卡片，濃縮成跟其他stat-card一樣的尺寸 */
+  .status-banner-compact{
+    display:block !important; padding:18px 16px !important; border-width:1px !important;
+    box-shadow:0 6px 18px rgba(20,50,60,0.05) !important; margin-bottom:0 !important;
+  }
+  .status-banner-compact .status-badge{margin-bottom:8px; font-size:11px; padding:4px 10px;}
+  .status-banner-compact .status-diff{font-size:20px; line-height:1.2;}
+  .status-banner-compact.tier-warn-banner{border-color:rgba(184,121,30,.3) !important; background:rgba(184,121,30,.06);}
+  .status-banner-compact.tier-warn-banner .status-badge{background:rgba(184,121,30,.12); color:#B8791E;}
+  .status-banner-compact.tier-warn-banner .status-diff{color:#B8791E;}
+  .status-banner-compact.tier-neg-banner{border-color:rgba(179,73,47,.3) !important; background:rgba(179,73,47,.06);}
+  .status-banner-compact.tier-neg-banner .status-badge{background:rgba(179,73,47,.12); color:var(--negative);}
+  .status-banner-compact.tier-neg-banner .status-diff{color:var(--negative);}
+  .stat-card{background:var(--card); border-radius:12px; border:1px solid var(--line); padding:18px 16px; box-shadow:0 6px 18px rgba(20,50,60,0.05);}
+  .stat-card.good{background:rgba(46,125,91,.06); border-color:rgba(46,125,91,.25);}
+  .stat-card.warm{background:var(--warm-tint); border-color:rgba(168,95,39,.2);}
+  .stat-card.card-tier-pos{background:rgba(46,125,91,.10); border-color:rgba(46,125,91,.3);}
+  .stat-card.card-tier-warn{background:rgba(184,121,30,.10); border-color:rgba(184,121,30,.3);}
+  .stat-card.card-tier-neg{background:rgba(179,73,47,.10); border-color:rgba(179,73,47,.3);}
+  .stat-label{font-size:11.5px; color:var(--ink-soft); margin-bottom:8px;}
+  .stat-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:20px; color:var(--navy); line-height:1.2;}
+  .stat-value small{font-size:12px; font-weight:500; color:var(--ink-soft); margin-left:2px;}
+  .stat-note{font-size:10.5px; color:var(--ink-soft); margin-top:6px;}
+
+  .inflation-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 20px;
+    font-size:13px; margin-bottom:20px;
+  }
+  .inflation-bar .lbl{font-weight:700; color:var(--teal-deep); margin-right:6px;}
+  .inflation-bar .arrow{color:var(--ink-soft);}
+  .inflation-bar b{font-family:"Roboto Mono",monospace;}
+  .inflation-bar .warm-text{font-family:"Roboto Mono",monospace; font-weight:700; color:var(--warm-deep);}
+
+  .tips-box{background:var(--warm-tint); border-radius:var(--radius); padding:22px 24px; margin-bottom:20px;}
+  .tips-head{display:flex; align-items:baseline; gap:10px; font-weight:800; color:var(--warm-deep); font-size:14px; margin-bottom:16px;}
+  .tips-head span{font-size:11px; font-weight:400; color:var(--ink-soft);}
+  .tip-item{display:flex; gap:12px; margin-bottom:14px;}
+  .tip-item:last-child{margin-bottom:0;}
+  .tip-n{
+    flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--warm-deep); color:#fff;
+    font-family:"Roboto Mono",monospace; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .tip-item b{font-size:12.5px; color:var(--warm-deep); display:block; margin-bottom:3px;}
+  .tip-item p{font-size:12.5px; color:var(--ink); margin:0; line-height:1.7;}
+
+  .formula-details{border:1px solid var(--line); border-radius:12px; padding:0; background:var(--card);}
+  .formula-details summary{padding:14px 20px; font-size:13px; font-weight:700; color:var(--teal-deep); cursor:pointer;}
+  .formula-details .labor-detail-box{padding:0 20px 20px;}
+  .labor-detail-box h4{font-size:12.5px; color:var(--warm-deep); margin:0 0 14px;}
+  .labor-detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;}
+  @media (max-width:520px){.labor-detail-grid{grid-template-columns:1fr;}}
+  .labor-detail-card{background:var(--paper); border-radius:10px; padding:16px;}
+  .ldc-label{font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;}
+  .ldc-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:19px; color:var(--navy);}
+  .ldc-value small{font-size:12px; font-weight:500; color:var(--ink-soft);}
+  .ldc-note{font-size:10.5px; color:var(--ink-soft); margin-top:4px;}
+  .warn-box{background:#FBF3E4; border:1px solid #E9D6A8; border-radius:8px; padding:12px 14px; font-size:11.5px; color:#7A5C22; line-height:1.8; margin-top:12px;}
+  .warn-box b{color:#5C4315;}
+
+  /* ---------- 購屋基金專用 ---------- */
+  .grace-flow{display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .grace-step{flex:1; min-width:160px;}
+  .grace-label{font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;}
+  .grace-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:22px; color:var(--navy);}
+  .grace-value small{font-size:13px; font-weight:500; color:var(--ink-soft);}
+  .grace-value.warm{color:var(--warm-deep);}
+  .grace-arrow{font-size:20px; color:var(--ink-soft);}
+
+  .cashflow-compare{display:flex; align-items:center; gap:20px; flex-wrap:wrap;}
+  .cf-item{flex:1; min-width:160px;}
+  .cf-label{font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;}
+  .cf-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:24px; color:var(--navy);}
+  .cf-value small{font-size:13px; font-weight:500; color:var(--ink-soft);}
+  .cf-value.warm{color:var(--warm-deep);}
+  .cf-diff{font-family:"Roboto Mono",monospace; font-weight:700; font-size:15px; color:var(--positive,#2E7D5B); background:rgba(46,125,91,.1); padding:8px 14px; border-radius:20px;}
+  .cf-diff.neg{color:var(--negative); background:rgba(179,73,47,.1);}
+
+  /* ---------- 遺贈方案專用 ---------- */
+  .sub-tabs.narrow3{max-width:520px;}
+  .input-suffix-wan{position:relative;}
+  .input-suffix-wan input{width:100%; padding:10px 12px; padding-right:34px; border:1px solid var(--line); border-radius:7px; font-family:"Roboto Mono",monospace; font-size:14px; background:var(--paper); color:var(--ink);}
+  .input-suffix-wan::after{content:"萬"; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--ink-soft); pointer-events:none;}
+
+  .row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .row-between:last-child{margin-bottom:0;}
+  .row-between .tr-label{font-size:13.5px;color:var(--ink);}
+  .row-between .tr-sub{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .stepper{display:flex;align-items:center;gap:12px;}
+  .stepper button{
+    width:30px;height:30px;border-radius:7px;border:1px solid var(--line);
+    background:var(--paper); color:var(--teal); font-size:16px; cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Roboto Mono", monospace;
+  }
+  .stepper button:hover{border-color:var(--warm);color:var(--warm-deep);}
+  .stepper .count{font-family:"Roboto Mono", monospace; font-weight:600; font-size:15px; min-width:24px; text-align:center;}
+
+  .donut-wrap{display:flex; flex-direction:column; align-items:center; gap:20px; padding:8px 0 4px;}
+  .donut{width:180px;height:180px;border-radius:50%; position:relative;}
+  .donut::after{content:""; position:absolute; inset:26px; background:var(--card); border-radius:50%; display:flex; align-items:center; justify-content:center;}
+  .donut-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; z-index:2;}
+  .donut-center .n{font-family:"Roboto Mono",monospace;font-weight:700;font-size:15px;color:var(--navy);}
+  .donut-center .l{font-size:10px;color:var(--ink-soft);margin-top:2px;}
+  .legend{width:100%;}
+  .legend-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .legend-row:last-child{border-bottom:none;}
+  .legend-row .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .legend-row .name{flex:1;}
+  .legend-row .pct{font-family:"Roboto Mono",monospace;font-weight:600;color:var(--navy);}
+  .legend-row .amt{font-family:"Roboto Mono",monospace;font-size:11.5px;color:var(--ink-soft);min-width:90px;text-align:right;}
+  .tsl-note{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+  .heir-block{border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-bottom:12px;}
+  .heir-block.disabled{opacity:.4;}
+  .heir-block .row-label{font-weight:600; font-size:13.5px;}
+
+  .amber-box{background:#FBF3E4; border:1px solid #E9D6A8; border-radius:8px; padding:14px 16px; font-size:12.5px; color:#7A5C22; margin-top:16px; line-height:1.6;}
+
+  .steps-list{margin-top:0;}
+  .step-row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .step-row .n{color:var(--warm-deep); font-family:"Roboto Mono",monospace; margin-right:8px;}
+  .step-row .v{font-family:"Roboto Mono",monospace; font-weight:600;}
+
+  .amt-banner{
+    margin-top:18px; padding:18px 20px; border-radius:9px;
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(46,125,91,.10); border:1px solid rgba(46,125,91,.3);
+  }
+  .amt-banner.due{background:rgba(179,73,47,.10); border-color:rgba(179,73,47,.3);}
+  .amt-banner .lbl{font-size:13px;font-weight:600;color:var(--positive,#2E7D5B);}
+  .amt-banner.due .lbl{color:var(--negative);}
+  .amt-banner .amt{font-family:"Roboto Mono",monospace;font-weight:700;font-size:22px;color:var(--positive,#2E7D5B);}
+  .amt-banner.due .amt{color:var(--negative);}
+
+  details{border:1px solid var(--line); border-radius:8px; margin-top:16px; padding:0;}
+  summary{padding:12px 16px; font-size:13px; color:var(--warm-deep); cursor:pointer; font-weight:500;}
+  details .details-body{padding:0 16px 16px;}
+
+  /* ---------- 資產分配：順位卡片 ---------- */
+  #tier-children, #tier-parents, #tier-siblings, #tier-grandparents{transition:opacity .2s ease;}
+  #tier-children.tier-inactive, #tier-parents.tier-inactive, #tier-siblings.tier-inactive, #tier-grandparents.tier-inactive{opacity:.42; pointer-events:none;}
+
+  .repeat-block{border:1px solid var(--line); border-radius:9px; padding:14px 16px; margin-bottom:12px; background:var(--paper);}
+  .repeat-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .repeat-head .t{font-size:13.5px; font-weight:700; color:var(--navy);}
+  .repeat-del{border:none; background:none; color:var(--ink-soft); cursor:pointer; font-size:15px;}
+  .repeat-del:hover{color:var(--negative);}
+  .repeat-block select{
+    width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:7px;
+    font-family:"Noto Sans TC",sans-serif; font-size:13.5px; background:var(--card); color:var(--ink);
+  }
+  .add-member-btn{
+    display:inline-flex; align-items:center; gap:6px; background:none; border:1px dashed var(--teal);
+    color:var(--teal-deep); font-size:12.5px; font-weight:700; padding:9px 16px; border-radius:8px; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .add-member-btn:hover{background:var(--teal-tint);}
+
+  .alloc-mode-view{display:none;}
+  .alloc-mode-view.active{display:block;}
+
+  .custom-heir-row{border:1px solid var(--line); border-radius:9px; padding:16px; margin-bottom:14px;}
+  .custom-heir-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .custom-heir-name{display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:var(--navy);}
+  .custom-heir-name .dot{width:9px;height:9px;border-radius:50%;}
+  .custom-heir-name .tag{font-size:10.5px; font-weight:500; color:var(--ink-soft); background:var(--paper); padding:2px 8px; border-radius:10px;}
+  .custom-heir-pct{font-family:"Roboto Mono",monospace; font-weight:800; color:var(--warm-deep); font-size:15px;}
+  .custom-heir-row input[type=range]{margin-bottom:10px;}
+  .custom-heir-ref{display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-soft);}
+  .custom-heir-ref b{color:var(--navy); font-weight:600;}
+
+  .custom-total-row{
+    display:flex; justify-content:space-between; align-items:center; margin-top:6px;
+    padding:14px 16px; border-radius:9px; background:rgba(179,73,47,.08); border:1px solid rgba(179,73,47,.25);
+  }
+  .custom-total-row.ok{background:rgba(46,125,91,.08); border-color:rgba(46,125,91,.25);}
+  .custom-total-row .tr-label{font-size:13px; font-weight:600; color:var(--ink);}
+  .custom-total-row b{font-family:"Roboto Mono",monospace; font-size:16px; color:var(--negative);}
+  .custom-total-row.ok b{color:var(--positive,#2E7D5B);}
+  .custom-total-row .calc-link{font-size:11.5px;}
+
+  .source-bar-wrap{width:100%;}
+  .source-bar{display:flex; width:100%; height:20px; border-radius:10px; overflow:hidden; background:var(--line);}
+  .source-bar-seg{height:100%; transition:width .3s ease;}
+  .source-bar-seg.contribution{background:var(--teal);}
+  .source-bar-seg.gain{background:var(--warm);}
+  .source-bar-legend{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:14px; font-size:12.5px; color:var(--ink);}
+  .source-bar-legend b{font-family:"Roboto Mono",monospace; color:var(--navy);}
+  .source-bar-legend .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px;}
+  .source-bar-legend .dot.contribution{background:var(--teal);}
+  .source-bar-legend .dot.gain{background:var(--warm);}
+
+  /* ---------- 三色達成度系統：正向=綠／警示=橘黃／嚴重=紅，目標值固定黑色 ---------- */
+  .tier-pos{color:var(--positive,#2E7D5B) !important;}
+  .tier-warn{color:#B8791E !important;}
+  .tier-neg{color:var(--negative,#B3492F) !important;}
+  .tier-target{color:var(--navy) !important;}
+
+  .status-banner.tier-warn-banner{border-color:#B8791E;}
+  .status-banner.tier-warn-banner .status-badge{background:rgba(184,121,30,.12); color:#B8791E;}
+  .status-banner.tier-warn-banner .status-diff{color:#B8791E;}
+  .status-banner.tier-neg-banner{border-color:var(--negative);}
+  .status-banner.tier-neg-banner .status-badge{background:rgba(179,73,47,.12); color:var(--negative);}
+  .status-banner.tier-neg-banner .status-diff{color:var(--negative);}
+
+  .achieve-fill.tier-pos-bg{background:linear-gradient(90deg,#4F9B7A,var(--positive,#2E7D5B));}
+  .achieve-fill.tier-warn-bg{background:linear-gradient(90deg,#E0A94A,#B8791E);}
+  .achieve-fill.tier-neg-bg{background:linear-gradient(90deg,#D17A63,var(--negative,#B3492F));}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Scenario War Room · 沙盤推演必勝</div>
+    <h1>在真正下決定之前，先在沙盤上打贏這一仗</h1>
+    <p>
+      軍事上的沙盤推演，是在真正開戰前，先把地形、兵力、各種變化都推演一遍——
+      <strong>錢的決定也一樣</strong>。退休要準備多少、房子什麼時候買得起、教育金夠不夠、資產怎麼傳承才不吃虧，這些問題不該用猜的。
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" id="tabnav">
+    <button class="active" data-tab="retirement"><span class="ic">🌤️</span>退休基金</button>
+    <button data-tab="house"><span class="ic">🏠</span>購屋基金</button>
+    <button data-tab="education"><span class="ic">🎓</span>教育基金</button>
+    <button data-tab="legacy"><span class="ic">🗺️</span>遺贈方案</button>
+    <button data-tab="invest"><span class="ic">📈</span>投資理財</button>
+  </nav>
+
+  <!-- ============ 退休基金 ============ -->
+  <section class="tab-panel active" id="panel-retirement">
+    <div class="grid1200">
+      <div class="card">
+        <h3>人生時間軸</h3>
+        <div class="timeline">
+          <div class="timeline-track"></div>
+          <div class="timeline-fill" id="rtTimelineFill"></div>
+          <div class="timeline-dot" id="rtDotNow"></div>
+          <div class="timeline-dot end" id="rtDotRetire"></div>
+          <div class="timeline-label" id="rtLabelNow">現在<b id="rtNowAgeLabel">30</b></div>
+          <div class="timeline-label" id="rtLabelRetire">退休<b id="rtRetireAgeLabel">60</b></div>
+        </div>
+        <div class="field-row2">
+          <div class="field">
+            <div class="field-label"><span>目前年齡</span><span class="fv" id="v-rtCurrentAge">30 歲</span></div>
+            <input type="range" id="in-rtCurrentAge" min="18" max="70" value="30">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>預計退休年齡</span><span class="fv" id="v-rtRetireAge">60 歲</span></div>
+            <input type="range" id="in-rtRetireAge" min="40" max="85" value="60">
+          </div>
+        </div>
+
+        <h3 class="second">退休目標</h3>
+        <div class="field-row2">
+          <div class="field">
+            <div class="field-label"><span>退休後希望每月有多少生活費／被動收入</span></div>
+            <div class="input-suffix"><input type="number" id="in-rtMonthlyIncome" value="50000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>通膨率</span><span class="fv" id="v-rtInflation">2.0%</span></div>
+            <input type="range" id="in-rtInflation" min="0" max="6" step="0.5" value="2">
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>預計使用金融工具報酬率</span><span class="fv" id="v-rtReturn">4.0%</span></div>
+          <input type="range" id="in-rtReturn" min="0" max="12" step="0.5" value="4">
+        </div>
+
+        <h3 class="second">你現在的資金狀況</h3>
+        <div class="field-row2">
+          <div class="field">
+            <div class="field-label"><span>現有資產</span></div>
+            <div class="input-suffix"><input type="number" id="in-rtAssets" value="500000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>每月可投資金額</span></div>
+            <div class="input-suffix"><input type="number" id="in-rtMonthlyInvest" value="10000"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card labor-card">
+        <div class="labor-head">
+          <h3 style="margin:0;border:none;padding:0;">🏛️ 勞保勞退（退休後的政府保障）</h3>
+        </div>
+        <div class="toggle-row" style="margin-bottom:18px;">
+          <span class="tr-label">把勞保老年年金＋勞退月退，一起算進退休收入</span>
+          <button class="toggle on" id="tg-labor"></button>
+        </div>
+        <div class="field-row2">
+          <div class="field">
+            <div class="field-label"><span>目前月薪</span></div>
+            <div class="input-suffix"><input type="number" id="in-laborSalary" value="45000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>勞保投保年資（退休時累計）</span><span class="fv" id="v-laborYears">25 年</span></div>
+            <input type="range" id="in-laborYears" min="0" max="45" value="25">
+          </div>
+        </div>
+        <div class="field-row2">
+          <div class="field">
+            <div class="field-label"><span>勞保年金請領年齡</span><span class="fv" id="v-laborClaimAge">65 歲</span></div>
+            <input type="range" id="in-laborClaimAge" min="55" max="70" value="65">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>勞退自願提繳率</span><span class="fv" id="v-laborVoluntary">0%</span></div>
+            <input type="range" id="in-laborVoluntary" min="0" max="6" step="1" value="0">
+          </div>
+        </div>
+        <div class="field-row2">
+          <div class="field">
+            <div class="field-label"><span>勞退專戶預估報酬率</span><span class="fv" id="v-laborReturn">3.0%</span></div>
+            <input type="range" id="in-laborReturn" min="0" max="8" step="0.5" value="3">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>現有勞退專戶餘額（選填）</span></div>
+            <div class="input-suffix"><input type="number" id="in-laborExisting" value="0"></div>
+          </div>
+        </div>
+        <div class="note-box">勞保投保薪資以 2026 年（115 年）上限 45,800 元計算；勞退月提繳工資另以 2026 年上限 150,000 元計算（兩者是不同分級表）。勞保年金採 A、B 式擇優估算，勞退月退以個人專戶累積本金 ÷ 20 年（240 個月）簡化估算。實際金額以勞動部勞工保險局核定為準。</div>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="btn-calcRetirement">計算退休基金</button>
+
+    <div class="result-section" id="rt-resultSection">
+
+      <!-- 左欄：1所需資產 → 2實際累積資產 → 3缺口或充足（濃縮成跟其他卡片同尺寸）
+           右欄：4目標月現金流 → 5預估退休收入 → 6通膨影響 -->
+      <div class="rt-grid-2col">
+        <div class="stat-card" id="rt-card-required">
+          <div class="stat-label">所需準備總額</div>
+          <div class="stat-value" id="rt-required">$0</div>
+          <div class="stat-note">被動收入達標所需</div>
+        </div>
+        <div class="stat-card" id="rt-card-desired">
+          <div class="stat-label">理想退休月生活費</div>
+          <div class="stat-value" id="rt-desiredMonthly">$0<small>/月</small></div>
+          <div class="stat-note">以今日購買力計算</div>
+        </div>
+
+        <div class="stat-card" id="rt-card-projected">
+          <div class="stat-label">退休時可用資產</div>
+          <div class="stat-value" id="rt-projected">$0</div>
+          <div class="stat-note">依目前儲蓄推算</div>
+        </div>
+        <div class="stat-card" id="rt-card-total">
+          <div class="stat-label">預估退休月收入（含勞保勞退）</div>
+          <div class="stat-value" id="rt-totalMonthly">$0<small>/月</small></div>
+          <div class="stat-note" id="rt-totalMonthlyNote">投資被動收入 ＋ 勞保勞退</div>
+        </div>
+
+        <div class="stat-card status-banner-compact" id="rt-statusBanner">
+          <div class="status-badge" id="rt-statusBadge">✓ 退休金充足</div>
+          <div class="status-diff" id="rt-diffValue">$0</div>
+          <div class="stat-note"><span id="rt-diffLabel">超出目標</span> · 達成率 <span id="rt-rateBig">0<small>%</small></span></div>
+          <p class="status-desc" id="rt-statusDesc" style="display:none;"></p>
+          <div class="achieve-bar" style="display:none;"><div class="achieve-fill" id="rt-rateBar"></div></div>
+          <div class="rate-sub" id="rt-rateSub" style="display:none;"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">通膨影響購買力</div>
+          <div class="stat-value" id="rt-infFuture">$0</div>
+          <div class="stat-note">今日 <span id="rt-infToday">$0</span> · <span id="rt-infYears">0年×0%</span></div>
+        </div>
+      </div>
+
+      <!-- 下方橫跨兩欄：實質報酬率 -->
+      <div class="stat-grid two">
+        <div class="stat-card">
+          <div class="stat-label">實質報酬率</div>
+          <div class="stat-value" id="rt-realReturn">0%</div>
+          <div class="stat-note">扣掉通膨後的真實購買力成長</div>
+        </div>
+      </div>
+
+      <div class="tips-box">
+        <div class="tips-head">💡 試算提醒<span>依這次試算結果</span></div>
+        <div class="tip-item"><span class="tip-n">1</span><div><b>目前狀態判讀</b><p id="tip-1"></p></div></div>
+        <div class="tip-item"><span class="tip-n">2</span><div><b>這代表什麼</b><p id="tip-2"></p></div></div>
+        <div class="tip-item"><span class="tip-n">3</span><div><b>下一步建議</b><p id="tip-3"></p></div></div>
+      </div>
+
+      <details class="formula-details">
+        <summary>計算公式說明</summary>
+        <div class="labor-detail-box">
+          <h4>🏛️ 勞保勞退明細（估算）・已算進上面的退休收入</h4>
+          <div class="labor-detail-grid">
+            <div class="labor-detail-card">
+              <div class="ldc-label">勞保老年年金</div>
+              <div class="ldc-value" id="rt-laborPension">$0<small>/月</small></div>
+              <div class="ldc-note">A、B 式擇優（退休當年名目）</div>
+            </div>
+            <div class="labor-detail-card">
+              <div class="ldc-label">勞退月退金（粗估）</div>
+              <div class="ldc-value" id="rt-pensionMonthly">$0<small>/月</small></div>
+              <div class="ldc-note" id="rt-pensionLump">或選一次領帳戶 $0</div>
+            </div>
+          </div>
+          <div class="warn-box" id="rt-gapWarning"></div>
+          <div class="warn-box">
+            <b>一次領 vs 月退要留意：</b>勞退活得越久、月退累積越多，通常比一次領划算；但一次領能自己運用、彈性高。勞保老年給付則多為月領。以上皆為估算，實際金額與領法一律以勞動部勞工保險局核定為準。
+          </div>
+        </div>
+        <div class="note-box" style="margin-top:14px;">
+          粗估公式：實質報酬率 ＝ (1+名目報酬率)÷(1+通膨率)－1；退休時可用資產以實質報酬率複利估算現有資產與每月投入金額（換算為今日購買力）；所需準備總額 ＝ （理想月生活費－勞保勞退月收入）×12÷實質報酬率；達成率 ＝ 預估退休月收入÷理想月生活費。
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 購屋基金 ============ -->
+  <section class="tab-panel" id="panel-house">
+    <div class="sub-tabs" id="houseSubTabs">
+      <button class="active" data-sub="ability">購屋能力試算</button>
+      <button data-sub="tax">房地合一稅（售屋）</button>
+    </div>
+
+    <div class="house-sub active" id="house-sub-ability">
+      <div class="grid2">
+        <div class="card">
+          <h3>購屋能力與房貸</h3>
+          <div class="field">
+            <div class="field-label"><span>目前年齡</span><span class="fv" id="v-haCurrentAge">30 歲</span></div>
+            <input type="range" id="in-haCurrentAge" min="18" max="65" value="30">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>預計購屋年齡</span><span class="fv" id="v-haBuyAge">35 歲</span></div>
+            <input type="range" id="in-haBuyAge" min="20" max="70" value="35">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>自備款比例</span><span class="fv" id="v-haDownPct">20%</span></div>
+            <input type="range" id="in-haDownPct" min="10" max="50" step="1" value="20">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>房貸利率</span><span class="fv" id="v-haRate">2.0%</span></div>
+            <input type="range" id="in-haRate" min="1" max="5" step="0.1" value="2">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>貸款年限</span><span class="fv" id="v-haLoanYears">30 年</span></div>
+            <input type="range" id="in-haLoanYears" min="5" max="40" value="30">
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>資金與貸款條件</h3>
+          <div class="field">
+            <div class="field-label"><span>房屋總價（現在的價格）</span></div>
+            <div class="input-suffix"><input type="number" id="in-haPrice" value="15000000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>現有現金</span></div>
+            <div class="input-suffix"><input type="number" id="in-haCash" value="500000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>寬限期</span><span class="fv" id="v-haGrace">3 年</span></div>
+            <input type="range" id="in-haGrace" min="0" max="10" value="3">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>儲蓄預期報酬率</span><span class="fv" id="v-haSaveReturn">4.0%</span></div>
+            <input type="range" id="in-haSaveReturn" min="0" max="10" step="0.5" value="4">
+          </div>
+        </div>
+      </div>
+
+      <button class="calc-btn" id="btn-calcHouse">計算購屋基金</button>
+
+      <div class="result-section" id="ha-resultSection">
+        <div class="rt-grid-2col">
+          <div class="stat-card status-banner-compact" id="ha-statusBanner">
+            <div class="status-badge" id="ha-statusBadge">✓ 計畫可行</div>
+            <div class="status-diff" id="ha-monthlyNeed">$0<small style="font-size:12px;font-weight:600;">/月</small></div>
+            <div class="stat-note">每月需存 · 自備款達成率 <span id="ha-rateBig">0<small>%</small></span></div>
+            <p class="status-desc" id="ha-statusDesc" style="display:none;"></p>
+            <div class="achieve-bar" style="display:none;"><div class="achieve-fill" id="ha-rateBar"></div></div>
+            <div class="rate-sub" id="ha-rateSub" style="display:none;"></div>
+          </div>
+          <div class="stat-card" id="ha-card-down">
+            <div class="stat-label">頭期款目標</div>
+            <div class="stat-value" id="ha-downPayment">$0</div>
+            <div class="stat-note" id="ha-downNote">房價 20%</div>
+          </div>
+
+          <div class="stat-card" id="ha-card-loan">
+            <div class="stat-label">貸款金額</div>
+            <div class="stat-value" id="ha-loanAmount">$0</div>
+            <div class="stat-note" id="ha-loanNote">共 30 年</div>
+          </div>
+          <div class="stat-card" id="ha-card-monthly">
+            <div class="stat-label">寬限期後月繳</div>
+            <div class="stat-value" id="ha-normalMonthly">$0<small>/月</small></div>
+            <div class="stat-note">本息攤還</div>
+          </div>
+
+          <div class="stat-card" id="ha-card-interest">
+            <div class="stat-label">總利息成本</div>
+            <div class="stat-value" id="ha-totalInterest">$0</div>
+            <div class="stat-note" id="ha-interestNote">佔總成本 0%</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="margin-bottom:18px;">寬限期安排</h3>
+          <div class="grace-flow">
+            <div class="grace-step">
+              <div class="grace-label" id="ha-graceYearsLabel">前 3 年（僅繳息）</div>
+              <div class="grace-value" id="ha-graceMonthly">$0<small>/月</small></div>
+            </div>
+            <div class="grace-arrow">→</div>
+            <div class="grace-step">
+              <div class="grace-label" id="ha-normalYearsLabel">第 4 年起（本息）</div>
+              <div class="grace-value warm" id="ha-normalMonthly2">$0<small>/月</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="margin-bottom:18px;">購屋前後・每月現金流變化</h3>
+          <div class="cashflow-compare">
+            <div class="cf-item">
+              <div class="cf-label">購屋前 每月需存</div>
+              <div class="cf-value" id="ha-cfBefore">$0<small>/月</small></div>
+            </div>
+            <div class="cf-diff" id="ha-cfDiff">0</div>
+            <div class="cf-item">
+              <div class="cf-label">購屋後 每月房貸</div>
+              <div class="cf-value warm" id="ha-cfAfter">$0<small>/月</small></div>
+              <div class="stat-note" id="ha-cfAfterNote">寬限期內（前3年）</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px;">
+          <h3 style="margin-bottom:18px;">購屋總成本</h3>
+          <div class="stat-value" id="ha-totalCost" style="font-size:26px;margin-bottom:12px;">$0</div>
+          <div class="source-bar-wrap">
+            <div class="source-bar">
+              <div class="source-bar-seg contribution" id="ha-sourceBarPrice"></div>
+              <div class="source-bar-seg gain" id="ha-sourceBarInterest"></div>
+            </div>
+            <div class="source-bar-legend">
+              <span><i class="dot contribution"></i>房價 <b id="ha-legendPrice">$0</b>（<span id="ha-legendPricePct">0%</span>）</span>
+              <span><i class="dot gain"></i>利息 <b id="ha-legendInterest">$0</b>（<span id="ha-legendInterestPct">0%</span>）</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="warn-box">
+          <b>房貸風險提示：</b>房貸是長達 <span id="ha-loanYearsText">30</span> 年的長期負債；這段期間若家庭主要收入中斷，剩餘貸款仍須清償，是規劃時值得納入的風險。可透過房貸壽險等工具，針對貸款期間預作準備。
+        </div>
+        <div class="note-box">本試算與提示僅供教育與財務規劃參考，非保險招攬或要約；實際保障依商品條款及核保，完整評估請洽合格從業人員。</div>
+      </div>
+    </div>
+
+    <div class="house-sub" id="house-sub-tax">
+      <div class="sub-tabs narrow" id="taxSystemTabs">
+        <button class="active" data-tax="new">新制・105年後取得</button>
+        <button data-tax="old">舊制・105年前取得</button>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>交易資料</h3>
+          <div class="field">
+            <div class="field-label"><span>成交價</span></div>
+            <div class="input-suffix"><input type="number" id="in-taxPrice" value="29000000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>取得成本</span></div>
+            <div class="input-suffix"><input type="number" id="in-taxCost" value="22000000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>費用（仲介／代書／契稅）</span></div>
+            <div class="input-suffix"><input type="number" id="in-taxFee" value="450000"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>持有年數</span><span class="fv" id="v-taxYears">7 年</span></div>
+            <input type="range" id="in-taxYears" min="0" max="30" value="7">
+          </div>
+        </div>
+
+        <div class="card" id="taxParamsNew">
+          <h3>新制參數</h3>
+          <div class="field">
+            <div class="field-label"><span>土地漲價總數額</span></div>
+            <div class="input-suffix"><input type="number" id="in-taxLandGain" value="0"></div>
+          </div>
+          <div class="toggle-row">
+            <span class="tr-label">符合自住優惠<span class="tr-sub">連續設籍持有滿 6 年</span></span>
+            <button class="toggle" id="tg-selfuse"></button>
+          </div>
+          <div class="stat-note" style="margin-top:14px; line-height:1.9;">
+            自住優惠資格條件（須同時符合以下三項）：<br>
+            1. 個人或其配偶、未成年子女辦竣戶籍登記、持有並居住於該房屋，須連續滿 6 年。<br>
+            2. 交易前 6 年內，該房屋無出租、無供營業或執行業務使用。<br>
+            3. 個人與其配偶及未成年子女於交易前 6 年內，未曾適用過本項自住房地租稅優惠（俗稱「一戶六年一次」，本人／配偶／未成年子女視為同一戶計算）。<br>
+            三項須同時成立才能適用；僅設籍未實際居住、出售前才臨時遷入戶籍、6 年內曾出租或供營業使用，皆不符合資格。實際認定以國稅局核定為準。
+          </div>
+        </div>
+        <div class="card" id="taxParamsOld" style="display:none;">
+          <h3>舊制粗估參數</h3>
+          <div class="field">
+            <div class="field-label"><span>房屋評定現值占成交比例</span><span class="fv" id="v-taxHouseRatio">30%</span></div>
+            <input type="range" id="in-taxHouseRatio" min="5" max="60" value="30">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>個人綜所稅適用稅率</span><span class="fv" id="v-taxIncomeRate">20%</span></div>
+            <input type="range" id="in-taxIncomeRate" min="5" max="40" step="1" value="20">
+          </div>
+        </div>
+      </div>
+
+      <button class="calc-btn" id="btn-calcTax">🧾 計算房地合一稅</button>
+
+      <div class="result-section" id="tax-resultSection">
+        <div class="result-card">
+          <h3 id="taxResultTitle">房地合一稅試算</h3>
+          <div class="ledger-row" id="taxRow1"><span class="lbl">課稅所得</span><span class="val" id="tax-taxable">$0</span></div>
+          <div class="ledger-row" id="taxRow2"><span class="lbl">適用稅率</span><span class="val" id="tax-rate">0%</span></div>
+          <div class="ledger-total">
+            <div class="lbl" id="taxResultLabel">預估應納稅額</div>
+            <div class="big" id="tax-final">$0</div>
+          </div>
+          <div class="note-box" id="taxNote">新制：持有≤2年45%／2-5年35%／5-10年20%／>10年15%；符合自住優惠者，課稅所得400萬以下免稅，超過部分按10%課徵。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 教育基金 ============ -->
+  <section class="tab-panel" id="panel-education">
+    <div class="grid1200">
+      <div class="card">
+        <h3>目標設定</h3>
+        <div class="field">
+          <div class="field-label"><span>子女目前年齡</span><span class="fv" id="v-eduCurrentAge">3 歲</span></div>
+          <input type="range" id="in-eduCurrentAge" min="0" max="17" value="3">
+        </div>
+        <div class="field">
+          <div class="field-label"><span>目標年齡</span><span class="fv" id="v-eduTargetAge">18 歲</span></div>
+          <input type="range" id="in-eduTargetAge" min="1" max="25" value="18">
+        </div>
+        <div class="field">
+          <div class="field-label"><span>教育基金目標（今日金額）</span></div>
+          <div class="input-suffix"><input type="number" id="in-eduTarget" value="3000000"></div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>目前已存金額</span></div>
+          <div class="input-suffix"><input type="number" id="in-eduExisting" value="200000"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>投資假設</h3>
+        <div class="field">
+          <div class="field-label"><span>預期報酬率</span><span class="fv" id="v-eduReturn">5.0%</span></div>
+          <input type="range" id="in-eduReturn" min="0" max="12" step="0.5" value="5">
+        </div>
+        <div class="field">
+          <div class="field-label"><span>預期教育通膨率</span><span class="fv" id="v-eduInflation">2.2%</span></div>
+          <input type="range" id="in-eduInflation" min="0" max="6" step="0.1" value="2.2">
+        </div>
+        <div class="note-box">教育通膨率通常高於一般消費者物價指數，反映學費、補習與教材費用上漲較快的現實；預設 2.2% 僅供參考，可依實際規劃調整。</div>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="btn-calcEducation">計算教育基金</button>
+
+    <div class="result-section" id="edu-resultSection">
+      <div class="rt-grid-2col">
+        <div class="stat-card status-banner-compact" id="edu-statusBanner">
+          <div class="status-badge" id="edu-statusBadge">✓ 計畫可行</div>
+          <div class="status-diff" id="edu-monthlyNeed">$0<small style="font-size:12px;font-weight:600;">/月</small></div>
+          <div class="stat-note">每月需存 · 複利貢獻比例 <span id="edu-compoundRate">0<small>%</small></span></div>
+          <p class="status-desc" id="edu-statusDesc" style="display:none;"></p>
+          <div class="achieve-bar" style="display:none;"><div class="achieve-fill" id="edu-compoundBar"></div></div>
+          <div class="rate-sub" id="edu-compoundSub" style="display:none;"></div>
+        </div>
+        <div class="stat-card" id="edu-card-target">
+          <div class="stat-label">教育金目標（通膨後）</div>
+          <div class="stat-value" id="edu-targetInflated">$0</div>
+          <div class="stat-note" id="edu-targetNote">今日 $0 → 通膨 0% × 0 年</div>
+        </div>
+
+        <div class="stat-card" id="edu-card-contribution">
+          <div class="stat-label">您的總投入</div>
+          <div class="stat-value" id="edu-totalContribution">$0</div>
+          <div class="stat-note" id="edu-contributionNote">佔目標 0%</div>
+        </div>
+        <div class="stat-card" id="edu-card-gain">
+          <div class="stat-label">預期投資收益</div>
+          <div class="stat-value" id="edu-compoundGain">$0</div>
+          <div class="stat-note" id="edu-gainNote">複利貢獻 0%</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <h3 style="margin-bottom:18px;">教育金來源結構</h3>
+        <div class="source-bar-wrap">
+          <div class="source-bar">
+            <div class="source-bar-seg contribution" id="edu-sourceBarContribution"></div>
+            <div class="source-bar-seg gain" id="edu-sourceBarGain"></div>
+          </div>
+          <div class="source-bar-legend">
+            <span><i class="dot contribution"></i>您的總投入 <b id="edu-legendContribution">$0</b>（<span id="edu-legendContributionPct">0%</span>）</span>
+            <span><i class="dot gain"></i>複利幫你賺 <b id="edu-legendGain">$0</b>（<span id="edu-legendGainPct">0%</span>）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="warn-box" id="edu-delayWarning"></div>
+
+      <div class="tips-box">
+        <div class="tips-head">💡 教育金規劃提示<span>依這次試算結果</span></div>
+        <div class="tip-item"><span class="tip-n">1</span><div><b>準備期與負擔</b><p id="edu-tip-1"></p></div></div>
+        <div class="tip-item"><span class="tip-n">2</span><div><b>收入中斷風險</b><p id="edu-tip-2"></p></div></div>
+      </div>
+
+      <details class="formula-details">
+        <summary>計算公式說明</summary>
+        <div class="labor-detail-box">
+          <div class="note-box" style="margin-top:0;">
+            本計算採月複利：月利率 ＝ (1+年報酬率)^(1/12)－1，儲蓄採「月底投入」模式（一般年金）計算。教育金目標先以教育通膨率推算至目標年齡當年，再反推每月需存金額；您的總投入＝目前已存金額＋每月存款×總月數，預期投資收益＝教育金目標（通膨後）－您的總投入。本試算僅供教育與財務規劃參考，非保險招攬或要約，實際規劃請洽合格從業人員。
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ 遺贈方案 ============ -->
+  <section class="tab-panel" id="panel-legacy">
+    <div class="sub-tabs narrow3" id="legacySubTabs">
+      <button class="active" data-sub="tax">租稅規劃</button>
+      <button data-sub="alloc">資產分配</button>
+      <button data-sub="amt">最低稅負</button>
+    </div>
+
+    <!-- ---- 子分頁一：租稅規劃 ---- -->
+    <div class="house-sub active" id="legacy-sub-tax">
+      <div class="grid2">
+        <div class="card">
+          <h3>客戶基本資料</h3>
+          <div class="field">
+            <div class="field-label"><span>總資產</span><span class="fv" id="v-lgAssets">3,000 萬</span></div>
+            <input type="range" id="in-lgAssets" min="0" max="30000" step="50" value="3000">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>不動產佔比</span><span class="fv" id="v-lgReratio">40%</span></div>
+            <input type="range" id="in-lgReratio" min="0" max="100" step="1" value="40">
+          </div>
+          <div class="field" style="background:var(--teal-tint);margin:0 -24px -4px;padding:16px 24px 20px;border-top:1px solid var(--line);">
+            <div class="field-label"><span>顧問設定・公告現值比率</span><span class="fv" id="v-lgDecl">65%</span></div>
+            <input type="range" id="in-lgDecl" min="30" max="100" step="1" value="65">
+            <div class="stat-note">不動產課稅是以「公告土地現值＋房屋評定現值」計算，通常僅市價的 3～8 成，不是市價本身。</div>
+          </div>
+          <div class="field" style="margin-top:20px;">
+            <div class="field-label"><span>上市／上櫃股權估值（選填）</span></div>
+            <div class="input-suffix-wan"><input type="number" id="in-lgListed" placeholder="0"></div>
+            <div class="stat-note">已包含在「總資產」內，不重複計稅；此處僅標記變現與股價波動風險。</div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>未上市櫃股權估值（選填）</span></div>
+            <div class="input-suffix-wan"><input type="number" id="in-lgUnlisted" placeholder="0"></div>
+            <div class="stat-note">遺產稅按每股淨值估算（洽會計師），且通常不易變現。</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h3>家庭結構</h3>
+            <div class="row-between">
+              <span class="tr-label">配偶健在</span>
+              <button class="toggle on" id="tg-lgSpouse"></button>
+            </div>
+            <div class="row-between">
+              <span class="tr-label">子女人數</span>
+              <div class="stepper"><button data-lgstep="children" data-d="-1">−</button><span class="count" id="v-lgChildren">2</span><button data-lgstep="children" data-d="1">+</button></div>
+            </div>
+            <div class="row-between">
+              <span class="tr-label">‣ 其中未成年人數<span class="tr-sub">按距滿 20 歲年數，每年加扣 56 萬</span></span>
+              <div class="stepper"><button data-lgstep="minors" data-d="-1">−</button><span class="count" id="v-lgMinors">0</span><button data-lgstep="minors" data-d="1">+</button></div>
+            </div>
+            <div class="row-between" id="row-lgMinoryears" style="display:none;">
+              <span class="tr-label">‣ 平均距滿 20 歲年數</span>
+              <div class="stepper"><button data-lgstep="minoryears" data-d="-1">−</button><span class="count" id="v-lgMinoryears">5</span><button data-lgstep="minoryears" data-d="1">+</button></div>
+            </div>
+            <div class="row-between">
+              <span class="tr-label">父母在世人數</span>
+              <div class="stepper"><button data-lgstep="parents" data-d="-1">−</button><span class="count" id="v-lgParents">0</span><button data-lgstep="parents" data-d="1">+</button></div>
+            </div>
+            <div class="row-between">
+              <span class="tr-label">身心障礙繼承人數<span class="tr-sub">重度以上，每人加扣 693 萬</span></span>
+              <div class="stepper"><button data-lgstep="disabled" data-d="-1">−</button><span class="count" id="v-lgDisabled">0</span><button data-lgstep="disabled" data-d="1">+</button></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>現有規劃</h3>
+            <div class="field">
+              <div class="field-label"><span>已有壽險保額</span></div>
+              <div class="input-suffix-wan"><input type="number" id="in-lgInsurance" placeholder="0"></div>
+              <div class="stat-note">指定受益人之壽險給付不計入遺產總額，但會沿用到「最低稅負」頁計算。</div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>死亡前2年內贈與（配偶／法定繼承人）</span></div>
+              <div class="input-suffix-wan"><input type="number" id="in-lgGifted" placeholder="0"></div>
+              <div class="stat-note">依遺贈稅法第15條，死亡前2年內贈與配偶、各順位法定繼承人或其配偶的財產，視為遺產併入遺產總額計稅；填入這裡會自動加回遺產總額一起試算。</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>可扣除項目・選填</h3>
+            <div class="field">
+              <div class="field-label"><span>未償債務（含房貸）</span></div>
+              <div class="input-suffix-wan"><input type="number" id="in-lgDebt" placeholder="0"></div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>夫妻剩餘財產差額分配</span></div>
+              <div class="input-suffix-wan"><input type="number" id="in-lgSpousaldiff" placeholder="0"></div>
+              <div class="stat-note">已婚常見、常是最大一筆扣除；不確定金額可留空，實際以申報認定。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-section" id="lg-tax-result">
+      <div class="result-card">
+        <h3>遺產稅試算結果</h3>
+        <div class="ledger-row"><span class="lbl">計稅遺產總額（不動產已折算公告現值）</span><span class="val" id="r-grossestate">0 萬</span></div>
+        <div class="ledger-row" style="opacity:.7;"><span class="lbl">‣ 非不動產部分</span><span class="val" id="r-nonre">0 萬</span></div>
+        <div class="ledger-row" style="opacity:.7;"><span class="lbl">‣ 不動產部分（× 公告現值比率）</span><span class="val" id="r-re">0 萬</span></div>
+        <div class="ledger-row" id="row-r-gifted" style="opacity:.7; display:none;"><span class="lbl">‣ 死亡前2年內贈與併入</span><span class="val" id="r-gifted">0 萬</span></div>
+        <div class="ledger-row"><span class="lbl">減：免稅額</span><span class="val">1,333 萬</span></div>
+        <div class="ledger-row"><span class="lbl">減：扣除額合計</span><span class="val" id="r-deductions">0 萬</span></div>
+        <div class="ledger-total">
+          <div class="lbl">遺產淨額</div>
+          <div class="big" id="r-netestate">0<small>萬</small></div>
+        </div>
+        <div class="ledger-total" style="margin-top:16px;">
+          <div class="lbl">應納遺產稅額（適用稅率 <span id="r-bracket">10%</span>）</div>
+          <div class="big" id="r-tax">0<small>萬</small></div>
+        </div>
+        <div class="note-box">試算依據：財政部 115 年度（2026）公告遺產稅免稅額 1,333 萬、配偶扣除額 553 萬、直系血親卑親屬扣除額每人 56 萬、父母扣除額每人 138 萬、重度身心障礙特別扣除額每人 693 萬、喪葬費扣除額 138 萬；課稅級距 5,621 萬以下 10%、超過至 1 億 1,242 萬部分 15%、超過部分 20%。</div>
+      </div>
+      </div>
+    </div>
+
+    <!-- ---- 子分頁二：資產分配 ---- -->
+    <div class="house-sub" id="legacy-sub-alloc">
+      <div class="grid2">
+        <div>
+          <div class="card">
+            <h3>配偶</h3>
+            <div class="row-between">
+              <span class="tr-label">現任配偶（並列繼承）</span>
+              <button class="toggle on" id="tg-allocSpouse"></button>
+            </div>
+            <div class="stat-note" style="margin-top:6px;">前婚配偶依法無繼承權</div>
+          </div>
+
+          <div class="card" id="tier-children">
+            <h3>第一順位：子女</h3>
+            <div id="childList"></div>
+            <button class="add-member-btn" id="btn-addChild" type="button">＋ 新增成員</button>
+          </div>
+
+          <div class="card" id="tier-parents">
+            <h3>第二順位：父母</h3>
+            <div class="stat-note" id="tier-parents-note" style="margin-bottom:14px;"></div>
+            <div class="sub-tabs narrow3" id="parentTypeTabs">
+              <button class="active" data-ptype="本生父母">本生父母</button>
+              <button data-ptype="被收養">被收養</button>
+              <button data-ptype="一方收養">一方收養</button>
+            </div>
+
+            <div class="row-between parent-row" data-show="本生父母">
+              <span class="tr-label">父親在世</span>
+              <button class="toggle" id="tg-fatherAlive"></button>
+            </div>
+            <div class="row-between parent-row" data-show="本生父母">
+              <span class="tr-label">母親在世</span>
+              <button class="toggle" id="tg-motherAlive"></button>
+            </div>
+
+            <div class="row-between parent-row" data-show="被收養">
+              <span class="tr-label">養父在世</span>
+              <button class="toggle" id="tg-adoptFatherAlive"></button>
+            </div>
+            <div class="row-between parent-row" data-show="被收養">
+              <span class="tr-label">養母在世</span>
+              <button class="toggle" id="tg-adoptMotherAlive"></button>
+            </div>
+
+            <div class="row-between parent-row" data-show="一方收養">
+              <span class="tr-label">父親在世</span>
+              <button class="toggle" id="tg-stepBioFather"></button>
+            </div>
+            <div class="row-between parent-row" data-show="一方收養">
+              <span class="tr-label">母親在世</span>
+              <button class="toggle" id="tg-stepBioMother"></button>
+            </div>
+            <div class="row-between parent-row" data-show="一方收養">
+              <span class="tr-label">養父在世</span>
+              <button class="toggle" id="tg-stepAdoptFather"></button>
+            </div>
+            <div class="row-between parent-row" data-show="一方收養">
+              <span class="tr-label">養母在世</span>
+              <button class="toggle" id="tg-stepAdoptMother"></button>
+            </div>
+
+            <div class="stat-note" id="parent-adopt-note" style="margin-top:6px;">未被收養：由本生父母繼承。</div>
+          </div>
+
+          <div class="card" id="tier-siblings">
+            <h3>第三順位：兄弟姊妹</h3>
+            <div class="stat-note" id="tier-siblings-note" style="margin-bottom:14px;"></div>
+            <div class="row-between">
+              <span class="tr-label">兄弟姊妹人數</span>
+              <div class="stepper"><button data-fam="siblings" data-d="-1">−</button><span class="count" id="v-siblings">0</span><button data-fam="siblings" data-d="1">+</button></div>
+            </div>
+            <div class="stat-note" style="margin-top:10px;">兄弟姊妹特留分：適用現行法（民法1223：應繼分 1/3）。刪除兄弟姊妹特留分之修法尚未公布施行。</div>
+          </div>
+
+          <div class="card" id="tier-grandparents">
+            <h3>第四順位：祖父母</h3>
+            <div class="stat-note" id="tier-grandparents-note" style="margin-bottom:14px;"></div>
+            <div class="row-between">
+              <span class="tr-label">在世祖父母人數</span>
+              <div class="stepper"><button data-fam="grandparents" data-d="-1">−</button><span class="count" id="v-grandparents">0</span><button data-fam="grandparents" data-d="1">+</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sub-tabs narrow3" id="allocModeTabs">
+            <button class="active" data-mode="legal">法定應繼分現狀</button>
+            <button data-mode="custom">自訂意願分配模擬</button>
+          </div>
+
+          <!-- 法定應繼分現狀 -->
+          <div class="alloc-mode-view active" id="allocView-legal">
+            <div class="card">
+              <h3>法定應繼分分配</h3>
+              <div class="donut-wrap">
+                <div class="donut" id="donut"><div class="donut-center"><span class="n" id="donut-total">0 萬</span><span class="l">遺產總額</span></div></div>
+                <div class="legend" id="legend"></div>
+              </div>
+              <div class="amber-box" id="sibling-note" style="display:none;">
+                ⚠ 立法院已於 2026/7/28 三讀通過刪除兄弟姊妹特留分（民法第1223條），但須公布後 6 個月才施行，目前尚未生效——本試算暫以現行法（應繼分 1/3）計算，正式施行日確定後請更新。
+              </div>
+            </div>
+          </div>
+
+          <!-- 自訂意願分配模擬 -->
+          <div class="alloc-mode-view" id="allocView-custom">
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <h3 style="margin:0;border:none;padding:0;">自訂意願分配</h3>
+                <button class="add-member-btn" id="btn-resetCustom" type="button" style="margin:0;">恢復預設</button>
+              </div>
+              <div id="customAllocList"></div>
+              <div class="custom-total-row" id="customTotalRow">
+                <span class="tr-label">分配比例合計</span>
+                <span><a href="#" id="btn-normalizeCustom" class="calc-link">一鍵湊整 100%</a>　<b id="customTotalPct">0%</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- 子分頁三：最低稅負 ---- -->
+    <div class="house-sub" id="legacy-sub-amt">
+      <div class="grid2">
+        <div class="card">
+          <h3>最低稅負・試算輸入</h3>
+          <div class="field">
+            <div class="field-label"><span>保險死亡給付</span></div>
+            <div class="input-suffix-wan"><input type="number" id="in-lgAmtIns" placeholder="0"></div>
+            <div class="stat-note">已自動帶入「租稅規劃」頁的已有壽險保額，可自行修改。</div>
+          </div>
+          <div class="row-between">
+            <span class="tr-label">要保人 ≠ 受益人<span class="tr-sub">關係到才需計入最低稅負</span></span>
+            <button class="toggle on" id="tg-lgAmt"></button>
+          </div>
+          <div class="field" style="margin-top:20px;">
+            <div class="field-label"><span>綜合所得淨額</span></div>
+            <div class="input-suffix-wan"><input type="number" id="in-lgAmtIncome" placeholder="0"></div>
+            <div class="stat-note">選填・總額扣掉免稅額與扣除額後的數；不確定可留空。</div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>海外所得</span></div>
+            <div class="input-suffix-wan"><input type="number" id="in-lgAmtOverseas" placeholder="0"></div>
+            <div class="stat-note">選填・達 100 萬／戶才計入，未達門檻則整筆不計。</div>
+          </div>
+          <details>
+            <summary>更多加計項目（有價證券・非現金捐贈・分開計稅股利）</summary>
+            <div class="details-body">
+              <div class="field">
+                <div class="field-label"><span>特定有價證券交易所得</span></div>
+                <div class="input-suffix-wan"><input type="number" id="in-lgAmtSec" placeholder="0"></div>
+              </div>
+              <div class="field">
+                <div class="field-label"><span>非現金捐贈金額</span></div>
+                <div class="input-suffix-wan"><input type="number" id="in-lgAmtDonate" placeholder="0"></div>
+              </div>
+              <div class="field">
+                <div class="field-label"><span>分開計稅股利及盈餘</span></div>
+                <div class="input-suffix-wan"><input type="number" id="in-lgAmtDiv" placeholder="0"></div>
+              </div>
+              <div class="field">
+                <div class="field-label"><span>一般所得稅額（用於折抵）</span></div>
+                <div class="input-suffix-wan"><input type="number" id="in-lgAmtGenertax" placeholder="0"></div>
+              </div>
+              <div class="field">
+                <div class="field-label"><span>海外已納稅額可扣抵</span></div>
+                <div class="input-suffix-wan"><input type="number" id="in-lgAmtCredit" placeholder="0"></div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="result-section" id="lg-amt-result">
+        <div class="card">
+          <h3>試算過程</h3>
+          <div class="steps-list">
+            <div class="step-row"><span><span class="n">①</span>保險溢額（死亡給付－3,740萬免計額）</span><span class="v" id="s1">0 萬</span></div>
+            <div class="step-row"><span><span class="n">②</span>海外所得（達100萬→全額計入）</span><span class="v" id="s2">0 萬</span></div>
+            <div class="step-row"><span><span class="n">③</span>基本所得額（綜所＋溢額＋海外＋其他）</span><span class="v" id="s3">0 萬</span></div>
+            <div class="step-row"><span><span class="n">④</span>基本稅額（（基本所得額－750萬）×20%）</span><span class="v" id="s4">0 萬</span></div>
+            <div class="step-row"><span><span class="n">⑤</span>減：一般所得稅額＋海外已納稅額扣抵</span><span class="v" id="s5">－0 萬</span></div>
+          </div>
+          <div class="amt-banner" id="amt-banner">
+            <span class="lbl" id="amt-banner-lbl">無需補繳</span>
+            <span class="amt" id="amt-banner-val">0 萬</span>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="note-box" style="margin-bottom:20px;">
+      民法應繼分／特留分依現行第 1138、1144、1223 條（兄弟姊妹特留分刪除案已三讀通過，尚待公布施行）。本工具僅供教育性試算參考，實際規劃請洽會計師、律師或持牌顧問確認。
+    </div>
+  </section>
+
+  <!-- ============ 投資理財 ============ -->
+  <section class="tab-panel" id="panel-invest">
+    <div class="grid1200">
+      <div class="card">
+        <h3>目標設定</h3>
+        <div class="field">
+          <div class="field-label"><span>投資年期</span><span class="fv" id="v-invYears">10 年</span></div>
+          <input type="range" id="in-invYears" min="1" max="40" value="10">
+        </div>
+        <div class="field">
+          <div class="field-label"><span>目標金額</span></div>
+          <div class="input-suffix"><input type="number" id="in-invTarget" value="5000000"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>投資假設</h3>
+        <div class="field">
+          <div class="field-label"><span>目前投入本金</span></div>
+          <div class="input-suffix"><input type="number" id="in-invPrincipal" value="500000"></div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>每月定期投入</span></div>
+          <div class="input-suffix"><input type="number" id="in-invMonthly" value="15000"></div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>預期年化報酬率</span><span class="fv" id="v-invReturn">6.0%</span></div>
+          <input type="range" id="in-invReturn" min="0" max="15" step="0.5" value="6">
+        </div>
+        <div class="field">
+          <div class="field-label"><span>通膨率</span><span class="fv" id="v-invInflation">2.0%</span></div>
+          <input type="range" id="in-invInflation" min="0" max="6" step="0.1" value="2">
+        </div>
+        <div class="note-box">本計算採月複利，本金與每月定期投入皆以「預期年化報酬率」成長；通膨率僅用於換算實質購買力，不影響名目累積金額。</div>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="btn-calcInvest">計算投資理財</button>
+
+    <div class="result-section" id="inv-resultSection">
+      <div class="rt-grid-2col">
+        <div class="stat-card" id="inv-card-target">
+          <div class="stat-label">目標金額</div>
+          <div class="stat-value" id="inv-targetDisplay">$0</div>
+          <div class="stat-note" id="inv-targetNote">投資 0 年後</div>
+        </div>
+        <div class="stat-card" id="inv-card-contribution">
+          <div class="stat-label">總投入本金</div>
+          <div class="stat-value" id="inv-totalContribution">$0</div>
+          <div class="stat-note" id="inv-contributionNote">本金＋每月投入累計</div>
+        </div>
+
+        <div class="stat-card" id="inv-card-final">
+          <div class="stat-label">預估累積資產</div>
+          <div class="stat-value" id="inv-finalDisplay">$0</div>
+          <div class="stat-note">依目前假設推算</div>
+        </div>
+        <div class="stat-card" id="inv-card-gain">
+          <div class="stat-label">投資收益（複利貢獻）</div>
+          <div class="stat-value" id="inv-gain">$0</div>
+          <div class="stat-note" id="inv-gainNote">複利貢獻 0%</div>
+        </div>
+
+        <div class="stat-card status-banner-compact" id="inv-statusBanner">
+          <div class="status-badge" id="inv-statusBadge">✓ 目標可望達成</div>
+          <div class="status-diff" id="inv-finalValue">$0</div>
+          <div class="stat-note"><span id="inv-diffLabelText">預估最終資產</span> · 達成率 <span id="inv-rateBig">0<small>%</small></span></div>
+          <p class="status-desc" id="inv-statusDesc" style="display:none;"></p>
+          <div class="achieve-bar" style="display:none;"><div class="achieve-fill" id="inv-rateBar"></div></div>
+          <div class="rate-sub" id="inv-rateSub" style="display:none;"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">通膨影響購買力</div>
+          <div class="stat-value" id="inv-infReal">$0</div>
+          <div class="stat-note">名目累積 <span id="inv-infNominal">$0</span> · <span id="inv-infYears">0年×0%</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <h3 style="margin-bottom:18px;">資產來源結構</h3>
+        <div class="source-bar-wrap">
+          <div class="source-bar">
+            <div class="source-bar-seg contribution" id="inv-sourceBarContribution"></div>
+            <div class="source-bar-seg gain" id="inv-sourceBarGain"></div>
+          </div>
+          <div class="source-bar-legend">
+            <span><i class="dot contribution"></i>本金投入 <b id="inv-legendContribution">$0</b>（<span id="inv-legendContributionPct">0%</span>）</span>
+            <span><i class="dot gain"></i>複利收益 <b id="inv-legendGain">$0</b>（<span id="inv-legendGainPct">0%</span>）</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tips-box">
+        <div class="tips-head">💡 投資理財提示<span>依這次試算結果</span></div>
+        <div class="tip-item"><span class="tip-n">1</span><div><b>目前狀態判讀</b><p id="inv-tip-1"></p></div></div>
+        <div class="tip-item"><span class="tip-n">2</span><div><b>這代表什麼</b><p id="inv-tip-2"></p></div></div>
+        <div class="tip-item"><span class="tip-n">3</span><div><b>下一步建議</b><p id="inv-tip-3"></p></div></div>
+      </div>
+
+      <details class="formula-details">
+        <summary>計算公式說明</summary>
+        <div class="labor-detail-box">
+          <div class="note-box" style="margin-top:0;">
+            月利率 ＝ (1+年化報酬率)^(1/12)－1；預估累積資產 ＝ 本金 ×(1+月利率)^總月數 ＋ 每月投入 ×[((1+月利率)^總月數－1)÷月利率]（月底投入模式）。投資收益 ＝ 預估累積資產－總投入本金；實質購買力 ＝ 名目累積金額 ÷(1+通膨率)^年期。本試算僅供教育與財務規劃參考，不代表實際投資報酬，市場有波動風險，實際規劃請洽合格從業人員。
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---------------- 共用工具 ---------------- */
+function money(n){
+  const v = Math.round(n||0);
+  return (v<0?"-$":"$") + Math.abs(v).toLocaleString("zh-TW");
+}
+
+/* ---------------- 主分頁切換 ---------------- */
+const tabButtons = document.querySelectorAll('#tabnav > button');
+const panels = document.querySelectorAll('main > .tab-panel');
+function activateTab(key){
+  tabButtons.forEach(b=> b.classList.toggle('active', b.dataset.tab===key));
+  panels.forEach(p=> p.classList.toggle('active', p.id === 'panel-'+key));
+}
+tabButtons.forEach(btn=> btn.addEventListener('click', ()=> activateTab(btn.dataset.tab)));
+
+/* ---------------- 退休基金 ---------------- */
+const LABOR_INSURANCE_CAP = 45800; // 2026(115年) 勞保投保薪資上限
+const LABOR_PENSION_CONTRIBUTION_CAP = 150000; // 2026(115年) 勞退月提繳工資分級表上限（與勞保上限不同，是兩張表）
+const PENSION_PAYOUT_MONTHS = 240; // 勞退月退簡化提領期：20年
+
+function updateTimelineVisual(){
+  const currentAge = +document.getElementById('in-rtCurrentAge').value;
+  const retireAge = +document.getElementById('in-rtRetireAge').value;
+  document.getElementById('v-rtCurrentAge').textContent = currentAge+' 歲';
+  document.getElementById('v-rtRetireAge').textContent = retireAge+' 歲';
+
+  const dMin=18, dMax=85;
+  const nowPct = Math.min(100,Math.max(0,((currentAge-dMin)/(dMax-dMin))*100));
+  const retPct = Math.min(100,Math.max(0,((retireAge-dMin)/(dMax-dMin))*100));
+  document.getElementById('rtDotNow').style.left = nowPct+'%';
+  document.getElementById('rtDotRetire').style.left = retPct+'%';
+  document.getElementById('rtLabelNow').style.left = nowPct+'%';
+  document.getElementById('rtLabelRetire').style.left = retPct+'%';
+  document.getElementById('rtNowAgeLabel').textContent = currentAge;
+  document.getElementById('rtRetireAgeLabel').textContent = retireAge;
+  const fill = document.getElementById('rtTimelineFill');
+  fill.style.left = Math.min(nowPct,retPct)+'%';
+  fill.style.width = Math.abs(retPct-nowPct)+'%';
+}
+
+// 滑桿數字即時顯示（不觸發完整試算，只更新標籤與時間軸）
+const rtCurrentAgeInput = document.getElementById('in-rtCurrentAge');
+const rtRetireAgeInput = document.getElementById('in-rtRetireAge');
+rtCurrentAgeInput.addEventListener('input', ()=>{
+  if(+rtCurrentAgeInput.value >= +rtRetireAgeInput.value){
+    rtCurrentAgeInput.value = +rtRetireAgeInput.value - 1;
+  }
+  updateTimelineVisual();
+});
+rtRetireAgeInput.addEventListener('input', ()=>{
+  if(+rtRetireAgeInput.value <= +rtCurrentAgeInput.value){
+    rtRetireAgeInput.value = +rtCurrentAgeInput.value + 1;
+  }
+  updateTimelineVisual();
+});
+function bindLiveLabel(id, vid, suffix, isPercent){
+  const el = document.getElementById(id);
+  el.addEventListener('input', ()=>{
+    const v = +el.value;
+    document.getElementById(vid).textContent = (isPercent? v.toFixed(1) : v) + suffix;
+  });
+}
+bindLiveLabel('in-rtReturn','v-rtReturn','%',true);
+bindLiveLabel('in-rtInflation','v-rtInflation','%',true);
+bindLiveLabel('in-laborYears','v-laborYears',' 年',false);
+bindLiveLabel('in-laborClaimAge','v-laborClaimAge',' 歲',false);
+bindLiveLabel('in-laborVoluntary','v-laborVoluntary','%',false);
+bindLiveLabel('in-laborReturn','v-laborReturn','%',true);
+
+const laborToggle = document.getElementById('tg-labor');
+let laborOn = true;
+laborToggle.addEventListener('click', ()=>{
+  laborOn = !laborOn;
+  laborToggle.classList.toggle('on', laborOn);
+});
+
+function calcLaborPension(avgSalary, years){
+  const capped = Math.min(avgSalary, LABOR_INSURANCE_CAP);
+  if(years<=0) return 0;
+  const planA = capped*years*0.00775 + 3000;
+  const planB = capped*years*0.0155;
+  return Math.max(planA, planB);
+}
+
+function calcLaborLumpSum(salary, years, voluntaryPct, returnRate, existing, inflation){
+  const months = Math.round(years*12);
+  if(months<=0) return existing;
+  const monthlyReturn = returnRate/12;
+  let balance = existing;
+  const cappedSalary = Math.min(salary, LABOR_PENSION_CONTRIBUTION_CAP);
+  const baseContribution = cappedSalary * (0.06 + voluntaryPct);
+  for(let m=1; m<=months; m++){
+    const yearIndex = Math.floor((m-1)/12);
+    const contribution = baseContribution * Math.pow(1+inflation, yearIndex);
+    balance = balance*(1+monthlyReturn) + contribution;
+  }
+  return balance;
+}
+
+function calcRetirement(){
+  const currentAge = +document.getElementById('in-rtCurrentAge').value;
+  const retireAge = +document.getElementById('in-rtRetireAge').value;
+  const desiredMonthly = +document.getElementById('in-rtMonthlyIncome').value || 0;
+  const nominalReturn = (+document.getElementById('in-rtReturn').value) / 100;
+  const inflation = (+document.getElementById('in-rtInflation').value) / 100;
+  const assets = +document.getElementById('in-rtAssets').value || 0;
+  const monthlyInvest = +document.getElementById('in-rtMonthlyInvest').value || 0;
+
+  const years = Math.max(0, retireAge - currentAge);
+  updateTimelineVisual();
+
+  // 實質報酬率（扣除通膨後的真實購買力成長）
+  const realReturn = (1+nominalReturn)/(1+inflation) - 1;
+
+  // 退休時可用資產（以今日購買力表示）
+  const fvAssets = assets * Math.pow(1+realReturn, years);
+  let fvContrib = 0;
+  if(years>0){
+    fvContrib = Math.abs(realReturn)>0.0001
+      ? monthlyInvest*12 * ((Math.pow(1+realReturn, years)-1)/realReturn)
+      : monthlyInvest*12*years;
+  }
+  const projected = fvAssets + fvContrib;
+  const investMonthly = Math.abs(realReturn)>0.0001 ? projected*realReturn/12 : projected/(years>0?years*12:1);
+
+  // 勞保勞退
+  const laborSalary = +document.getElementById('in-laborSalary').value || 0;
+  const laborYears = +document.getElementById('in-laborYears').value;
+  const laborClaimAge = +document.getElementById('in-laborClaimAge').value;
+  const voluntaryPct = (+document.getElementById('in-laborVoluntary').value)/100;
+  const pensionReturn = (+document.getElementById('in-laborReturn').value)/100;
+  const laborExisting = +document.getElementById('in-laborExisting').value || 0;
+
+  const laborPensionMonthly = calcLaborPension(laborSalary, laborYears);
+  const pensionLump = calcLaborLumpSum(laborSalary, laborYears, voluntaryPct, pensionReturn, laborExisting, inflation);
+  const pensionMonthly = pensionLump / PENSION_PAYOUT_MONTHS;
+
+  const laborTotal = laborOn ? (laborPensionMonthly + pensionMonthly) : 0;
+  const totalMonthlyIncome = investMonthly + laborTotal;
+
+  const investGapTarget = Math.max(0, desiredMonthly - laborTotal);
+  const DRAWDOWN_HORIZON_YEARS = 30;
+  let requiredAsset;
+  if(realReturn > 0.0005){
+    requiredAsset = investGapTarget*12/realReturn; // 永續提領模型（報酬支應生活費）
+  } else if(Math.abs(realReturn) < 0.0005){
+    requiredAsset = investGapTarget*12*DRAWDOWN_HORIZON_YEARS; // 報酬率趨近於0，改用固定年期估算
+  } else {
+    // 實質報酬率為負：改用有限期提領現值公式（假設退休後 30 年提領期），避免永續公式產生錯誤的負值
+    requiredAsset = investGapTarget*12 * (1-Math.pow(1+realReturn,-DRAWDOWN_HORIZON_YEARS))/realReturn;
+  }
+
+  const achievementRate = desiredMonthly>0 ? (totalMonthlyIncome/desiredMonthly*100) : 100;
+  const surplus = projected - requiredAsset;
+
+  // ---- 三級狀態判定 ----
+  // tier: 'pos' 達標超標（rate>=100） / 'warn' 未達標但仍正向（0<=rate<100） / 'neg' 未達標且轉負（rate<0，實質資產恐虧損）
+  let tier;
+  if(achievementRate >= 100) tier = 'pos';
+  else if(achievementRate >= 0) tier = 'warn';
+  else tier = 'neg';
+
+  const tierClass = 'tier-'+tier;
+  const bannerClass = tier==='pos' ? '' : (tier==='warn' ? 'tier-warn-banner' : 'tier-neg-banner');
+  const barClass = tier==='pos' ? 'tier-pos-bg' : (tier==='warn' ? 'tier-warn-bg' : 'tier-neg-bg');
+
+  // ---- 寫入畫面 ----
+  const banner = document.getElementById('rt-statusBanner');
+  banner.className = 'stat-card status-banner-compact' + (bannerClass ? ' '+bannerClass : '');
+
+  const badgeText = tier==='pos' ? '✓ 退休金充足' : (tier==='warn' ? '⚠ 退休金有落差' : '✕ 實質資產恐虧損');
+  document.getElementById('rt-statusBadge').textContent = badgeText;
+  document.getElementById('rt-diffLabel').textContent = surplus>=0 ? '超出目標' : '尚有缺口';
+  const diffEl = document.getElementById('rt-diffValue');
+  diffEl.textContent = money(Math.abs(surplus));
+  diffEl.className = 'status-diff ' + tierClass;
+
+  let statusDesc;
+  if(tier==='pos'){
+    statusDesc = '依目前計畫，退休目標可望達成。持續維持現有儲蓄節奏，未來退休生活將有紮實保障。';
+  } else if(tier==='warn'){
+    statusDesc = '依目前計畫，退休準備尚未完全達標，但方向正確。建議提高每月投入金額、拉長投資年期，或調整退休目標，縮小落差。';
+  } else {
+    statusDesc = '目前假設下，實質報酬率為負，資產的真實購買力會隨時間流失，光靠投資成長難以支應退休生活。建議優先檢視「金融工具報酬率」與「通膨率」的假設是否合理，並考慮提高投入金額或延後退休。';
+  }
+  document.getElementById('rt-statusDesc').textContent = statusDesc;
+
+  const rateBig = document.getElementById('rt-rateBig');
+  rateBig.innerHTML = achievementRate.toFixed(1)+'<small>%</small>';
+  rateBig.className = 'rate-big ' + tierClass;
+  const rateBar = document.getElementById('rt-rateBar');
+  rateBar.style.width = Math.max(0,Math.min(100,achievementRate))+'%';
+  rateBar.className = 'achieve-fill ' + barClass;
+  document.getElementById('rt-rateSub').textContent = '已達成 '+Math.max(0,achievementRate).toFixed(0)+'%';
+
+  // 目標值（使用者設定）：白底黑字；實際狀況：卡片底色套三色，文字維持深色可讀
+  document.getElementById('rt-card-required').className = 'stat-card';
+  document.getElementById('rt-required').className = 'stat-value tier-target';
+  document.getElementById('rt-required').textContent = money(requiredAsset);
+
+  const projectedTier = projected>=requiredAsset ? 'pos' : (projected>=requiredAsset*0.5 ? 'warn' : 'neg');
+  document.getElementById('rt-card-projected').className = 'stat-card card-tier-'+projectedTier;
+  const projectedEl = document.getElementById('rt-projected');
+  projectedEl.textContent = money(projected);
+  projectedEl.className = 'stat-value tier-'+projectedTier;
+
+  document.getElementById('rt-card-desired').className = 'stat-card';
+  document.getElementById('rt-desiredMonthly').className = 'stat-value tier-target';
+  document.getElementById('rt-desiredMonthly').innerHTML = money(desiredMonthly)+'<small>/月</small>';
+
+  document.getElementById('rt-card-total').className = 'stat-card card-tier-'+tier;
+  const totalMonthlyEl = document.getElementById('rt-totalMonthly');
+  totalMonthlyEl.innerHTML = money(totalMonthlyIncome)+'<small>/月</small>';
+  totalMonthlyEl.className = 'stat-value tier-'+tier;
+  document.getElementById('rt-totalMonthlyNote').textContent = laborOn
+    ? `投資被動收入 ${money(investMonthly)} ＋ 勞保勞退 ${money(laborTotal)}（以今日購買力計算）`
+    : '投資被動收入（未計入勞保勞退，以今日購買力計算）';
+
+  const futureNominal = desiredMonthly * Math.pow(1+inflation, years);
+  document.getElementById('rt-infToday').textContent = money(desiredMonthly);
+  document.getElementById('rt-infYears').textContent = `${years} 年 × ${(inflation*100).toFixed(1)}% 通膨`;
+  document.getElementById('rt-infFuture').textContent = money(futureNominal);
+
+  const realReturnEl = document.getElementById('rt-realReturn');
+  realReturnEl.textContent = (realReturn*100).toFixed(2)+'%';
+  realReturnEl.className = 'stat-value ' + (realReturn>0 ? 'tier-pos' : (realReturn>=0 ? 'tier-warn' : 'tier-neg'));
+
+  document.getElementById('rt-laborPension').innerHTML = money(laborPensionMonthly)+'<small>/月</small>';
+  document.getElementById('rt-pensionMonthly').innerHTML = money(pensionMonthly)+'<small>/月</small>';
+  document.getElementById('rt-pensionLump').textContent = '或選一次領帳戶 '+money(pensionLump);
+
+  const claimGapYears = laborClaimAge - retireAge;
+  const gapWarnEl = document.getElementById('rt-gapWarning');
+  if(laborOn && claimGapYears>0){
+    gapWarnEl.innerHTML = `<b>注意時間差：</b>勞保要到 ${laborClaimAge} 歲才能請領，退休後有 ${claimGapYears} 年只有勞退＋自備儲蓄、還沒有勞保，這段要另外備好。（上方「達成率」已把勞保按 ${laborClaimAge} 歲折算，不是退休當年就有。）`;
+    gapWarnEl.style.display = 'block';
+  } else {
+    gapWarnEl.style.display = 'none';
+  }
+
+  // ---- 試算提醒：三種文案（達標超標／未達標但為正／未達標且轉負） ----
+  if(tier==='pos'){
+    document.getElementById('tip-1').textContent = `退休準備達成率 ${achievementRate.toFixed(1)}%，依目前計畫可望達成退休目標。`;
+    document.getElementById('tip-2').textContent = '只要維持現有儲蓄節奏，退休時可用資產足以支應預期生活費，財務自由的基礎已初步建立。';
+    document.getElementById('tip-3').textContent = '建議每年檢視一次計畫假設（通膨率、報酬率），確保與實際情況同步。如有資產配置調整，也記得同步更新試算。';
+  } else if(tier==='warn'){
+    document.getElementById('tip-1').textContent = `退休準備達成率 ${achievementRate.toFixed(1)}%，距離目標還有落差，但方向仍是正向累積。`;
+    document.getElementById('tip-2').textContent = '目前的儲蓄與投入節奏，還無法完全支應理想退休生活費，退休時可用資產會小於所需準備總額。';
+    document.getElementById('tip-3').textContent = '可以試著提高每月可投資金額、延後退休年齡爭取更多累積時間，或適度調降退休後每月生活費目標，重新試算看看落差怎麼縮小。';
+  } else {
+    document.getElementById('tip-1').textContent = `退休準備達成率 ${achievementRate.toFixed(1)}%，目前假設下實質報酬率為負（${(realReturn*100).toFixed(2)}%），資產的真實購買力正在流失。`;
+    document.getElementById('tip-2').textContent = '當金融工具報酬率低於通膨率時，就算帳面數字沒少，錢實際能買到的東西會愈來愈少，單靠現在的配置無法支撐退休後的生活費。';
+    document.getElementById('tip-3').textContent = '建議重新檢視「金融工具報酬率」跟「通膨率」的假設是否合理，並優先考慮提高每月投入金額、延後退休年齡，或調整資產配置以爭取更合理的實質報酬率。';
+  }
+
+  document.getElementById('rt-resultSection').classList.add('show');
+}
+
+document.getElementById('btn-calcRetirement').addEventListener('click', calcRetirement);
+updateTimelineVisual();
+
+/* ---------------- 投資理財 ---------------- */
+bindSliderLabel('in-invYears','v-invYears',' 年',0);
+bindSliderLabel('in-invReturn','v-invReturn','%',1);
+bindSliderLabel('in-invInflation','v-invInflation','%',1);
+
+function calcInvest(){
+  const years = +document.getElementById('in-invYears').value;
+  const target = +document.getElementById('in-invTarget').value || 0;
+  const principal = +document.getElementById('in-invPrincipal').value || 0;
+  const monthly = +document.getElementById('in-invMonthly').value || 0;
+  const annualReturn = (+document.getElementById('in-invReturn').value)/100;
+  const inflation = (+document.getElementById('in-invInflation').value)/100;
+
+  const monthlyRate = Math.pow(1+annualReturn, 1/12) - 1;
+  const n = years*12;
+
+  const fvPrincipal = principal * Math.pow(1+monthlyRate, n);
+  const fvContribution = monthlyRate>0.00001
+    ? monthly * ((Math.pow(1+monthlyRate, n)-1)/monthlyRate)
+    : monthly*n;
+  const finalValue = fvPrincipal + fvContribution;
+  const totalContribution = principal + monthly*n;
+  const gain = Math.max(0, finalValue - totalContribution);
+  const gainRate = finalValue>0 ? gain/finalValue*100 : 0;
+  const contributionRate = finalValue>0 ? totalContribution/finalValue*100 : 0;
+
+  const realValue = finalValue / Math.pow(1+inflation, years);
+
+  const achievementRate = target>0 ? Math.min(999, finalValue/target*100) : 100;
+  const tier = achievementRate>=100 ? 'pos' : (achievementRate>=60 ? 'warn' : 'neg');
+
+  const banner = document.getElementById('inv-statusBanner');
+  banner.className = 'stat-card status-banner-compact' + (tier==='pos' ? '' : (tier==='warn' ? ' tier-warn-banner' : ' tier-neg-banner'));
+  document.getElementById('inv-statusBadge').textContent = tier==='pos' ? '✓ 目標可望達成' : (tier==='warn' ? '⚠ 距離目標尚有落差' : '✕ 落差較大，建議調整假設');
+
+  const finalValueEl = document.getElementById('inv-finalValue');
+  finalValueEl.textContent = money(finalValue);
+  finalValueEl.className = 'status-diff tier-'+tier;
+
+  document.getElementById('inv-statusDesc').textContent = tier==='pos'
+    ? '依目前的投入節奏與報酬假設，預估能達成或超過設定的目標金額。'
+    : tier==='warn'
+    ? '目前的投入節奏還無法完全達到目標，可以考慮拉長投資年期或提高每月投入金額。'
+    : '目前假設下與目標金額落差較大，建議重新檢視目標金額、投資年期或每月投入金額是否合理。';
+
+  const rateBig = document.getElementById('inv-rateBig');
+  rateBig.innerHTML = achievementRate.toFixed(0)+'<small>%</small>';
+  rateBig.className = 'rate-big tier-'+tier;
+  document.getElementById('inv-rateBar').style.width = Math.min(100,achievementRate)+'%';
+  document.getElementById('inv-rateBar').className = 'achieve-fill tier-'+tier+'-bg';
+  document.getElementById('inv-rateSub').textContent = '目標 '+money(target);
+
+  document.getElementById('inv-targetDisplay').className = 'stat-value tier-target';
+  document.getElementById('inv-targetDisplay').textContent = money(target);
+  document.getElementById('inv-targetNote').textContent = '投資 '+years+' 年後';
+
+  document.getElementById('inv-card-final').className = 'stat-card card-tier-'+tier;
+  const finalDisplayEl = document.getElementById('inv-finalDisplay');
+  finalDisplayEl.textContent = money(finalValue);
+  finalDisplayEl.className = 'stat-value tier-'+tier;
+
+  document.getElementById('inv-totalContribution').className = 'stat-value tier-target';
+  document.getElementById('inv-totalContribution').textContent = money(totalContribution);
+
+  document.getElementById('inv-card-gain').className = 'stat-card card-tier-'+tier;
+  const gainEl = document.getElementById('inv-gain');
+  gainEl.textContent = money(gain);
+  gainEl.className = 'stat-value tier-'+tier;
+  document.getElementById('inv-gainNote').textContent = '複利貢獻 '+gainRate.toFixed(0)+'%';
+
+  document.getElementById('inv-sourceBarContribution').style.width = contributionRate+'%';
+  document.getElementById('inv-sourceBarGain').style.width = gainRate+'%';
+  document.getElementById('inv-legendContribution').textContent = money(totalContribution);
+  document.getElementById('inv-legendContributionPct').textContent = contributionRate.toFixed(0)+'%';
+  document.getElementById('inv-legendGain').textContent = money(gain);
+  document.getElementById('inv-legendGainPct').textContent = gainRate.toFixed(0)+'%';
+
+  document.getElementById('inv-infNominal').textContent = money(finalValue);
+  document.getElementById('inv-infYears').textContent = years+' 年 × '+(inflation*100).toFixed(1)+'% 通膨';
+  document.getElementById('inv-infReal').textContent = money(realValue);
+
+  document.getElementById('inv-tip-1').textContent = `依目前假設，${years} 年後預估累積資產 ${money(finalValue)}，達成率 ${achievementRate.toFixed(0)}%。`;
+  document.getElementById('inv-tip-2').textContent = tier==='pos'
+    ? '複利效果已經是資產成長的主要推力，持續維持投入紀律即可。'
+    : '目前投入本金與每月定期投入的組合，還沒辦法讓複利發揮到足以達標的程度。';
+  document.getElementById('inv-tip-3').textContent = '建議每年檢視一次報酬率與通膨假設是否貼近實際市場，並視情況調整每月投入金額或投資年期。';
+
+  document.getElementById('inv-resultSection').classList.add('show');
+}
+document.getElementById('btn-calcInvest').addEventListener('click', calcInvest);
+
+/* ---------------- 遺贈方案 ---------------- */
+document.querySelectorAll('#legacySubTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#legacySubTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#panel-legacy .house-sub').forEach(s=>s.classList.remove('active'));
+    document.getElementById('legacy-sub-'+btn.dataset.sub).classList.add('active');
+  });
+});
+
+const lgFmt = n => Math.round(n).toLocaleString('en-US');
+const lgState = {
+  assets: 3000, reratio: 40, decl: 65,
+  listed: 0, unlisted: 0,
+  spouse: true, children: 2, minors: 0, minoryears: 5,
+  parents: 0, disabled: 0,
+  insurance: 0, gifted: 0, debt: 0, spousaldiff: 0
+};
+
+function wireLgToggle(id, onChange){
+  const el = document.getElementById(id);
+  el.addEventListener('click', ()=>{
+    el.classList.toggle('on');
+    onChange(el.classList.contains('on'));
+  });
+}
+wireLgToggle('tg-lgSpouse', v=>{ setSpouse(v); });
+let lgAmtToggleOn = true;
+wireLgToggle('tg-lgAmt', v=>{ lgAmtToggleOn=v; calcLegacyAmt(); });
+
+document.querySelectorAll('#panel-legacy .stepper button[data-lgstep]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.lgstep, d = parseInt(btn.dataset.d);
+    const min = 0;
+    const max = (key==='parents') ? 2 : (key==='minoryears' ? 20 : 12);
+    lgState[key] = Math.max(min, Math.min(max, (lgState[key]||0) + d));
+    if(key==='children') lgState.minors = Math.min(lgState.minors, lgState.children);
+    document.getElementById('v-lg'+key.charAt(0).toUpperCase()+key.slice(1)).textContent = lgState[key];
+    document.getElementById('row-lgMinoryears').style.display = lgState.minors>0 ? 'flex' : 'none';
+    calcLegacyTax();
+  });
+});
+
+function bindLgRange(id, key, vid, suffixFn){
+  document.getElementById(id).addEventListener('input', e=>{
+    lgState[key] = parseFloat(e.target.value);
+    document.getElementById(vid).textContent = suffixFn(lgState[key]);
+    calcLegacyTax();
+  });
+}
+bindLgRange('in-lgAssets','assets','v-lgAssets', v=>lgFmt(v)+' 萬');
+bindLgRange('in-lgReratio','reratio','v-lgReratio', v=>v+'%');
+bindLgRange('in-lgDecl','decl','v-lgDecl', v=>v+'%');
+
+function bindLgNum(id, key){
+  document.getElementById(id).addEventListener('input', e=>{ lgState[key] = parseFloat(e.target.value)||0; calcLegacyTax(); });
+}
+bindLgNum('in-lgListed','listed');
+bindLgNum('in-lgUnlisted','unlisted');
+bindLgNum('in-lgInsurance','insurance');
+bindLgNum('in-lgGifted','gifted');
+bindLgNum('in-lgDebt','debt');
+bindLgNum('in-lgSpousaldiff','spousaldiff');
+document.getElementById('in-lgInsurance').addEventListener('input', e=>{
+  document.getElementById('in-lgAmtIns').value = lgState.insurance || '';
+  calcLegacyAmt();
+});
+
+// ---- 遺產稅 ----
+const LG_EX_ESTATE = 1333, LG_DED_SPOUSE = 553, LG_DED_CHILD = 56, LG_DED_PARENT = 138,
+      LG_DED_DISABLED = 693, LG_DED_FUNERAL = 138, LG_B1 = 5621, LG_B2 = 11242,
+      LG_DIFF2 = 281.05, LG_DIFF3 = 843.15;
+
+function lgEstateTax(net){
+  if(net<=0) return {tax:0, rate:0};
+  if(net<=LG_B1) return {tax: net*0.10, rate:10};
+  if(net<=LG_B2) return {tax: net*0.15 - LG_DIFF2, rate:15};
+  return {tax: net*0.20 - LG_DIFF3, rate:20};
+}
+
+function calcLegacyTax(){
+  const nonRe = lgState.assets * (1 - lgState.reratio/100);
+  const re = lgState.assets * (lgState.reratio/100) * (lgState.decl/100);
+  const gross = nonRe + re + (lgState.gifted||0); // 死亡前2年內贈與配偶／法定繼承人之財產，依法視為遺產併入
+
+  let ded = 0;
+  if(lgState.spouse) ded += LG_DED_SPOUSE;
+  ded += lgState.children * LG_DED_CHILD;
+  ded += lgState.minors * lgState.minoryears * LG_DED_CHILD;
+  ded += lgState.parents * LG_DED_PARENT;
+  ded += lgState.disabled * LG_DED_DISABLED;
+  ded += LG_DED_FUNERAL;
+  ded += lgState.debt;
+  ded += lgState.spousaldiff;
+
+  const net = Math.max(0, gross - LG_EX_ESTATE - ded);
+  const {tax, rate} = lgEstateTax(net);
+
+  document.getElementById('r-grossestate').textContent = lgFmt(gross)+' 萬';
+  document.getElementById('r-nonre').textContent = lgFmt(nonRe)+' 萬';
+  document.getElementById('r-re').textContent = lgFmt(re)+' 萬';
+  document.getElementById('row-r-gifted').style.display = lgState.gifted>0 ? 'flex' : 'none';
+  document.getElementById('r-gifted').textContent = lgFmt(lgState.gifted||0)+' 萬';
+  document.getElementById('r-deductions').textContent = lgFmt(ded)+' 萬';
+  document.getElementById('r-netestate').textContent = lgFmt(net);
+  document.getElementById('r-tax').textContent = lgFmt(tax);
+  document.getElementById('r-bracket').textContent = rate+'%';
+  document.getElementById('lg-tax-result').classList.add('show');
+}
+
+// ---- 資產分配：狀態 ----
+const lgPalette = ['#2E7391','#16323F','#2E7D5B','#B3492F','#C97B3D','#1F5C73'];
+let childIdSeq = 3;
+lgState.childList = [{id:1, type:'親生子女'}, {id:2, type:'親生子女'}];
+lgState.fatherAlive = false;
+lgState.motherAlive = false;
+lgState.adoptFatherAlive = false;
+lgState.adoptMotherAlive = false;
+lgState.parentType = '本生父母';
+lgState.stepAdoptFatherAlive = false;
+lgState.stepBioMotherAlive = false;
+lgState.stepAdoptMotherAlive = false;
+lgState.stepBioFatherAlive = false;
+lgState.siblings = 0;
+lgState.grandparents = 0;
+lgState.allocMode = 'legal';
+lgState.customShares = {};
+
+function syncChildrenCount(){
+  lgState.children = lgState.childList.length;
+  lgState.minors = Math.min(lgState.minors, lgState.children);
+}
+function syncParentsCount(){
+  if(lgState.parentType==='本生父母'){
+    lgState.parents = (lgState.fatherAlive?1:0) + (lgState.motherAlive?1:0);
+  } else if(lgState.parentType==='被收養'){
+    lgState.parents = (lgState.adoptFatherAlive?1:0) + (lgState.adoptMotherAlive?1:0);
+  } else {
+    // 一方收養：父親／母親／養父／養母四個獨立開關，自由勾選，續存本生方＋收養繼親最多併存 2 位
+    const count = (lgState.stepBioFatherAlive?1:0) + (lgState.stepBioMotherAlive?1:0)
+                + (lgState.stepAdoptFatherAlive?1:0) + (lgState.stepAdoptMotherAlive?1:0);
+    lgState.parents = Math.min(2, count);
+  }
+}
+
+function getAliveParentLabels(){
+  // 回傳目前在世的父母／養父母標籤陣列，供資產分配個別呈現使用
+  if(lgState.parentType==='本生父母'){
+    const arr=[]; if(lgState.fatherAlive) arr.push('父親'); if(lgState.motherAlive) arr.push('母親'); return arr;
+  } else if(lgState.parentType==='被收養'){
+    const arr=[]; if(lgState.adoptFatherAlive) arr.push('養父'); if(lgState.adoptMotherAlive) arr.push('養母'); return arr;
+  } else {
+    const arr=[];
+    if(lgState.stepBioFatherAlive) arr.push('父親');
+    if(lgState.stepBioMotherAlive) arr.push('母親');
+    if(lgState.stepAdoptFatherAlive) arr.push('養父');
+    if(lgState.stepAdoptMotherAlive) arr.push('養母');
+    return arr.slice(0,2);
+  }
+}
+
+// ---- 配偶 toggle（租稅規劃／資產分配兩處同步） ----
+function setSpouse(v){
+  lgState.spouse = v;
+  document.getElementById('tg-lgSpouse').classList.toggle('on', v);
+  document.getElementById('tg-allocSpouse').classList.toggle('on', v);
+  calcLegacyAlloc();
+}
+document.getElementById('tg-allocSpouse').addEventListener('click', ()=> setSpouse(!lgState.spouse));
+
+// ---- 子女清單 ----
+function renderChildList(){
+  const mount = document.getElementById('childList');
+  mount.innerHTML = '';
+  lgState.childList.forEach((child, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'repeat-block';
+    row.innerHTML = `
+      <div class="repeat-head"><span class="t">子女 ${idx+1}</span><button class="repeat-del" type="button">✕</button></div>
+      <select>
+        <option value="親生子女" ${child.type==='親生子女'?'selected':''}>親生子女（含前婚、婚生）</option>
+        <option value="收養子女" ${child.type==='收養子女'?'selected':''}>收養子女</option>
+      </select>
+    `;
+    row.querySelector('select').addEventListener('change', e=>{ child.type = e.target.value; });
+    row.querySelector('.repeat-del').addEventListener('click', ()=>{
+      lgState.childList = lgState.childList.filter(c=>c.id!==child.id);
+      syncChildrenCount();
+      renderChildList();
+      updateTierStates();
+      calcLegacyAlloc();
+    });
+    mount.appendChild(row);
+  });
+}
+document.getElementById('btn-addChild').addEventListener('click', ()=>{
+  lgState.childList.push({id:++childIdSeq, type:'親生子女'});
+  syncChildrenCount();
+  renderChildList();
+  updateTierStates();
+  calcLegacyAlloc();
+});
+renderChildList();
+syncChildrenCount();
+
+// ---- 父母 ----
+function updateParentRowVisibility(){
+  document.querySelectorAll('.parent-row').forEach(row=>{
+    const showFor = row.dataset.show.split(',');
+    row.style.display = showFor.includes(lgState.parentType) ? 'flex' : 'none';
+  });
+}
+document.querySelectorAll('#parentTypeTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#parentTypeTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    lgState.parentType = btn.dataset.ptype;
+    updateParentRowVisibility();
+    document.getElementById('parent-adopt-note').textContent =
+      lgState.parentType==='本生父母' ? '未被收養：由本生父母繼承。' :
+      lgState.parentType==='被收養' ? '已被他人收養：本生父母依法無繼承權，由收養父母繼承。' :
+      '夫妻一方收養他方子女之例外：續存的本生方（一位）與收養的繼親（一位）得併存繼承，最多 2 位。';
+    syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  });
+});
+updateParentRowVisibility();
+document.getElementById('tg-fatherAlive').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.fatherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+document.getElementById('tg-motherAlive').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.motherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+document.getElementById('tg-adoptFatherAlive').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.adoptFatherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+document.getElementById('tg-adoptMotherAlive').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.adoptMotherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+
+// ---- 一方收養：四個獨立開關，自由勾選 ----
+document.getElementById('tg-stepBioFather').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.stepBioFatherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+document.getElementById('tg-stepBioMother').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.stepBioMotherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+document.getElementById('tg-stepAdoptFather').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.stepAdoptFatherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+document.getElementById('tg-stepAdoptMother').addEventListener('click', function(){
+  this.classList.toggle('on');
+  lgState.stepAdoptMotherAlive = this.classList.contains('on');
+  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+});
+
+// ---- 兄弟姊妹（不限人數）／祖父母（上限4人）stepper ----
+document.querySelectorAll('#legacy-sub-alloc .stepper button[data-fam]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.fam, d = parseInt(btn.dataset.d);
+    const max = key==='grandparents' ? 4 : 99;
+    lgState[key] = Math.max(0, Math.min(max, (lgState[key]||0)+d));
+    document.getElementById('v-'+key).textContent = lgState[key];
+    updateTierStates();
+    calcLegacyAlloc();
+  });
+});
+
+// ---- 順位啟用／停用視覺 ----
+function updateTierStates(){
+  const childrenActive = lgState.childList.length>0;
+  const parentsActive = !childrenActive && lgState.parents>0;
+  const siblingsActive = !childrenActive && !parentsActive && lgState.siblings>0;
+  const grandparentsActive = !childrenActive && !parentsActive && !siblingsActive && lgState.grandparents>0;
+
+  document.getElementById('tier-parents').classList.toggle('tier-inactive', childrenActive);
+  document.getElementById('tier-siblings').classList.toggle('tier-inactive', childrenActive || parentsActive);
+  document.getElementById('tier-grandparents').classList.toggle('tier-inactive', childrenActive || parentsActive || siblingsActive);
+
+  document.getElementById('tier-parents-note').textContent = childrenActive ? '已有第一順位繼承人，後續順位依法無繼承權' : '無第一順位繼承人，父母列入繼承判定';
+  document.getElementById('tier-siblings-note').textContent = (childrenActive||parentsActive) ? '已有前順位繼承人，後續順位依法無繼承權' : '無前順位繼承人，兄弟姊妹列入繼承判定';
+  document.getElementById('tier-grandparents-note').textContent = (childrenActive||parentsActive||siblingsActive) ? '已有前順位繼承人，依法無繼承權' : '無前順位繼承人，祖父母列入繼承判定';
+}
+updateTierStates();
+
+// ---- 計算繼承人與應繼分（完整四順位） ----
+function lgComputeHeirs(){
+  const heirs = [];
+  const childrenActive = lgState.childList.length>0;
+  const parentLabels = getAliveParentLabels();
+  const parentsAliveCount = parentLabels.length;
+  const parentsActive = !childrenActive && parentsAliveCount>0;
+  const siblingsActive = !childrenActive && !parentsActive && lgState.siblings>0;
+  const grandparentsActive = !childrenActive && !parentsActive && !siblingsActive && lgState.grandparents>0;
+
+  let tierName = null, tierCount = 0;
+  if(childrenActive){ tierName='子女'; tierCount=lgState.childList.length; }
+  else if(parentsActive){ tierName='父母'; tierCount=parentsAliveCount; }
+  else if(siblingsActive){ tierName='兄弟姊妹'; tierCount=lgState.siblings; }
+  else if(grandparentsActive){ tierName='祖父母'; tierCount=lgState.grandparents; }
+
+  // 依順位展開成「每個人一條」的清單，個別呈現在圖表上
+  function expandTierIndividuals(name){
+    const list = [];
+    if(name==='子女'){
+      for(let i=0;i<tierCount;i++) list.push({key:'child'+i, name:'子女 '+(i+1), tslRatio:0.5});
+    } else if(name==='父母'){
+      parentLabels.forEach((label,i)=> list.push({key:'parent'+i, name:label, tslRatio:0.5}));
+    } else if(name==='兄弟姊妹'){
+      for(let i=0;i<tierCount;i++) list.push({key:'sibling'+i, name:'兄弟姊妹 '+(i+1), tslRatio:1/3});
+    } else if(name==='祖父母'){
+      for(let i=0;i<tierCount;i++) list.push({key:'grandparent'+i, name:'祖父母 '+(i+1), tslRatio:1/3});
+    }
+    return list;
+  }
+
+  if(!lgState.spouse){
+    if(tierName){
+      const individuals = expandTierIndividuals(tierName);
+      const each = 1/individuals.length;
+      individuals.forEach(p=> heirs.push({key:p.key, name:p.name, total:each, tslRatio:p.tslRatio}));
+    } else {
+      heirs.push({key:'none', name:'（無配偶／任何順位繼承人）', total:1, tslRatio:1/3, note:true});
+    }
+    return heirs;
+  }
+  if(!tierName){
+    heirs.push({key:'spouse', name:'配偶（無其他繼承人，全額繼承）', total:1, tslRatio:0.5});
+    return heirs;
+  }
+
+  const individuals = expandTierIndividuals(tierName);
+  let spouseShare, tierShare;
+  if(tierName==='子女'){ const n=1+individuals.length; spouseShare=1/n; tierShare=1/n; }
+  else if(tierName==='父母'){ spouseShare=0.5; tierShare=0.5/individuals.length; }
+  else if(tierName==='兄弟姊妹'){ spouseShare=0.5; tierShare=0.5/individuals.length; }
+  else { spouseShare=2/3; tierShare=(1/3)/individuals.length; }
+
+  heirs.push({key:'spouse', name:'配偶', total:spouseShare, tslRatio:0.5});
+  individuals.forEach(p=> heirs.push({key:p.key, name:p.name, total:tierShare, tslRatio:p.tslRatio}));
+  return heirs;
+}
+
+// ---- 模式切換：法定 / 自訂 ----
+document.querySelectorAll('#allocModeTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#allocModeTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    lgState.allocMode = btn.dataset.mode;
+    document.querySelectorAll('.alloc-mode-view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('allocView-'+lgState.allocMode).classList.add('active');
+    if(lgState.allocMode==='custom') resetCustomShares();
+    calcLegacyAlloc();
+  });
+});
+
+function resetCustomShares(){
+  const heirs = lgComputeHeirs();
+  lgState.customShares = {};
+  heirs.forEach(h=>{ lgState.customShares[h.key] = h.total*100; });
+}
+document.getElementById('btn-resetCustom').addEventListener('click', resetCustomShares1);
+function resetCustomShares1(){ resetCustomShares(); calcLegacyAlloc(); }
+
+document.getElementById('btn-normalizeCustom').addEventListener('click', (e)=>{
+  e.preventDefault();
+  const heirs = lgComputeHeirs();
+  const sum = heirs.reduce((s,h)=> s+(lgState.customShares[h.key]||0), 0);
+  if(sum>0){
+    heirs.forEach(h=>{ lgState.customShares[h.key] = (lgState.customShares[h.key]||0)/sum*100; });
+  }
+  calcLegacyAlloc();
+});
+
+// ---- 主渲染函式 ----
+function calcLegacyAlloc(){
+  const total = lgState.assets;
+  const heirs = lgComputeHeirs();
+
+  if(lgState.allocMode==='legal'){
+    let gradient = [], legend = '', angle = 0;
+    heirs.forEach((h,i)=>{
+      const pct = h.total*100;
+      const color = lgPalette[i%lgPalette.length];
+      gradient.push(color+' '+angle+'% '+(angle+pct)+'%');
+      angle += pct;
+      const amt = total*h.total;
+      const tslAmt = amt*h.tslRatio;
+      legend += '<div class="legend-row"><span class="dot" style="background:'+color+'"></span><span class="name">'+h.name+'</span><span class="pct">'+pct.toFixed(1)+'%</span><span class="amt">'+lgFmt(amt)+' 萬</span></div>';
+      legend += '<div class="legend-row" style="border-bottom:1px solid var(--line);padding-top:0;"><span class="dot"></span><span class="name tsl-note">特留分底線（現行法 × '+(h.tslRatio===0.5?'1/2':'1/3')+'）</span><span class="pct"></span><span class="amt">'+lgFmt(tslAmt)+' 萬</span></div>';
+    });
+    document.getElementById('donut').style.background = 'conic-gradient('+gradient.join(',')+')';
+    document.getElementById('donut-total').textContent = lgFmt(total)+' 萬';
+    document.getElementById('legend').innerHTML = legend;
+    document.getElementById('sibling-note').style.display = heirs.some(h=>h.note) ? 'block' : 'none';
+  } else {
+    renderCustomAlloc(heirs, total);
+  }
+}
+
+function lgHeirTag(key){
+  if(key==='spouse') return '配偶';
+  if(key.startsWith('child')) return '子女';
+  if(key.startsWith('parent')) return '父母';
+  if(key.startsWith('sibling')) return '兄弟姊妹';
+  if(key.startsWith('grandparent')) return '祖父母';
+  return '';
+}
+
+function renderCustomAlloc(heirs, total){
+  const mount = document.getElementById('customAllocList');
+  mount.innerHTML = '';
+  heirs.forEach((h,i)=>{
+    if(lgState.customShares[h.key]===undefined) lgState.customShares[h.key] = h.total*100;
+    const color = lgPalette[i%lgPalette.length];
+    const pct = lgState.customShares[h.key];
+    const amt = total*pct/100;
+    const tslAmt = total*h.total*h.tslRatio;
+    const row = document.createElement('div');
+    row.className = 'custom-heir-row';
+    row.innerHTML = `
+      <div class="custom-heir-top">
+        <div class="custom-heir-name"><span class="dot" style="background:${color}"></span>${h.name}<span class="tag">${lgHeirTag(h.key)}</span></div>
+        <div class="custom-heir-pct"><span class="pctval">${pct.toFixed(1)}</span>% ・ ${lgFmt(amt)} 萬</div>
+      </div>
+      <input type="range" min="0" max="100" step="0.1" value="${pct}">
+      <div class="custom-heir-ref">
+        <span>應繼分 <b>${lgFmt(total*h.total)} 萬</b>（${(h.total*100).toFixed(1)}%）</span>
+        <span>特留分底線 <b>${lgFmt(tslAmt)} 萬</b></span>
+      </div>
+    `;
+    row.querySelector('input[type=range]').addEventListener('input', e=>{
+      lgState.customShares[h.key] = parseFloat(e.target.value);
+      row.querySelector('.pctval').textContent = lgState.customShares[h.key].toFixed(1);
+      row.querySelector('.custom-heir-pct').innerHTML = `<span class="pctval">${lgState.customShares[h.key].toFixed(1)}</span>% ・ ${lgFmt(total*lgState.customShares[h.key]/100)} 萬`;
+      updateCustomTotal(heirs);
+    });
+    mount.appendChild(row);
+  });
+  updateCustomTotal(heirs);
+}
+
+function updateCustomTotal(heirs){
+  const sum = heirs.reduce((s,h)=> s+(lgState.customShares[h.key]||0), 0);
+  const row = document.getElementById('customTotalRow');
+  document.getElementById('customTotalPct').textContent = sum.toFixed(1)+'%';
+  row.classList.toggle('ok', Math.abs(sum-100)<0.15);
+}
+
+// ---- 最低稅負 ----
+const LG_AMT_EX_INS = 3740, LG_AMT_EX_BASE = 750, LG_AMT_RATE = 0.20, LG_OVERSEAS_THRESHOLD = 100;
+
+function calcLegacyAmt(){
+  const insurance = parseFloat(document.getElementById('in-lgAmtIns').value)||0;
+  const income = parseFloat(document.getElementById('in-lgAmtIncome').value)||0;
+  const overseas = parseFloat(document.getElementById('in-lgAmtOverseas').value)||0;
+  const sec = parseFloat(document.getElementById('in-lgAmtSec').value)||0;
+  const donate = parseFloat(document.getElementById('in-lgAmtDonate').value)||0;
+  const div = parseFloat(document.getElementById('in-lgAmtDiv').value)||0;
+  const generalTax = parseFloat(document.getElementById('in-lgAmtGenertax').value)||0;
+  const credit = parseFloat(document.getElementById('in-lgAmtCredit').value)||0;
+
+  const s1 = lgAmtToggleOn ? Math.max(0, insurance - LG_AMT_EX_INS) : 0;
+  const s2 = overseas >= LG_OVERSEAS_THRESHOLD ? overseas : 0;
+  const s3 = income + s1 + s2 + sec + donate + div;
+  const s4 = Math.max(0, (s3 - LG_AMT_EX_BASE) * LG_AMT_RATE);
+  const s5 = generalTax + credit;
+  const due = Math.max(0, s4 - s5);
+
+  document.getElementById('s1').textContent = lgFmt(s1)+' 萬';
+  document.getElementById('s2').textContent = lgFmt(s2)+' 萬';
+  document.getElementById('s3').textContent = lgFmt(s3)+' 萬';
+  document.getElementById('s4').textContent = lgFmt(s4)+' 萬';
+  document.getElementById('s5').textContent = '－'+lgFmt(s5)+' 萬';
+
+  const banner = document.getElementById('amt-banner');
+  banner.classList.toggle('due', due>0);
+  document.getElementById('amt-banner-lbl').textContent = due>0 ? '應補繳基本稅額' : '無需補繳';
+  document.getElementById('amt-banner-val').textContent = lgFmt(due)+' 萬';
+  document.getElementById('lg-amt-result').classList.add('show');
+}
+
+['in-lgAmtIns','in-lgAmtIncome','in-lgAmtOverseas','in-lgAmtSec','in-lgAmtDonate','in-lgAmtDiv','in-lgAmtGenertax','in-lgAmtCredit']
+  .forEach(id => document.getElementById(id).addEventListener('input', calcLegacyAmt));
+
+calcLegacyTax();
+calcLegacyAlloc();
+calcLegacyAmt();
+
+/* ---------------- 教育基金 ---------------- */
+bindSliderLabel('in-eduReturn','v-eduReturn','%',1);
+bindSliderLabel('in-eduInflation','v-eduInflation','%',1);
+
+const eduCurrentAgeInput = document.getElementById('in-eduCurrentAge');
+const eduTargetAgeInput = document.getElementById('in-eduTargetAge');
+eduCurrentAgeInput.addEventListener('input', ()=>{
+  if(+eduCurrentAgeInput.value >= +eduTargetAgeInput.value){
+    eduCurrentAgeInput.value = +eduTargetAgeInput.value - 1;
+  }
+  document.getElementById('v-eduCurrentAge').textContent = eduCurrentAgeInput.value+' 歲';
+});
+eduTargetAgeInput.addEventListener('input', ()=>{
+  if(+eduTargetAgeInput.value <= +eduCurrentAgeInput.value){
+    eduTargetAgeInput.value = +eduCurrentAgeInput.value + 1;
+  }
+  document.getElementById('v-eduTargetAge').textContent = eduTargetAgeInput.value+' 歲';
+});
+
+function calcEducation(){
+  const currentAge = +eduCurrentAgeInput.value;
+  const targetAge = +eduTargetAgeInput.value;
+  const target = +document.getElementById('in-eduTarget').value || 0;
+  const existing = +document.getElementById('in-eduExisting').value || 0;
+  const annualReturn = (+document.getElementById('in-eduReturn').value)/100;
+  const eduInflation = (+document.getElementById('in-eduInflation').value)/100;
+
+  const years = Math.max(1, targetAge-currentAge);
+  const monthlyRate = Math.pow(1+annualReturn, 1/12) - 1;
+  const n = years*12;
+
+  const targetInflated = target * Math.pow(1+eduInflation, years);
+  const existingFV = existing * Math.pow(1+monthlyRate, n);
+  const gap = Math.max(0, targetInflated - existingFV);
+  const pmt = monthlyRate>0.00001
+    ? gap * monthlyRate / (Math.pow(1+monthlyRate, n) - 1)
+    : gap / n;
+
+  const totalContribution = pmt*n + existing;
+  const compoundGain = Math.max(0, targetInflated - totalContribution);
+  const compoundRate = targetInflated>0 ? compoundGain/targetInflated*100 : 0;
+  const contributionPct = targetInflated>0 ? totalContribution/targetInflated*100 : 0;
+
+  // 延後一年開始的比較（負擔敏感度）
+  const yearsDelay = Math.max(1, years-1);
+  const nDelay = yearsDelay*12;
+  const targetInflatedDelay = target * Math.pow(1+eduInflation, yearsDelay);
+  const existingFVDelay = existing * Math.pow(1+monthlyRate, nDelay);
+  const gapDelay = Math.max(0, targetInflatedDelay - existingFVDelay);
+  const pmtDelay = monthlyRate>0.00001
+    ? gapDelay * monthlyRate / (Math.pow(1+monthlyRate, nDelay) - 1)
+    : gapDelay / nDelay;
+  const delayIncrease = pmtDelay - pmt;
+
+  // ---- 可行性分級（依每月需存占家庭常見負擔感的粗略分級：無明確比較基準時，改用「複利貢獻比例」與缺口是否為0判斷） ----
+  const feasible = gap <= targetInflated*1.5; // 目標本身>0時基本上都算可行，主要用於極端情況（如通膨吃掉太多本金）
+  const tier = compoundRate>=25 ? 'pos' : (compoundRate>=10 ? 'warn' : 'neg');
+
+  const banner = document.getElementById('edu-statusBanner');
+  banner.className = 'stat-card status-banner-compact' + (tier==='pos' ? '' : (tier==='warn' ? ' tier-warn-banner' : ' tier-neg-banner'));
+  document.getElementById('edu-statusBadge').textContent = tier==='pos' ? '✓ 計畫可行，時間複利幫上大忙' : (tier==='warn' ? '⚠ 計畫可行，但複利幫助有限' : '✕ 準備期太短，幾乎得靠本金硬存');
+
+  const monthlyNeedEl = document.getElementById('edu-monthlyNeed');
+  monthlyNeedEl.innerHTML = money(pmt)+'<small style="font-size:16px;font-weight:600;">/月</small>';
+  monthlyNeedEl.className = 'status-diff tier-'+tier;
+
+  document.getElementById('edu-statusDesc').textContent =
+    '時間複利是你最強的夥伴。越早開始，越多教育金由投資幫你賺，每月負擔越輕。';
+
+  const rateBig = document.getElementById('edu-compoundRate');
+  rateBig.innerHTML = compoundRate.toFixed(0)+'<small>%</small>';
+  rateBig.className = 'rate-big tier-'+tier;
+  const rateBar = document.getElementById('edu-compoundBar');
+  rateBar.style.width = Math.max(0,Math.min(100,compoundRate))+'%';
+  rateBar.className = 'achieve-fill tier-'+tier+'-bg';
+  document.getElementById('edu-compoundSub').textContent = '時間複利幫你賺 '+money(compoundGain);
+
+  // 目標值：白底黑字
+  document.getElementById('edu-card-target').className = 'stat-card';
+  document.getElementById('edu-targetInflated').className = 'stat-value tier-target';
+  document.getElementById('edu-targetInflated').textContent = money(targetInflated);
+  document.getElementById('edu-targetNote').textContent = `今日 ${money(target)} → 通膨 ${(eduInflation*100).toFixed(1)}% × ${years} 年`;
+
+  // 實際狀況：套三色底
+  document.getElementById('edu-card-contribution').className = 'stat-card card-tier-'+tier;
+  const contribEl = document.getElementById('edu-totalContribution');
+  contribEl.textContent = money(totalContribution);
+  contribEl.className = 'stat-value tier-'+tier;
+  document.getElementById('edu-contributionNote').textContent = '佔目標 '+contributionPct.toFixed(0)+'%';
+
+  document.getElementById('edu-card-gain').className = 'stat-card card-tier-'+tier;
+  const gainEl = document.getElementById('edu-compoundGain');
+  gainEl.textContent = money(compoundGain);
+  gainEl.className = 'stat-value tier-'+tier;
+  document.getElementById('edu-gainNote').textContent = '複利貢獻 '+compoundRate.toFixed(0)+'%';
+
+  // 來源結構條狀圖
+  document.getElementById('edu-sourceBarContribution').style.width = contributionPct+'%';
+  document.getElementById('edu-sourceBarGain').style.width = compoundRate+'%';
+  document.getElementById('edu-legendContribution').textContent = money(totalContribution);
+  document.getElementById('edu-legendContributionPct').textContent = contributionPct.toFixed(0)+'%';
+  document.getElementById('edu-legendGain').textContent = money(compoundGain);
+  document.getElementById('edu-legendGainPct').textContent = compoundRate.toFixed(0)+'%';
+
+  document.getElementById('edu-delayWarning').innerHTML =
+    `<b>準備期長短會影響每月負擔：</b>若延後一年才開始，依目前報酬假設，每月約需多投入 ${money(Math.max(0,delayIncrease))} 元（由 ${money(pmt)} 增至 ${money(pmtDelay)}）。實際金額隨報酬率與市場波動而變動，僅供規劃參考。`;
+
+  document.getElementById('edu-tip-1').textContent =
+    `教育金需約 ${years} 年累積、每月約存 ${money(pmt)}；這段準備期若延後開始，每月負擔會明顯增加，越早規劃越輕鬆。`;
+  document.getElementById('edu-tip-2').textContent =
+    '這段準備期若收入中斷，可能影響目標達成。規劃時可一併考量保障，使目標金額在意外發生時仍有著落；本試算僅供教育與財務規劃參考，非保險招攬或要約，實際保障依商品條款及核保，完整評估請洽合格從業人員。';
+
+  document.getElementById('edu-resultSection').classList.add('show');
+}
+document.getElementById('btn-calcEducation').addEventListener('click', calcEducation);
+
+/* ---------------- 購屋基金：子分頁切換 ---------------- */
+document.querySelectorAll('#houseSubTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#houseSubTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.house-sub').forEach(s=>s.classList.remove('active'));
+    document.getElementById('house-sub-'+btn.dataset.sub).classList.add('active');
+  });
+});
+
+/* ---------------- 購屋能力試算 ---------------- */
+function tierOfCoverage(actual, target){
+  if(target<=0) return 'pos';
+  const ratio = actual/target*100;
+  if(ratio>=100) return 'pos';
+  if(ratio>=50) return 'warn';
+  return 'neg';
+}
+
+function calcHouseAbility(){
+  const currentAge = +document.getElementById('in-haCurrentAge').value;
+  const buyAge = +document.getElementById('in-haBuyAge').value;
+  const downPct = (+document.getElementById('in-haDownPct').value)/100;
+  const rate = (+document.getElementById('in-haRate').value)/100;
+  const loanYears = +document.getElementById('in-haLoanYears').value;
+  const price = +document.getElementById('in-haPrice').value || 0;
+  const cash = +document.getElementById('in-haCash').value || 0;
+  const grace = +document.getElementById('in-haGrace').value;
+  const saveReturn = (+document.getElementById('in-haSaveReturn').value)/100;
+
+  const years = Math.max(1, buyAge - currentAge);
+  const monthlyRate = rate/12;
+  const saveMonthlyRate = Math.pow(1+saveReturn, 1/12) - 1;
+  const n = years*12;
+
+  // 頭期款目標（以今日房價計算，不再推估未來房價成長）
+  const downPayment = price * downPct;
+  const loanAmount = price - downPayment;
+
+  // 每月需存（年金公式，比照教育基金的月複利模式）
+  const futureCash = cash * Math.pow(1+saveMonthlyRate, n);
+  const gap = Math.max(0, downPayment - futureCash);
+  const monthlyNeed = saveMonthlyRate>0.00001
+    ? gap * saveMonthlyRate / (Math.pow(1+saveMonthlyRate, n) - 1)
+    : gap / n;
+
+  // 貸款月付金（寬限期內只繳息／寬限期後本息攤還）
+  const graceMonthly = loanAmount * monthlyRate;
+  const remainMonths = Math.max(1,(loanYears-grace))*12;
+  const normalMonthly = monthlyRate>0
+    ? loanAmount * monthlyRate / (1-Math.pow(1+monthlyRate,-remainMonths))
+    : loanAmount/remainMonths;
+
+  // 總利息成本（寬限期僅息 + 攤還期利息部分）
+  const graceInterest = graceMonthly * grace * 12;
+  const normalTotalPaid = normalMonthly * remainMonths;
+  const normalInterest = Math.max(0, normalTotalPaid - loanAmount);
+  const totalInterest = graceInterest + normalInterest;
+  const totalCost = price + totalInterest;
+
+  const achievementRate = downPayment>0 ? Math.min(999, futureCash/downPayment*100) : 100;
+  const tier = achievementRate>=100 ? 'pos' : (achievementRate>=50 ? 'warn' : 'neg');
+
+  // ---- 狀態橫幅 ----
+  const banner = document.getElementById('ha-statusBanner');
+  banner.className = 'stat-card status-banner-compact' + (tier==='pos' ? '' : (tier==='warn' ? ' tier-warn-banner' : ' tier-neg-banner'));
+  document.getElementById('ha-statusBadge').textContent = tier==='pos' ? '✓ 計畫可行' : (tier==='warn' ? '⚠ 需要調整計畫' : '✕ 頭期款壓力大');
+
+  const monthlyNeedEl = document.getElementById('ha-monthlyNeed');
+  monthlyNeedEl.innerHTML = money(monthlyNeed)+'<small style="font-size:16px;font-weight:600;">/月</small>';
+  monthlyNeedEl.className = 'status-diff tier-'+tier;
+
+  document.getElementById('ha-statusDesc').textContent = tier==='pos'
+    ? '依目前計畫，頭期款準備充足，持續維持現有儲蓄節奏即可。'
+    : tier==='warn'
+    ? '頭期款目標偏高，建議考慮拉長儲蓄時間、降低自備款比例，或調整房屋預算。'
+    : '頭期款目標與現況落差較大，建議重新檢視房屋預算、自備款比例或購屋時間點。';
+
+  const rateBig = document.getElementById('ha-rateBig');
+  rateBig.innerHTML = achievementRate.toFixed(0)+'<small>%</small>';
+  rateBig.className = 'rate-big tier-'+tier;
+  document.getElementById('ha-rateBar').style.width = Math.min(100,achievementRate)+'%';
+  document.getElementById('ha-rateBar').className = 'achieve-fill tier-'+tier+'-bg';
+  document.getElementById('ha-rateSub').textContent = '頭期款 '+money(downPayment);
+
+  // ---- 統計卡：目標＝黑字，實際狀況＝套色 ----
+  document.getElementById('ha-downPayment').className = 'stat-value tier-target';
+  document.getElementById('ha-downPayment').textContent = money(downPayment);
+  document.getElementById('ha-downNote').textContent = '房價 '+(downPct*100).toFixed(0)+'%';
+
+  document.getElementById('ha-loanAmount').className = 'stat-value tier-target';
+  document.getElementById('ha-loanAmount').textContent = money(loanAmount);
+  document.getElementById('ha-loanNote').textContent = '共 '+loanYears+' 年';
+
+  document.getElementById('ha-normalMonthly').className = 'stat-value tier-target';
+  document.getElementById('ha-normalMonthly').innerHTML = money(normalMonthly)+'<small>/月</small>';
+
+  document.getElementById('ha-totalInterest').className = 'stat-value tier-target';
+  document.getElementById('ha-totalInterest').textContent = money(totalInterest);
+  document.getElementById('ha-interestNote').textContent = '佔總成本 '+(totalCost>0?(totalInterest/totalCost*100).toFixed(0):0)+'%';
+
+  // ---- 寬限期安排 ----
+  document.getElementById('ha-graceYearsLabel').textContent = '前 '+grace+' 年（僅繳息）';
+  document.getElementById('ha-normalYearsLabel').textContent = '第 '+(grace+1)+' 年起（本息）';
+  document.getElementById('ha-graceMonthly').innerHTML = money(graceMonthly)+'<small>/月</small>';
+  document.getElementById('ha-normalMonthly2').innerHTML = money(normalMonthly)+'<small>/月</small>';
+
+  // ---- 購屋前後現金流變化 ----
+  document.getElementById('ha-cfBefore').innerHTML = money(monthlyNeed)+'<small>/月</small>';
+  const cfAfterVal = grace>0 ? graceMonthly : normalMonthly;
+  document.getElementById('ha-cfAfter').innerHTML = money(cfAfterVal)+'<small>/月</small>';
+  document.getElementById('ha-cfAfterNote').textContent = grace>0 ? ('寬限期內（前'+grace+'年），寬限期後 '+money(normalMonthly)+' /月') : '本息攤還';
+  const diff = cfAfterVal - monthlyNeed;
+  const diffEl = document.getElementById('ha-cfDiff');
+  diffEl.textContent = (diff>=0?'+':'') + lgFmtSigned(diff);
+  diffEl.className = 'cf-diff' + (diff>0 ? ' neg' : '');
+
+  // ---- 購屋總成本來源結構 ----
+  document.getElementById('ha-totalCost').textContent = money(totalCost);
+  const pricePct = totalCost>0 ? price/totalCost*100 : 0;
+  const interestPct = totalCost>0 ? totalInterest/totalCost*100 : 0;
+  document.getElementById('ha-sourceBarPrice').style.width = pricePct+'%';
+  document.getElementById('ha-sourceBarInterest').style.width = interestPct+'%';
+  document.getElementById('ha-legendPrice').textContent = money(price);
+  document.getElementById('ha-legendPricePct').textContent = pricePct.toFixed(0)+'%';
+  document.getElementById('ha-legendInterest').textContent = money(totalInterest);
+  document.getElementById('ha-legendInterestPct').textContent = interestPct.toFixed(0)+'%';
+
+  document.getElementById('ha-loanYearsText').textContent = loanYears;
+  document.getElementById('ha-resultSection').classList.add('show');
+}
+function lgFmtSigned(n){
+  const v = Math.round(n);
+  return (v<0?'-$':'$') + Math.abs(v).toLocaleString('zh-TW');
+}
+document.getElementById('btn-calcHouse').addEventListener('click', calcHouseAbility);
+
+// 滑桿即時標籤顯示（不觸發完整試算）
+function bindSliderLabel(id, vid, suffix, decimals){
+  const el = document.getElementById(id);
+  el.addEventListener('input', ()=>{
+    const v = +el.value;
+    document.getElementById(vid).textContent = (decimals>0 ? v.toFixed(decimals) : v) + suffix;
+  });
+}
+bindSliderLabel('in-haDownPct','v-haDownPct','%',0);
+bindSliderLabel('in-haRate','v-haRate','%',1);
+bindSliderLabel('in-haLoanYears','v-haLoanYears',' 年',0);
+bindSliderLabel('in-haGrace','v-haGrace',' 年',0);
+bindSliderLabel('in-haSaveReturn','v-haSaveReturn','%',1);
+
+// 目前年齡 必須永遠小於 預計購屋年齡
+const haCurrentAgeInput = document.getElementById('in-haCurrentAge');
+const haBuyAgeInput = document.getElementById('in-haBuyAge');
+haCurrentAgeInput.addEventListener('input', ()=>{
+  if(+haCurrentAgeInput.value >= +haBuyAgeInput.value){
+    haCurrentAgeInput.value = +haBuyAgeInput.value - 1;
+  }
+  document.getElementById('v-haCurrentAge').textContent = haCurrentAgeInput.value+' 歲';
+});
+haBuyAgeInput.addEventListener('input', ()=>{
+  if(+haBuyAgeInput.value <= +haCurrentAgeInput.value){
+    haBuyAgeInput.value = +haCurrentAgeInput.value + 1;
+  }
+  document.getElementById('v-haBuyAge').textContent = haBuyAgeInput.value+' 歲';
+});
+
+
+/* ---------------- 房地合一稅 ---------------- */
+let taxSystem = 'new';
+document.querySelectorAll('#taxSystemTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#taxSystemTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    taxSystem = btn.dataset.tax;
+    document.getElementById('taxParamsNew').style.display = taxSystem==='new' ? 'block':'none';
+    document.getElementById('taxParamsOld').style.display = taxSystem==='old' ? 'block':'none';
+    document.getElementById('taxResultTitle').textContent = taxSystem==='new' ? '房地合一稅試算' : '舊制財產交易所得試算';
+    document.getElementById('taxRow1').querySelector('.lbl').textContent = taxSystem==='new' ? '課稅所得' : '房屋財產交易所得（粗估）';
+    document.getElementById('taxRow2').style.display = taxSystem==='new' ? 'flex' : 'none';
+    document.getElementById('taxResultLabel').textContent = taxSystem==='new' ? '預估應納稅額' : '估計房屋部分所得稅（併綜所稅、粗估）';
+    document.getElementById('taxNote').textContent = taxSystem==='new'
+      ? '新制：持有≤2年45%／2-5年35%／5-10年20%／>10年15%；符合自住優惠者，課稅所得400萬以下免稅，超過部分按10%課徵。'
+      : '舊制（105年前取得）：房屋部分交易所得併入綜合所得稅申報，土地部分另計土地增值稅（不在此試算內）；房屋評定現值比例與適用稅率請依實際資料調整。';
+    document.getElementById('tax-resultSection').classList.remove('show');
+  });
+});
+
+const selfUseToggle = document.getElementById('tg-selfuse');
+let selfUseOn = false;
+selfUseToggle.addEventListener('click', ()=>{
+  selfUseOn = !selfUseOn;
+  selfUseToggle.classList.toggle('on', selfUseOn);
+});
+
+bindSliderLabel('in-taxYears','v-taxYears',' 年',0);
+bindSliderLabel('in-taxHouseRatio','v-taxHouseRatio','%',0);
+bindSliderLabel('in-taxIncomeRate','v-taxIncomeRate','%',0);
+
+function newSystemRate(years){
+  if(years<=2) return {rate:0.45, label:'45%（持有≤2年）'};
+  if(years<=5) return {rate:0.35, label:'35%（持有2-5年）'};
+  if(years<=10) return {rate:0.20, label:'20%（持有5-10年）'};
+  return {rate:0.15, label:'15%（持有>10年）'};
+}
+
+function calcTax(){
+  const price = +document.getElementById('in-taxPrice').value || 0;
+  const cost = +document.getElementById('in-taxCost').value || 0;
+  const fee = +document.getElementById('in-taxFee').value || 0;
+  const years = +document.getElementById('in-taxYears').value;
+  document.getElementById('v-taxYears').textContent = years+' 年';
+
+  const grossGain = price - cost - fee;
+
+  if(taxSystem==='new'){
+    const landGain = +document.getElementById('in-taxLandGain').value || 0;
+    const taxable = Math.max(0, grossGain - landGain);
+    document.getElementById('tax-taxable').textContent = money(taxable);
+
+    if(selfUseOn && years>=6){
+      const afterExempt = Math.max(0, taxable-4000000);
+      const finalTax = afterExempt*0.10;
+      document.getElementById('tax-rate').textContent = '自住優惠 10%（400萬免稅）';
+      document.getElementById('tax-final').textContent = money(finalTax);
+    } else {
+      const r = newSystemRate(years);
+      const finalTax = taxable * r.rate;
+      document.getElementById('tax-rate').textContent = r.label;
+      document.getElementById('tax-final').textContent = money(finalTax);
+    }
+  } else {
+    const houseRatio = (+document.getElementById('in-taxHouseRatio').value)/100;
+    const incomeRate = (+document.getElementById('in-taxIncomeRate').value)/100;
+    document.getElementById('v-taxHouseRatio').textContent = (houseRatio*100).toFixed(0)+'%';
+    document.getElementById('v-taxIncomeRate').textContent = (incomeRate*100).toFixed(0)+'%';
+
+    const taxable = Math.max(0, grossGain);
+    document.getElementById('tax-taxable').textContent = money(taxable);
+    const houseIncome = taxable * houseRatio;
+    const finalTax = houseIncome * incomeRate;
+    document.getElementById('tax-final').textContent = money(finalTax);
+  }
+  document.getElementById('tax-resultSection').classList.add('show');
+}
+document.getElementById('btn-calcTax').addEventListener('click', calcTax);
+
+/* ---------------- 初始化（不自動顯示結果，等按鈕觸發） ---------------- */
+updateTimelineVisual();
+
+// 支援從外部連結直接跳到指定分頁，例如 simulation.html?tab=house
+const params = new URLSearchParams(window.location.search);
+const initialTab = params.get('tab');
+if(initialTab && document.getElementById('panel-'+initialTab)){
+  activateTab(initialTab);
+}
+</script>
+
+</body>
+</html>

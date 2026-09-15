@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>即時匯率</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:32px 0 40px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:200px; height:200px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#BFE0EA; font-weight:700; margin-bottom:8px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
+  header.hero p{max-width:640px; color:#DCEAEE; font-size:13px; line-height:1.8;}
+
+  main{margin-top:-20px; position:relative; z-index:10; padding-bottom:140px;}
+
+  .toolbar{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); padding:16px 20px; margin-bottom:22px;
+  }
+  .toolbar .meta{font-size:12px; color:var(--ink-soft); font-family:"Roboto Mono",monospace;}
+  .toolbar .meta b{color:var(--teal-deep);}
+  .refresh-btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:#fff; border:none;
+    padding:9px 18px; border-radius:20px; font-size:12.5px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .refresh-btn:hover{background:var(--teal-deep);}
+  .refresh-btn:disabled{opacity:.5; cursor:default;}
+  .refresh-btn .spin{display:inline-block; animation:spin 1s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);} to{transform:rotate(360deg);}}
+
+  .rate-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:28px;}
+  @media (max-width:980px){ .rate-grid{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:640px){ .rate-grid{grid-template-columns:repeat(2,1fr);} }
+
+  .rate-card{
+    background:var(--card); border-radius:12px; border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(20,50,60,0.05); padding:18px 16px; text-align:center;
+  }
+  .rate-card .flag{font-size:22px; margin-bottom:6px;}
+  .rate-card .code{font-family:"Roboto Mono",monospace; font-size:11px; color:var(--ink-soft); letter-spacing:.08em; margin-bottom:8px;}
+  .rate-card .main-rate{font-family:"Roboto Mono",monospace; font-weight:800; font-size:19px; color:var(--navy); margin-bottom:2px;}
+  .rate-card .main-rate small{font-size:11px; font-weight:500; color:var(--ink-soft);}
+  .rate-card .sub-rate{font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.7;}
+
+  .converter-card{
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); padding:26px 28px; margin-bottom:22px;
+  }
+  .converter-card h3{font-size:14px; color:var(--teal-deep); margin-bottom:20px;}
+  .converter-row{display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap;}
+  .converter-field{flex:1; min-width:180px;}
+  .converter-field label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:8px; font-weight:600;}
+  .converter-field .input-group{display:flex; border:1px solid var(--line); border-radius:9px; overflow:hidden;}
+  .converter-field input{
+    flex:1; border:none; padding:12px 14px; font-family:"Roboto Mono",monospace; font-size:16px;
+    color:var(--ink); background:var(--card); min-width:0;
+  }
+  .converter-field input:focus{outline:none;}
+  .converter-field select{
+    border:none; border-left:1px solid var(--line); background:var(--paper); padding:0 12px;
+    font-family:"Noto Sans TC",sans-serif; font-size:13px; font-weight:700; color:var(--navy); cursor:pointer;
+  }
+  .converter-swap{
+    flex-shrink:0; width:42px; height:42px; border-radius:50%; border:1px solid var(--line);
+    background:var(--paper); color:var(--teal-deep); font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; margin-bottom:1px;
+  }
+  .converter-swap:hover{background:var(--teal-tint);}
+  .converter-note{font-size:11px; color:var(--ink-soft); margin-top:16px;}
+
+  .state-box{
+    background:var(--card); border-radius:var(--radius); border:1px dashed var(--line);
+    padding:50px 30px; text-align:center; color:var(--ink-soft); font-size:13.5px;
+  }
+  .state-box .icon{font-size:28px; margin-bottom:12px;}
+
+  .note-box{
+    background:var(--teal-tint); border-radius:8px; padding:14px 16px; font-size:11.5px;
+    color:var(--teal-deep); line-height:1.8; margin-top:22px;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Live Exchange Rate · 即時匯率</div>
+    <h1>台幣兌各幣別，一頁看完</h1>
+    <p>台灣人常用的美金、港幣、日圓、韓元、泰銖，市場參考匯率一次看完，不用自己開分頁查。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toolbar">
+    <div class="meta" id="updateMeta">尚未抓取</div>
+    <button class="refresh-btn" id="btnRefresh">重新整理</button>
+  </div>
+
+  <div id="rateArea">
+    <div class="state-box" id="stateBox">
+      <div class="icon">💱</div>
+      正在抓取台灣銀行牌告匯率…
+    </div>
+    <div class="rate-grid" id="rateGrid" style="display:none;"></div>
+  </div>
+
+  <div class="converter-card" id="converterCard" style="display:none;">
+    <h3>雙向換算</h3>
+    <div class="converter-row">
+      <div class="converter-field">
+        <label>幣別 A</label>
+        <div class="input-group">
+          <input type="number" id="inputA" value="1000" min="0">
+          <select id="selectA"></select>
+        </div>
+      </div>
+      <button class="converter-swap" id="btnSwap" title="交換方向">⇄</button>
+      <div class="converter-field">
+        <label>幣別 B</label>
+        <div class="input-group">
+          <input type="number" id="inputB" value="0" min="0">
+          <select id="selectB"></select>
+        </div>
+      </div>
+    </div>
+    <div class="converter-note" id="converterNote">依市場參考中間價換算，實際交易匯率請以銀行當下牌告為準。</div>
+  </div>
+
+  <div class="note-box">
+    資料來源：<a href="https://www.exchangerate-api.com" target="_blank" rel="noopener" style="color:var(--teal-deep);">ExchangeRate-API</a>，市場參考匯率，每日更新一次。這是市場中間價，不是特定銀行的實際買賣牌告價，會跟銀行臨櫃或匯款時看到的價格略有落差（通常差在銀行的買賣價差），實際兌換請以當下交易銀行公告為準。
+  </div>
+</main>
+
+<script>
+const CURRENCIES = [
+  {code:"USD", name:"美元", flag:"🇺🇸"},
+  {code:"HKD", name:"港幣", flag:"🇭🇰"},
+  {code:"JPY", name:"日圓", flag:"🇯🇵"},
+  {code:"KRW", name:"韓元", flag:"🇰🇷"},
+  {code:"THB", name:"泰銖", flag:"🇹🇭"}
+];
+// 換算器兩邊都能選的完整清單（含台幣本身）
+const ALL_CURRENCIES = [
+  {code:"TWD", name:"新台幣", flag:"🇹🇼"},
+  ...CURRENCIES
+];
+
+// ExchangeRate-API 開放端點：原生支援瀏覽器跨網域呼叫，不需要任何代理服務
+const RATE_API_URL = "https://open.er-api.com/v6/latest/USD";
+
+let rates = {}; // { USD: twdPerUnit }
+let lastUpdateText = "";
+
+function rateOf(code){
+  const v = rates[code];
+  return (v && v>0) ? v : null;
+}
+
+function renderRateGrid(){
+  const grid = document.getElementById('rateGrid');
+  grid.innerHTML = CURRENCIES.map(c=>{
+    const twdPerUnit = rateOf(c.code);
+    if(!twdPerUnit){
+      return `<div class="rate-card"><div class="flag">${c.flag}</div><div class="code">${c.code}</div><div class="main-rate">—</div><div class="sub-rate">目前無報價</div></div>`;
+    }
+    const unitPerTwd = 1/twdPerUnit;
+    const twdText = twdPerUnit.toFixed(twdPerUnit < 1 ? 5 : 3);
+    const unitText = unitPerTwd.toFixed(unitPerTwd < 1 ? 4 : 2);
+    return `
+      <div class="rate-card">
+        <div class="flag">${c.flag}</div>
+        <div class="code">${c.name}（${c.code}）</div>
+        <div class="main-rate">${twdText}<small> TWD</small></div>
+        <div class="sub-rate">1 台幣 ≈ ${unitText} ${c.code}<br>市場參考中間價</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function initConverter(){
+  const selectA = document.getElementById('selectA');
+  const selectB = document.getElementById('selectB');
+  const options = ALL_CURRENCIES.map(c=>`<option value="${c.code}">${c.flag} ${c.name}（${c.code}）</option>`).join('');
+  selectA.innerHTML = options;
+  selectB.innerHTML = options;
+  selectA.value = 'TWD';
+  selectB.value = 'USD';
+  selectA.addEventListener('change', ()=> updateConverter('a'));
+  selectB.addEventListener('change', ()=> updateConverter('b'));
+  document.getElementById('inputA').addEventListener('input', ()=> updateConverter('a'));
+  document.getElementById('inputB').addEventListener('input', ()=> updateConverter('b'));
+  document.getElementById('btnSwap').addEventListener('click', ()=>{
+    const inputA = document.getElementById('inputA');
+    const inputB = document.getElementById('inputB');
+    const codeA = selectA.value, codeB = selectB.value;
+    const amtA = inputA.value, amtB = inputB.value;
+    selectA.value = codeB; selectB.value = codeA;
+    inputA.value = amtB; inputB.value = amtA;
+    updateConverter('a');
+  });
+  updateConverter('a');
+}
+
+function decimalsFor(rate){
+  return rate < 1 ? 4 : 2;
+}
+
+function updateConverter(source){
+  const codeA = document.getElementById('selectA').value;
+  const codeB = document.getElementById('selectB').value;
+  const rA = rateOf(codeA); // 每 1 單位 A 幣值多少台幣
+  const rB = rateOf(codeB);
+  const inputA = document.getElementById('inputA');
+  const inputB = document.getElementById('inputB');
+  const note = document.getElementById('converterNote');
+  if(rA===null || rB===null){
+    note.textContent = '這個幣別目前沒有可用的匯率報價。';
+    return;
+  }
+  if(source === 'a'){
+    const a = parseFloat(inputA.value) || 0;
+    inputB.value = (a * rA / rB).toFixed(decimalsFor(rB));
+  } else {
+    const b = parseFloat(inputB.value) || 0;
+    inputA.value = (b * rB / rA).toFixed(decimalsFor(rA));
+  }
+  note.textContent = '依市場參考中間價估算，非銀行實際牌告買賣價，實際兌換請以銀行當下公告為準。';
+}
+
+async function loadRates(){
+  const btn = document.getElementById('btnRefresh');
+  const stateBox = document.getElementById('stateBox');
+  const grid = document.getElementById('rateGrid');
+  const converter = document.getElementById('converterCard');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> 抓取中…';
+  stateBox.style.display = 'block';
+  stateBox.innerHTML = '<div class="icon">💱</div>正在抓取台灣銀行牌告匯率…';
+  grid.style.display = 'none';
+  converter.style.display = 'none';
+
+  try{
+    const res = await fetch(RATE_API_URL);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.result !== 'success' || !data.rates || !data.rates.TWD){
+      throw new Error('資料格式不如預期');
+    }
+    const twdPerUsd = data.rates.TWD;
+    rates = { TWD: 1 };
+    CURRENCIES.forEach(c=>{
+      const rateVsUsd = data.rates[c.code];
+      if(rateVsUsd){
+        rates[c.code] = c.code==='USD' ? twdPerUsd : (twdPerUsd / rateVsUsd);
+      }
+    });
+    lastUpdateText = data.time_last_update_utc || '';
+
+    stateBox.style.display = 'none';
+    grid.style.display = 'grid';
+    converter.style.display = 'block';
+    renderRateGrid();
+    initConverter();
+    document.getElementById('updateMeta').innerHTML = '更新於 <b>'+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})+'</b>　資料來源：ExchangeRate-API';
+  } catch(err){
+    stateBox.style.display = 'block';
+    stateBox.innerHTML = '<div class="icon">⚠️</div>這次抓取失敗了，原因：<br><div style="text-align:left;max-width:480px;margin:14px auto 0;font-family:\'Roboto Mono\',monospace;font-size:11.5px;color:var(--negative);background:var(--paper);padding:12px 16px;border-radius:8px;">'+err.message+'</div><br>按上方「重新整理」再試一次看看。若持續失敗，請把這個畫面截圖給 Claude。';
+    grid.style.display = 'none';
+    converter.style.display = 'none';
+    document.getElementById('updateMeta').textContent = '抓取失敗';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '重新整理';
+  }
+}
+
+document.getElementById('btnRefresh').addEventListener('click', loadRates);
+loadRates();
+</script>
+
+</body>
+</html>

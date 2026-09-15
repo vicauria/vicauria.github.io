@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>傳承藍圖｜資產稅務試算室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F7F6;
+    --paper-deep:#E6F0F2;
+    --card:#FFFFFF;
+    --ink:#182226;
+    --ink-soft:#5B6B70;
+    --ink-faint:#90A0A5;
+    --brass:#2E7391;
+    --brass-soft:#5B92AA;
+    --teal:#16323F;
+    --teal-soft:#1F5C73;
+    --rose:#B3492F;
+    --sage:#2E7D5B;
+    --line:#E1E7E7;
+    --line-soft:#EDF2F2;
+    --shadow: 0 1px 2px rgba(24,34,38,.04), 0 8px 24px -12px rgba(24,34,38,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Noto Sans TC", sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:0 24px 80px;}
+
+  /* Header */
+  header.hero{
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-soft) 60%,var(--brass) 100%);
+    color:#fff;
+    padding:56px 0 84px;
+    margin-bottom:0;
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-80px; top:-80px; width:320px; height:320px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
+  header.hero .eyebrow{
+    font-family:"Roboto Mono", monospace;
+    font-size:13px;
+    letter-spacing:.28em;
+    color:#BFE0EA;
+    text-transform:uppercase;
+    font-weight:700;
+    margin:0 0 14px;
+  }
+  header.hero h1.title{
+    font-family:"Noto Serif TC", serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 14px;
+    color:#fff;
+    letter-spacing:.01em;
+  }
+  header.hero h1.title em{
+    font-style:normal;
+    color:#8FC4D8;
+    border-bottom:2px solid rgba(143,196,216,0.5);
+  }
+  header.hero .subtitle{
+    font-size:15.5px;
+    color:#DCEAEE;
+    max-width:640px;
+    margin:0;
+  }
+
+  /* Tabs */
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    margin:28px 0 32px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    appearance:none;
+    border:none;
+    background:none;
+    font-family:"Noto Serif TC", serif;
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink-faint);
+    padding:12px 20px 14px;
+    cursor:pointer;
+    position:relative;
+    white-space:nowrap;
+    transition:color .15s ease;
+  }
+  nav.tabs button .num{
+    font-family:"Roboto Mono", monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+    margin-right:8px;
+    font-weight:400;
+  }
+  nav.tabs button.active{color:var(--teal);}
+  nav.tabs button.active .num{color:var(--brass);}
+  nav.tabs button.active::after{
+    content:"";
+    position:absolute;
+    left:20px; right:20px; bottom:-1px;
+    height:2px;
+    background:var(--brass);
+  }
+  nav.tabs button:hover{color:var(--teal-soft);}
+
+  .tab-panel{display:none;animation:fade .25s ease;}
+  .tab-panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .panel-head{margin-bottom:22px;}
+  .panel-head h2{
+    font-family:"Noto Serif TC", serif;
+    font-size:22px;
+    margin:0 0 6px;
+    color:var(--teal);
+  }
+  .panel-head p{margin:0;color:var(--ink-soft);font-size:14px;}
+
+  /* Layout grid */
+  .grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start;}
+  @media (max-width:860px){.grid2{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:24px;
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+  }
+  .card h3{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.04em;
+    color:var(--teal);
+    margin:0 0 18px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--line-soft);
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h3::before{
+    content:"";
+    width:6px;height:6px;
+    background:var(--brass);
+    border-radius:50%;
+    display:inline-block;
+  }
+
+  /* Fields */
+  .field{margin-bottom:20px;}
+  .field:last-child{margin-bottom:0;}
+  .field-label{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:13.5px; font-weight:500; color:var(--ink);
+    margin-bottom:8px;
+  }
+  .field-label .hint{font-size:11.5px;color:var(--ink-faint);font-weight:400;}
+  .field-value{
+    font-family:"Roboto Mono", monospace;
+    font-weight:600; color:var(--brass); font-size:14px;
+  }
+  .field-note{font-size:12px;color:var(--ink-faint);margin-top:6px;line-height:1.5;}
+
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:4px;
+    background:var(--line); border-radius:2px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px;height:16px;border-radius:50%;
+    background:var(--teal); border:3px solid #fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;
+    background:var(--teal); border:3px solid #fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.25); cursor:pointer;
+  }
+
+  input[type=number], input[type=text]{
+    width:100%; padding:10px 12px;
+    border:1px solid var(--line); border-radius:7px;
+    font-family:"Roboto Mono", monospace; font-size:14px;
+    background:var(--paper); color:var(--ink);
+  }
+  input[type=number]:focus, input[type=text]:focus{
+    outline:2px solid var(--brass-soft); outline-offset:1px; border-color:var(--brass);
+  }
+  .input-suffix{position:relative;}
+  .input-suffix input{padding-right:36px;}
+  .input-suffix::after{
+    content:"萬"; position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    font-size:12px; color:var(--ink-faint); pointer-events:none;
+  }
+
+  .stepper{display:flex;align-items:center;gap:12px;}
+  .stepper button{
+    width:30px;height:30px;border-radius:7px;border:1px solid var(--line);
+    background:var(--paper); color:var(--teal); font-size:16px; cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Roboto Mono", monospace;
+  }
+  .stepper button:hover{border-color:var(--brass);color:var(--brass);}
+  .stepper .count{
+    font-family:"Roboto Mono", monospace; font-weight:600; font-size:15px;
+    min-width:24px; text-align:center;
+  }
+  .row-between{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .row-between:last-child{margin-bottom:0;}
+  .row-label{font-size:13.5px;color:var(--ink);}
+  .row-label .sub{display:block;font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+
+  /* Toggle */
+  .toggle{
+    width:42px;height:24px;border-radius:12px;background:var(--line);
+    position:relative;cursor:pointer;border:none;flex-shrink:0;
+    transition:background .15s ease;
+  }
+  .toggle::after{
+    content:"";position:absolute;top:3px;left:3px;
+    width:18px;height:18px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 2px rgba(0,0,0,.3);
+    transition:transform .15s ease;
+  }
+  .toggle.on{background:var(--teal);}
+  .toggle.on::after{transform:translateX(18px);}
+
+  /* Result panel */
+  .result-card{
+    background:var(--teal); color:#fff;
+    border-radius:10px; padding:26px;
+    box-shadow:var(--shadow);
+    position:sticky; top:20px;
+  }
+  .result-card h3{
+    color:#E6F0F2; border-bottom-color:rgba(255,255,255,.15);
+    font-size:13px;
+  }
+  .result-card h3::before{background:var(--brass-soft);}
+  .ledger-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0; border-bottom:1px dashed rgba(255,255,255,.14);
+    font-size:13px;
+  }
+  .ledger-row .lbl{color:rgba(230,240,242,.75);}
+  .ledger-row .val{font-family:"Roboto Mono", monospace;font-weight:500;}
+  .ledger-row.sub .lbl{padding-left:14px;font-size:12px;color:rgba(230,240,242,.6);}
+  .ledger-row.sub .val{font-size:12px;color:rgba(230,240,242,.75);}
+  .ledger-total{
+    margin-top:14px;padding-top:16px;border-top:1px solid rgba(255,255,255,.25);
+  }
+  .ledger-total .lbl{font-size:13px;color:#E6F0F2;}
+  .ledger-total .big{
+    font-family:"Roboto Mono", monospace; font-weight:700;
+    font-size:32px; color:var(--brass-soft); line-height:1.2; margin-top:6px;
+  }
+  .ledger-total .big small{font-size:15px;font-weight:500;margin-left:4px;color:rgba(230,240,242,.7);}
+
+  /* Bracket ruler — signature element */
+  .ruler{margin-top:20px;}
+  .ruler-label{font-size:11.5px;color:rgba(230,240,242,.6);margin-bottom:8px;}
+  .ruler-track{
+    position:relative; height:10px; border-radius:5px; overflow:hidden;
+    display:flex; background:rgba(255,255,255,.08);
+  }
+  .ruler-seg{height:100%;}
+  .ruler-seg.b1{background:rgba(91,146,170,.35);}
+  .ruler-seg.b2{background:rgba(91,146,170,.6);}
+  .ruler-seg.b3{background:rgba(91,146,170,.9);}
+  .ruler-marker{
+    position:absolute; top:-4px; width:2px; height:18px; background:#fff;
+    box-shadow:0 0 0 3px rgba(255,255,255,.25);
+  }
+  .ruler-ticks{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;font-family:"Roboto Mono",monospace;color:rgba(230,240,242,.5);}
+
+  .disclaimer{
+    margin-top:32px; padding:16px 18px; background:var(--paper-deep);
+    border:1px solid var(--line); border-radius:8px;
+    font-size:12px; color:var(--ink-soft); line-height:1.7;
+  }
+  .disclaimer strong{color:var(--teal);}
+
+  /* Tab 2 specifics */
+  .heir-block{
+    border:1px solid var(--line-soft); border-radius:8px; padding:16px 18px; margin-bottom:14px;
+  }
+  .heir-block.disabled{opacity:.4;}
+  .heir-block .row-label{font-weight:600;}
+  .add-btn{
+    width:100%; padding:10px; border:1px dashed var(--line); border-radius:8px;
+    background:none; color:var(--brass); font-size:13px; cursor:pointer; font-weight:500;
+  }
+  .add-btn:hover{border-color:var(--brass);background:rgba(46,115,145,.05);}
+
+  .donut-wrap{display:flex; flex-direction:column; align-items:center; gap:20px; padding:8px 0 4px;}
+  .donut{
+    width:180px;height:180px;border-radius:50%;
+    position:relative;
+  }
+  .donut::after{
+    content:""; position:absolute; inset:26px; background:var(--card); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .donut-center{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; z-index:2;
+  }
+  .donut-center .n{font-family:"Roboto Mono",monospace;font-weight:700;font-size:15px;color:var(--teal);}
+  .donut-center .l{font-size:10px;color:var(--ink-faint);margin-top:2px;}
+  .legend{width:100%;}
+  .legend-row{
+    display:flex; align-items:center; gap:10px; padding:8px 0;
+    border-bottom:1px solid var(--line-soft); font-size:13px;
+  }
+  .legend-row:last-child{border-bottom:none;}
+  .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .legend-row .name{flex:1;}
+  .legend-row .pct{font-family:"Roboto Mono",monospace;font-weight:600;color:var(--teal);}
+  .legend-row .amt{font-family:"Roboto Mono",monospace;font-size:11.5px;color:var(--ink-faint);min-width:90px;text-align:right;}
+  .tsl-note{font-size:11px;color:var(--ink-faint);margin-top:2px;}
+
+  .mode-switch{display:flex;gap:8px;margin-bottom:18px;}
+  .mode-switch button{
+    flex:1; padding:10px; border:1px solid var(--line); border-radius:8px;
+    background:var(--card); font-size:13px; font-weight:500; color:var(--ink-soft); cursor:pointer;
+  }
+  .mode-switch button.active{background:var(--teal); color:#fff; border-color:var(--teal);}
+
+  .amber-box{
+    background:#FBEFE2; border:1px solid #E9CBA8; border-radius:8px;
+    padding:14px 16px; font-size:12.5px; color:#A85F27; margin-top:16px; line-height:1.6;
+  }
+
+  .banner{
+    margin-top:18px; padding:18px 20px; border-radius:9px;
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(46,125,91,.12); border:1px solid rgba(46,125,91,.3);
+  }
+  .banner.due{background:rgba(179,73,47,.1); border-color:rgba(179,73,47,.28);}
+  .banner .lbl{font-size:13px;font-weight:600;color:var(--sage);}
+  .banner.due .lbl{color:var(--rose);}
+  .banner .amt{font-family:"Roboto Mono",monospace;font-weight:700;font-size:22px;color:var(--sage);}
+  .banner.due .amt{color:var(--rose);}
+
+  .steps-list{margin-top:0;}
+  .step-row{
+    display:flex; justify-content:space-between; padding:10px 0;
+    border-bottom:1px solid var(--line-soft); font-size:13px;
+  }
+  .step-row .n{color:var(--brass); font-family:"Roboto Mono",monospace; margin-right:8px;}
+  .step-row .v{font-family:"Roboto Mono",monospace; font-weight:600;}
+
+  details{border:1px solid var(--line); border-radius:8px; margin-top:16px; padding:0;}
+  summary{padding:12px 16px; font-size:13px; color:var(--brass); cursor:pointer; font-weight:500;}
+  details .details-body{padding:0 16px 16px;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Legacy Blueprint / 資產稅務試算室</p>
+    <h1 class="title">傳承藍圖<em>．</em>把稅算清楚，把心意留下</h1>
+    <p class="subtitle">從資產結構到繼承分配，一次算清楚遺產稅、法定應繼分與最低稅負制的補繳風險。所有試算基於 2026 年（115 年度）財政部公告最新標準。</p>
+  </div>
+</header>
+
+<div class="app">
+
+  <nav class="tabs">
+    <button class="active" data-tab="tax"><span class="num">01</span>租稅規劃</button>
+    <button data-tab="alloc"><span class="num">02</span>資產分配</button>
+    <button data-tab="amt"><span class="num">03</span>最低稅負</button>
+  </nav>
+
+  <!-- ============ TAB 1：租稅規劃 ============ -->
+  <section class="tab-panel active" id="panel-tax">
+    <div class="panel-head">
+      <h2>遺產稅試算</h2>
+      <p>計算應納遺產稅，並把公告現值折算、扣除額與免稅額一次算進來。</p>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h3>客戶基本資料</h3>
+          <div class="field">
+            <div class="field-label"><span>總資產</span><span class="field-value" id="v-assets">3,000 萬</span></div>
+            <input type="range" id="in-assets" min="0" max="30000" step="50" value="3000">
+          </div>
+          <div class="field">
+            <div class="field-label"><span>不動產佔比</span><span class="field-value" id="v-reratio">40%</span></div>
+            <input type="range" id="in-reratio" min="0" max="100" step="1" value="40">
+          </div>
+          <div class="field" style="background:var(--paper-deep);margin:0 -24px -4px;padding:16px 24px 20px;border-top:1px solid var(--line-soft);">
+            <div class="field-label"><span>顧問設定・公告現值比率</span><span class="field-value" id="v-decl">65%</span></div>
+            <input type="range" id="in-decl" min="30" max="100" step="1" value="65">
+            <div class="field-note">不動產課稅是以「公告土地現值＋房屋評定現值」計算，通常僅市價的 3～8 成，不是市價本身。</div>
+          </div>
+          <div class="field" style="margin-top:20px;">
+            <div class="field-label"><span>上市／上櫃股權估值（選填）</span></div>
+            <div class="input-suffix"><input type="number" id="in-listed" placeholder="0"></div>
+            <div class="field-note">已包含在「總資產」內，不重複計稅；此處僅標記變現與股價波動風險。</div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>未上市櫃股權估值（選填）</span></div>
+            <div class="input-suffix"><input type="number" id="in-unlisted" placeholder="0"></div>
+            <div class="field-note">遺產稅按每股淨值估算（洽會計師），且通常不易變現。</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3>家庭結構</h3>
+          <div class="row-between">
+            <span class="row-label">配偶健在</span>
+            <button class="toggle on" id="tg-spouse"></button>
+          </div>
+          <div class="row-between">
+            <span class="row-label">子女人數</span>
+            <div class="stepper"><button data-step="children" data-d="-1">−</button><span class="count" id="v-children">2</span><button data-step="children" data-d="1">+</button></div>
+          </div>
+          <div class="row-between">
+            <span class="row-label">‣ 其中未成年人數<span class="sub">按距滿 20 歲年數，每年加扣 56 萬</span></span>
+            <div class="stepper"><button data-step="minors" data-d="-1">−</button><span class="count" id="v-minors">0</span><button data-step="minors" data-d="1">+</button></div>
+          </div>
+          <div class="row-between" id="row-minoryears" style="display:none;">
+            <span class="row-label">‣ 平均距滿 20 歲年數</span>
+            <div class="stepper"><button data-step="minoryears" data-d="-1">−</button><span class="count" id="v-minoryears">5</span><button data-step="minoryears" data-d="1">+</button></div>
+          </div>
+          <div class="row-between">
+            <span class="row-label">父母在世人數</span>
+            <div class="stepper"><button data-step="parents" data-d="-1">−</button><span class="count" id="v-parents">0</span><button data-step="parents" data-d="1">+</button></div>
+          </div>
+          <div class="row-between">
+            <span class="row-label">身心障礙繼承人數<span class="sub">重度以上，每人加扣 693 萬</span></span>
+            <div class="stepper"><button data-step="disabled" data-d="-1">−</button><span class="count" id="v-disabled">0</span><button data-step="disabled" data-d="1">+</button></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>現有規劃</h3>
+          <div class="field">
+            <div class="field-label"><span>已有壽險保額</span></div>
+            <div class="input-suffix"><input type="number" id="in-insurance" placeholder="0"></div>
+            <div class="field-note">指定受益人之壽險給付不計入遺產總額，但會沿用到「最低稅負」頁計算。</div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>每年已做贈與</span></div>
+            <div class="input-suffix"><input type="number" id="in-gifted" placeholder="0"></div>
+            <div class="field-note">死亡前 2 年內對配偶及特定親屬的贈與，仍會被追回併入遺產總額計稅。</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>可扣除項目・選填</h3>
+          <div class="field">
+            <div class="field-label"><span>未償債務（含房貸）</span></div>
+            <div class="input-suffix"><input type="number" id="in-debt" placeholder="0"></div>
+          </div>
+          <div class="field">
+            <div class="field-label"><span>夫妻剩餘財產差額分配</span></div>
+            <div class="input-suffix"><input type="number" id="in-spousaldiff" placeholder="0"></div>
+            <div class="field-note">已婚常見、常是最大一筆扣除；不確定金額可留空，實際以申報認定。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h3>遺產稅試算結果</h3>
+      <div class="ledger-row"><span class="lbl">計稅遺產總額（不動產已折算公告現值）</span><span class="val" id="r-grossestate">0 萬</span></div>
+      <div class="ledger-row sub"><span class="lbl">非不動產部分</span><span class="val" id="r-nonre">0 萬</span></div>
+      <div class="ledger-row sub"><span class="lbl">不動產部分（× 公告現值比率）</span><span class="val" id="r-re">0 萬</span></div>
+      <div class="ledger-row"><span class="lbl">減：免稅額</span><span class="val">1,333 萬</span></div>
+      <div class="ledger-row"><span class="lbl">減：扣除額合計</span><span class="val" id="r-deductions">0 萬</span></div>
+      <div class="ledger-row sub"><span class="lbl">配偶／子女／父母／身障／喪葬費／債務／夫妻差額</span><span class="val" id="r-deductbreak">—</span></div>
+      <div class="ledger-total">
+        <div class="lbl">遺產淨額</div>
+        <div class="big" id="r-netestate">0 <small>萬</small></div>
+      </div>
+      <div class="ledger-total" style="margin-top:16px;">
+        <div class="lbl">應納遺產稅額（適用稅率 <span id="r-bracket">10%</span>）</div>
+        <div class="big" id="r-tax">0 <small>萬</small></div>
+      </div>
+      <div class="ruler">
+        <div class="ruler-label">遺產淨額落點・課稅級距尺</div>
+        <div class="ruler-track">
+          <div class="ruler-seg b1" style="width:33%"></div>
+          <div class="ruler-seg b2" style="width:33%"></div>
+          <div class="ruler-seg b3" style="width:34%"></div>
+          <div class="ruler-marker" id="r-marker" style="left:0%"></div>
+        </div>
+        <div class="ruler-ticks"><span>0</span><span>5,621萬・10%</span><span>1億1,242萬・15%</span><span>20%↑</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2：資產分配 ============ -->
+  <section class="tab-panel" id="panel-alloc">
+    <div class="panel-head">
+      <h2>資產分配試算</h2>
+      <p>依民法第 1138、1144、1223 條，算出法定應繼分與特留分底線（沿用「租稅規劃」頁的家庭結構與總資產）。</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>繼承順位（依現有家庭結構自動判定）</h3>
+        <div id="heir-tree"></div>
+      </div>
+      <div class="card">
+        <h3>法定應繼分分配</h3>
+        <div class="donut-wrap">
+          <div class="donut" id="donut"><div class="donut-center"><span class="n" id="donut-total">0 萬</span><span class="l">遺產總額</span></div></div>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="amber-box" id="sibling-note" style="display:none;">
+          ⚠ 立法院已於 2026/7/28 三讀通過刪除兄弟姊妹特留分（民法第1223條），但須公布後 6 個月才施行，目前尚未生效——本試算暫以現行法（應繼分 1/3）計算，正式施行日確定後請更新。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3：最低稅負 ============ -->
+  <section class="tab-panel" id="panel-amt">
+    <div class="panel-head">
+      <h2>最低稅負制試算</h2>
+      <p>要保人≠受益人的壽險身故給付，超過 3,740 萬部分要計入基本所得額，判斷是否需要補繳基本稅額。</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>最低稅負・試算輸入</h3>
+        <div class="field">
+          <div class="field-label"><span>保險死亡給付</span></div>
+          <div class="input-suffix"><input type="number" id="in-amt-ins" placeholder="0"></div>
+          <div class="field-note">已自動帶入「租稅規劃」頁的已有壽險保額，可自行修改。</div>
+        </div>
+        <div class="row-between">
+          <span class="row-label">要保人 ≠ 受益人<span class="sub">關係到才需計入最低稅負</span></span>
+          <button class="toggle on" id="tg-amt"></button>
+        </div>
+        <div class="field" style="margin-top:20px;">
+          <div class="field-label"><span>綜合所得淨額</span></div>
+          <div class="input-suffix"><input type="number" id="in-amt-income" placeholder="0"></div>
+          <div class="field-note">選填・總額扣掉免稅額與扣除額後的數；不確定可留空。</div>
+        </div>
+        <div class="field">
+          <div class="field-label"><span>海外所得</span></div>
+          <div class="input-suffix"><input type="number" id="in-amt-overseas" placeholder="0"></div>
+          <div class="field-note">選填・達 100 萬／戶才計入，未達門檻則整筆不計。</div>
+        </div>
+        <details>
+          <summary>更多加計項目（有價證券・非現金捐贈・分開計稅股利）</summary>
+          <div class="details-body">
+            <div class="field">
+              <div class="field-label"><span>特定有價證券交易所得</span></div>
+              <div class="input-suffix"><input type="number" id="in-amt-sec" placeholder="0"></div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>非現金捐贈金額</span></div>
+              <div class="input-suffix"><input type="number" id="in-amt-donate" placeholder="0"></div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>分開計稅股利及盈餘</span></div>
+              <div class="input-suffix"><input type="number" id="in-amt-div" placeholder="0"></div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>一般所得稅額（用於折抵）</span></div>
+              <div class="input-suffix"><input type="number" id="in-amt-genertax" placeholder="0"></div>
+            </div>
+            <div class="field">
+              <div class="field-label"><span>海外已納稅額可扣抵</span></div>
+              <div class="input-suffix"><input type="number" id="in-amt-credit" placeholder="0"></div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>試算過程</h3>
+        <div class="steps-list">
+          <div class="step-row"><span><span class="n">①</span>保險溢額（死亡給付－3,740萬免計額）</span><span class="v" id="s1">0 萬</span></div>
+          <div class="step-row"><span><span class="n">②</span>海外所得（達100萬→全額計入）</span><span class="v" id="s2">0 萬</span></div>
+          <div class="step-row"><span><span class="n">③</span>基本所得額（綜所＋溢額＋海外＋其他）</span><span class="v" id="s3">0 萬</span></div>
+          <div class="step-row"><span><span class="n">④</span>基本稅額（（基本所得額－750萬）×20%）</span><span class="v" id="s4">0 萬</span></div>
+          <div class="step-row"><span><span class="n">⑤</span>減：一般所得稅額＋海外已納稅額扣抵</span><span class="v" id="s5">－0 萬</span></div>
+        </div>
+        <div class="banner" id="amt-banner">
+          <span class="lbl" id="amt-banner-lbl">無需補繳</span>
+          <span class="amt" id="amt-banner-val">0 萬</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    <strong>試算依據：</strong>財政部 115 年度（2026）公告遺產稅免稅額 1,333 萬、配偶扣除額 553 萬、直系血親卑親屬扣除額每人 56 萬（未成年按距滿 20 歲年數加扣）、父母扣除額每人 138 萬、重度身心障礙特別扣除額每人 693 萬、喪葬費扣除額 138 萬，課稅級距 5,621 萬以下 10%、超過 5,621 萬至 1 億 1,242 萬部分 15%、超過部分 20%；所得基本稅額條例現行規定基本所得額免稅額 750 萬、稅率 20%、保險死亡給付免計額 3,740 萬、海外所得 100 萬門檻；民法應繼分／特留分依現行第 1138、1144、1223 條（兄弟姊妹特留分刪除案已三讀通過，尚待公布施行）。本工具僅供教育性試算參考，實際規劃請洽會計師、律師或持牌顧問確認。
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+
+  // ---------- shared state ----------
+  const state = {
+    assets: 3000, reratio: 40, decl: 65,
+    listed: 0, unlisted: 0,
+    spouse: true, children: 2, minors: 0, minoryears: 5,
+    parents: 0, disabled: 0,
+    insurance: 0, gifted: 0, debt: 0, spousaldiff: 0
+  };
+
+  // ---------- tab switching ----------
+  document.querySelectorAll('nav.tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      $('panel-'+btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab==='alloc') renderAlloc();
+    });
+  });
+
+  // ---------- toggles ----------
+  function wireToggle(id, onChange){
+    const el = $(id);
+    el.addEventListener('click', ()=>{
+      el.classList.toggle('on');
+      onChange(el.classList.contains('on'));
+    });
+  }
+  wireToggle('tg-spouse', v=>{ state.spouse=v; calcTax(); renderAlloc(); });
+  wireToggle('tg-amt', ()=> calcAMT());
+
+  // ---------- steppers ----------
+  document.querySelectorAll('.stepper button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.step, d = parseInt(btn.dataset.d);
+      const min = (key==='minoryears') ? 0 : 0;
+      const max = (key==='parents') ? 2 : (key==='minoryears' ? 20 : 12);
+      state[key] = Math.max(min, Math.min(max, (state[key]||0) + d));
+      if(key==='children') state.minors = Math.min(state.minors, state.children);
+      $('v-'+key).textContent = state[key];
+      $('row-minoryears').style.display = state.minors>0 ? 'flex' : 'none';
+      calcTax(); renderAlloc();
+    });
+  });
+
+  // ---------- sliders / numeric inputs ----------
+  function bindRange(id, key, suffixEl, suffixFn){
+    $(id).addEventListener('input', e=>{
+      state[key] = parseFloat(e.target.value);
+      if(suffixEl) $(suffixEl).textContent = suffixFn(state[key]);
+      calcTax(); renderAlloc();
+    });
+  }
+  bindRange('in-assets','assets','v-assets', v=>fmt(v)+' 萬');
+  bindRange('in-reratio','reratio','v-reratio', v=>v+'%');
+  bindRange('in-decl','decl','v-decl', v=>v+'%');
+
+  function bindNum(id, key, cb){
+    $(id).addEventListener('input', e=>{
+      state[key] = parseFloat(e.target.value)||0;
+      calcTax();
+      if(cb) cb();
+    });
+  }
+  bindNum('in-listed','listed');
+  bindNum('in-unlisted','unlisted');
+  bindNum('in-insurance','insurance', ()=>{ $('in-amt-ins').value = state.insurance || ''; calcAMT(); });
+  bindNum('in-gifted','gifted');
+  bindNum('in-debt','debt');
+  bindNum('in-spousaldiff','spousaldiff');
+
+  // ============ TAB 1: 遺產稅計算 ============
+  const EX_ESTATE = 1333;          // 免稅額
+  const DED_SPOUSE = 553;
+  const DED_CHILD = 56;
+  const DED_PARENT = 138;
+  const DED_DISABLED = 693;
+  const DED_FUNERAL = 138;
+  const B1 = 5621, B2 = 11242;     // 萬
+  const DIFF2 = 281.05, DIFF3 = 843.15;
+
+  function estateTax(net){
+    if(net<=0) return {tax:0, rate:0};
+    if(net<=B1) return {tax: net*0.10, rate:10};
+    if(net<=B2) return {tax: net*0.15 - DIFF2, rate:15};
+    return {tax: net*0.20 - DIFF3, rate:20};
+  }
+
+  function calcTax(){
+    const nonRe = state.assets * (1 - state.reratio/100);
+    const re = state.assets * (state.reratio/100) * (state.decl/100);
+    const gross = nonRe + re;
+
+    let ded = 0;
+    if(state.spouse) ded += DED_SPOUSE;
+    ded += state.children * DED_CHILD;
+    ded += state.minors * state.minoryears * DED_CHILD;
+    ded += state.parents * DED_PARENT;
+    ded += state.disabled * DED_DISABLED;
+    ded += DED_FUNERAL;
+    ded += state.debt;
+    ded += state.spousaldiff;
+
+    const net = Math.max(0, gross - EX_ESTATE - ded);
+    const {tax, rate} = estateTax(net);
+
+    $('r-grossestate').textContent = fmt(gross)+' 萬';
+    $('r-nonre').textContent = fmt(nonRe)+' 萬';
+    $('r-re').textContent = fmt(re)+' 萬';
+    $('r-deductions').textContent = fmt(ded)+' 萬';
+    $('r-deductbreak').textContent =
+      (state.spouse?DED_SPOUSE:0)+' / '+(state.children*DED_CHILD)+' / '+(state.parents*DED_PARENT)+' / '+(state.disabled*DED_DISABLED)+' / '+DED_FUNERAL+' / '+state.debt+' / '+state.spousaldiff;
+    $('r-netestate').textContent = fmt(net);
+    $('r-tax').textContent = fmt(tax);
+    $('r-bracket').textContent = rate+'%';
+
+    const pos = Math.min(100, (net / (B2*1.3)) * 100);
+    $('r-marker').style.left = pos+'%';
+
+    // keep AMT tab's insurance in sync only if user hasn't typed there yet
+    return {gross, net, tax};
+  }
+
+  // ============ TAB 2: 資產分配 ============
+  const palette = ['#2E7391','#16323F','#2E7D5B','#B3492F','#2E7391','#1F5C73'];
+
+  function computeHeirs(){
+    // returns array of {name, count, share_per_head, class}
+    const heirs = [];
+    const hasChildren = state.children>0;
+    const hasParents = state.parents>0;
+    // siblings/grandparents not tracked as separate stepper inputs in tab1;
+    // treat as 0 unless spouse absent + no descendants (rare edge, kept simple)
+    if(!state.spouse){
+      if(hasChildren){ heirs.push({name:'子女', count:state.children, total:1, tslRatio:0.5}); }
+      else if(hasParents){ heirs.push({name:'父母', count:state.parents, total:1, tslRatio:0.5}); }
+      else { heirs.push({name:'（無配偶／子女／父母，依序由兄弟姊妹或祖父母繼承）', count:1, total:1, tslRatio:1/3, note:true}); }
+      return heirs;
+    }
+    if(hasChildren){
+      const n = 1+state.children;
+      heirs.push({name:'配偶', count:1, total:1/n, tslRatio:0.5});
+      heirs.push({name:'子女', count:state.children, total:state.children/n, tslRatio:0.5});
+    } else if(hasParents){
+      heirs.push({name:'配偶', count:1, total:0.5, tslRatio:0.5});
+      heirs.push({name:'父母', count:state.parents, total:0.5, tslRatio:0.5});
+    } else {
+      heirs.push({name:'配偶（無子女／父母在世，全額繼承）', count:1, total:1, tslRatio:0.5});
+    }
+    return heirs;
+  }
+
+  function renderAlloc(){
+    const total = state.assets;
+    const heirs = computeHeirs();
+
+    // tree summary
+    let tree = '<div class="heir-block"><div class="row-label">配偶</div><div class="tsl-note">'+(state.spouse?'健在，列入繼承':'不健在或已離婚，不列入')+'</div></div>';
+    tree += '<div class="heir-block'+(state.children>0?'':' disabled')+'"><div class="row-label">第一順位：子女（'+state.children+' 人）</div><div class="tsl-note">'+(state.children>0?'第一順位繼承人，父母／兄弟姊妹／祖父母皆無繼承權':'無子女')+'</div></div>';
+    tree += '<div class="heir-block'+(state.children===0 && state.parents>0?'':' disabled')+'"><div class="row-label">第二順位：父母（'+state.parents+' 人在世）</div><div class="tsl-note">'+(state.children>0?'已有第一順位繼承人，依法無繼承權':(state.parents>0?'無第一順位繼承人，父母列入繼承':'父母不在世'))+'</div></div>';
+    $('heir-tree').innerHTML = tree;
+
+    // donut + legend
+    let gradient = [], legend = '', angle = 0;
+    heirs.forEach((h,i)=>{
+      const pct = h.total*100;
+      const color = palette[i%palette.length];
+      gradient.push(color+' '+angle+'% '+(angle+pct)+'%');
+      angle += pct;
+      const amt = total*h.total;
+      const tslAmt = amt*h.tslRatio;
+      legend += '<div class="legend-row"><span class="dot" style="background:'+color+'"></span><span class="name">'+h.name+(h.count>1?'（每人 '+(pct/h.count).toFixed(1)+'%）':'')+'</span><span class="pct">'+pct.toFixed(1)+'%</span><span class="amt">'+fmt(amt)+' 萬</span></div>';
+      legend += '<div class="legend-row" style="border-bottom:1px solid var(--line-soft);padding-top:0;"><span class="dot"></span><span class="name tsl-note">特留分底線（現行法 × '+(h.tslRatio===0.5?'1/2':'1/3')+'）</span><span class="pct"></span><span class="amt">'+fmt(tslAmt)+' 萬</span></div>';
+    });
+    $('donut').style.background = 'conic-gradient('+gradient.join(',')+')';
+    $('donut-total').textContent = fmt(total)+' 萬';
+    $('legend').innerHTML = legend;
+    $('sibling-note').style.display = heirs.some(h=>h.note) ? 'block' : 'none';
+  }
+
+  // ============ TAB 3: 最低稅負 ============
+  const AMT_EX_INS = 3740, AMT_EX_BASE = 750, AMT_RATE = 0.20, OVERSEAS_THRESHOLD = 100;
+
+  function calcAMT(){
+    const insurance = parseFloat($('in-amt-ins').value)||0;
+    const toggled = $('tg-amt').classList.contains('on');
+    const income = parseFloat($('in-amt-income').value)||0;
+    const overseas = parseFloat($('in-amt-overseas').value)||0;
+    const sec = parseFloat($('in-amt-sec').value)||0;
+    const donate = parseFloat($('in-amt-donate').value)||0;
+    const div = parseFloat($('in-amt-div').value)||0;
+    const generalTax = parseFloat($('in-amt-genertax').value)||0;
+    const credit = parseFloat($('in-amt-credit').value)||0;
+
+    const s1 = toggled ? Math.max(0, insurance - AMT_EX_INS) : 0;
+    const s2 = overseas >= OVERSEAS_THRESHOLD ? overseas : 0;
+    const s3 = income + s1 + s2 + sec + donate + div;
+    const s4 = Math.max(0, (s3 - AMT_EX_BASE) * AMT_RATE);
+    const s5 = generalTax + credit;
+    const due = Math.max(0, s4 - s5);
+
+    $('s1').textContent = fmt(s1)+' 萬';
+    $('s2').textContent = fmt(s2)+' 萬';
+    $('s3').textContent = fmt(s3)+' 萬';
+    $('s4').textContent = fmt(s4)+' 萬';
+    $('s5').textContent = '－'+fmt(s5)+' 萬';
+
+    const banner = $('amt-banner');
+    if(due>0){
+      banner.classList.add('due');
+      $('amt-banner-lbl').textContent = '應補繳基本稅額';
+    } else {
+      banner.classList.remove('due');
+      $('amt-banner-lbl').textContent = '無需補繳';
+    }
+    $('amt-banner-val').textContent = fmt(due)+' 萬';
+  }
+
+  ['in-amt-ins','in-amt-income','in-amt-overseas','in-amt-sec','in-amt-donate','in-amt-div','in-amt-genertax','in-amt-credit']
+    .forEach(id => $(id).addEventListener('input', calcAMT));
+
+  // ---------- init ----------
+  calcTax();
+  renderAlloc();
+  calcAMT();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>品牌故事｜Vicauria</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16323F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vicauria">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC", sans-serif; line-height:1.6;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC", serif; margin:0; color:var(--navy);}
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+
+  .topnav{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:1080px; margin:0 auto; padding:20px 24px; border-bottom:1px solid var(--line);
+  }
+  .topnav .logo{
+    font-family:"Roboto Mono", monospace; font-size:13px; letter-spacing:.2em;
+    color:var(--teal-deep); font-weight:700; text-decoration:none;
+  }
+  .topnav .back-link{
+    font-size:13px; color:var(--ink-soft); text-decoration:none; font-weight:500;
+  }
+  .topnav .back-link:hover{color:var(--teal-deep);}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:64px 0 68px; position:relative; overflow:hidden; text-align:center;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-80px; top:-80px; width:280px; height:280px;
+    border-radius:50%; background:radial-gradient(circle,rgba(201,123,61,0.16) 0%,rgba(201,123,61,0) 70%);
+  }
+  header.hero .eyebrow{
+    font-size:12px; letter-spacing:.28em; text-transform:uppercase;
+    color:#F3C98A; font-weight:700; margin-bottom:24px; position:relative; z-index:2;
+  }
+  header.hero blockquote{
+    margin:0 auto; max-width:600px; position:relative; z-index:2;
+    font-family:"Noto Serif TC", serif; font-weight:600; font-size:clamp(19px,3vw,26px);
+    color:#fff; line-height:1.8;
+  }
+  header.hero cite{
+    display:block; margin-top:20px; font-style:normal; font-size:13px; color:#BFE0EA;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+
+  main{padding:56px 0 80px;}
+  .story-p{font-size:15.5px; color:var(--ink); line-height:2.1; margin:0 0 22px;}
+  .story-p b{color:var(--navy);}
+  .story-h2{
+    font-size:21px; margin:52px 0 20px; color:var(--navy);
+  }
+  .story-h2 .num{
+    font-family:"Roboto Mono", monospace; font-size:12px; color:var(--warm-deep); font-weight:700;
+    display:block; letter-spacing:.14em; margin-bottom:8px;
+  }
+
+  .tool-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:24px 0 8px;
+  }
+  @media (max-width:520px){ .tool-grid{grid-template-columns:1fr;} }
+  .tool-card{
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px;
+    box-shadow:0 6px 18px rgba(20,50,60,0.05);
+  }
+  .tool-card .t{font-size:14px; font-weight:700; color:var(--navy); margin-bottom:6px;}
+  .tool-card .d{font-size:12.5px; color:var(--ink-soft); line-height:1.8;}
+
+  .note-callout{
+    background:var(--teal-tint); border-radius:10px; padding:14px 18px; margin:20px 0;
+    font-size:12.5px; color:var(--teal-deep); line-height:1.8;
+  }
+
+  .quote-block{
+    font-family:"Noto Serif TC", serif; font-size:18px; font-weight:600; color:var(--teal-deep);
+    line-height:1.8; margin:36px 0; padding-left:20px; border-left:3px solid var(--warm);
+  }
+
+  .closing{
+    margin-top:60px; padding:36px 32px; border-radius:16px;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 100%); color:#fff;
+    text-align:center;
+  }
+  .closing .marks{
+    font-family:"Roboto Mono", monospace; font-size:12px; letter-spacing:.2em; color:#F3C98A;
+    text-transform:uppercase; margin-bottom:14px;
+  }
+  .closing p{color:#DCEAEE; font-size:14.5px; line-height:2; max-width:480px; margin:0 auto 24px;}
+  .closing a.cta{
+    display:inline-flex; align-items:center; gap:8px; background:#fff; color:var(--navy);
+    padding:14px 30px; border-radius:26px; font-size:14.5px; font-weight:700; text-decoration:none;
+    transition:transform .15s ease;
+  }
+  .closing a.cta:hover{transform:translateY(-2px);}
+
+  footer{text-align:center; color:var(--ink-soft); font-size:12px; padding:30px 0 40px;}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="logo">VICAURIA</a>
+  <a href="index.html" class="back-link">← 回首頁</a>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Our Story · 品牌故事</div>
+    <blockquote>
+      「在開始時，我環顧四周，卻找不到夢想中的車。<br>所以我決定自己打造一台。」
+      <cite>— Ferdinand Porsche，保時捷創辦人</cite>
+    </blockquote>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <p class="story-p">這句話，是 Vicauria 這個平台誕生的起點。</p>
+
+    <div class="story-h2"><span class="num">Chapter 01</span>手動算，是財務規劃避不開的事</div>
+    <p class="story-p">做財務規劃這件事，很多時候還是得靠自己手動計算。市面上不是沒有計算機工具，但客戶的狀況千百種——一旦碰上比較特殊的情形，那些現成的工具往往就不夠用了，最後還是得攤開紙筆、拿出計算機，一步一步慢慢算。</p>
+    <p class="story-p">手動算最怕的不是慢，是<b>算錯</b>。少打一個零、漏看一個條件，算出來的數字可能就差了十萬八千里——而這些數字，是客戶要拿來決定人生的。</p>
+    <p class="story-p">所以我想，那就自己寫程式，把這些計算邏輯做成工具，一來縮短計算時間，二來把算錯的風險降到最低。這就是為什麼這個網站裡，會有這麼多台計算機的原因。</p>
+
+    <div class="story-h2"><span class="num">Chapter 02</span>遇到的狀況越來越多，計算機也越來越多</div>
+    <p class="story-p">一開始只是想解決眼前的問題，但做著做著，客戶的需求一個接一個冒出來，工具也就跟著一個一個長出來：</p>
+
+    <div class="tool-grid">
+      <div class="tool-card">
+        <div class="t">🌤️ 退休基金試算機</div>
+        <div class="d">因為退休規劃是幾乎每個客戶都會問到的事</div>
+      </div>
+      <div class="tool-card">
+        <div class="t">🎓 教育基金試算機</div>
+        <div class="d">因為有子女的客戶，都會擔心教育金夠不夠</div>
+      </div>
+      <div class="tool-card">
+        <div class="t">✈️ 旅遊基金規劃</div>
+        <div class="d">現代人喜歡出國旅遊充電，這也是財富願景的一部分</div>
+      </div>
+      <div class="tool-card">
+        <div class="t">🏠 購屋基金 ／ 🗺️ 遺贈方案</div>
+        <div class="d">還有更多因應不同人生階段長出來的工具</div>
+      </div>
+    </div>
+
+    <div class="story-h2"><span class="num">Chapter 03</span>財富地圖：像玩遊戲一樣的顧問問卷</div>
+    <p class="story-p">帶客戶做財務規劃的過程中，要記的事情真的很多——收入、支出、資產、負債、家庭狀況、人生目標，一邊聊一邊寫筆記，很容易漏東漏西，客戶也常常覺得自己好像在被身家調查。</p>
+    <p class="story-p">所以我做了「財富地圖」——一套顧問式的引導問卷，設計成像玩遊戲闖關一樣，一關一關過，不會讓人覺得生硬有壓力，但同時又能真正收集到完整、有用的客戶資訊，之後拿來協助他做規劃。</p>
+
+    <div class="story-h2"><span class="num">Chapter 04</span>市場快訊：把找新聞的時間省下來</div>
+    <p class="story-p">金融市場每天發生的事情太多太多，如果每天要自己一個一個網站慢慢找新聞、慢慢篩，非常耗時間。所以我做了「市場快訊」，自動幫忙抓取相關的財經新聞內容，分類整理好，讓身為顧問的自己，可以少花一點時間在爬文找雜訊上，多留一點時間給真正重要的事——陪客戶談規劃。</p>
+
+    <div class="story-h2"><span class="num">Chapter 05</span>客戶資料：讓每一次諮詢都留得下來</div>
+    <p class="story-p">做完一場諮詢，客戶的狀況總不能只留在腦子裡。所以目前也做了一個簡易的客戶管理功能，讓每次諮詢完的資料可以直接建檔，之後不定時翻閱、追蹤客戶的狀況變化——狀態標籤、顧問筆記、下次追蹤日期，都能一併記下來。</p>
+
+    <div class="quote-block">找不到夢想中的工具，那就自己打造一個。</div>
+    <p class="story-p">Vicauria 這個平台，說到底就是這樣長出來的——不是一開始就規劃好的完整藍圖，而是每一次遇到問題，就多解決一個，工具也就一台一台跟著長大。</p>
+
+    <div class="closing">
+      <div class="marks">覺醒 × 金錢 × 故事</div>
+      <p>如果你也覺得，好的工具應該讓規劃更準、更快，而不是讓你更累——歡迎進來看看這些工具能怎麼幫上忙。</p>
+      <a href="login.html" class="cta">進入工作台 →</a>
+    </div>
+  </div>
+</main>
+
+<footer>Vicauria ・ 資產配置工作台</footer>
+
+</body>
+</html>

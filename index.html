@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Vicauria｜資產配置工作台</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16323F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vicauria">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC", sans-serif; line-height:1.6;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC", serif; margin:0; color:var(--navy);}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- Top nav ---------- */
+  .topnav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 0; border-bottom:1px solid var(--line);
+  }
+  .topnav .logo{
+    font-family:"Roboto Mono", monospace; font-size:13px; letter-spacing:.2em;
+    color:var(--teal-deep); font-weight:700;
+  }
+  .auth-area{display:flex; align-items:center; gap:12px;}
+  .auth-area a.login-link{
+    font-size:13.5px; font-weight:700; color:var(--teal-deep); text-decoration:none;
+    padding:9px 18px; border:1.5px solid var(--teal-deep); border-radius:24px;
+    transition:all .15s ease;
+  }
+  .auth-area a.login-link:hover{background:var(--teal-deep); color:#fff;}
+  .auth-area .user-chip{
+    display:flex; align-items:center; gap:9px;
+    font-size:13px; color:var(--ink);
+  }
+  .auth-area .user-avatar{
+    width:28px; height:28px; border-radius:50%;
+    background:linear-gradient(135deg,var(--teal) 0%,var(--warm) 100%);
+    color:#fff; font-weight:800; font-size:12px; font-family:"Noto Serif TC",serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .auth-area button.logout-link{
+    appearance:none; border:none; background:none; cursor:pointer;
+    font-size:12px; color:var(--ink-soft); text-decoration:underline;
+    text-underline-offset:2px; padding:0;
+  }
+  .auth-area button.logout-link:hover{color:var(--negative,#B3492F);}
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:64px 0 90px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-100px; top:-100px; width:360px; height:360px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{
+    font-size:13px; letter-spacing:.28em; text-transform:uppercase;
+    color:#BFE0EA; font-weight:700; margin-bottom:16px;
+  }
+  header.hero h1{
+    color:#fff; font-size:clamp(30px,5vw,48px); font-weight:800; margin-bottom:16px; max-width:16ch;
+  }
+  header.hero p{max-width:520px; color:#DCEAEE; font-size:16px; margin-bottom:32px;}
+  .cta-btn{
+    display:inline-flex; align-items:center; gap:10px;
+    background:#fff; color:var(--navy); padding:16px 32px; border-radius:30px;
+    font-size:15.5px; font-weight:700; text-decoration:none;
+    box-shadow:0 12px 30px rgba(0,0,0,0.25);
+    transition:transform .15s ease;
+  }
+  .cta-btn:hover{transform:translateY(-2px);}
+
+  /* ---------- Modules preview ---------- */
+  main{margin-top:-46px; position:relative; z-index:10; padding-bottom:70px;}
+  .section-title{text-align:center; margin-bottom:8px; margin-top:50px;}
+  .section-sub{text-align:center; color:var(--ink-soft); font-size:14px; margin-bottom:14px;}
+  .section-pitch{
+    text-align:center; color:var(--teal-deep); font-size:13.5px; font-weight:700;
+    margin:0 auto 36px; background:var(--teal-tint); display:table; padding:8px 20px;
+    border-radius:20px;
+  }
+
+  .module-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
+  }
+  @media (max-width:820px){ .module-grid{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .module-grid{grid-template-columns:1fr;} }
+  @media (max-width:480px){ .story-section h2{white-space:normal; font-size:19px;} }
+
+  .module-card{
+    background:var(--card); border-radius:14px; border:1px solid var(--line);
+    box-shadow:0 8px 24px rgba(20,50,60,0.06); padding:24px 20px;
+  }
+  .module-card .icon{font-size:26px; margin-bottom:12px;}
+  .module-card h3{font-size:15px; margin-bottom:6px;}
+  .module-card p{font-size:12.5px; color:var(--ink-soft); margin:0; line-height:1.7;}
+  .module-card .tag{
+    display:inline-block; margin-top:12px; font-size:10.5px; font-weight:700;
+    padding:4px 10px; border-radius:16px; letter-spacing:.02em;
+  }
+  .module-card .tag.explore{background:var(--teal-tint); color:var(--teal-deep);}
+  .module-card .tag.report{background:#FBEFE2; color:var(--warm-deep);}
+
+  footer{text-align:center; color:var(--ink-soft); font-size:12px; padding:30px 0 10px;}
+
+  .legal-section{
+    max-width:900px; margin:0 auto; padding:0 20px 20px;
+  }
+  .legal-copyright{
+    text-align:center; font-size:11.5px; color:var(--ink-soft); line-height:1.8;
+    padding:18px 0; border-top:1px solid var(--line); margin-top:20px;
+  }
+  .legal-details{ margin-top:14px; }
+  .legal-details summary{
+    text-align:center; font-size:11.5px; color:var(--teal-deep); cursor:pointer;
+    font-weight:600; list-style:none; user-select:none;
+  }
+  .legal-details summary::-webkit-details-marker{ display:none; }
+  .legal-details summary:hover{ text-decoration:underline; }
+  .legal-details summary::after{ content:" ▾"; }
+  .legal-details[open] summary::after{ content:" ▴"; }
+  .legal-body{
+    max-width:680px; margin:16px auto 0; font-size:11.5px; color:var(--ink-soft);
+    line-height:2; background:var(--paper); border-radius:12px; padding:20px 24px;
+  }
+  .legal-body h4{
+    font-family:"Noto Serif TC", serif; font-size:13px; color:var(--navy);
+    margin:16px 0 6px;
+  }
+  .legal-body h4:first-child{ margin-top:0; }
+  .legal-body p{ margin:0 0 10px; }
+
+  /* ---------- 品牌故事區塊 ---------- */
+  .story-section{
+    margin:56px 0 60px; padding:40px 36px; border-radius:20px;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 100%);
+    color:#fff; display:flex; align-items:center; gap:40px; flex-wrap:wrap;
+    position:relative; overflow:hidden;
+  }
+  .story-section::after{
+    content:""; position:absolute; left:-60px; bottom:-60px; width:220px; height:220px;
+    border-radius:50%; background:radial-gradient(circle,rgba(201,123,61,0.18) 0%,rgba(201,123,61,0) 70%);
+  }
+  .story-section .story-text{flex:1; min-width:260px; position:relative; z-index:2;}
+  .story-section .eyebrow2{
+    font-family:"Roboto Mono", monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:#F3C98A; font-weight:700; margin-bottom:12px;
+  }
+  .story-section h2{color:#fff; font-size:clamp(18px,2.4vw,24px); margin-bottom:14px; white-space:nowrap;}
+  .story-section p{color:#DCEAEE; font-size:14px; line-height:2; max-width:480px; margin-bottom:22px;}
+  .story-btn{
+    display:inline-flex; align-items:center; gap:8px; background:#fff; color:var(--navy);
+    padding:13px 26px; border-radius:26px; font-size:14px; font-weight:700; text-decoration:none;
+    transition:transform .15s ease;
+  }
+  .story-btn:hover{transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="topnav">
+    <div class="logo">VICAURIA</div>
+    <div class="auth-area" id="authArea">
+      <a href="login.html" class="login-link">登入</a>
+    </div>
+  </nav>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Financial Advisor Workspace</div>
+    <h1>把每一次財務規劃，做得更完整。</h1>
+    <p>從收支現金流、資產負債，到遺產稅務與客戶財富畫像——一個工作台，裝下你日常需要的每一個試算工具。</p>
+    <a href="workbench.html" class="cta-btn" id="ctaBtn">進入工作台 →</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="story-section">
+    <div class="story-text">
+      <div class="eyebrow2">Our Story</div>
+      <h2>找不到夢想中的工具，所以自己打造一個。</h2>
+      <p>財務規劃很多時候還是得手動計算——為了縮短時間、減少算錯的風險，這個平台上的每一台計算機，都是這樣一台一台長出來的。</p>
+      <a href="brand-story.html" class="story-btn">閱讀品牌故事 →</a>
+    </div>
+  </div>
+
+  <h2 class="section-title">六個模組，隨時取用</h2>
+  <p class="section-sub">工具類即時試算，報告類填完送出、一鍵產出 PDF 給客戶。</p>
+  <div class="section-pitch">加入後，這些功能會是你日常規劃最快的好幫手</div>
+
+  <div class="module-grid">
+    <div class="module-card">
+      <div class="icon">◆</div>
+      <h3>財富地圖</h3>
+      <p>17 題引導式問卷，帶客戶一步步看清財務現況，產出客戶版與顧問版報告。</p>
+      <span class="tag report">報告類</span>
+    </div>
+    <div class="module-card">
+      <div class="icon">💧</div>
+      <h3>收支現金流</h3>
+      <p>收入／支出逐項記錄，即時算出年度結餘與儲蓄率。</p>
+      <span class="tag report">報告類</span>
+    </div>
+    <div class="module-card">
+      <div class="icon">⚖️</div>
+      <h3>資產負債表</h3>
+      <p>資產與負債配置，算出淨值、負債比與資產配置結構。</p>
+      <span class="tag report">報告類</span>
+    </div>
+    <div class="module-card">
+      <div class="icon">🏦</div>
+      <h3>貸款試算室</h3>
+      <p>車貸信貸、房貸寬限期、跨方案比較與資金運用利差試算。</p>
+      <span class="tag explore">工具類</span>
+    </div>
+    <div class="module-card">
+      <div class="icon">📰</div>
+      <h3>市場快訊</h3>
+      <p>國際財經、央行利率、房市稅務、退休議題自動分類，出處清楚不用自己找新聞。</p>
+      <span class="tag explore">工具類</span>
+    </div>
+    <div class="module-card">
+      <div class="icon">📈</div>
+      <h3>資金效率健檢</h3>
+      <p>通膨與資金效率快篩，看清放著不動的錢正在變薄還是變多。</p>
+      <span class="tag explore">工具類</span>
+    </div>
+  </div>
+</main>
+
+<div class="legal-section">
+  <div class="legal-copyright">
+    © 2026 Vicauria. All Rights Reserved.　版權所有，非經授權不得複製、重製、轉載或以任何形式使用本網站之設計、程式碼與試算邏輯。
+  </div>
+  <details class="legal-details">
+    <summary>查看完整著作權聲明與使用條款</summary>
+    <div class="legal-body">
+      <h4>著作權聲明</h4>
+      <p>本網站（含頁面設計、版面編排、程式碼、圖示、文案內容，以及各項試算工具之計算邏輯與公式呈現方式）為 Vicauria 之原創作品，受《著作權法》保護，著作權歸 Vicauria 所有。</p>
+      <p>未經 Vicauria 書面授權，任何人不得以任何方式複製、重製、反編譯、轉載、散布、公開傳輸本網站之全部或部分內容，或將本網站之設計、功能架構、試算邏輯用於開發其他商業服務或工具。違者將依法追究相關法律責任。</p>
+
+      <h4>非投資／稅務／法律建議聲明</h4>
+      <p>本網站所提供之各項試算工具（含但不限於退休基金、教育基金、購屋基金、房地合一稅、遺產稅、最低稅負制、勞保勞退等試算結果），僅供財務規劃參考與教育性用途，不構成任何投資建議、稅務建議或法律意見，亦非保險招攬或商品推薦。</p>
+      <p>試算結果為依使用者輸入資料與簡化假設所計算之估算值，可能與實際核定金額有所落差。實際稅額、給付金額、法定權利義務，仍應以國稅局、勞動部勞工保險局、地政機關等主管機關之核定，或合格會計師、律師、地政士之專業意見為準。</p>
+
+      <h4>資料使用與隱私</h4>
+      <p>本網站使用者於工作台中登入後所建立之客戶資料，儲存於具存取權限控管之雲端資料庫，僅限該登入帳號本人存取，不會與其他使用者共用或公開。</p>
+
+      <h4>服務變動</h4>
+      <p>Vicauria 保留隨時修改、暫停或終止本網站服務內容之權利，恕不另行個別通知。</p>
+
+      <p style="margin-top:16px;color:var(--ink-soft);">如對本聲明有任何疑問，歡迎透過網站上的聯繫方式與我們聯絡。</p>
+    </div>
+  </details>
+</div>
+
+<footer>Vicauria ・ 資產配置工作台</footer>
+
+<script>
+  (function(){
+    const authArea = document.getElementById('authArea');
+    const raw = localStorage.getItem('jk_user');
+    if(!raw) return;
+    try{
+      const user = JSON.parse(raw);
+      const name = user.name || user.email || 'Jess';
+      authArea.innerHTML = `
+        <div class="user-chip">
+          <div class="user-avatar">${name.charAt(0).toUpperCase()}</div>
+          <span>${name}</span>
+        </div>
+        <button class="logout-link" id="logoutBtn">登出</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', ()=>{
+        localStorage.removeItem('jk_user');
+        window.location.reload();
+      });
+    }catch(e){}
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>意見箱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{max-width:720px; margin:0 auto; padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:32px 0 40px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:200px; height:200px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#BFE0EA; font-weight:700; margin-bottom:8px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
+  header.hero p{max-width:600px; color:#DCEAEE; font-size:13px; line-height:1.8;}
+
+  main{margin-top:-20px; position:relative; z-index:10; padding-bottom:140px;}
+
+  .card{
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); padding:28px 30px;
+  }
+  .field{margin-bottom:20px;}
+  .field label{display:block; font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:8px;}
+  .category-pills{display:flex; gap:8px; flex-wrap:wrap;}
+  .category-pill{
+    padding:9px 18px; border-radius:20px; border:1.5px solid var(--line); background:var(--paper);
+    font-size:12.5px; font-weight:700; color:var(--ink-soft); cursor:pointer;
+  }
+  .category-pill.active{background:var(--navy); border-color:var(--navy); color:#fff;}
+  textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:9px; padding:12px 14px;
+    font-family:"Noto Sans TC",sans-serif; font-size:14px; color:var(--ink);
+    resize:vertical; min-height:160px; line-height:1.8;
+  }
+  textarea:focus{outline:none; border-color:var(--teal);}
+  .submit-btn{
+    width:100%; padding:14px; border:none; border-radius:26px;
+    background:var(--navy); color:#fff; font-size:14.5px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .submit-btn:hover{background:var(--teal-deep);}
+  .submit-btn:disabled{opacity:.6; cursor:default;}
+
+  .success-box{display:none; text-align:center; padding:20px 0;}
+  .success-box.show{display:block;}
+  .success-box .icon{font-size:32px; margin-bottom:14px;}
+  .success-box p{font-size:14px; color:var(--ink); line-height:1.9;}
+
+  .error-msg{
+    display:none; background:rgba(179,73,47,0.08); border:1px solid rgba(179,73,47,0.25);
+    color:var(--negative); font-size:12.5px; padding:10px 12px; border-radius:8px; margin-bottom:16px;
+  }
+  .error-msg.show{display:block;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Feedback · 意見箱</div>
+    <h1>遇到問題，或有想改進的地方？</h1>
+    <p>不管是功能上卡卡的、算錯的地方，還是你希望這個工作台能多做什麼，都歡迎寫下來。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <div class="error-msg" id="errorMsg"></div>
+    <form id="feedbackForm">
+      <div class="field">
+        <label>這是屬於哪一類？</label>
+        <div class="category-pills" id="categoryPills">
+          <div class="category-pill active" data-val="bug">功能異常／算錯了</div>
+          <div class="category-pill" data-val="idea">功能建議</div>
+          <div class="category-pill" data-val="other">其他</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>詳細說明</label>
+        <textarea id="messageInput" placeholder="請盡量描述清楚：在哪個模組、發生了什麼、你原本期待是什麼…"></textarea>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">送出意見</button>
+    </form>
+
+    <div class="success-box" id="successBox">
+      <div class="icon">✅</div>
+      <p>謝謝你的意見，已經收到了！</p>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script>
+  let selectedCategory = 'bug';
+  document.querySelectorAll('.category-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=>{
+      document.querySelectorAll('.category-pill').forEach(p=>p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedCategory = pill.dataset.val;
+    });
+  });
+
+  const errorMsg = document.getElementById('errorMsg');
+  function showError(text){
+    errorMsg.textContent = text;
+    errorMsg.classList.add('show');
+  }
+
+  document.getElementById('feedbackForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    errorMsg.classList.remove('show');
+    const message = document.getElementById('messageInput').value.trim();
+    const submitBtn = document.getElementById('submitBtn');
+
+    if(!message){
+      showError('請填寫詳細說明再送出');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '送出中…';
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){
+      showError('請先登入才能送出意見');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '送出意見';
+      return;
+    }
+
+    const { error } = await supabaseClient.from('feedback').insert({
+      advisor_id: session.user.id,
+      advisor_email: session.user.email,
+      category: selectedCategory,
+      message
+    });
+
+    if(error){
+      showError('送出失敗，請檢查網路連線後再試一次。');
+      submitBtn.disabled = false;
+      submitBtn.textContent = '送出意見';
+      return;
+    }
+
+    document.getElementById('feedbackForm').style.display = 'none';
+    document.getElementById('successBox').classList.add('show');
+  });
+</script>
+
+</body>
+</html>

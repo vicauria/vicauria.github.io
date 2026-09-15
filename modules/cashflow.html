@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>收支現金流試算室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F;
+    --teal:#2E7391;
+    --teal-deep:#1F5C73;
+    --teal-tint:#E6F0F2;
+    --warm:#C97B3D;
+    --warm-deep:#A85F27;
+    --warm-tint:#FBEFE2;
+    --ink:#182226;
+    --ink-soft:#5B6B70;
+    --paper:#F5F7F6;
+    --card:#FFFFFF;
+    --line:#E1E7E7;
+    --positive:#2E7D5B;
+    --negative:#B3492F;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif;
+    line-height:1.6;
+    padding-bottom:140px;
+  }
+  h1,h2,h3{
+    font-family:"Noto Serif TC",serif;
+    margin:0;
+    color:var(--navy);
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 20px;
+  }
+
+  /* ---------- Header ---------- */
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff;
+    padding:26px 0 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero::after{
+    content:"";
+    position:absolute;
+    right:-80px; top:-80px;
+    width:320px; height:320px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{
+    font-size:11px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:#BFE0EA;
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  header.hero h1{
+    color:#fff;
+    font-size:clamp(19px,2.4vw,24px);
+    font-weight:700;
+    margin-bottom:0;
+  }
+  header.hero p{
+    max-width:620px;
+    color:#DCEAEE;
+    font-size:13px;
+    margin-top:8px;
+  }
+
+  /* ---------- Sticky summary ---------- */
+  .summary-dock{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(22,50,63,0.97);
+    backdrop-filter:blur(6px);
+    color:#fff;
+    box-shadow:0 6px 18px rgba(0,0,0,0.15);
+  }
+  .summary-inner{
+    max-width:1180px;
+    margin:0 auto;
+    padding:14px 20px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  .sum-item{
+    text-align:center;
+    padding:6px 4px;
+    border-right:1px solid rgba(255,255,255,0.14);
+  }
+  .sum-item:last-child{border-right:none;}
+  .sum-label{
+    font-size:12px;
+    color:#A9C7CF;
+    letter-spacing:.06em;
+    margin-bottom:4px;
+  }
+  .sum-value{
+    font-family:"Roboto Mono",monospace;
+    font-size:clamp(16px,2.4vw,24px);
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+  }
+  .sum-value.positive{color:#8FE3BE;}
+  .sum-value.negative{color:#F3A98C;}
+
+  /* ---------- Content card shell ---------- */
+  main{
+    margin-top:-16px;
+    position:relative;
+    z-index:10;
+  }
+  .panel{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08);
+    border:1px solid var(--line);
+    padding:28px 26px 22px;
+    margin-bottom:26px;
+  }
+  .panel-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .panel-head h2{
+    font-size:21px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .tag-income{color:var(--teal-deep);}
+  .tag-expense{color:var(--warm-deep);}
+  .panel-sub{
+    color:var(--ink-soft);
+    font-size:13.5px;
+    margin-bottom:20px;
+  }
+
+  /* ---------- Group ---------- */
+  .group{
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .group-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 16px;
+    background:var(--teal-tint);
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .group.expense .group-head{background:var(--warm-tint);}
+  .group-title{
+    font-weight:700;
+    font-size:15px;
+    color:var(--teal-deep);
+  }
+  .group.expense .group-title{color:var(--warm-deep);}
+  .group-title small{
+    display:block;
+    font-weight:400;
+    color:var(--ink-soft);
+    font-size:12px;
+    margin-top:2px;
+  }
+  .group-subtotal{
+    font-family:"Roboto Mono",monospace;
+    font-weight:800;
+    font-size:16px;
+    color:var(--navy);
+    white-space:nowrap;
+  }
+  .group-subtotal span{
+    font-size:11px;
+    font-weight:400;
+    color:var(--ink-soft);
+    display:block;
+    text-align:right;
+  }
+
+  .row-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  .row-table thead th{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:500;
+    text-align:left;
+    padding:8px 10px 6px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .row-table td{
+    padding:6px 10px;
+    border-bottom:1px dashed var(--line);
+    vertical-align:middle;
+  }
+  .row-table tr:last-child td{border-bottom:none;}
+  .row-table input[type="text"]{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    font-family:inherit;
+    font-size:14px;
+    padding:7px 8px;
+    border-radius:6px;
+    color:var(--ink);
+  }
+  .row-table input[type="text"]:hover,
+  .row-table input[type="text"]:focus{
+    border-color:var(--line);
+    background:#FAFBFB;
+  }
+  .row-table input[type="number"]{
+    width:112px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-family:"Noto Sans TC",sans-serif;
+    font-size:14px;
+    padding:7px 8px;
+    border-radius:6px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .row-table input[type="number"]:focus{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+  }
+  .row-subtotal{
+    font-family:"Roboto Mono",monospace;
+    font-variant-numeric:tabular-nums;
+    font-weight:700;
+    text-align:right;
+    color:var(--navy);
+    min-width:96px;
+    white-space:nowrap;
+  }
+  .col-hint{font-size:10.5px;color:var(--ink-soft);font-weight:400;}
+  .del-btn{
+    border:none;
+    background:none;
+    color:#B7C2C4;
+    cursor:pointer;
+    font-size:16px;
+    padding:4px 6px;
+    line-height:1;
+    border-radius:6px;
+  }
+  .del-btn:hover{color:var(--negative);background:#FBEAE5;}
+
+  .add-row-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin:10px 14px 14px;
+    background:none;
+    border:1px dashed var(--teal);
+    color:var(--teal-deep);
+    font-size:13px;
+    font-weight:700;
+    padding:7px 14px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .group.expense .add-row-btn{border-color:var(--warm);color:var(--warm-deep);}
+  .add-row-btn:hover{background:var(--teal-tint);}
+  .group.expense .add-row-btn:hover{background:var(--warm-tint);}
+
+  /* ---------- Misc note ---------- */
+  .misc-note{
+    display:flex;
+    gap:10px;
+    background:#FFF7EC;
+    border:1px solid #F0DCB8;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:13px;
+    color:#7A5A22;
+    margin-top:4px;
+  }
+
+  /* ---------- Breakdown / result panel ---------- */
+  .breakdown-grid{
+    display:grid;
+    grid-template-columns:1fr 0.95fr 1fr;
+    gap:22px;
+  }
+  @media (max-width:980px){
+    .breakdown-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Donut chart ---------- */
+  .chart-card{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+  .chart-card h3{
+    font-size:15px;
+    color:var(--navy);
+    margin-bottom:2px;
+  }
+  .chart-card .chart-sub{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .donut-wrap{
+    position:relative;
+    width:220px;
+    height:220px;
+  }
+  .donut-wrap svg circle{
+    transition:stroke-dasharray .35s ease, stroke .35s ease;
+  }
+  .donut-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+  }
+  .donut-center .dc-value{
+    font-family:"Noto Serif TC",serif;
+    font-weight:800;
+    font-size:27px;
+    color:var(--navy);
+    line-height:1.1;
+  }
+  .donut-center .dc-value.negative{color:var(--negative);}
+  .donut-center .dc-label{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:3px;
+  }
+  .deficit-note{
+    margin-top:14px;
+    background:#FBEAE5;
+    border:1px solid #EBC4B7;
+    color:var(--negative);
+    font-size:12.5px;
+    padding:8px 12px;
+    border-radius:8px;
+  }
+  .legend{
+    width:100%;
+    margin-top:18px;
+    text-align:left;
+  }
+  .legend-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 2px;
+    font-size:13px;
+  }
+  .legend-dot{
+    width:10px;height:10px;border-radius:50%;flex:none;
+  }
+  .legend-label{flex:1;color:var(--ink);}
+  .legend-pct{
+    font-weight:700;
+    color:var(--navy);
+    font-variant-numeric:tabular-nums;
+    min-width:44px;
+    text-align:right;
+  }
+  .legend-amt{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    min-width:76px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .bd-table{width:100%;border-collapse:collapse;font-size:14px;}
+  .bd-table th{
+    text-align:left;
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:500;
+    padding:6px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .bd-table td{
+    padding:9px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .bd-table td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  .bd-table tr.total td{
+    border-top:2px solid var(--navy);
+    border-bottom:none;
+    font-weight:800;
+    font-size:15.5px;
+    color:var(--navy);
+    padding-top:12px;
+  }
+  .bd-table tr.net td{
+    font-weight:800;
+    font-size:16.5px;
+    padding-top:10px;
+  }
+
+  .ratio-card{
+    background:var(--teal-tint);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:10px;
+  }
+  .ratio-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:8px 0;
+    border-bottom:1px dashed rgba(46,115,145,0.25);
+  }
+  .ratio-row:last-child{border-bottom:none;}
+  .ratio-name{font-size:13.5px;color:var(--teal-deep);font-weight:500;}
+  .ratio-name small{display:block;color:var(--ink-soft);font-size:11px;font-weight:400;}
+  .ratio-value{font-family:"Noto Serif TC",serif;font-weight:800;font-size:19px;color:var(--navy);}
+
+  footer{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:12px;
+    padding:26px 0 10px;
+  }
+
+  @media (max-width:700px){
+    .summary-inner{grid-template-columns:repeat(2,1fr);}
+    .sum-item:nth-child(2){border-right:none;}
+    .panel{padding:20px 16px 16px;}
+
+    /* 表格在窄螢幕改成一張一張卡片，不再硬擠成很窄的欄位 */
+    .row-table thead{display:none;}
+    .row-table, .row-table tbody, .row-table tr, .row-table td{display:block; width:100%;}
+    .row-table tr{
+      border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:10px;
+      background:var(--card);
+    }
+    .row-table td{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:7px 0; border-bottom:1px dashed var(--line);
+    }
+    .row-table td:last-child{border-bottom:none; justify-content:flex-end;}
+    .row-table td::before{
+      content:attr(data-label); font-size:11.5px; color:var(--ink-soft); font-weight:600;
+      flex-shrink:0;
+    }
+    .row-table td input{width:auto; flex:1; max-width:60%; text-align:right;}
+    .row-table td input[type="text"]{text-align:left;}
+    .row-table .row-subtotal{font-weight:700; color:var(--navy);}
+  }
+
+  .report-btn{
+    position:fixed; right:24px; bottom:24px; z-index:60;
+    display:flex; align-items:center; gap:8px;
+    background:var(--navy); color:#fff; border:none;
+    padding:13px 20px; border-radius:30px; font-size:14px; font-weight:700;
+    cursor:pointer; box-shadow:0 8px 24px rgba(22,50,63,0.35);
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .report-btn:hover{background:var(--teal-deep);}
+  .report-btn.hidden{display:none;}
+
+  .generate-wrap{display:flex; justify-content:center; margin:8px 0 32px;}
+  .generate-btn{
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--navy); color:#fff; border:none;
+    padding:16px 40px; border-radius:30px; font-size:16px; font-weight:700;
+    cursor:pointer; box-shadow:0 10px 28px rgba(22,50,63,0.28);
+    font-family:"Noto Sans TC",sans-serif;
+    transition:background .15s ease, transform .1s ease;
+  }
+  .generate-btn:hover{background:var(--teal-deep);}
+  .generate-btn:active{transform:scale(0.98);}
+
+  #resultsPanel, #summaryDock{
+    opacity:0; max-height:0; overflow:hidden; pointer-events:none;
+    transition:opacity .35s ease;
+  }
+  #resultsPanel.show, #summaryDock.show{
+    opacity:1; max-height:none; overflow:visible; pointer-events:auto;
+  }
+  #summaryDock:not(.show){position:static;}
+
+  .placeholder-note{
+    text-align:center; color:var(--ink-soft); font-size:13.5px;
+    padding:18px; border:1px dashed var(--line); border-radius:10px; margin:8px 0 32px;
+    background:var(--card);
+  }
+  .placeholder-note.hide{display:none;}
+  .print-only{display:none;}
+
+  @media print{
+    .report-btn{display:none !important;}
+    .summary-dock{position:static;background:var(--navy);}
+    .row-table input[type="number"],.row-table input[type="text"]{border:none;background:none;padding:4px 6px;}
+    .add-row-btn,.del-btn{display:none !important;}
+    header.hero{padding:32px 0 48px;}
+    .panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+    .print-only{display:block;padding:0 0 18px;color:var(--ink-soft);font-size:13px;}
+    body{padding-bottom:0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">財務規劃報告書 · 收支現金流模組</div>
+    <h1>收支現金流試算室</h1>
+    <p>把每一筆工作收入、理財收入，跟每一筆必要、浮動、保費、撫養、貸款支出都列清楚——月收入自動換算成年度，年終獎金這類一次性收入只加一次，最後總收入、總支出、年度結餘，全部即時算給你看。</p>
+  </div>
+</header>
+
+<div class="summary-dock" id="summaryDock">
+  <div class="summary-inner">
+    <div class="sum-item">
+      <div class="sum-label">年度總收入</div>
+      <div class="sum-value" id="sumIncome">$0</div>
+    </div>
+    <div class="sum-item">
+      <div class="sum-label">年度總支出</div>
+      <div class="sum-value" id="sumExpense">$0</div>
+    </div>
+    <div class="sum-item">
+      <div class="sum-label">年度現金流結餘</div>
+      <div class="sum-value" id="sumNet">$0</div>
+    </div>
+    <div class="sum-item">
+      <div class="sum-label">名目儲蓄率</div>
+      <div class="sum-value" id="sumSavingsRate">0%</div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div class="print-only">試算日期：<span id="printDate"></span>　｜　客戶：＿＿＿＿＿＿＿＿＿＿　｜　顧問：Jess</div>
+
+  <!-- ================= 收入 ================= -->
+  <section class="panel" id="incomePanel">
+    <div class="panel-head">
+      <h2><span class="tag-income">●</span> 收入流量表</h2>
+    </div>
+    <p class="panel-sub">每個項目分開填「月收入」跟「年度一次性收入」。月收入會自動 ×12；年終獎金、分紅這種一年只發一次的，填在後面那格，不會被乘 12，只加一次到年度小計。</p>
+    <div id="incomeGroups"></div>
+  </section>
+
+  <!-- ================= 支出 ================= -->
+  <section class="panel" id="expensePanel">
+    <div class="panel-head">
+      <h2><span class="tag-expense">●</span> 支出流量表</h2>
+    </div>
+    <p class="panel-sub">支出依「必要／浮動／保費／撫養／貸款」五大分類列出，每一類都可以自己增加項目。表格外的臨時支出，就填最下面的「雜項」。</p>
+    <div id="expenseGroups"></div>
+
+    <div class="group" id="miscGroupWrap">
+      <div class="group-head">
+        <div class="group-title">（雜項）未列項目支出
+          <small>不在上述分類裡、但確實會發生的支出，先抓一個估計值放這裡</small>
+        </div>
+        <div class="group-subtotal" id="miscSubtotal">$0<span>年度小計</span></div>
+      </div>
+      <table class="row-table">
+        <thead>
+          <tr>
+            <th style="width:38%">項目說明</th>
+            <th>月支出 <span class="col-hint">(自動×12)</span></th>
+            <th>年度一次性 <span class="col-hint">(只加一次)</span></th>
+            <th style="text-align:right">年度小計</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="miscBody"></tbody>
+      </table>
+      <button class="add-row-btn" data-group="misc">＋ 新增雜項</button>
+    </div>
+  </section>
+
+  <div class="placeholder-note" id="placeholderNote">填好上方的收入與支出項目後，按下方按鈕產生年度總結與比率分析。</div>
+  <div class="generate-wrap">
+    <button class="generate-btn" id="generateBtn">產生結果 →</button>
+  </div>
+
+  <!-- ================= 總結 ================= -->
+  <section class="panel" id="resultsPanel">
+    <div class="panel-head">
+      <h2>收支總結</h2>
+    </div>
+    <p class="panel-sub">總收入、總支出逐項加總後的結果，數字會隨上面表格即時更新。</p>
+
+    <div class="breakdown-grid">
+      <div>
+        <table class="bd-table">
+          <thead>
+            <tr><th>收入項目</th><th style="text-align:right">年度合計</th></tr>
+          </thead>
+          <tbody id="bdIncomeBody"></tbody>
+          <tbody>
+            <tr class="total"><td>總收入</td><td class="num" id="bdIncomeTotal">$0</td></tr>
+          </tbody>
+        </table>
+
+        <table class="bd-table" style="margin-top:18px;">
+          <thead>
+            <tr><th>支出項目</th><th style="text-align:right">年度合計</th></tr>
+          </thead>
+          <tbody id="bdExpenseBody"></tbody>
+          <tbody>
+            <tr class="total"><td>總支出</td><td class="num" id="bdExpenseTotal">$0</td></tr>
+            <tr class="net"><td>年度現金流結餘</td><td class="num" id="bdNet">$0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="chart-card">
+        <h3>整體收支結構</h3>
+        <div class="chart-sub" id="chartSubLabel">占總收入的比例</div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" width="220" height="220">
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
+            <g id="donutSegments" transform="rotate(-90 100 100)"></g>
+          </svg>
+          <div class="donut-center">
+            <div class="dc-value" id="donutCenterValue">0%</div>
+            <div class="dc-label" id="donutCenterLabel">年度儲蓄率</div>
+          </div>
+        </div>
+        <div id="deficitNote" class="deficit-note" style="display:none;"></div>
+        <div class="legend" id="donutLegend"></div>
+      </div>
+
+      <div>
+        <div class="ratio-card">
+          <div class="ratio-row">
+            <div class="ratio-name">名目儲蓄率<small>年度結餘 ÷ 總收入，理想值 &gt; 20%</small></div>
+            <div class="ratio-value" id="ratioSavings">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">理財收入比<small>理財(被動)收入 ÷ 總收入</small></div>
+            <div class="ratio-value" id="ratioFinIncome">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">必要支出比<small>必要支出(含稅) ÷ 總收入</small></div>
+            <div class="ratio-value" id="ratioNecessary">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">浮動支出比<small>浮動支出 ÷ 總收入，建議 &lt; 20%</small></div>
+            <div class="ratio-value" id="ratioFlexible">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">保費支出比<small>保費支出 ÷ 總收入，建議 ≈ 10%</small></div>
+            <div class="ratio-value" id="ratioInsurance">0%</div>
+          </div>
+          <div class="ratio-row">
+            <div class="ratio-name">貸款壓力比<small>貸款支出 ÷ 總收入</small></div>
+            <div class="ratio-value" id="ratioLoan">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<button class="report-btn hidden" id="reportBtn" onclick="window.print()">📄 產出報告（列印／存成 PDF）</button>
+
+<footer>收支現金流試算室 · 僅供財務規劃討論使用，所有比率計算依「總收入」為分母</footer>
+
+<script>
+/* ---------------------------------------------------------
+   資料結構：income / expense 都是「分組 -> 多列」
+   每一列 row = { name, monthly, once }
+   年度小計 rowAnnual = monthly*12 + once   (月收入自動年化，一次性只加一次)
+--------------------------------------------------------- */
+
+const incomeGroups = [
+  {
+    key:"active",
+    title:"工作收入（主動）",
+    hint:"薪資、接案等持續性主動收入",
+    rows:[
+      {name:"薪資所得", monthly:0, once:0},
+      {name:"年終獎金／分紅", monthly:0, once:0}
+    ]
+  },
+  {
+    key:"passive",
+    title:"理財收入（被動）",
+    hint:"用於計算「理財收入比」，是財富自由度的關鍵指標",
+    rows:[
+      {name:"房租收入", monthly:0, once:0},
+      {name:"股息／利息收入", monthly:0, once:0}
+    ]
+  }
+];
+
+const expenseGroups = [
+  {
+    key:"necessary",
+    title:"必要支出（含稅）",
+    hint:"食衣住行等生活必需，比例越低越好",
+    rows:[
+      {name:"房貸／房租", monthly:0, once:0},
+      {name:"三餐飲食", monthly:0, once:0},
+      {name:"交通費", monthly:0, once:0},
+      {name:"水電瓦斯／電信", monthly:0, once:0}
+    ]
+  },
+  {
+    key:"flexible",
+    title:"浮動支出",
+    hint:"娛樂、治裝等非必要消費，建議控制在收入 20% 以內",
+    rows:[
+      {name:"娛樂消費", monthly:0, once:0},
+      {name:"治裝／美容", monthly:0, once:0},
+      {name:"旅遊基金", monthly:0, once:0}
+    ]
+  },
+  {
+    key:"insurance",
+    title:"保費支出",
+    hint:"壽險、醫療、意外等保障型保費",
+    rows:[
+      {name:"壽險／醫療險", monthly:0, once:0},
+      {name:"意外險", monthly:0, once:0}
+    ]
+  },
+  {
+    key:"dependent",
+    title:"撫養支出",
+    hint:"子女教育、孝親費等家庭責任支出",
+    rows:[
+      {name:"子女教育費", monthly:0, once:0},
+      {name:"孝親費", monthly:0, once:0}
+    ]
+  },
+  {
+    key:"loan",
+    title:"貸款支出",
+    hint:"信貸、車貸等非房貸類貸款月付金",
+    rows:[
+      {name:"信貸／車貸", monthly:0, once:0}
+    ]
+  }
+];
+
+const miscRows = [
+  {name:"其他未列支出", monthly:0, once:0}
+];
+
+/* ---------------- render helpers ---------------- */
+
+function money(n){
+  const v = Math.round(n || 0);
+  return (v<0?"-$":"$") + Math.abs(v).toLocaleString("zh-TW");
+}
+function pct(n){
+  if(!isFinite(n)) return "0%";
+  return (n*100).toFixed(1) + "%";
+}
+function rowAnnual(row){
+  return (Number(row.monthly)||0)*12 + (Number(row.once)||0);
+}
+function groupAnnual(group){
+  return group.rows.reduce((s,r)=>s+rowAnnual(r),0);
+}
+
+function renderGroupTable(group, isExpense){
+  const wrap = document.createElement("div");
+  wrap.className = "group" + (isExpense ? " expense" : "");
+  wrap.dataset.key = group.key;
+
+  wrap.innerHTML = `
+    <div class="group-head">
+      <div class="group-title">${group.title}<small>${group.hint}</small></div>
+      <div class="group-subtotal" data-role="subtotal">$0<span>年度小計</span></div>
+    </div>
+    <table class="row-table">
+      <thead>
+        <tr>
+          <th style="width:38%">項目名稱</th>
+          <th>月${isExpense?'支出':'收入'} <span class="col-hint">(自動×12)</span></th>
+          <th>年度一次性 <span class="col-hint">(只加一次)</span></th>
+          <th style="text-align:right">年度小計</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button class="add-row-btn" type="button">＋ 新增項目</button>
+  `;
+
+  const tbody = wrap.querySelector("tbody");
+  group.rows.forEach((row, idx)=> tbody.appendChild(renderRow(group, row, idx)) );
+
+  wrap.querySelector(".add-row-btn").addEventListener("click", ()=>{
+    const newRow = {name:"", monthly:0, once:0};
+    group.rows.push(newRow);
+    tbody.appendChild(renderRow(group, newRow, group.rows.length-1));
+    recalc();
+  });
+
+  return wrap;
+}
+
+function renderRow(group, row, idx){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td data-label="項目名稱"><input type="text" value="${row.name}" placeholder="輸入項目名稱"></td>
+    <td data-label="每月金額"><input type="number" min="0" step="100" value="${row.monthly||0}"></td>
+    <td data-label="年度一次性"><input type="number" min="0" step="100" value="${row.once||0}"></td>
+    <td class="row-subtotal" data-label="年度小計">${money(rowAnnual(row))}</td>
+    <td data-label=""><button class="del-btn" type="button" title="刪除">✕</button></td>
+  `;
+  const [nameInput, monthlyInput, onceInput] = tr.querySelectorAll("input");
+  nameInput.addEventListener("input", e=>{ row.name = e.target.value; recalc(); });
+  monthlyInput.addEventListener("input", e=>{ row.monthly = Number(e.target.value)||0; recalc(); });
+  onceInput.addEventListener("input", e=>{ row.once = Number(e.target.value)||0; recalc(); });
+  tr.querySelector(".del-btn").addEventListener("click", ()=>{
+    const i = group.rows.indexOf(row);
+    if(i>-1) group.rows.splice(i,1);
+    tr.remove();
+    recalc();
+  });
+  return tr;
+}
+
+/* misc group (single flat list, no sub-groups) */
+function renderMisc(){
+  const tbody = document.getElementById("miscBody");
+  tbody.innerHTML = "";
+  const fakeGroup = {rows:miscRows};
+  miscRows.forEach((row)=> tbody.appendChild(renderRow(fakeGroup, row)) );
+}
+document.querySelector('[data-group="misc"]').addEventListener("click", ()=>{
+  const newRow = {name:"", monthly:0, once:0};
+  miscRows.push(newRow);
+  document.getElementById("miscBody").appendChild(renderRow({rows:miscRows}, newRow));
+  recalc();
+});
+
+/* ---------------- initial render ---------------- */
+const incomeMount = document.getElementById("incomeGroups");
+const expenseMount = document.getElementById("expenseGroups");
+incomeGroups.forEach(g=> incomeMount.appendChild(renderGroupTable(g,false)) );
+expenseGroups.forEach(g=> expenseMount.appendChild(renderGroupTable(g,true)) );
+renderMisc();
+document.getElementById("printDate").textContent = new Date().toLocaleDateString("zh-TW");
+
+/* ---------------- 產生結果 按鈕 ---------------- */
+const generateBtn = document.getElementById("generateBtn");
+const summaryDock = document.getElementById("summaryDock");
+const resultsPanel = document.getElementById("resultsPanel");
+const reportBtn = document.getElementById("reportBtn");
+const placeholderNote = document.getElementById("placeholderNote");
+
+generateBtn.addEventListener("click", ()=>{
+  recalc();
+  summaryDock.classList.add("show");
+  resultsPanel.classList.add("show");
+  reportBtn.classList.remove("hidden");
+  placeholderNote.classList.add("hide");
+  resultsPanel.scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+/* ---------------- recalc everything ---------------- */
+function recalc(){
+  // group subtotal labels (income + expense groups)
+  document.querySelectorAll("#incomeGroups .group, #expenseGroups .group").forEach(el=>{
+    const key = el.dataset.key;
+    const allGroups = [...incomeGroups, ...expenseGroups];
+    const group = allGroups.find(g=>g.key===key);
+    if(!group) return;
+    el.querySelectorAll(".row-table tbody tr").forEach((tr,i)=>{
+      const cell = tr.querySelector(".row-subtotal");
+      if(cell) cell.textContent = money(rowAnnual(group.rows[i]));
+    });
+    el.querySelector('[data-role="subtotal"]').innerHTML =
+      money(groupAnnual(group)) + "<span>年度小計</span>";
+  });
+
+  // misc subtotal + row values
+  const miscBody = document.getElementById("miscBody");
+  miscBody.querySelectorAll("tr").forEach((tr,i)=>{
+    const cell = tr.querySelector(".row-subtotal");
+    if(cell) cell.textContent = money(rowAnnual(miscRows[i]));
+  });
+  const miscTotal = miscRows.reduce((s,r)=>s+rowAnnual(r),0);
+  document.getElementById("miscSubtotal").innerHTML = money(miscTotal) + "<span>年度小計</span>";
+
+  // grand totals
+  const totalIncome = incomeGroups.reduce((s,g)=>s+groupAnnual(g),0);
+  const totalExpense = expenseGroups.reduce((s,g)=>s+groupAnnual(g),0) + miscTotal;
+  const net = totalIncome - totalExpense;
+  const savingsRate = totalIncome>0 ? net/totalIncome : 0;
+  const passiveIncome = (incomeGroups.find(g=>g.key==="passive")||{rows:[]}).rows.reduce((s,r)=>s+rowAnnual(r),0);
+  const finIncomeRatio = totalIncome>0 ? passiveIncome/totalIncome : 0;
+
+  const necessary = groupAnnual(expenseGroups.find(g=>g.key==="necessary"));
+  const flexible = groupAnnual(expenseGroups.find(g=>g.key==="flexible"));
+  const insurance = groupAnnual(expenseGroups.find(g=>g.key==="insurance"));
+  const dependent = groupAnnual(expenseGroups.find(g=>g.key==="dependent"));
+  const loan = groupAnnual(expenseGroups.find(g=>g.key==="loan"));
+
+  // sticky dock
+  document.getElementById("sumIncome").textContent = money(totalIncome);
+  document.getElementById("sumExpense").textContent = money(totalExpense);
+  const netEl = document.getElementById("sumNet");
+  netEl.textContent = money(net);
+  netEl.className = "sum-value " + (net>=0?"positive":"negative");
+  document.getElementById("sumSavingsRate").textContent = pct(savingsRate);
+
+  // breakdown tables
+  const incBody = document.getElementById("bdIncomeBody");
+  incBody.innerHTML = incomeGroups.map(g=>
+    `<tr><td>${g.title}</td><td class="num">${money(groupAnnual(g))}</td></tr>`
+  ).join("");
+  document.getElementById("bdIncomeTotal").textContent = money(totalIncome);
+
+  const expBody = document.getElementById("bdExpenseBody");
+  expBody.innerHTML = expenseGroups.map(g=>
+    `<tr><td>${g.title}</td><td class="num">${money(groupAnnual(g))}</td></tr>`
+  ).join("") + `<tr><td>（雜項）未列項目支出</td><td class="num">${money(miscTotal)}</td></tr>`;
+  document.getElementById("bdExpenseTotal").textContent = money(totalExpense);
+  const netRow = document.getElementById("bdNet");
+  netRow.textContent = money(net);
+  netRow.style.color = net>=0 ? "var(--positive)" : "var(--negative)";
+
+  // ratios
+  document.getElementById("ratioSavings").textContent = pct(savingsRate);
+  document.getElementById("ratioFinIncome").textContent = pct(finIncomeRatio);
+  document.getElementById("ratioNecessary").textContent = pct(totalIncome>0?necessary/totalIncome:0);
+  document.getElementById("ratioFlexible").textContent = pct(totalIncome>0?flexible/totalIncome:0);
+  document.getElementById("ratioInsurance").textContent = pct(totalIncome>0?insurance/totalIncome:0);
+  document.getElementById("ratioLoan").textContent = pct(totalIncome>0?loan/totalIncome:0);
+
+  renderDonut({totalIncome, totalExpense, net, savingsRate, necessary, flexible, insurance, dependent, loan, miscTotal});
+}
+
+/* ---------------- donut chart ---------------- */
+const DONUT_R = 80;
+const DONUT_C = 2 * Math.PI * DONUT_R;
+
+const donutCategories = [
+  {key:"necessary", label:"必要支出", color:"#1F5C73"},
+  {key:"flexible",  label:"浮動支出", color:"#2E7391"},
+  {key:"insurance", label:"保費支出", color:"#5FA8C7"},
+  {key:"dependent", label:"撫養支出", color:"#9FCBDB"},
+  {key:"loan",      label:"貸款支出", color:"#C97B3D"},
+  {key:"misc",      label:"雜項支出", color:"#E3A66D"},
+  {key:"savings",   label:"年度結餘（儲蓄）", color:"#2E7D5B"}
+];
+
+function renderDonut(d){
+  const segWrap = document.getElementById("donutSegments");
+  const legend = document.getElementById("donutLegend");
+  const centerValue = document.getElementById("donutCenterValue");
+  const centerLabel = document.getElementById("donutCenterLabel");
+  const subLabel = document.getElementById("chartSubLabel");
+  const deficitNote = document.getElementById("deficitNote");
+
+  segWrap.innerHTML = "";
+  legend.innerHTML = "";
+
+  if(d.totalIncome <= 0){
+    centerValue.className = "dc-value";
+    centerValue.textContent = "0%";
+    centerLabel.textContent = "請先輸入收入";
+    subLabel.textContent = "占總收入的比例";
+    deficitNote.style.display = "none";
+    return;
+  }
+
+  const values = {
+    necessary:d.necessary, flexible:d.flexible, insurance:d.insurance,
+    dependent:d.dependent, loan:d.loan, misc:d.miscTotal, savings:Math.max(d.net,0)
+  };
+
+  // base：收支平衡或有結餘時，圓餅 100% = 總收入；超支時，圓餅 100% = 總支出（沒有結餘可畫）
+  const base = d.net >= 0 ? d.totalIncome : d.totalExpense;
+  subLabel.textContent = d.net >= 0 ? "占總收入的比例" : "占總支出的比例（收入不足以支應支出）";
+
+  let cumulative = 0;
+  donutCategories.forEach(cat=>{
+    if(cat.key === "savings" && d.net < 0) return; // 超支時不畫結餘那一塊
+    const val = values[cat.key] || 0;
+    if(val <= 0) return;
+    const fraction = val / base;
+    const len = fraction * DONUT_C;
+    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    circle.setAttribute("cx","100");
+    circle.setAttribute("cy","100");
+    circle.setAttribute("r", DONUT_R);
+    circle.setAttribute("fill","none");
+    circle.setAttribute("stroke", cat.color);
+    circle.setAttribute("stroke-width","30");
+    circle.setAttribute("stroke-dasharray", `${len} ${DONUT_C-len}`);
+    circle.setAttribute("stroke-dashoffset", `${-cumulative}`);
+    segWrap.appendChild(circle);
+
+    const row = document.createElement("div");
+    row.className = "legend-row";
+    row.innerHTML = `
+      <span class="legend-dot" style="background:${cat.color}"></span>
+      <span class="legend-label">${cat.label}</span>
+      <span class="legend-pct">${pct(fraction)}</span>
+      <span class="legend-amt">${money(val)}</span>
+    `;
+    legend.appendChild(row);
+
+    cumulative += len;
+  });
+
+  if(d.net >= 0){
+    centerValue.className = "dc-value";
+    centerValue.textContent = pct(d.savingsRate);
+    centerLabel.textContent = "年度儲蓄率";
+    deficitNote.style.display = "none";
+  } else {
+    centerValue.className = "dc-value negative";
+    centerValue.textContent = pct(d.net / d.totalIncome);
+    centerLabel.textContent = "收支缺口（占總收入）";
+    deficitNote.style.display = "block";
+    deficitNote.textContent = `目前支出超過收入 ${money(Math.abs(d.net))}，圓餅圖以總支出為 100% 顯示各分類占比`;
+  }
+}
+
+recalc();
+</script>
+
+</body>
+</html>

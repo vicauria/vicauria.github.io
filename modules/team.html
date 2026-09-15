@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>團隊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2; --teal-light-text:#BFE0EA;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --paper:#F5F7F6; --card:#FFFFFF; --ink:#182226; --ink-soft:#5B6B70; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:32px 0 40px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:200px; height:200px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:8px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
+  header.hero p{max-width:600px; color:#DCEAEE; font-size:13px; line-height:1.8;}
+
+  main{margin-top:-20px; position:relative; z-index:10; padding-bottom:140px;}
+
+  .card{
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); padding:26px 28px; margin-bottom:22px;
+  }
+  .card h3{font-size:15px; margin-bottom:6px;}
+  .card .sub{font-size:12.5px; color:var(--ink-soft); margin-bottom:20px; line-height:1.8;}
+
+  .team-name-row{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+  .btn-edit-name{
+    background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;
+    padding:2px 6px; border-radius:6px;
+  }
+  .btn-edit-name:hover{background:var(--paper); color:var(--teal-deep);}
+  .team-name-edit-row{display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;}
+  .team-name-edit-row input{
+    flex:1; min-width:180px; padding:9px 12px; border:1.5px solid var(--teal); border-radius:8px;
+    font-family:"Noto Sans TC",sans-serif; font-size:14px; font-weight:700; color:var(--navy);
+  }
+  .team-name-edit-row input:focus{outline:none;}
+
+  .invite-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .invite-code-box{
+    font-family:"Roboto Mono",monospace; font-size:20px; font-weight:700; letter-spacing:.1em;
+    background:var(--teal-tint); color:var(--teal-deep); padding:12px 20px; border-radius:9px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:#fff; border:none;
+    padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn:hover{background:var(--teal-deep);}
+  .btn.warm{background:var(--warm);} .btn.warm:hover{background:var(--warm-deep);}
+  .btn.outline{background:none; color:var(--navy); border:1.5px solid var(--line);}
+  .btn.outline:hover{border-color:var(--teal); color:var(--teal-deep);}
+  .btn:disabled{opacity:.5; cursor:default;}
+
+  .join-row{display:flex; gap:10px; flex-wrap:wrap;}
+  .join-row input{
+    flex:1; min-width:180px; padding:11px 14px; border:1.5px solid var(--line); border-radius:9px;
+    font-family:"Roboto Mono",monospace; font-size:14px; letter-spacing:.05em; text-transform:uppercase;
+  }
+  .join-row input:focus{outline:none; border-color:var(--teal);}
+
+  table.workload-table{width:100%; border-collapse:collapse; margin-top:6px;}
+  table.workload-table th{
+    text-align:left; font-size:11.5px; color:var(--ink-soft); font-weight:700;
+    padding:8px 10px; border-bottom:1px solid var(--line);
+  }
+  table.workload-table td{
+    padding:12px 10px; border-bottom:1px dashed var(--line); font-size:13px;
+  }
+  table.workload-table td.num{font-family:"Roboto Mono",monospace; font-weight:700; text-align:center;}
+  .member-row-name{font-weight:700; color:var(--navy);}
+  .btn-remove{
+    background:none; border:none; color:var(--negative); font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .btn-remove:hover{text-decoration:underline;}
+
+  .empty-hint{color:var(--ink-soft); font-size:13px; text-align:center; padding:24px;}
+  .success-msg{
+    display:none; background:rgba(46,125,91,0.08); border:1px solid rgba(46,125,91,0.25);
+    color:var(--positive); font-size:12.5px; padding:10px 12px; border-radius:8px; margin-top:14px;
+  }
+  .success-msg.show{display:block;}
+  .error-msg{
+    display:none; background:rgba(179,73,47,0.08); border:1px solid rgba(179,73,47,0.25);
+    color:var(--negative); font-size:12.5px; padding:10px 12px; border-radius:8px; margin-top:14px;
+  }
+  .error-msg.show{display:block;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Team · 團隊</div>
+    <h1>團隊工作量監控</h1>
+    <p>只看得到數字（各狀態幾位客戶、有幾筆待追蹤），完全看不到客戶姓名、筆記或問卷內容，保護每位顧問手上客戶的隱私。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="card" id="masterCard" style="display:none;">
+    <div class="team-name-row">
+      <h3 id="teamNameDisplay" style="margin-bottom:0;">我的團隊</h3>
+      <button class="btn-edit-name" id="btnEditTeamName" title="編輯團隊名稱">✎</button>
+    </div>
+    <div class="team-name-edit-row" id="teamNameEditRow" style="display:none;">
+      <input type="text" id="teamNameInput" maxlength="30" placeholder="幫這個團隊取個名字">
+      <button class="btn" id="btnSaveTeamName">儲存</button>
+      <button class="btn outline" id="btnCancelTeamName">取消</button>
+    </div>
+    <div class="sub">把下面的邀請碼給你想邀請的顧問，讓他們在自己的帳號裡輸入加入。</div>
+    <div class="invite-row">
+      <div class="invite-code-box" id="inviteCodeBox">--------</div>
+      <button class="btn outline" id="btnCopyCode">複製邀請碼</button>
+    </div>
+    <div class="success-msg" id="masterSuccessMsg"></div>
+
+    <div style="margin-top:28px;">
+      <h3 style="font-size:14px;">團隊工作量</h3>
+      <div id="workloadArea"></div>
+    </div>
+  </div>
+
+  <div class="card" id="joinCard">
+    <h3>加入其他顧問的團隊</h3>
+    <div class="sub">如果有人邀請你加入他的團隊，把邀請碼輸入在這裡就好；你的客戶資料內容不會因此被對方看到，只有工作量數字會被統計。</div>
+    <div class="join-row">
+      <input type="text" id="joinCodeInput" placeholder="輸入邀請碼，例如 A1B2C3D4" maxlength="12">
+      <button class="btn" id="btnJoinTeam">加入團隊</button>
+    </div>
+    <div class="error-msg" id="joinErrorMsg"></div>
+    <div class="success-msg" id="joinSuccessMsg"></div>
+    <div id="myTeamsArea" style="margin-top:18px;"></div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../theme-config.js"></script>
+<script>
+jkApplySavedTheme();
+
+let myUserId = null;
+let myPlan = 'free';
+
+function showMasterSuccess(text){
+  document.getElementById('masterSuccessMsg').textContent = text;
+  document.getElementById('masterSuccessMsg').classList.add('show');
+}
+function showJoinError(text){
+  document.getElementById('joinSuccessMsg').classList.remove('show');
+  document.getElementById('joinErrorMsg').textContent = text;
+  document.getElementById('joinErrorMsg').classList.add('show');
+}
+function showJoinSuccess(text){
+  document.getElementById('joinErrorMsg').classList.remove('show');
+  document.getElementById('joinSuccessMsg').textContent = text;
+  document.getElementById('joinSuccessMsg').classList.add('show');
+}
+
+/* ---------------- Master：我的團隊 ---------------- */
+async function ensureMyTeam(){
+  let { data: team } = await supabaseClient.from('teams').select('*').eq('owner_id', myUserId).maybeSingle();
+  if(!team){
+    const { data: created, error } = await supabaseClient.from('teams').insert({ owner_id: myUserId }).select('*').single();
+    if(error){ console.error('建立團隊失敗', error); return null; }
+    team = created;
+  }
+  return team;
+}
+
+async function loadWorkload(teamId){
+  const { data, error } = await supabaseClient.rpc('get_team_workload', { p_team_id: teamId });
+  const area = document.getElementById('workloadArea');
+  if(error){ area.innerHTML = '<div class="empty-hint">讀取工作量資料失敗，請稍後再試。</div>'; return; }
+  if(!data || data.length===0){
+    area.innerHTML = '<div class="empty-hint">目前團隊裡還沒有其他顧問加入。</div>';
+    return;
+  }
+  area.innerHTML = `
+    <table class="workload-table">
+      <thead>
+        <tr>
+          <th>顧問</th><th style="text-align:center;">今日新增/更新</th><th style="text-align:center;">追蹤中</th><th style="text-align:center;">提案中</th>
+          <th style="text-align:center;">已成交</th><th style="text-align:center;">已流失</th>
+          <th style="text-align:center;">待追蹤</th><th style="text-align:center;">總數</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(r=>`
+          <tr data-advisor="${r.advisor_id}">
+            <td class="member-row-name">${r.display_name}</td>
+            <td class="num" style="color:${r.today_count>0?'var(--teal-deep)':'var(--ink-soft)'};font-weight:700;">${r.today_count}</td>
+            <td class="num">${r.tracking_count}</td>
+            <td class="num">${r.proposal_count}</td>
+            <td class="num" style="color:var(--positive);">${r.closed_count}</td>
+            <td class="num" style="color:var(--negative);">${r.lost_count}</td>
+            <td class="num" style="color:${r.overdue_count>0?'var(--negative)':'var(--ink)'};font-weight:700;">${r.overdue_count}</td>
+            <td class="num">${r.total_count}</td>
+            <td><button class="btn-remove" data-advisor="${r.advisor_id}">移除</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="sub" style="margin-top:10px;">「今日新增/更新」是台北時間今天內，新建立或有異動的客戶紀錄筆數，自動統計，顧問不用額外填寫任何東西。</div>
+  `;
+  area.querySelectorAll('.btn-remove').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('確定要把這位顧問移出團隊嗎？')) return;
+      await supabaseClient.from('team_members').delete().eq('team_id', teamId).eq('advisor_id', btn.dataset.advisor);
+      loadWorkload(teamId);
+    });
+  });
+}
+
+async function initMasterSection(){
+  if(myPlan !== 'master') return;
+  document.getElementById('masterCard').style.display = 'block';
+  const team = await ensureMyTeam();
+  if(!team) return;
+  document.getElementById('teamNameDisplay').textContent = team.name || '我的團隊';
+  document.getElementById('inviteCodeBox').textContent = team.invite_code.toUpperCase();
+  document.getElementById('btnCopyCode').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(team.invite_code.toUpperCase());
+    showMasterSuccess('邀請碼已複製到剪貼簿。');
+  });
+
+  // ---- 編輯團隊名稱：改完會直接更新資料庫，顧問那邊下次讀取就會看到新名稱 ----
+  const nameDisplay = document.getElementById('teamNameDisplay');
+  const editRow = document.getElementById('teamNameEditRow');
+  const nameInput = document.getElementById('teamNameInput');
+  document.getElementById('btnEditTeamName').addEventListener('click', ()=>{
+    nameInput.value = team.name || '';
+    nameDisplay.style.display = 'none';
+    document.getElementById('btnEditTeamName').style.display = 'none';
+    editRow.style.display = 'flex';
+    nameInput.focus();
+  });
+  document.getElementById('btnCancelTeamName').addEventListener('click', ()=>{
+    editRow.style.display = 'none';
+    nameDisplay.style.display = 'block';
+    document.getElementById('btnEditTeamName').style.display = 'inline-block';
+  });
+  document.getElementById('btnSaveTeamName').addEventListener('click', async ()=>{
+    const newName = nameInput.value.trim() || '我的團隊';
+    const { error } = await supabaseClient.from('teams').update({ name: newName }).eq('id', team.id);
+    if(error){ showMasterSuccess('儲存失敗，請稍後再試。'); return; }
+    team.name = newName;
+    nameDisplay.textContent = newName;
+    editRow.style.display = 'none';
+    nameDisplay.style.display = 'block';
+    document.getElementById('btnEditTeamName').style.display = 'inline-block';
+    showMasterSuccess('團隊名稱已更新，顧問那邊會看到新名稱。');
+  });
+
+  loadWorkload(team.id);
+}
+
+/* ---------------- 加入其他顧問的團隊 ---------------- */
+async function loadMyTeams(){
+  const { data } = await supabaseClient
+    .from('team_members')
+    .select('team_id, teams(name, invite_code, owner_id)')
+    .eq('advisor_id', myUserId);
+  const area = document.getElementById('myTeamsArea');
+  if(!data || data.length===0){ area.innerHTML = ''; return; }
+  area.innerHTML = '<div class="sub" style="margin-bottom:8px;">你目前加入的團隊：</div>' + data.map(r=>`
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--paper); border-radius:8px; margin-bottom:8px;">
+      <span style="font-size:13px; font-weight:700;">${r.teams?.name || '團隊'}</span>
+      <button class="btn-remove" data-team="${r.team_id}">退出</button>
+    </div>
+  `).join('');
+  area.querySelectorAll('.btn-remove').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('確定要退出這個團隊嗎？')) return;
+      await supabaseClient.from('team_members').delete().eq('team_id', btn.dataset.team).eq('advisor_id', myUserId);
+      loadMyTeams();
+    });
+  });
+}
+
+document.getElementById('btnJoinTeam').addEventListener('click', async ()=>{
+  const code = document.getElementById('joinCodeInput').value.trim().toLowerCase();
+  if(!code){ showJoinError('請輸入邀請碼'); return; }
+  const { data: team, error: findErr } = await supabaseClient.from('teams').select('id, owner_id').eq('invite_code', code).maybeSingle();
+  if(findErr || !team){ showJoinError('找不到這個邀請碼，請確認輸入正確。'); return; }
+  if(team.owner_id === myUserId){ showJoinError('不能加入自己的團隊喔。'); return; }
+  const { error: joinErr } = await supabaseClient.from('team_members').insert({ team_id: team.id, advisor_id: myUserId });
+  if(joinErr){
+    if(joinErr.message.includes('duplicate')) showJoinError('你已經加入過這個團隊了。');
+    else showJoinError('加入失敗，請稍後再試。');
+    return;
+  }
+  document.getElementById('joinCodeInput').value = '';
+  showJoinSuccess('加入成功！');
+  loadMyTeams();
+});
+
+(async function init(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session){ return; }
+  myUserId = session.user.id;
+  const { data: profile } = await supabaseClient.from('profiles').select('plan').eq('id', myUserId).single();
+  myPlan = (profile && profile.plan) || 'free';
+  await initMasterSection();
+  await loadMyTeams();
+})();
+</script>
+
+</body>
+</html>

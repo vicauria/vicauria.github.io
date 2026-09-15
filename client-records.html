@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客戶資料</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff;padding:28px 0 36px;position:relative;overflow:hidden;
+  }
+  header.hero::after{
+    content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;
+    border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#BFE0EA;font-weight:700;margin-bottom:8px;}
+  header.hero h1{color:#fff;font-size:clamp(19px,2.4vw,24px);font-weight:700;margin-bottom:6px;}
+  header.hero p{max-width:640px;color:#DCEAEE;font-size:13px;line-height:1.8;}
+
+  main{margin-top:-18px;position:relative;z-index:10;padding-bottom:120px;}
+
+  .toolbar{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+    margin-bottom:16px;
+  }
+  .count-label{font-size:12.5px;color:var(--ink-soft);font-family:"Roboto Mono",monospace;}
+  .count-label b{color:var(--teal-deep);}
+  .due-badge{
+    display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;
+    color:var(--negative);background:rgba(179,73,47,0.08);padding:4px 10px;border-radius:14px;
+    margin-left:8px;
+  }
+
+  .record-list{display:flex;flex-direction:column;gap:12px;}
+  .record-card{
+    background:var(--card);border-radius:12px;border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(20,50,60,0.05);padding:18px 20px;
+  }
+  .record-card.overdue{border-color:rgba(179,73,47,0.35);}
+  .record-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .record-name-wrap{flex:1;min-width:180px;}
+  .record-name-display{
+    font-size:15px;font-weight:700;color:var(--navy);font-family:"Noto Serif TC",serif;
+    padding:4px 2px;
+  }
+  .record-name-display.unnamed{color:var(--ink-soft);font-weight:500;font-family:"Noto Sans TC",sans-serif;}
+  .record-meta{font-size:11.5px;color:var(--ink-soft);font-family:"Roboto Mono",monospace;margin-top:6px;}
+  .record-summary{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+
+  .record-actions{display:flex;gap:8px;flex-shrink:0;}
+  .btn-view{
+    display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;border:none;
+    padding:9px 18px;border-radius:18px;font-size:12.5px;font-weight:700;cursor:pointer;
+    text-decoration:none;font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-view:hover{background:var(--teal-deep);}
+  .btn-delete{
+    display:inline-flex;align-items:center;gap:6px;background:none;color:var(--negative);
+    border:1px solid rgba(179,73,47,0.35);padding:9px 14px;border-radius:18px;
+    font-size:12.5px;font-weight:700;cursor:pointer;font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-delete:hover{background:rgba(179,73,47,0.08);}
+  .btn-trash{
+    display:inline-flex;align-items:center;gap:6px;background:none;color:var(--ink-soft);
+    border:1px solid var(--line);padding:8px 16px;border-radius:18px;
+    font-size:12px;font-weight:700;cursor:pointer;font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-trash:hover{border-color:var(--teal);color:var(--teal-deep);}
+
+  .trash-card{
+    background:var(--paper);border-radius:12px;border:1px dashed var(--line);
+    padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .trash-card .trash-info{flex:1;min-width:180px;}
+  .trash-card .trash-name{font-size:14px;font-weight:700;color:var(--ink-soft);}
+  .trash-card .trash-meta{font-size:11px;color:var(--ink-soft);font-family:"Roboto Mono",monospace;margin-top:4px;}
+  .btn-restore{
+    display:inline-flex;align-items:center;gap:6px;background:var(--teal);color:#fff;border:none;
+    padding:8px 16px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-restore:hover{background:var(--teal-deep);}
+  .btn-purge{
+    display:inline-flex;align-items:center;gap:6px;background:none;color:var(--negative);
+    border:1px solid rgba(179,73,47,0.35);padding:8px 14px;border-radius:16px;
+    font-size:12px;font-weight:700;cursor:pointer;font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-purge:hover{background:rgba(179,73,47,0.08);}
+
+  /* ---- 狀態標籤 / 筆記 / 追蹤日期（只在客戶資料這裡出現，不屬於財富地圖問卷本身） ---- */
+  .record-track-row{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);
+  }
+  .track-info{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .status-badge{
+    display:inline-flex;align-items:center;font-size:12px;font-weight:700;
+    padding:6px 14px;border-radius:16px;
+  }
+  .followup-display{font-size:12px;color:var(--ink-soft);}
+  .followup-display b{color:var(--ink);font-family:"Roboto Mono",monospace;font-weight:700;}
+  .btn-edit-track{
+    display:inline-flex;align-items:center;gap:6px;background:none;color:var(--teal-deep);
+    border:1px solid var(--teal); padding:7px 16px;border-radius:16px;
+    font-size:12px;font-weight:700;cursor:pointer;font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-edit-track:hover{background:var(--teal-tint);}
+
+  /* ---- 追蹤更新／報告歷史／比對 ---- */
+  .btn-refresh{
+    display:inline-flex;align-items:center;gap:6px;background:none;color:var(--warm-deep);
+    border:1px solid var(--warm); padding:9px 16px;border-radius:18px;
+    font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:none;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-refresh:hover{background:var(--warm-tint);}
+  .report-history-toggle{
+    display:inline-flex; align-items:center; gap:5px; background:none; border:none;
+    color:var(--ink-soft); font-size:11.5px; cursor:pointer; padding:0; margin-top:10px;
+    font-family:"Noto Sans TC",sans-serif; text-decoration:underline; text-underline-offset:2px;
+  }
+  .report-history-toggle:hover{color:var(--teal-deep);}
+  .report-history{
+    display:none; margin-top:10px; padding:12px 14px; background:var(--paper);
+    border-radius:10px; border:1px solid var(--line);
+  }
+  .report-history.show{display:block;}
+  .report-history-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:6px 0; font-size:12px; color:var(--ink-soft);
+  }
+  .report-history-row:not(:last-child){border-bottom:1px dashed var(--line);}
+  .report-history-row .rh-date{font-family:"Roboto Mono",monospace; color:var(--ink);}
+  .report-history-row a{color:var(--teal-deep); font-weight:700; text-decoration:none; font-size:11.5px;}
+  .report-history-row a:hover{text-decoration:underline;}
+
+  .compare-panel{
+    margin-top:12px; padding-top:12px; border-top:1px dashed var(--line);
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .compare-panel label{font-size:11.5px; color:var(--ink-soft); font-weight:700;}
+  .compare-panel select{
+    border:1.5px solid var(--line); border-radius:8px; padding:6px 10px;
+    font-size:12px; font-family:"Noto Sans TC",sans-serif; color:var(--ink); cursor:pointer;
+  }
+  .btn-compare-go{
+    background:var(--navy); color:#fff; border:none; padding:8px 16px; border-radius:16px;
+    font-size:12px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+    text-decoration:none; display:inline-flex; align-items:center;
+  }
+  .btn-compare-go:hover{background:var(--teal-deep);}
+  .btn-compare-go[disabled]{opacity:.5; cursor:default; pointer-events:none;}
+
+  /* ---- 編輯彈窗 ---- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(22,50,63,0.5);
+    z-index:100; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--card); border-radius:16px; padding:28px; max-width:440px; width:100%;
+    box-shadow:0 20px 60px rgba(20,50,60,0.25);
+  }
+  .modal-box h3{font-size:16px; margin-bottom:4px;}
+  .modal-box .modal-sub{font-size:12px; color:var(--ink-soft); margin-bottom:20px;}
+  .modal-field{margin-bottom:18px;}
+  .modal-field label{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;}
+  .modal-field select, .modal-field input[type="date"], .modal-field input[type="text"]{
+    width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px;
+    font-family:"Noto Sans TC",sans-serif; font-size:13.5px; color:var(--ink); cursor:pointer;
+  }
+  .modal-field input[type="date"]{font-family:"Roboto Mono",monospace; cursor:default;}
+  .modal-field textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px;
+    font-family:"Noto Sans TC",sans-serif; font-size:13px; color:var(--ink);
+    resize:vertical; min-height:90px; line-height:1.7;
+  }
+  .modal-field textarea:focus, .modal-field select:focus, .modal-field input:focus{outline:none; border-color:var(--teal);}
+  .modal-close-btn{
+    width:100%; background:var(--navy); color:#fff; border:none; padding:12px;
+    border-radius:24px; font-size:13.5px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif; margin-top:6px;
+  }
+  .modal-close-btn:hover{background:var(--teal-deep);}
+
+  .state-box{
+    background:var(--card);border-radius:var(--radius);border:1px dashed var(--line);
+    padding:50px 30px;text-align:center;color:var(--ink-soft);font-size:13.5px;
+  }
+  .state-box .icon{font-size:28px;margin-bottom:12px;}
+
+  .note-box{
+    background:var(--teal-tint);border-radius:8px;padding:14px 16px;font-size:11.5px;
+    color:var(--teal-deep);line-height:1.8;margin-top:22px;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Client Records · 客戶資料</div>
+    <h1>每一份填完的財富地圖，都留在這裡</h1>
+    <p>客戶在財富地圖填完問卷、生成報告的當下，會自動存一筆紀錄在這裡。半年、一年後回訪，點「追蹤更新」直接帶入上次的答案微調，舊的報告不會被蓋掉，還能挑兩份出來比對成長狀況。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toolbar">
+    <div class="count-label" id="countLabel">目前 0 筆 ／ 上限 不限</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <div class="count-label" id="dueLabel"></div>
+      <button class="btn-trash" id="btnToggleTrash">🗑️ 已刪除 (<span id="trashCount">0</span>)</button>
+    </div>
+  </div>
+
+  <div id="trashArea" style="display:none; margin-bottom:20px;">
+    <div class="record-list" id="trashList" style="gap:8px;"></div>
+  </div>
+
+  <div id="listArea">
+    <div class="state-box" id="emptyState">
+      <div class="icon">🗂️</div>
+      目前還沒有任何客戶紀錄。<br>到「財富地圖」帶客戶完成問卷、生成報告後，會自動出現在這裡。
+    </div>
+    <div class="record-list" id="recordList" style="display:none;"></div>
+  </div>
+
+  <div class="note-box">
+    這些紀錄存在<b>雲端資料庫</b>裡，換電腦、換瀏覽器登入同一組帳號都看得到；而且每個顧問帳號只看得到自己的客戶資料，彼此不會互相看到。<br><br>
+    刪除的紀錄會先進「已刪除」，可以隨時還原；只有在「已刪除」裡按下永久刪除，才會真的沒辦法復原。
+  </div>
+</main>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h3>編輯客戶資料</h3>
+    <div class="modal-sub">名稱、狀態、筆記、追蹤日期只有這裡看得到、改得動，客戶清單上只會顯示唯讀結果。</div>
+    <div class="modal-field">
+      <label>客戶名稱</label>
+      <input type="text" id="modalClientNameInput" placeholder="建議用代號，避免留真實姓名">
+    </div>
+    <div class="modal-field">
+      <label>狀態</label>
+      <select id="modalStatus"></select>
+    </div>
+    <div class="modal-field">
+      <label>下次追蹤日期</label>
+      <input type="date" id="modalFollowUp">
+    </div>
+    <div class="modal-field">
+      <label>顧問筆記</label>
+      <textarea id="modalNotes" placeholder="這次聯繫聊了什麼、下次該注意什麼…"></textarea>
+    </div>
+    <button class="modal-close-btn" id="btnCloseModal">完成</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script src="../plan-utils.js"></script>
+<script>
+// 目前尚未區分方案，先固定為不限；之後有方案分級（例如20/100筆）時，改這裡的數字即可
+// 各方案的客戶容量上限，null 代表不限
+const PLAN_LIMITS = { free: 20, pro: 100, master: null };
+let currentPlan = 'free'; // 預設先當作free，實際值會在頁面載入時去讀取覆蓋過去
+
+async function fetchCurrentPlan(){
+  const result = await fetchEffectivePlan();
+  return result.plan;
+}
+
+const STATUS_OPTIONS = [
+  {key:'', label:'未設定狀態', color:'var(--ink-soft)', bg:'rgba(91,107,112,0.08)'},
+  {key:'tracking', label:'追蹤中', color:'#B8791E', bg:'rgba(184,121,30,0.1)'},
+  {key:'proposal', label:'提案中', color:'#1F5C73', bg:'rgba(31,92,115,0.1)'},
+  {key:'closed', label:'已成交', color:'var(--positive)', bg:'rgba(46,125,91,0.1)'},
+  {key:'lost', label:'已流失', color:'var(--negative)', bg:'rgba(179,73,47,0.1)'}
+];
+
+// 欄位命名對照：資料庫用 snake_case，畫面邏輯沿用原本的 camelCase，減少改動範圍
+const FIELD_TO_COLUMN = {
+  clientName: 'client_name', status: 'status', notes: 'notes',
+  followUpDate: 'follow_up_date', deletedAt: 'deleted_at'
+};
+
+async function fetchAllRecords(){
+  const { data: clients, error } = await supabaseClient
+    .from('client_records')
+    .select('*');
+  if(error){
+    console.error('讀取客戶資料失敗', error);
+    return [];
+  }
+
+  const { data: reports, error: reportsError } = await supabaseClient
+    .from('client_reports')
+    .select('id, client_id, saved_at, state')
+    .order('saved_at', { ascending: false });
+  if(reportsError) console.error('讀取報告紀錄失敗', reportsError);
+
+  const reportsByClient = {};
+  (reports||[]).forEach(r=>{
+    if(!reportsByClient[r.client_id]) reportsByClient[r.client_id] = [];
+    reportsByClient[r.client_id].push(r);
+  });
+
+  const records = clients.map(r => {
+    const clientReports = reportsByClient[r.id] || []; // 已經照 saved_at 新到舊排好
+    return {
+      id: r.id,
+      clientName: r.client_name,
+      status: r.status,
+      notes: r.notes,
+      followUpDate: r.follow_up_date,
+      deletedAt: r.deleted_at,
+      reports: clientReports,
+      savedAt: clientReports[0] ? clientReports[0].saved_at : null,
+      state: clientReports[0] ? clientReports[0].state : null
+    };
+  });
+  // 沒有指定排序來源了（原本用 client_records.saved_at），改用最新一份報告時間排序
+  records.sort((a,b)=> new Date(b.savedAt||0) - new Date(a.savedAt||0));
+  return records;
+}
+
+async function updateRecordField(id, field, value){
+  const column = FIELD_TO_COLUMN[field];
+  const { error } = await supabaseClient
+    .from('client_records')
+    .update({ [column]: value })
+    .eq('id', id);
+  if(error){ console.error('更新失敗', error); alert('更新失敗，請檢查網路連線後再試一次。'); }
+  return !error;
+}
+
+async function permanentlyDeleteRecord(id){
+  const { error } = await supabaseClient.from('client_records').delete().eq('id', id);
+  if(error){ console.error('刪除失敗', error); alert('刪除失敗，請檢查網路連線後再試一次。'); }
+  return !error;
+}
+
+function formatDate(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '—';
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr+'T00:00:00');
+  if(isNaN(target.getTime())) return null;
+  return Math.round((target-today)/(24*60*60*1000));
+}
+
+function followUpBadge(dateStr){
+  const d = daysUntil(dateStr);
+  if(d===null) return '';
+  if(d < 0) return `<span class="due-badge">已過期 ${Math.abs(d)} 天</span>`;
+  if(d === 0) return `<span class="due-badge">今日需追蹤</span>`;
+  if(d <= 3) return `<span class="due-badge" style="color:#B8791E;background:rgba(184,121,30,0.08);">${d} 天後追蹤</span>`;
+  return '';
+}
+
+function summarize(state){
+  try{
+    const parts = [];
+    if(state.basicA && state.basicA.dobY){
+      const age = new Date().getFullYear() - parseInt(state.basicA.dobY);
+      if(!isNaN(age)) parts.push(age+'歲');
+    }
+    if(state.backerA && state.backerA.marital) parts.push(state.backerA.marital);
+    if(state.backerA && state.backerA.hasChildren==='有') parts.push(state.backerA.children.length+'位子女');
+    if(state.visionA && state.visionA.goals && state.visionA.goals.length>0){
+      parts.push('目標：'+state.visionA.goals.map(g=>g==='自行輸入'?(state.visionA.customGoalName||'自訂目標'):g).join('、'));
+    }
+    return parts.join('　・　') || '尚無足夠資料摘要';
+  }catch(e){ return ''; }
+}
+
+async function render(){
+  const allRecords = await fetchAllRecords();
+  const records = allRecords.filter(r=>!r.deletedAt);
+  const trashed = allRecords.filter(r=>r.deletedAt);
+  const limit = PLAN_LIMITS[currentPlan];
+  const limitText = limit ? limit : '不限';
+  document.getElementById('countLabel').innerHTML = '目前 <b>'+records.length+'</b> 筆 ／ 上限 '+limitText+(limit && records.length>=limit ? ' <span style="color:var(--negative);font-weight:700;">（已達上限）</span>' : '');
+  document.getElementById('trashCount').textContent = trashed.length;
+  const dueCount = records.filter(r=>{ const d=daysUntil(r.followUpDate); return d!==null && d<=0; }).length;
+  document.getElementById('dueLabel').innerHTML = dueCount>0 ? '<span style="color:var(--negative);font-weight:700;">'+dueCount+' 筆待追蹤</span>' : '';
+  const emptyState = document.getElementById('emptyState');
+  const list = document.getElementById('recordList');
+
+  if(records.length===0){
+    emptyState.style.display = 'block';
+    list.style.display = 'none';
+    return;
+  }
+  emptyState.style.display = 'none';
+  list.style.display = 'flex';
+
+  // 待追蹤（今日或已過期）的排到最前面，其餘維持原本時間排序
+  const sorted = records.slice().sort((a,b)=>{
+    const da = daysUntil(a.followUpDate), db = daysUntil(b.followUpDate);
+    const aUrgent = da!==null && da<=0, bUrgent = db!==null && db<=0;
+    if(aUrgent && !bUrgent) return -1;
+    if(!aUrgent && bUrgent) return 1;
+    return 0;
+  });
+
+  list.innerHTML = sorted.map(r => {
+    const isOverdue = (()=>{ const d=daysUntil(r.followUpDate); return d!==null && d<=0; })();
+    const statusOpt = STATUS_OPTIONS.find(s=>s.key===(r.status||'')) || STATUS_OPTIONS[0];
+    const followUpText = r.followUpDate ? r.followUpDate.replace(/-/g,'/') : '尚未設定';
+    const reportCount = r.reports.length;
+    const latestReport = r.reports[0];
+    return `
+    <div class="record-card ${isOverdue?'overdue':''}" data-id="${r.id}">
+      <div class="record-top">
+        <div class="record-name-wrap">
+          <div class="record-name-display ${(r.clientName||'').trim() ? '' : 'unnamed'}">${(r.clientName||'').trim() || '尚未命名（點下方編輯設定）'}</div>
+          <div class="record-meta">最新填答：${formatDate(r.savedAt)}　・　共 ${reportCount} 份報告</div>
+          <div class="record-summary">${summarize(r.state)}</div>
+        </div>
+        <div class="record-actions">
+          ${latestReport ? `<a class="btn-view" href="blueprint.html?reportId=${encodeURIComponent(latestReport.id)}" target="_blank" rel="noopener">查看最新報告 →</a>` : ''}
+          <a class="btn-refresh" href="blueprint.html?trackClientId=${encodeURIComponent(r.id)}" target="_blank" rel="noopener">🔄 追蹤更新</a>
+          <button class="btn-delete" data-id="${r.id}">刪除</button>
+        </div>
+      </div>
+
+      ${reportCount > 0 ? `
+      <button class="report-history-toggle" data-id="${r.id}">📋 報告紀錄（${reportCount}）</button>
+      <div class="report-history" id="history-${r.id}">
+        ${r.reports.map((rep, i)=>`
+          <div class="report-history-row">
+            <span class="rh-date">${i===0?'最新　':'　　　'}${formatDate(rep.saved_at)}</span>
+            <a href="blueprint.html?reportId=${encodeURIComponent(rep.id)}" target="_blank" rel="noopener">查看 →</a>
+          </div>
+        `).join('')}
+        ${reportCount >= 2 ? `
+        <div class="compare-panel">
+          <label>比對報告</label>
+          <select class="compare-select-a" data-id="${r.id}">
+            ${r.reports.map((rep,i)=>`<option value="${rep.id}" ${i===r.reports.length-1?'selected':''}>${formatDate(rep.saved_at)}</option>`).join('')}
+          </select>
+          <span style="color:var(--ink-soft);font-size:12px;">vs</span>
+          <select class="compare-select-b" data-id="${r.id}">
+            ${r.reports.map((rep,i)=>`<option value="${rep.id}" ${i===0?'selected':''}>${formatDate(rep.saved_at)}</option>`).join('')}
+          </select>
+          <button class="btn-compare-go" data-id="${r.id}">開始比對 →</button>
+        </div>
+        ` : ''}
+      </div>
+      ` : ''}
+
+      <div class="record-track-row">
+        <div class="track-info">
+          <span class="status-badge" style="color:${statusOpt.color};background:${statusOpt.bg};">${statusOpt.label}</span>
+          <span class="followup-display">追蹤日期：<b>${followUpText}</b></span>
+          ${followUpBadge(r.followUpDate)}
+        </div>
+        <button class="btn-edit-track" data-id="${r.id}">✎ 編輯狀態／筆記／追蹤日期</button>
+      </div>
+    </div>
+  `;
+  }).join('');
+
+  list.querySelectorAll('.btn-edit-track').forEach(btn=>{
+    btn.addEventListener('click', ()=> openEditModal(btn.dataset.id));
+  });
+  list.querySelectorAll('.btn-delete').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('確定要刪除這筆客戶紀錄嗎？\n\n刪除後會先移到「已刪除」，還可以還原；如果從「已刪除」裡按永久刪除，才會真的沒辦法復原。')) return;
+      await updateRecordField(btn.dataset.id, 'deletedAt', new Date().toISOString());
+      render();
+    });
+  });
+  list.querySelectorAll('.report-history-toggle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.getElementById('history-'+btn.dataset.id).classList.toggle('show');
+    });
+  });
+  list.querySelectorAll('.btn-compare-go').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      const a = list.querySelector(`.compare-select-a[data-id="${id}"]`).value;
+      const b = list.querySelector(`.compare-select-b[data-id="${id}"]`).value;
+      if(a === b){ alert('請選兩份不同的報告再比對。'); return; }
+      window.open(`report-compare.html?reportId1=${encodeURIComponent(a)}&reportId2=${encodeURIComponent(b)}`, '_blank');
+    });
+  });
+
+  renderTrash();
+}
+
+/* ---- 編輯彈窗：狀態／追蹤日期／筆記，只有這裡看得到、改得動 ---- */
+let editingId = null;
+async function openEditModal(id){
+  editingId = id;
+  const all = await fetchAllRecords();
+  const rec = all.find(x=>x.id===id);
+  if(!rec) return;
+  document.getElementById('modalClientNameInput').value = rec.clientName || '';
+  const statusSelect = document.getElementById('modalStatus');
+  statusSelect.innerHTML = STATUS_OPTIONS.map(s=>`<option value="${s.key}" ${((rec.status||'')===s.key)?'selected':''}>${s.label}</option>`).join('');
+  document.getElementById('modalFollowUp').value = rec.followUpDate || '';
+  document.getElementById('modalNotes').value = rec.notes || '';
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal(){
+  editingId = null;
+  document.getElementById('editModal').classList.remove('show');
+  render();
+}
+async function saveEditField(field, value){
+  if(!editingId) return;
+  await updateRecordField(editingId, field, value);
+}
+document.getElementById('modalClientNameInput').addEventListener('change', e=> saveEditField('clientName', e.target.value));
+document.getElementById('modalStatus').addEventListener('change', e=> saveEditField('status', e.target.value));
+document.getElementById('modalFollowUp').addEventListener('change', e=> saveEditField('followUpDate', e.target.value || null));
+document.getElementById('modalNotes').addEventListener('change', e=> saveEditField('notes', e.target.value));
+document.getElementById('btnCloseModal').addEventListener('click', closeEditModal);
+document.getElementById('editModal').addEventListener('click', (e)=>{
+  if(e.target.id==='editModal') closeEditModal();
+});
+
+async function renderTrash(){
+  const all = await fetchAllRecords();
+  const trashed = all.filter(r=>r.deletedAt).sort((a,b)=> new Date(b.deletedAt)-new Date(a.deletedAt));
+  const trashList = document.getElementById('trashList');
+
+  if(trashed.length===0){
+    trashList.innerHTML = '<div class="state-box" style="padding:24px;"><div class="icon">🗑️</div>目前沒有已刪除的紀錄。</div>';
+    return;
+  }
+
+  trashList.innerHTML = trashed.map(r=>`
+    <div class="trash-card" data-id="${r.id}">
+      <div class="trash-info">
+        <div class="trash-name">${(r.clientName||'').trim() || '（未命名）'}</div>
+        <div class="trash-meta">刪除於：${formatDate(r.deletedAt)}　・　原填答時間：${formatDate(r.savedAt)}</div>
+      </div>
+      <button class="btn-restore" data-id="${r.id}">↩ 還原</button>
+      <button class="btn-purge" data-id="${r.id}">永久刪除</button>
+    </div>
+  `).join('');
+
+  trashList.querySelectorAll('.btn-restore').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await updateRecordField(btn.dataset.id, 'deletedAt', null);
+      render();
+    });
+  });
+  trashList.querySelectorAll('.btn-purge').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('確定要永久刪除這筆紀錄嗎？這一步之後真的沒辦法復原了。')) return;
+      await permanentlyDeleteRecord(btn.dataset.id);
+      render();
+    });
+  });
+}
+
+document.getElementById('btnToggleTrash').addEventListener('click', ()=>{
+  const area = document.getElementById('trashArea');
+  area.style.display = area.style.display==='none' ? 'block' : 'none';
+});
+
+(async function init(){
+  currentPlan = await fetchCurrentPlan();
+  render();
+})();
+</script>
+
+</body>
+</html>
