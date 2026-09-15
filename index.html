@@ -37,7 +37,9 @@
   .topnav .logo{
     font-family:"Roboto Mono", monospace; font-size:13px; letter-spacing:.2em;
     color:var(--teal-deep); font-weight:700;
+    display:flex; align-items:center; gap:8px;
   }
+  .topnav .logo img{height:22px; width:auto; display:block;}
   .auth-area{display:flex; align-items:center; gap:12px;}
   .auth-area a.login-link{
     font-size:13.5px; font-weight:700; color:var(--teal-deep); text-decoration:none;
@@ -178,7 +180,7 @@
 
 <div class="wrap">
   <nav class="topnav">
-    <div class="logo">VICAURIA</div>
+    <div class="logo"><img src="icons/vicauria-mark.png" alt=""> VICAURIA</div>
     <div class="auth-area" id="authArea">
       <a href="login.html" class="login-link">登入</a>
     </div>
