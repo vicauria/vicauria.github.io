@@ -42,7 +42,11 @@
 
   /* ---------- 整體結論 badge ---------- */
   .verdict-card{
-    background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    background-color:var(--card);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='180'><text x='10' y='110' font-family='Roboto Mono, monospace' font-size='26' font-weight='700' fill='%2316323F' fill-opacity='0.05' transform='rotate(-24 150 90)'>VICAURIA</text></svg>");
+    background-repeat:repeat;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    border-radius:var(--radius);border:1px solid var(--line);
     box-shadow:0 10px 28px rgba(20,50,60,0.08);padding:22px 26px;margin-bottom:16px;
     display:flex; align-items:center; gap:18px; flex-wrap:wrap;
   }
@@ -58,7 +62,11 @@
   /* ---------- 指標卡 ---------- */
   .metric-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px;}
   .metric-card{
-    background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    background-color:var(--card);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='180'><text x='10' y='110' font-family='Roboto Mono, monospace' font-size='26' font-weight='700' fill='%2316323F' fill-opacity='0.05' transform='rotate(-24 150 90)'>VICAURIA</text></svg>");
+    background-repeat:repeat;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    border-radius:var(--radius);border:1px solid var(--line);
     padding:18px 16px; box-shadow:0 6px 18px rgba(20,50,60,0.05);
   }
   .metric-card .m-label{font-size:11px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; margin-bottom:8px;}
@@ -71,7 +79,11 @@
   .metric-card .m-delta.flat{background:var(--paper); color:var(--ink-soft);}
 
   .panel{
-    background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+    background-color:var(--card);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='180'><text x='10' y='110' font-family='Roboto Mono, monospace' font-size='26' font-weight='700' fill='%2316323F' fill-opacity='0.05' transform='rotate(-24 150 90)'>VICAURIA</text></svg>");
+    background-repeat:repeat;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    border-radius:var(--radius);border:1px solid var(--line);
     box-shadow:0 6px 18px rgba(20,50,60,0.05);padding:22px 24px;margin-bottom:16px;
   }
   .panel h2{font-size:15px;margin-bottom:4px;}
@@ -205,11 +217,15 @@ function metricsOf(s){
   const expenseTotal = expenseGroups.reduce((sum,g)=>sum+groupAnnualTotal(g),0);
   const assetTotal = assetGroups.reduce((sum,g)=>sum+groupAmountTotal(g),0);
   const liabilityTotal = liabilityGroups.reduce((sum,g)=>sum+groupAmountTotal(g),0);
+  const liquidGroup = assetGroups.find(g=>g.key==='liquid');
+  const liquidTotal = liquidGroup ? groupAmountTotal(liquidGroup) : 0;
   return {
     incomeTotal, expenseTotal, assetTotal, liabilityTotal,
+    surplus: incomeTotal - expenseTotal,
     netWorth: assetTotal - liabilityTotal,
     savingsRate: incomeTotal>0 ? (incomeTotal-expenseTotal)/incomeTotal : null,
     debtRatio: assetTotal>0 ? liabilityTotal/assetTotal : null,
+    liquidAssetRatio: assetTotal>0 ? liquidTotal/assetTotal : null,
     riskScore: riskScoreOf(s),
     assetBreakdown: categoryTotals(assetGroups, groupAmountTotal),
     liabilityBreakdown: categoryTotals(liabilityGroups, groupAmountTotal)
@@ -225,29 +241,29 @@ function lifeStageText(s){
   return (s.basicA && s.basicA.lifeStage && s.basicA.lifeStage.length) ? s.basicA.lifeStage.join('、') : '—';
 }
 
-function changeCell(before, after, opts){
+function computeChange(before, after, opts){
   opts = opts||{};
-  if(before===null || after===null || before===undefined || after===undefined){
-    return `<td class="change flat">—</td>`;
-  }
+  if(before===null || after===null || before===undefined || after===undefined) return {state:'na'};
   const diff = after - before;
-  if(Math.abs(diff) < (opts.epsilon||0.001)){
-    return `<td class="change flat">持平</td>`;
-  }
-  const dir = diff > 0 ? 'up' : 'down';
+  if(Math.abs(diff) < (opts.epsilon||0.001)) return {state:'flat'};
   const arrow = diff > 0 ? '↑' : '↓';
   const text = opts.percent ? (Math.abs(diff*100).toFixed(1)+'%') : money(Math.abs(diff));
-  return `<td class="change ${dir}">${arrow} ${text}</td>`;
+  let cls;
+  if(opts.neutral) cls = 'flat';
+  else cls = (opts.invert ? diff < 0 : diff > 0) ? 'up' : 'down';
+  return { state:'changed', cls, arrow, text };
+}
+function changeCell(before, after, opts){
+  const c = computeChange(before, after, opts);
+  if(c.state==='na') return `<td class="change flat">—</td>`;
+  if(c.state==='flat') return `<td class="change flat">持平</td>`;
+  return `<td class="change ${c.cls}">${c.arrow} ${c.text}</td>`;
 }
 function deltaBadge(before, after, opts){
-  opts = opts||{};
-  if(before===null || after===null || before===undefined || after===undefined) return `<span class="m-delta flat">—</span>`;
-  const diff = after - before;
-  if(Math.abs(diff) < (opts.epsilon||0.001)) return `<span class="m-delta flat">持平</span>`;
-  const dir = diff > 0 ? 'up' : 'down';
-  const arrow = diff > 0 ? '↑' : '↓';
-  const text = opts.percent ? (Math.abs(diff*100).toFixed(1)+'%') : money(Math.abs(diff));
-  return `<span class="m-delta ${dir}">${arrow} ${text}</span>`;
+  const c = computeChange(before, after, opts);
+  if(c.state==='na') return `<span class="m-delta flat">—</span>`;
+  if(c.state==='flat') return `<span class="m-delta flat">持平</span>`;
+  return `<span class="m-delta ${c.cls}">${c.arrow} ${c.text}</span>`;
 }
 
 async function fetchReport(id){
@@ -286,10 +302,13 @@ function buildAdvice(mBefore, mAfter){
   if(mBefore.savingsRate!==null && mAfter.savingsRate!==null){
     const sr = mAfter.savingsRate - mBefore.savingsRate;
     if(sr > 0.02){
-      advice.push(`儲蓄率提升了 ${(sr*100).toFixed(1)} 個百分點，代表收支結構有確實改善，可以評估是否把多出來的儲蓄轉入投資部位，讓資金效率更好。`);
+      advice.push(`儲蓄率提升了 ${(sr*100).toFixed(1)} 個百分點，代表收支結構有確實改善。`);
     } else if(sr < -0.02){
       advice.push(`儲蓄率下降了 ${(Math.abs(sr)*100).toFixed(1)} 個百分點，建議一起檢視是收入減少、還是支出增加，尤其留意浮動支出有沒有悄悄變高。`);
     }
+  }
+  if(mAfter.liquidAssetRatio !== null && mAfter.liquidAssetRatio > 0.7){
+    advice.push('目前理財型資產（活存、定存等）占總資產超過七成，如果這部分資金的利率沒有跑贏通膨，資產配比可以再跟顧問一起探討，評估要不要提高投資部位的比重；如果本來就是選擇抗通膨型的存款工具，維持現狀也沒關係。');
   }
   if(mBefore.debtRatio!==null && mAfter.debtRatio!==null){
     const dr = mAfter.debtRatio - mBefore.debtRatio;
@@ -383,21 +402,27 @@ function overallVerdict(mBefore, mAfter){
         <div class="m-label">負債／資產比</div>
         <div class="m-values"><span class="m-after">${mAfter.debtRatio!==null?(mAfter.debtRatio*100).toFixed(1)+'%':'—'}</span></div>
         <div class="m-before">上次 ${mBefore.debtRatio!==null?(mBefore.debtRatio*100).toFixed(1)+'%':'—'}</div>
-        ${deltaBadge(mBefore.debtRatio, mAfter.debtRatio, {percent:true, epsilon:0.0001})}
+        ${deltaBadge(mBefore.debtRatio, mAfter.debtRatio, {percent:true, epsilon:0.0001, invert:true})}
       </div>
       <div class="metric-card">
         <div class="m-label">風險評估</div>
         <div class="m-values"><span class="m-after" style="font-size:14px;">${riskTypeLabel(mAfter.riskScore)}</span></div>
         <div class="m-before">上次 ${riskTypeLabel(mBefore.riskScore)}</div>
-        ${deltaBadge(mBefore.riskScore, mAfter.riskScore)}
+        ${deltaBadge(mBefore.riskScore, mAfter.riskScore, {neutral:true})}
       </div>
     </div>
 
     <div class="panel">
-      <h2>收支與資產負債對照</h2>
-      <div class="panel-sub">長條圖：前後兩次的收入、支出、總資產、總負債；折線圖：這位客戶所有歷史報告的淨資產走勢</div>
+      <h2>收支與年結餘</h2>
+      <div class="panel-sub">前後兩次的年收入、年支出、年結餘（收入減支出）對照</div>
+      <div class="chart-box"><canvas id="barChartFlow"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <h2>資產負債與淨資產走勢</h2>
+      <div class="panel-sub">長條圖：前後兩次的總資產、總負債、淨資產；折線圖：這位客戶所有歷史報告的淨資產走勢</div>
       <div class="chart-row">
-        <div class="chart-box"><canvas id="barChart"></canvas></div>
+        <div class="chart-box"><canvas id="barChartBalance"></canvas></div>
         <div class="chart-box"><canvas id="trendChart"></canvas></div>
       </div>
     </div>
@@ -431,7 +456,7 @@ function overallVerdict(mBefore, mAfter){
           <tr><th>年收入</th><td>${money(mBefore.incomeTotal)}</td><td>${money(mAfter.incomeTotal)}</td>${changeCell(mBefore.incomeTotal, mAfter.incomeTotal)}</tr>
           <tr><th>年支出</th><td>${money(mBefore.expenseTotal)}</td><td>${money(mAfter.expenseTotal)}</td>${changeCell(mBefore.expenseTotal, mAfter.expenseTotal)}</tr>
           <tr><th>總資產</th><td>${money(mBefore.assetTotal)}</td><td>${money(mAfter.assetTotal)}</td>${changeCell(mBefore.assetTotal, mAfter.assetTotal)}</tr>
-          <tr><th>總負債</th><td>${money(mBefore.liabilityTotal)}</td><td>${money(mAfter.liabilityTotal)}</td>${changeCell(mBefore.liabilityTotal, mAfter.liabilityTotal)}</tr>
+          <tr><th>總負債</th><td>${money(mBefore.liabilityTotal)}</td><td>${money(mAfter.liabilityTotal)}</td>${changeCell(mBefore.liabilityTotal, mAfter.liabilityTotal, {invert:true})}</tr>
         </tbody>
       </table>
     </div>
@@ -477,14 +502,35 @@ function overallVerdict(mBefore, mAfter){
     }
   }
 
-  safeRenderChart('barChart', ()=>{
-    new Chart(document.getElementById('barChart'), {
+  safeRenderChart('barChartFlow', ()=>{
+    new Chart(document.getElementById('barChartFlow'), {
       type: 'bar',
       data: {
-        labels: ['年收入','年支出','總資產','總負債'],
+        labels: ['年收入','年支出','年結餘'],
         datasets: [
-          { label: formatDate(before.saved_at), data: [mBefore.incomeTotal, mBefore.expenseTotal, mBefore.assetTotal, mBefore.liabilityTotal], backgroundColor:'#9FB4BC', borderRadius:4 },
-          { label: formatDate(after.saved_at), data: [mAfter.incomeTotal, mAfter.expenseTotal, mAfter.assetTotal, mAfter.liabilityTotal], backgroundColor:'#2E7391', borderRadius:4 }
+          { label: formatDate(before.saved_at), data: [mBefore.incomeTotal, mBefore.expenseTotal, mBefore.surplus], backgroundColor:'#9FB4BC', borderRadius:4 },
+          { label: formatDate(after.saved_at), data: [mAfter.incomeTotal, mAfter.expenseTotal, mAfter.surplus], backgroundColor:'#2E7391', borderRadius:4 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ font:{ family:"'Noto Sans TC'", size:11 } } } },
+        scales:{
+          y:{ ticks:{ callback:v=>'$'+(v/10000)+'萬', font:{ size:10 } } },
+          x:{ ticks:{ font:{ family:"'Noto Sans TC'", size:11 } } }
+        }
+      }
+    });
+  });
+
+  safeRenderChart('barChartBalance', ()=>{
+    new Chart(document.getElementById('barChartBalance'), {
+      type: 'bar',
+      data: {
+        labels: ['總資產','總負債','淨資產'],
+        datasets: [
+          { label: formatDate(before.saved_at), data: [mBefore.assetTotal, mBefore.liabilityTotal, mBefore.netWorth], backgroundColor:'#9FB4BC', borderRadius:4 },
+          { label: formatDate(after.saved_at), data: [mAfter.assetTotal, mAfter.liabilityTotal, mAfter.netWorth], backgroundColor:'#2E7391', borderRadius:4 }
         ]
       },
       options: {
@@ -520,7 +566,7 @@ function overallVerdict(mBefore, mAfter){
     });
   });
 
-  // ---- 圓餅圖：資產結構 前後各一份 ----
+  // ---- 圓餅圖：資產結構 前後各一份，圖例上直接標百分比 ----
   function renderDonut(elId, breakdown){
     if(breakdown.length===0){
       const el = document.getElementById(elId);
@@ -536,7 +582,27 @@ function overallVerdict(mBefore, mAfter){
         },
         options:{
           responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{ position:'bottom', labels:{ font:{ family:"'Noto Sans TC'", size:10 }, boxWidth:10 } } }
+          plugins:{
+            legend:{
+              position:'bottom',
+              labels:{
+                font:{ family:"'Noto Sans TC'", size:10 }, boxWidth:10,
+                generateLabels(chart){
+                  const ds = chart.data.datasets[0];
+                  const total = ds.data.reduce((a,b)=>a+b,0);
+                  return chart.data.labels.map((label,i)=>{
+                    const pct = total>0 ? Math.round(ds.data[i]/total*100) : 0;
+                    return {
+                      text: `${label} ${pct}%`,
+                      fillStyle: ds.backgroundColor[i],
+                      strokeStyle: ds.backgroundColor[i],
+                      index: i
+                    };
+                  });
+                }
+              }
+            }
+          }
         }
       });
     });
