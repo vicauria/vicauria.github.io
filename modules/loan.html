@@ -285,21 +285,12 @@
           <div class="bd-row"><span>寬限期後（本利攤還）</span><span id="g_bd_after" class="mono">0 元／月</span></div>
         </div>
 
-        <div class="result-label" style="margin-top:22px;">總利息比較</div>
-        <div class="breakdown">
-          <div class="bd-row"><span>有寬限期・總利息</span><span id="g_bd_totalWith" class="mono">0 元</span></div>
-          <div class="bd-row total"><span>無寬限期・總利息</span><span id="g_bd_totalWithout" class="mono">0 元</span></div>
-        </div>
-
-        <div class="dim-line" style="margin-top:20px;"><div class="dim-tick-r"></div>
-          <div class="dim-value"><span class="cur">＋</span><span id="g_extra">0</span><span class="sub-unit">元</span></div>
-        </div>
-        <div class="stepper-note" style="color:rgba(245,247,246,0.55); margin-top:-14px;">比起完全不設寬限期，多付出的總利息</div>
-
         <div class="result-label" style="margin-top:22px;">總還款金額（本金＋利息）</div>
         <div class="breakdown">
-          <div class="bd-row"><span>有寬限期・總還款</span><span id="g_bd_repayWith" class="mono">0 元</span></div>
-          <div class="bd-row total"><span>無寬限期・總還款</span><span id="g_bd_repayWithout" class="mono">0 元</span></div>
+          <div class="bd-row"><span>總利息</span><span id="g_bd_interest" class="mono">0 元</span></div>
+        </div>
+        <div class="dim-line" style="margin-top:8px;"><div class="dim-tick-r"></div>
+          <div class="dim-value"><span id="g_bd_repayWith">0</span><span class="sub-unit">元</span></div>
         </div>
       </div>
     </div>
@@ -431,6 +422,7 @@
           <div class="bd-row"><span>未投入配置金額（預備金／其他）</span><span id="s_bd_idle" class="mono">0 元</span></div>
         </div>
         <div class="breakdown" style="margin-top:14px;">
+          <div class="bd-row"><span>月還貸款金額</span><span id="s_bd_monthly" class="mono">0 元／月</span></div>
           <div class="bd-row"><span>貸款總利息（實際攤還）</span><span id="s_bd_loanInterest" class="mono neg">0 元</span></div>
           <div class="bd-row"><span>配置估算總收益（僅計入投入部分）</span><span id="s_bd_investGain" class="mono pos">0 元</span></div>
           <div class="bd-row total"><span>估算淨利差金額</span><span id="s_bd_net" class="mono">0 元</span></div>
@@ -563,18 +555,10 @@ function calcGrace(){
   const totalWith = gracePayment*graceMonths + afterPayment*remainMonths;
   const interestWith = totalWith - P;
 
-  const noGraceM = monthlyPayment(P, rate, totalMonths);
-  const interestWithout = noGraceM*totalMonths - P;
-
-  const extra = interestWith - interestWithout;
-
   document.getElementById('g_bd_grace').textContent = fmtYuan(gracePayment)+' 元／月';
   document.getElementById('g_bd_after').textContent = fmtYuan(afterPayment)+' 元／月';
-  document.getElementById('g_extra').textContent = fmtYuan(extra);
-  document.getElementById('g_bd_totalWith').textContent = fmtYuan(interestWith)+' 元';
-  document.getElementById('g_bd_totalWithout').textContent = fmtYuan(interestWithout)+' 元';
-  document.getElementById('g_bd_repayWith').textContent = fmtYuan(totalWith)+' 元';
-  document.getElementById('g_bd_repayWithout').textContent = fmtYuan(noGraceM*totalMonths)+' 元';
+  document.getElementById('g_bd_interest').textContent = fmtYuan(interestWith)+' 元';
+  document.getElementById('g_bd_repayWith').textContent = fmtYuan(totalWith);
 }
 
 function calcCompare(){
@@ -620,7 +604,7 @@ function calcSpread(){
   const M = monthlyPayment(P, loanRate, months);
   const loanInterest = M*months - P;
 
-  const idle = P - deployed;
+  const idle = Math.max(0, P - deployed);
   const investGain = deployed*(Math.pow(1+investRate/100, years) - 1);
 
   const spread = investRate - loanRate;
@@ -630,6 +614,7 @@ function calcSpread(){
   document.getElementById('s_bd_loanAmt').textContent = fmtYuan(P)+' 元';
   document.getElementById('s_bd_deployed').textContent = fmtYuan(deployed)+' 元';
   document.getElementById('s_bd_idle').textContent = fmtYuan(idle)+' 元';
+  document.getElementById('s_bd_monthly').textContent = fmtYuan(M)+' 元／月';
   document.getElementById('s_bd_loanInterest').textContent = '－'+fmtYuan(loanInterest)+' 元';
   document.getElementById('s_bd_investGain').textContent = '＋'+fmtYuan(investGain)+' 元';
   document.getElementById('s_bd_net').textContent = (netDiff>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
@@ -658,7 +643,12 @@ function calcSpread(){
 
 function calcPledge(){
   const limit = num('p_limit');
-  const P = num('p_amount');
+  let P = num('p_amount');
+  if(P > limit){
+    P = limit;
+    document.getElementById('p_amount').value = limit;
+  }
+  document.getElementById('p_amount').max = limit;
   const deployed = num('p_deployed');
   const rate = num('p_rate');
   const ioYears = num('p_ioYears');
