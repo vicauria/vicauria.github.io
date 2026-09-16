@@ -42,10 +42,7 @@
 
   /* ---------- 整體結論 badge ---------- */
   .verdict-card{
-    background-color:var(--card);
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='180'><text x='10' y='110' font-family='Roboto Mono, monospace' font-size='26' font-weight='700' fill='%2316323F' fill-opacity='0.05' transform='rotate(-24 150 90)'>VICAURIA</text></svg>");
-    background-repeat:repeat;
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    background:var(--card);
     border-radius:var(--radius);border:1px solid var(--line);
     box-shadow:0 10px 28px rgba(20,50,60,0.08);padding:22px 26px;margin-bottom:16px;
     display:flex; align-items:center; gap:18px; flex-wrap:wrap;
@@ -62,10 +59,7 @@
   /* ---------- 指標卡 ---------- */
   .metric-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px;}
   .metric-card{
-    background-color:var(--card);
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='180'><text x='10' y='110' font-family='Roboto Mono, monospace' font-size='26' font-weight='700' fill='%2316323F' fill-opacity='0.05' transform='rotate(-24 150 90)'>VICAURIA</text></svg>");
-    background-repeat:repeat;
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    background:var(--card);
     border-radius:var(--radius);border:1px solid var(--line);
     padding:18px 16px; box-shadow:0 6px 18px rgba(20,50,60,0.05);
   }
@@ -79,15 +73,21 @@
   .metric-card .m-delta.flat{background:var(--paper); color:var(--ink-soft);}
 
   .panel{
-    background-color:var(--card);
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='180'><text x='10' y='110' font-family='Roboto Mono, monospace' font-size='26' font-weight='700' fill='%2316323F' fill-opacity='0.05' transform='rotate(-24 150 90)'>VICAURIA</text></svg>");
-    background-repeat:repeat;
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    background:var(--card);
     border-radius:var(--radius);border:1px solid var(--line);
     box-shadow:0 6px 18px rgba(20,50,60,0.05);padding:22px 24px;margin-bottom:16px;
   }
   .panel h2{font-size:15px;margin-bottom:4px;}
   .panel .panel-sub{font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;}
+
+  /* 浮水印：跟財富地圖報告用完全一樣的做法（同一個 SVG tile、同樣的角度跟透明度） */
+  .panel, .metric-card, .verdict-card{ position:relative; overflow:hidden; }
+  .panel::before, .metric-card::before, .verdict-card::before{
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='83'%3E%3Ctext x='0' y='53' font-size='27' font-family='sans-serif' fill='rgba(22,50,63,0.055)' transform='rotate(-28 64 41)'%3EVicauria%3C/text%3E%3C/svg%3E");
+    background-repeat:repeat;
+  }
+  .panel > *, .metric-card > *, .verdict-card > *{ position:relative; z-index:1; }
   .chart-row{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
   .chart-box{position:relative; height:260px;}
   .donut-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
@@ -143,6 +143,7 @@
     .btn-pdf, .back-link{display:none;}
     main{margin-top:-40px;}
     .panel, .metric-card, .verdict-card{box-shadow:none; break-inside:avoid;}
+    .panel::before, .metric-card::before, .verdict-card::before{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
 </head>
