@@ -61,6 +61,8 @@
   .cal-cell.today{border-color:var(--teal); box-shadow:inset 0 0 0 1px var(--teal);}
   .cal-cell.selected{background:var(--teal-tint); border-color:var(--teal);}
   .cal-cell .d-num{font-family:"Roboto Mono",monospace; font-size:12px; font-weight:700; margin-bottom:5px;}
+  .cal-cell .d-num.holiday{color:var(--negative);}
+  .cal-cell .d-holiday-label{font-size:9px; color:var(--negative); line-height:1.3; margin-bottom:3px;}
   .cal-cell .d-dots{display:flex; flex-wrap:wrap; gap:3px;}
   .cal-cell .d-dots .dot{width:6px; height:6px; border-radius:50%;}
 
@@ -207,6 +209,25 @@
         <input type="time" id="fieldEnd">
       </div>
     </div>
+    <div class="field" id="recurringField">
+      <label class="visibility-toggle" style="margin-bottom:10px;">
+        <input type="checkbox" id="fieldRecurring">
+        <span>
+          <span class="vt-text">設為週期性事件</span>
+          <div class="vt-sub">例如每週一固定開會，勾選後不用每週手動新增一次</div>
+        </span>
+      </label>
+      <div id="recurringOptions" style="display:none; margin-top:10px;" class="field-row">
+        <div class="field">
+          <label>每幾週重複一次</label>
+          <input type="text" id="fieldRecurInterval" value="1">
+        </div>
+        <div class="field">
+          <label>重複到（結束日期）</label>
+          <input type="date" id="fieldRecurUntil">
+        </div>
+      </div>
+    </div>
     <div class="field">
       <label>連結客戶（選填）</label>
       <select id="fieldClient">
@@ -249,6 +270,57 @@ let clientOptions = [];
 function pad(n){ return String(n).padStart(2,'0'); }
 function toDateStr(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function todayStr(){ return toDateStr(new Date()); }
+
+// 台灣國定假日／補假（依行政院人事行政總處正式公告的115年／116年辦公日曆表）
+// 116年（2027）下半年之後的年度，等政院公告了要記得再補進來
+const TW_HOLIDAYS = {
+  '2026-01-01': '元旦',
+  '2026-02-15': '除夕前一日',
+  '2026-02-16': '除夕',
+  '2026-02-17': '春節',
+  '2026-02-18': '初二',
+  '2026-02-19': '初三',
+  '2026-02-20': '小年夜補假',
+  '2026-02-27': '和平紀念日補假',
+  '2026-02-28': '和平紀念日',
+  '2026-04-03': '兒童節補假',
+  '2026-04-04': '兒童節',
+  '2026-04-05': '清明節',
+  '2026-04-06': '清明節補假',
+  '2026-05-01': '勞動節',
+  '2026-06-19': '端午節',
+  '2026-09-25': '中秋節',
+  '2026-09-28': '教師節',
+  '2026-10-09': '國慶日補假',
+  '2026-10-10': '國慶日',
+  '2026-10-25': '台灣光復節',
+  '2026-10-26': '光復節補假',
+  '2026-12-25': '行憲紀念日',
+  '2027-01-01': '開國紀念日',
+  '2027-02-04': '小年夜',
+  '2027-02-05': '除夕',
+  '2027-02-06': '初一',
+  '2027-02-07': '初二',
+  '2027-02-08': '初三',
+  '2027-02-09': '初一補假',
+  '2027-02-10': '初二補假',
+  '2027-02-28': '和平紀念日',
+  '2027-03-01': '和平紀念日補假',
+  '2027-04-04': '兒童節',
+  '2027-04-05': '清明節',
+  '2027-04-06': '兒童節補假',
+  '2027-04-30': '勞動節補假',
+  '2027-05-01': '勞動節',
+  '2027-06-09': '端午節',
+  '2027-09-15': '中秋節',
+  '2027-09-28': '教師節',
+  '2027-10-10': '國慶日',
+  '2027-10-11': '國慶日補假',
+  '2027-10-25': '台灣光復節',
+  '2027-12-24': '行憲紀念日補假',
+  '2027-12-25': '行憲紀念日',
+  '2027-12-31': '元旦補假'
+};
 
 async function init(){
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -347,11 +419,13 @@ function renderGrid(){
     }
     const dayEvents = monthEvents.filter(e=>eventCoversDate(e, c.dateStr));
     const dots = dayEvents.slice(0,6).map(e=>`<span class="dot ${eventKind(e)}"></span>`).join('');
+    const holidayName = TW_HOLIDAYS[c.dateStr];
     const cls = ['cal-cell'];
     if(c.dateStr === t) cls.push('today');
     if(c.dateStr === selectedDate) cls.push('selected');
     html += `<div class="${cls.join(' ')}" data-date="${c.dateStr}">
-      <div class="d-num">${c.day}</div>
+      <div class="d-num${holidayName?' holiday':''}">${c.day}</div>
+      ${holidayName ? `<div class="d-holiday-label">${holidayName}</div>` : ''}
       <div class="d-dots">${dots}</div>
     </div>`;
   });
@@ -379,7 +453,9 @@ function renderDayPanel(){
   if(!selectedDate) return;
   const d = new Date(selectedDate + 'T00:00:00');
   const wd = ['日','一','二','三','四','五','六'][d.getDay()];
-  document.getElementById('dayPanelTitle').textContent = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}（週${wd}）`;
+  const holidayName = TW_HOLIDAYS[selectedDate];
+  document.getElementById('dayPanelTitle').textContent =
+    `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}（週${wd}）` + (holidayName ? `　·　${holidayName}` : '');
 
   const dayEvents = monthEvents.filter(e=>eventCoversDate(e, selectedDate))
     .sort((a,b)=> (a.start_time||'99').localeCompare(b.start_time||'99'));
@@ -400,7 +476,7 @@ function renderDayPanel(){
     <div class="event-row">
       <span class="e-badge ${kind}"></span>
       <div class="e-body">
-        <div class="e-title">${escapeHtml(e.title)}</div>
+        <div class="e-title">${e.series_id ? '🔁 ' : ''}${escapeHtml(e.title)}</div>
         <div class="e-meta">${[formatTimeRange(e), clientLine].filter(Boolean).join('　')}</div>
         ${e.description ? `<div class="e-meta">${escapeHtml(e.description)}</div>` : ''}
         ${ownerLine ? `<div class="e-owner">${ownerLine}</div>` : ''}
@@ -436,6 +512,12 @@ function toggleTimeRow(){
 }
 document.getElementById('fieldAllDay').addEventListener('change', toggleTimeRow);
 
+function toggleRecurringOptions(){
+  document.getElementById('recurringOptions').style.display =
+    document.getElementById('fieldRecurring').checked ? 'grid' : 'none';
+}
+document.getElementById('fieldRecurring').addEventListener('change', toggleRecurringOptions);
+
 function openEventModal(existing){
   document.getElementById('eventModalTitle').textContent = existing ? '編輯事件' : '新增事件';
   document.getElementById('eventId').value = existing ? existing.id : '';
@@ -450,6 +532,13 @@ function openEventModal(existing){
   document.getElementById('fieldDesc').value = existing ? (existing.description || '') : '';
   document.getElementById('fieldVisibility').checked = !!(existing && existing.visibility === 'team');
   document.getElementById('btnDeleteEvent').style.display = existing ? 'inline-block' : 'none';
+  // 週期性設定只在「新增」的時候提供，編輯既有事件（包括週期性事件的其中一筆）一律當成單筆處理
+  document.getElementById('recurringField').style.display = existing ? 'none' : 'block';
+  document.getElementById('fieldRecurring').checked = false;
+  document.getElementById('fieldRecurInterval').value = '1';
+  const defaultUntil = new Date(selectedDate + 'T00:00:00'); defaultUntil.setMonth(defaultUntil.getMonth()+3);
+  document.getElementById('fieldRecurUntil').value = toDateStr(defaultUntil);
+  toggleRecurringOptions();
   eventOverlay.classList.add('show');
 }
 function closeEventModal(){ eventOverlay.classList.remove('show'); }
@@ -457,6 +546,11 @@ function closeEventModal(){ eventOverlay.classList.remove('show'); }
 document.getElementById('btnAddEvent').addEventListener('click', ()=> openEventModal(null));
 document.getElementById('btnCancelEvent').addEventListener('click', closeEventModal);
 eventOverlay.addEventListener('click', (e)=>{ if(e.target.id==='eventOverlay') closeEventModal(); });
+
+function makeSeriesId(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'series-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+}
 
 document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
   const title = document.getElementById('fieldTitle').value.trim();
@@ -467,11 +561,11 @@ document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
   if(!startDate){ alert('請選擇開始日期'); return; }
   if(endDate < startDate){ alert('結束日期不能早於開始日期'); return; }
   const allDay = document.getElementById('fieldAllDay').checked;
-  const payload = {
+  const isRecurring = !id && document.getElementById('fieldRecurring').checked;
+
+  const basePayload = {
     advisor_id: myId,
     title,
-    event_date: startDate,
-    end_date: endDate,
     start_time: allDay ? null : (document.getElementById('fieldStart').value || null),
     end_time: allDay ? null : (document.getElementById('fieldEnd').value || null),
     client_id: document.getElementById('fieldClient').value || null,
@@ -480,10 +574,31 @@ document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
   };
 
   let error;
-  if(id){
-    ({ error } = await supabaseClient.from('calendar_events').update(payload).eq('id', id));
+  if(isRecurring){
+    const interval = Math.max(1, parseInt(document.getElementById('fieldRecurInterval').value, 10) || 1);
+    const until = document.getElementById('fieldRecurUntil').value;
+    if(!until){ alert('請選擇週期性事件要重複到哪一天'); return; }
+    const seriesId = makeSeriesId();
+    const rows = [];
+    let cursor = new Date(startDate + 'T00:00:00');
+    const untilD = new Date(until + 'T00:00:00');
+    const MAX_OCCURRENCES = 104; // 安全上限，避免不小心設太久生出海量資料
+    let count = 0;
+    while(cursor <= untilD && count < MAX_OCCURRENCES){
+      const dateStr = toDateStr(cursor);
+      rows.push({ ...basePayload, event_date: dateStr, end_date: dateStr, series_id: seriesId });
+      cursor.setDate(cursor.getDate() + interval*7);
+      count++;
+    }
+    if(rows.length===0){ alert('週期性事件的結束日期要晚於開始日期'); return; }
+    ({ error } = await supabaseClient.from('calendar_events').insert(rows));
   } else {
-    ({ error } = await supabaseClient.from('calendar_events').insert(payload));
+    const payload = { ...basePayload, event_date: startDate, end_date: endDate };
+    if(id){
+      ({ error } = await supabaseClient.from('calendar_events').update(payload).eq('id', id));
+    } else {
+      ({ error } = await supabaseClient.from('calendar_events').insert(payload));
+    }
   }
   if(error){ console.error('儲存事件失敗', error); alert('儲存失敗，請檢查網路連線後再試一次。'); return; }
 
