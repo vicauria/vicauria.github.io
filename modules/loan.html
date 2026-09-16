@@ -133,6 +133,8 @@
   .cmp-wrap{margin-top:6px;}
   .cmp-item{margin-bottom:18px;}
   .cmp-item .cmp-head{display:flex; justify-content:space-between; font-family:'Roboto Mono'; font-size:12px; margin-bottom:6px; color:var(--text-soft);}
+  .cmp-item .cmp-head.plan-a{color:var(--brass);}
+  .cmp-item .cmp-head.plan-b{color:var(--teal);}
   .cmp-bar-track{height:14px; background:var(--paper-line); border-radius:2px; overflow:hidden;}
   .cmp-bar-fill{height:100%; transition:width .3s ease;}
   .cmp-bar-fill.a{background:var(--brass);}
@@ -337,33 +339,33 @@
         <div class="result-label">月付金比較</div>
         <div class="cmp-wrap">
           <div class="cmp-item">
-            <div class="cmp-head"><span>方案 A</span><span id="cmp_a_m_label" class="mono">0 元</span></div>
+            <div class="cmp-head plan-a"><span>方案 A</span><span id="cmp_a_m_label" class="mono">0 元</span></div>
             <div class="cmp-bar-track"><div class="cmp-bar-fill a" id="cmp_a_m_bar" style="width:0%"></div></div>
           </div>
           <div class="cmp-item">
-            <div class="cmp-head"><span>方案 B</span><span id="cmp_b_m_label" class="mono">0 元</span></div>
+            <div class="cmp-head plan-b"><span>方案 B</span><span id="cmp_b_m_label" class="mono">0 元</span></div>
             <div class="cmp-bar-track"><div class="cmp-bar-fill b" id="cmp_b_m_bar" style="width:0%"></div></div>
           </div>
         </div>
         <div class="result-label" style="margin-top:16px;">總利息比較</div>
         <div class="cmp-wrap">
           <div class="cmp-item">
-            <div class="cmp-head"><span>方案 A</span><span id="cmp_a_i_label" class="mono">0 元</span></div>
+            <div class="cmp-head plan-a"><span>方案 A</span><span id="cmp_a_i_label" class="mono">0 元</span></div>
             <div class="cmp-bar-track"><div class="cmp-bar-fill a" id="cmp_a_i_bar" style="width:0%"></div></div>
           </div>
           <div class="cmp-item">
-            <div class="cmp-head"><span>方案 B</span><span id="cmp_b_i_label" class="mono">0 元</span></div>
+            <div class="cmp-head plan-b"><span>方案 B</span><span id="cmp_b_i_label" class="mono">0 元</span></div>
             <div class="cmp-bar-track"><div class="cmp-bar-fill b" id="cmp_b_i_bar" style="width:0%"></div></div>
           </div>
         </div>
         <div class="result-label" style="margin-top:16px;">總還款比較（本金＋利息）</div>
         <div class="cmp-wrap">
           <div class="cmp-item">
-            <div class="cmp-head"><span>方案 A</span><span id="cmp_a_t_label" class="mono">0 元</span></div>
+            <div class="cmp-head plan-a"><span>方案 A</span><span id="cmp_a_t_label" class="mono">0 元</span></div>
             <div class="cmp-bar-track"><div class="cmp-bar-fill a" id="cmp_a_t_bar" style="width:0%"></div></div>
           </div>
           <div class="cmp-item">
-            <div class="cmp-head"><span>方案 B</span><span id="cmp_b_t_label" class="mono">0 元</span></div>
+            <div class="cmp-head plan-b"><span>方案 B</span><span id="cmp_b_t_label" class="mono">0 元</span></div>
             <div class="cmp-bar-track"><div class="cmp-bar-fill b" id="cmp_b_t_bar" style="width:0%"></div></div>
           </div>
         </div>
