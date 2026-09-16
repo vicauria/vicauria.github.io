@@ -46,11 +46,21 @@
 
   header.hero{
     background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
-    color:#fff; padding:64px 0 68px; position:relative; overflow:hidden; text-align:center;
+    color:#fff; padding:60px 0 68px; position:relative; overflow:hidden; text-align:center;
   }
   header.hero::after{
     content:""; position:absolute; right:-80px; top:-80px; width:280px; height:280px;
     border-radius:50%; background:radial-gradient(circle,rgba(201,123,61,0.16) 0%,rgba(201,123,61,0) 70%);
+  }
+  .hero-mark{
+    width:104px; height:104px; border-radius:50%; background:#fff; margin:0 auto 26px;
+    display:flex; align-items:center; justify-content:center; position:relative; z-index:2;
+    box-shadow:0 14px 36px rgba(0,0,0,0.22);
+  }
+  .hero-mark img{width:62px; height:auto; display:block;}
+  .hero-wordmark{
+    font-family:"Roboto Mono", monospace; font-size:15px; letter-spacing:.32em;
+    color:#fff; font-weight:700; margin-bottom:10px; position:relative; z-index:2;
   }
   header.hero .eyebrow{
     font-size:12px; letter-spacing:.28em; text-transform:uppercase;
@@ -98,6 +108,20 @@
     line-height:1.8; margin:36px 0; padding-left:20px; border-left:3px solid var(--warm);
   }
 
+  .concept-block{
+    margin:32px 0; padding:26px 28px; background:var(--card); border-radius:14px;
+    border:1px solid var(--line); box-shadow:0 6px 18px rgba(20,50,60,0.04);
+  }
+  .concept-block .c-word{
+    font-family:"Noto Serif TC", serif; font-weight:900; font-size:26px; color:var(--warm-deep);
+    margin-bottom:4px;
+  }
+  .concept-block .c-sub{
+    font-size:14px; font-weight:700; color:var(--navy); margin-bottom:14px;
+  }
+  .concept-block .story-p{margin-bottom:14px;}
+  .concept-block .story-p:last-child{margin-bottom:0;}
+
   .closing{
     margin-top:60px; padding:36px 32px; border-radius:16px;
     background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 100%); color:#fff;
@@ -127,57 +151,57 @@
 
 <header class="hero">
   <div class="wrap">
+    <div class="hero-mark"><img src="icons/vicauria-mark.png" alt="Vicauria"></div>
+    <div class="hero-wordmark">VICAURIA</div>
     <div class="eyebrow">Our Story · 品牌故事</div>
     <blockquote>
-      「在開始時，我環顧四周，卻找不到夢想中的車。<br>所以我決定自己打造一台。」
-      <cite>— Ferdinand Porsche，保時捷創辦人</cite>
+      Victory · Aura · Via
     </blockquote>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <p class="story-p">這句話，是 Vicauria 這個平台誕生的起點。</p>
+    <div class="story-h2"><span class="num">Chapter 01</span>一開始，只是想解決一個很實際的問題</div>
+    <p class="story-p">Vicauria 最早根本不是要拿來當品牌用的。</p>
+    <p class="story-p">它是從我自己的工作困擾裡長出來的。做財務規劃這幾年，我發現自己花在「整理」上的時間，常常比花在「理解客戶」上的時間還多。現金流要算、資產負債要列、房貸要試算、幾個方案攤開來比較、報告還要另外做一份。每一件事單獨看都不難，但工具一多、流程一散，時間就這樣被切成一小塊一小塊，真正拿來坐下來聽客戶講話的時間反而被壓縮了。</p>
+    <p class="story-p">所以最開始，我只是想幫自己做一套更順手的工作工具而已，沒想那麼多。</p>
+    <p class="story-p">做著做著才發現，這個困擾好像不是我一個人的。跟幾個同業聊過之後，才知道大家其實都在用差不多的土法煉鋼方式硬撐——這才讓我開始想，如果這套工具可以幫到的不只是我自己呢？</p>
+    <div class="quote-block">Vicauria，就是從這裡開始長出來的。</div>
 
-    <div class="story-h2"><span class="num">Chapter 01</span>手動算，是財務規劃避不開的事</div>
-    <p class="story-p">做財務規劃這件事，很多時候還是得靠自己手動計算。市面上不是沒有計算機工具，但客戶的狀況千百種——一旦碰上比較特殊的情形，那些現成的工具往往就不夠用了，最後還是得攤開紙筆、拿出計算機，一步一步慢慢算。</p>
-    <p class="story-p">手動算最怕的不是慢，是<b>算錯</b>。少打一個零、漏看一個條件，算出來的數字可能就差了十萬八千里——而這些數字，是客戶要拿來決定人生的。</p>
-    <p class="story-p">所以我想，那就自己寫程式，把這些計算邏輯做成工具，一來縮短計算時間，二來把算錯的風險降到最低。這就是為什麼這個網站裡，會有這麼多台計算機的原因。</p>
+    <div class="story-h2"><span class="num">Chapter 02</span>為什麼叫 Vicauria</div>
+    <p class="story-p">這個名字是三個字拼起來的：Victory、Aura、Via。不是先想好一個好聽的名字才回頭編故事，是這三件事本來就是我在做這件事情時，一直放在心裡的東西。</p>
 
-    <div class="story-h2"><span class="num">Chapter 02</span>遇到的狀況越來越多，計算機也越來越多</div>
-    <p class="story-p">一開始只是想解決眼前的問題，但做著做著，客戶的需求一個接一個冒出來，工具也就跟著一個一個長出來：</p>
-
-    <div class="tool-grid">
-      <div class="tool-card">
-        <div class="t">🌤️ 退休基金試算機</div>
-        <div class="d">因為退休規劃是幾乎每個客戶都會問到的事</div>
-      </div>
-      <div class="tool-card">
-        <div class="t">🎓 教育基金試算機</div>
-        <div class="d">因為有子女的客戶，都會擔心教育金夠不夠</div>
-      </div>
-      <div class="tool-card">
-        <div class="t">✈️ 旅遊基金規劃</div>
-        <div class="d">現代人喜歡出國旅遊充電，這也是財富願景的一部分</div>
-      </div>
-      <div class="tool-card">
-        <div class="t">🏠 購屋基金 ／ 🗺️ 遺贈方案</div>
-        <div class="d">還有更多因應不同人生階段長出來的工具</div>
-      </div>
+    <div class="concept-block">
+      <div class="c-word">Victory</div>
+      <div class="c-sub">你自己定義的那種贏</div>
+      <p class="story-p">財務上的「成功」，我一直覺得沒有標準答案。</p>
+      <p class="story-p">有人的勝利是提早退休；有人只是想有一天房貸繳完，終於可以喘口氣；有人想的是孩子未來多一點選擇；也有人單純希望好好照顧父母，或者讓自己辛苦一輩子存下來的東西，能順利留給在乎的人。</p>
+      <p class="story-p">這些都是「贏」，只是每個人的贏長得不一樣。我不太相信有一套放諸四海皆準的成功公式——比較貼近事實的，是每個人都在打自己的那場仗。</p>
     </div>
 
-    <div class="story-h2"><span class="num">Chapter 03</span>財富地圖：像玩遊戲一樣的顧問問卷</div>
-    <p class="story-p">帶客戶做財務規劃的過程中，要記的事情真的很多——收入、支出、資產、負債、家庭狀況、人生目標，一邊聊一邊寫筆記，很容易漏東漏西，客戶也常常覺得自己好像在被身家調查。</p>
-    <p class="story-p">所以我做了「財富地圖」——一套顧問式的引導問卷，設計成像玩遊戲闖關一樣，一關一關過，不會讓人覺得生硬有壓力，但同時又能真正收集到完整、有用的客戶資訊，之後拿來協助他做規劃。</p>
+    <div class="concept-block">
+      <div class="c-word">Aura</div>
+      <div class="c-sub">每個人的財務樣子都不一樣</div>
+      <p class="story-p">個性不同、家庭背景不同、收入不同，連對「安全感」的定義都不一樣。</p>
+      <p class="story-p">我常常遇到收入條件很接近的兩個人，但他們需要的規劃方向卻完全不同——一個在意的是彈性，另一個在意的是保本，你沒辦法用同一套方案套在兩個人身上，即使他們的數字看起來很像。</p>
+      <p class="story-p">Aura 講的就是這件事：財務規劃真的沒辦法套公式，因為沒有兩個人的人生是同一份考卷。</p>
+    </div>
 
-    <div class="story-h2"><span class="num">Chapter 04</span>市場快訊：把找新聞的時間省下來</div>
-    <p class="story-p">金融市場每天發生的事情太多太多，如果每天要自己一個一個網站慢慢找新聞、慢慢篩，非常耗時間。所以我做了「市場快訊」，自動幫忙抓取相關的財經新聞內容，分類整理好，讓身為顧問的自己，可以少花一點時間在爬文找雜訊上，多留一點時間給真正重要的事——陪客戶談規劃。</p>
+    <div class="concept-block">
+      <div class="c-word">Via</div>
+      <div class="c-sub">路徑不會只有一條</div>
+      <p class="story-p">就算兩個人的目標一樣，走到那裡的路也不一定一樣。</p>
+      <p class="story-p">有人靠調整現金流，有人重新配置資產，有人選擇先把負債壓力降下來，有人甚至決定把目標往後延一點——都可以到達，只是走法不同。</p>
+      <p class="story-p">我們不太想跟客戶說「你應該走這條路」，比較想做的是，陪著顧問和客戶一起把可能的路攤開來看，再一起挑出現階段最適合的那一條。</p>
+    </div>
 
-    <div class="story-h2"><span class="num">Chapter 05</span>客戶資料：讓每一次諮詢都留得下來</div>
-    <p class="story-p">做完一場諮詢，客戶的狀況總不能只留在腦子裡。所以目前也做了一個簡易的客戶管理功能，讓每次諮詢完的資料可以直接建檔，之後不定時翻閱、追蹤客戶的狀況變化——狀態標籤、顧問筆記、下次追蹤日期，都能一併記下來。</p>
+    <div class="quote-block">三個字合在一起，大概就是 Vicauria 想講的事：每個人的財務樣貌不一樣，走的路也會不一樣，但最後都是為了打造屬於自己的那種贏。</div>
 
-    <div class="quote-block">找不到夢想中的工具，那就自己打造一個。</div>
-    <p class="story-p">Vicauria 這個平台，說到底就是這樣長出來的——不是一開始就規劃好的完整藍圖，而是每一次遇到問題，就多解決一個，工具也就一台一台跟著長大。</p>
+    <div class="story-h2"><span class="num">Chapter 03</span>Vicauria 想做的，其實很單純</div>
+    <p class="story-p">我們不是想再做一個計算機，也不打算把功能一直往同一個網站裡塞。</p>
+    <p class="story-p">真正想做的事情很簡單：讓顧問能更快看懂客戶的狀況、更清楚地把不同路徑攤開比較、更有效率地把規劃做完——把「整理資料」這件事盡量交給系統，把省下來的時間，留給真正重要的那件事。</p>
+    <p class="story-p">因為工具再厲害，也只是工具。真正重要的，始終是坐在你對面的那個人，到底想要的是什麼。</p>
 
     <div class="closing">
       <div class="marks">覺醒 × 金錢 × 故事</div>
