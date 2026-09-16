@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行事曆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2; --plum:#4A3B5C; --plum-tint:#EFEAF2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+
+  header{margin-bottom:20px;}
+  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal-deep);font-weight:700;margin-bottom:8px;}
+  header h1{font-size:22px;}
+  header p{font-size:13px;color:var(--ink-soft);margin-top:8px;max-width:620px;}
+
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin:14px 0 4px; font-size:11.5px; color:var(--ink-soft);}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .legend .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+  .dot.mine{background:var(--teal);}
+  .dot.teamshared{background:var(--warm);}
+  .dot.monitor{background:var(--plum);}
+
+  .cal-panel{
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(20,50,60,0.05); padding:20px 22px; margin-bottom:18px;
+  }
+  .cal-nav{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .cal-nav .month-label{font-family:"Noto Serif TC",serif; font-weight:700; font-size:16px; color:var(--navy);}
+  .cal-nav-btns{display:flex; gap:8px;}
+  .cal-nav-btns button{
+    appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink);
+    width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:13px;
+  }
+  .cal-nav-btns button:hover{background:var(--paper);}
+  .btn-today{
+    appearance:none; border:1px solid var(--teal); background:none; color:var(--teal-deep);
+    padding:5px 12px; border-radius:14px; font-size:11.5px; font-weight:700; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif; margin-left:8px;
+  }
+  .btn-today:hover{background:var(--teal-tint);}
+
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-dow{font-size:11px; color:var(--ink-soft); text-align:center; font-family:"Roboto Mono",monospace; padding-bottom:6px;}
+  .cal-cell{
+    min-height:74px; border-radius:10px; border:1px solid var(--line); padding:6px 6px;
+    cursor:pointer; background:#fff; transition:border-color .12s ease, background .12s ease;
+  }
+  .cal-cell:hover{border-color:var(--teal);}
+  .cal-cell.outside{background:var(--paper); color:rgba(91,107,112,0.4);}
+  .cal-cell.today{border-color:var(--teal); box-shadow:inset 0 0 0 1px var(--teal);}
+  .cal-cell.selected{background:var(--teal-tint); border-color:var(--teal);}
+  .cal-cell .d-num{font-family:"Roboto Mono",monospace; font-size:12px; font-weight:700; margin-bottom:5px;}
+  .cal-cell .d-dots{display:flex; flex-wrap:wrap; gap:3px;}
+  .cal-cell .d-dots .dot{width:6px; height:6px; border-radius:50%;}
+
+  @media (max-width:640px){
+    .cal-cell{min-height:52px;}
+    .cal-dow{font-size:9.5px;}
+  }
+
+  .day-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
+  .day-panel-head h3{font-size:15px;}
+  .btn-add-event{
+    background:var(--teal); color:#fff; border:none; padding:9px 18px; border-radius:18px;
+    font-size:12.5px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-add-event:hover{background:var(--teal-deep);}
+
+  .event-row{
+    display:flex; align-items:flex-start; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line);
+  }
+  .event-row:last-child{border-bottom:none;}
+  .event-row .e-badge{flex-shrink:0; width:8px; height:8px; border-radius:50%; margin-top:6px;}
+  .event-row .e-body{flex:1; min-width:0;}
+  .event-row .e-title{font-size:13.5px; font-weight:700; color:var(--ink);}
+  .event-row .e-meta{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .event-row .e-owner{font-size:10.5px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; margin-top:3px;}
+  .event-row .e-actions{flex-shrink:0; display:flex; gap:6px;}
+  .event-row .e-actions button{
+    appearance:none; border:none; background:none; color:var(--ink-soft); cursor:pointer;
+    font-size:12px; padding:4px 6px; border-radius:6px;
+  }
+  .event-row .e-actions button:hover{background:var(--paper); color:var(--teal-deep);}
+  .empty-day{color:var(--ink-soft); font-size:12.5px; padding:20px 4px; text-align:center;}
+
+  /* ---- 新增/編輯事件 modal ---- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,35,44,0.5);
+    z-index:200; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff; border-radius:18px; padding:26px 28px; width:min(480px,100%);
+    max-height:88vh; overflow-y:auto; box-shadow:0 24px 60px rgba(20,50,60,0.3);
+  }
+  .modal-box h3{font-size:16px; margin-bottom:18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;}
+  .field input[type=text], .field input[type=date], .field input[type=time], .field textarea, .field select{
+    width:100%; padding:9px 12px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:13px; font-family:"Noto Sans TC",sans-serif; color:var(--ink);
+  }
+  .field textarea{resize:vertical; min-height:64px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .visibility-toggle{
+    display:flex; align-items:center; gap:10px; background:var(--paper); border-radius:10px; padding:10px 12px;
+  }
+  .visibility-toggle input{width:auto;}
+  .visibility-toggle .vt-text{font-size:12px; color:var(--ink);}
+  .visibility-toggle .vt-sub{font-size:10.5px; color:var(--ink-soft); margin-top:2px;}
+  .modal-actions{display:flex; justify-content:space-between; align-items:center; margin-top:20px;}
+  .btn-save{
+    background:var(--navy); color:#fff; border:none; padding:10px 22px; border-radius:18px;
+    font-size:13px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-save:hover{background:var(--teal-deep);}
+  .btn-cancel{
+    background:none; border:none; color:var(--ink-soft); font-size:12.5px; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-delete-event{
+    background:none; border:none; color:var(--negative); font-size:12.5px; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Calendar · 行事曆</div>
+    <h1>約訪行程</h1>
+    <p>記錄自己的約訪；如果你是團隊主管，可以把重要公告開放給整個團隊看到，也能一次看到底下夥伴的行程安排。</p>
+    <div class="legend">
+      <span><span class="dot mine"></span>我的行程</span>
+      <span><span class="dot teamshared"></span>團隊公告</span>
+      <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程（僅你看得到）</span>
+    </div>
+  </header>
+
+  <div class="cal-panel">
+    <div class="cal-nav">
+      <div class="month-label" id="monthLabel">載入中…</div>
+      <div class="cal-nav-btns">
+        <button id="btnPrevMonth">←</button>
+        <button id="btnNextMonth">→</button>
+        <button class="btn-today" id="btnToday">今天</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <div class="cal-panel">
+    <div class="day-panel-head">
+      <h3 id="dayPanelTitle">選一天看行程</h3>
+      <button class="btn-add-event" id="btnAddEvent">＋ 新增事件</button>
+    </div>
+    <div id="dayEventList"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="eventOverlay">
+  <div class="modal-box">
+    <h3 id="eventModalTitle">新增事件</h3>
+    <input type="hidden" id="eventId">
+    <div class="field">
+      <label>標題</label>
+      <input type="text" id="fieldTitle" placeholder="例如：與陳先生約訪">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>日期</label>
+        <input type="date" id="fieldDate">
+      </div>
+      <div class="field" style="display:flex; gap:6px;">
+        <div style="flex:1;">
+          <label>開始時間</label>
+          <input type="time" id="fieldStart">
+        </div>
+        <div style="flex:1;">
+          <label>結束時間</label>
+          <input type="time" id="fieldEnd">
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>連結客戶（選填）</label>
+      <select id="fieldClient">
+        <option value="">不連結客戶</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>備註（選填）</label>
+      <textarea id="fieldDesc" placeholder="約訪地點、要準備的資料等"></textarea>
+    </div>
+    <div class="field" id="visibilityField" style="display:none;">
+      <label class="visibility-toggle">
+        <input type="checkbox" id="fieldVisibility">
+        <span>
+          <span class="vt-text">開放給團隊</span>
+          <div class="vt-sub">開啟後，你團隊裡的所有夥伴都會在自己的行事曆上看到這筆</div>
+        </span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete-event" id="btnDeleteEvent" style="display:none;">刪除這筆事件</button>
+      <div style="margin-left:auto; display:flex; gap:14px; align-items:center;">
+        <button class="btn-cancel" id="btnCancelEvent">取消</button>
+        <button class="btn-save" id="btnSaveEvent">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script>
+let myId = null;
+let isTeamOwner = false;
+let currentMonth = new Date(); currentMonth.setDate(1);
+let selectedDate = null; // 'YYYY-MM-DD'
+let monthEvents = [];    // 這個月抓到的所有事件（已含 RLS 篩選過的可見範圍）
+let clientOptions = [];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function toDateStr(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function todayStr(){ return toDateStr(new Date()); }
+
+async function init(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session) return;
+  myId = session.user.id;
+
+  const { data: ownedTeams } = await supabaseClient.from('teams').select('id').eq('owner_id', myId);
+  isTeamOwner = !!(ownedTeams && ownedTeams.length > 0);
+  if(isTeamOwner){
+    document.getElementById('visibilityField').style.display = 'block';
+    document.getElementById('monitorLegend').style.display = 'inline-flex';
+  }
+
+  const { data: clients } = await supabaseClient
+    .from('client_records')
+    .select('id, client_name')
+    .eq('advisor_id', myId)
+    .is('deleted_at', null);
+  clientOptions = clients || [];
+  const sel = document.getElementById('fieldClient');
+  clientOptions.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = (c.client_name || '').trim() || '（未命名客戶）';
+    sel.appendChild(opt);
+  });
+
+  selectedDate = todayStr();
+  await loadMonth();
+}
+
+async function loadMonth(){
+  const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  document.getElementById('monthLabel').textContent = `${y} 年 ${m+1} 月`;
+
+  const rangeStart = toDateStr(new Date(y, m, 1));
+  const rangeEnd = toDateStr(new Date(y, m+1, 0));
+
+  const { data, error } = await supabaseClient
+    .from('calendar_events')
+    .select('*, client_records(client_name)')
+    .gte('event_date', rangeStart)
+    .lte('event_date', rangeEnd)
+    .order('start_time', { ascending: true, nullsFirst: false });
+  if(error){ console.error('讀取行事曆失敗', error); monthEvents = []; }
+  else monthEvents = data || [];
+
+  // 補上每筆事件建立者的名字（給團隊公告／夥伴監控用）
+  const otherIds = [...new Set(monthEvents.filter(e=>e.advisor_id!==myId).map(e=>e.advisor_id))];
+  let nameMap = {};
+  if(otherIds.length){
+    const { data: profiles } = await supabaseClient.from('profiles').select('id, display_name').in('id', otherIds);
+    (profiles||[]).forEach(p=>{ nameMap[p.id] = p.display_name || '（未命名顧問）'; });
+  }
+  monthEvents.forEach(e=>{ e._ownerName = e.advisor_id===myId ? null : (nameMap[e.advisor_id] || '（未命名顧問）'); });
+
+  renderGrid();
+  renderDayPanel();
+}
+
+function eventKind(e){
+  if(e.advisor_id === myId) return 'mine';
+  if(e.visibility === 'team') return 'teamshared';
+  return 'monitor';
+}
+
+function renderGrid(){
+  const grid = document.getElementById('calGrid');
+  const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+
+  let html = ['日','一','二','三','四','五','六'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+
+  const cells = [];
+  for(let i=0;i<firstDow;i++){
+    cells.push({ day: daysInPrevMonth - firstDow + 1 + i, outside:true });
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    cells.push({ day:d, outside:false, dateStr: toDateStr(new Date(y,m,d)) });
+  }
+  while(cells.length % 7 !== 0){
+    cells.push({ day: cells.length - firstDow - daysInMonth + 1, outside:true });
+  }
+
+  const t = todayStr();
+  cells.forEach(c=>{
+    if(c.outside){
+      html += `<div class="cal-cell outside"><div class="d-num">${c.day}</div></div>`;
+      return;
+    }
+    const dayEvents = monthEvents.filter(e=>e.event_date === c.dateStr);
+    const dots = dayEvents.slice(0,6).map(e=>`<span class="dot ${eventKind(e)}"></span>`).join('');
+    const cls = ['cal-cell'];
+    if(c.dateStr === t) cls.push('today');
+    if(c.dateStr === selectedDate) cls.push('selected');
+    html += `<div class="${cls.join(' ')}" data-date="${c.dateStr}">
+      <div class="d-num">${c.day}</div>
+      <div class="d-dots">${dots}</div>
+    </div>`;
+  });
+
+  grid.innerHTML = html;
+  grid.querySelectorAll('.cal-cell[data-date]').forEach(cell=>{
+    cell.addEventListener('click', ()=>{
+      selectedDate = cell.dataset.date;
+      renderGrid();
+      renderDayPanel();
+    });
+  });
+}
+
+function formatTimeRange(e){
+  if(!e.start_time) return '';
+  const cut = t => t ? t.slice(0,5) : '';
+  return e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time);
+}
+
+function renderDayPanel(){
+  if(!selectedDate) return;
+  const d = new Date(selectedDate + 'T00:00:00');
+  const wd = ['日','一','二','三','四','五','六'][d.getDay()];
+  document.getElementById('dayPanelTitle').textContent = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}（週${wd}）`;
+
+  const dayEvents = monthEvents.filter(e=>e.event_date===selectedDate)
+    .sort((a,b)=> (a.start_time||'99').localeCompare(b.start_time||'99'));
+
+  const list = document.getElementById('dayEventList');
+  if(dayEvents.length===0){
+    list.innerHTML = '<div class="empty-day">這天還沒有安排任何事件</div>';
+    return;
+  }
+  list.innerHTML = dayEvents.map(e=>{
+    const kind = eventKind(e);
+    const isMine = kind === 'mine';
+    const ownerLine = kind==='teamshared' ? `${e._ownerName} · 團隊公告`
+                     : kind==='monitor' ? `${e._ownerName} · 夥伴行程（僅你看得到）`
+                     : '';
+    const clientLine = e.client_records ? `👤 ${e.client_records.client_name || '（未命名客戶）'}` : '';
+    return `
+    <div class="event-row">
+      <span class="e-badge ${kind}"></span>
+      <div class="e-body">
+        <div class="e-title">${escapeHtml(e.title)}</div>
+        <div class="e-meta">${[formatTimeRange(e), clientLine].filter(Boolean).join('　')}</div>
+        ${e.description ? `<div class="e-meta">${escapeHtml(e.description)}</div>` : ''}
+        ${ownerLine ? `<div class="e-owner">${ownerLine}</div>` : ''}
+      </div>
+      ${isMine ? `<div class="e-actions"><button data-edit="${e.id}">✎</button></div>` : ''}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const e = monthEvents.find(x=>x.id===btn.dataset.edit);
+      if(e) openEventModal(e);
+    });
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+/* ---------------- 新增／編輯事件 modal ---------------- */
+const eventOverlay = document.getElementById('eventOverlay');
+
+function openEventModal(existing){
+  document.getElementById('eventModalTitle').textContent = existing ? '編輯事件' : '新增事件';
+  document.getElementById('eventId').value = existing ? existing.id : '';
+  document.getElementById('fieldTitle').value = existing ? existing.title : '';
+  document.getElementById('fieldDate').value = existing ? existing.event_date : selectedDate;
+  document.getElementById('fieldStart').value = existing && existing.start_time ? existing.start_time.slice(0,5) : '';
+  document.getElementById('fieldEnd').value = existing && existing.end_time ? existing.end_time.slice(0,5) : '';
+  document.getElementById('fieldClient').value = existing && existing.client_id ? existing.client_id : '';
+  document.getElementById('fieldDesc').value = existing ? (existing.description || '') : '';
+  document.getElementById('fieldVisibility').checked = !!(existing && existing.visibility === 'team');
+  document.getElementById('btnDeleteEvent').style.display = existing ? 'inline-block' : 'none';
+  eventOverlay.classList.add('show');
+}
+function closeEventModal(){ eventOverlay.classList.remove('show'); }
+
+document.getElementById('btnAddEvent').addEventListener('click', ()=> openEventModal(null));
+document.getElementById('btnCancelEvent').addEventListener('click', closeEventModal);
+eventOverlay.addEventListener('click', (e)=>{ if(e.target.id==='eventOverlay') closeEventModal(); });
+
+document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
+  const title = document.getElementById('fieldTitle').value.trim();
+  if(!title){ alert('請輸入標題'); return; }
+  const id = document.getElementById('eventId').value;
+  const payload = {
+    advisor_id: myId,
+    title,
+    event_date: document.getElementById('fieldDate').value,
+    start_time: document.getElementById('fieldStart').value || null,
+    end_time: document.getElementById('fieldEnd').value || null,
+    client_id: document.getElementById('fieldClient').value || null,
+    description: document.getElementById('fieldDesc').value.trim() || null,
+    visibility: (isTeamOwner && document.getElementById('fieldVisibility').checked) ? 'team' : 'private'
+  };
+  if(!payload.event_date){ alert('請選擇日期'); return; }
+
+  let error;
+  if(id){
+    ({ error } = await supabaseClient.from('calendar_events').update(payload).eq('id', id));
+  } else {
+    ({ error } = await supabaseClient.from('calendar_events').insert(payload));
+  }
+  if(error){ console.error('儲存事件失敗', error); alert('儲存失敗，請檢查網路連線後再試一次。'); return; }
+
+  closeEventModal();
+  await loadMonth();
+});
+
+document.getElementById('btnDeleteEvent').addEventListener('click', async ()=>{
+  const id = document.getElementById('eventId').value;
+  if(!id) return;
+  if(!confirm('確定要刪除這筆事件嗎？這個動作沒辦法復原。')) return;
+  const { error } = await supabaseClient.from('calendar_events').delete().eq('id', id);
+  if(error){ console.error('刪除事件失敗', error); alert('刪除失敗，請檢查網路連線後再試一次。'); return; }
+  closeEventModal();
+  await loadMonth();
+});
+
+document.getElementById('btnPrevMonth').addEventListener('click', ()=>{
+  currentMonth.setMonth(currentMonth.getMonth()-1);
+  loadMonth();
+});
+document.getElementById('btnNextMonth').addEventListener('click', ()=>{
+  currentMonth.setMonth(currentMonth.getMonth()+1);
+  loadMonth();
+});
+document.getElementById('btnToday').addEventListener('click', ()=>{
+  currentMonth = new Date(); currentMonth.setDate(1);
+  selectedDate = todayStr();
+  loadMonth();
+});
+
+init();
+</script>
+
+</body>
+</html>

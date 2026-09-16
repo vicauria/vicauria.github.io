@@ -101,6 +101,18 @@
   }
   .tool-card .t{font-family:"Noto Serif TC",serif; font-weight:700; font-size:14.5px; color:var(--navy); margin-bottom:6px;}
   .tool-card .d{font-size:12px; color:#5B6B70; line-height:1.7;}
+
+  .agenda-row{
+    display:flex; align-items:center; gap:12px; background:#fff; border:1px solid #E1E7E7;
+    border-radius:12px; padding:12px 16px; margin-bottom:8px; cursor:pointer;
+  }
+  .agenda-row:hover{border-color:#2E7391;}
+  .agenda-row .a-time{
+    font-family:"Roboto Mono",monospace; font-size:12px; color:#2E7391; font-weight:700;
+    width:76px; flex-shrink:0;
+  }
+  .agenda-row .a-title{font-size:13px; color:#182226; font-weight:600;}
+  .agenda-row .a-meta{font-size:11px; color:#5B6B70; margin-top:2px;}
 </style>
 </head>
 <body>
@@ -139,10 +151,17 @@
   <div class="tools-grid" id="toolsGrid"></div>
 </div>
 
+<div class="tools-section" id="agendaSection" style="display:none;">
+  <div class="tools-title">今日行程</div>
+  <div class="tools-sub" id="agendaSub"></div>
+  <div id="agendaList" style="margin-top:14px;"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase-config.js"></script>
 <script>
   const TOOLS = [
+    {target:'frame-calendar', badge:'📅', title:'行事曆', desc:'約訪行程／團隊公告'},
     {target:'frame-blueprint', badge:'🗺️', title:'財富地圖', desc:'顧問式引導問卷／財富畫像報告'},
     {target:'frame-clientrecords', badge:'🗂️', title:'客戶資料', desc:'已填答的財富地圖紀錄'},
     {target:'frame-marketnews', badge:'📰', title:'市場快訊', desc:'即時財經新聞／自動分類'},
@@ -181,6 +200,7 @@
         if(name){
           document.getElementById('greeting').innerHTML = 'Hi，歡迎回來，<b>'+name+'</b> 顧問。';
         }
+        await loadTodayAgenda(user.id);
       }
     }catch(e){}
 
@@ -190,6 +210,39 @@
     document.getElementById('datetime').textContent =
       now.getFullYear()+'/'+p(now.getMonth()+1)+'/'+p(now.getDate())+'（'+weekday+'）　'+p(now.getHours())+':'+p(now.getMinutes());
   })();
+
+  async function loadTodayAgenda(myId){
+    const p = n => String(n).padStart(2,'0');
+    const t = new Date();
+    const todayStr = `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;
+    try{
+      const { data, error } = await supabaseClient
+        .from('calendar_events')
+        .select('id, title, start_time, end_time, advisor_id, visibility')
+        .eq('event_date', todayStr)
+        .order('start_time', { ascending:true, nullsFirst:false });
+      if(error || !data || data.length===0) return;
+
+      const section = document.getElementById('agendaSection');
+      const sub = document.getElementById('agendaSub');
+      const list = document.getElementById('agendaList');
+      sub.textContent = `今天共有 ${data.length} 筆安排，點一下直接前往行事曆查看`;
+      list.innerHTML = data.map(e=>{
+        const cut = s => s ? s.slice(0,5) : '';
+        const time = e.start_time ? (e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time)) : '全天';
+        const tag = e.advisor_id===myId ? '' : (e.visibility==='team' ? '（團隊公告）' : '（夥伴行程）');
+        return `<div class="agenda-row"><span class="a-time">${time}</span><div><div class="a-title">${e.title}${tag}</div></div></div>`;
+      }).join('');
+      list.querySelectorAll('.agenda-row').forEach(row=>{
+        row.addEventListener('click', ()=>{
+          if(window.parent && typeof window.parent.goToModule === 'function'){
+            window.parent.goToModule('frame-calendar');
+          }
+        });
+      });
+      section.style.display = 'block';
+    }catch(e){ console.error('讀取今日行程失敗', e); }
+  }
 </script>
 
 </body>
