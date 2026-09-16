@@ -219,7 +219,8 @@
       const { data, error } = await supabaseClient
         .from('calendar_events')
         .select('id, title, start_time, end_time, advisor_id, visibility')
-        .eq('event_date', todayStr)
+        .lte('event_date', todayStr)
+        .or(`end_date.gte.${todayStr},and(end_date.is.null,event_date.eq.${todayStr})`)
         .order('start_time', { ascending:true, nullsFirst:false });
       if(error || !data || data.length===0) return;
 

@@ -145,7 +145,7 @@
     <div class="legend">
       <span><span class="dot mine"></span>我的行程</span>
       <span><span class="dot teamshared"></span>團隊公告</span>
-      <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程（僅你看得到）</span>
+      <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程</span>
     </div>
   </header>
 
@@ -180,18 +180,31 @@
     </div>
     <div class="field-row">
       <div class="field">
-        <label>日期</label>
+        <label>開始日期</label>
         <input type="date" id="fieldDate">
       </div>
-      <div class="field" style="display:flex; gap:6px;">
-        <div style="flex:1;">
-          <label>開始時間</label>
-          <input type="time" id="fieldStart">
-        </div>
-        <div style="flex:1;">
-          <label>結束時間</label>
-          <input type="time" id="fieldEnd">
-        </div>
+      <div class="field">
+        <label>結束日期</label>
+        <input type="date" id="fieldEndDate">
+      </div>
+    </div>
+    <div class="field">
+      <label class="visibility-toggle" style="margin-bottom:10px;">
+        <input type="checkbox" id="fieldAllDay">
+        <span>
+          <span class="vt-text">全天</span>
+          <div class="vt-sub">整天不指定時間（例如出國、休假、多天培訓）</div>
+        </span>
+      </label>
+    </div>
+    <div class="field-row" id="timeFieldRow">
+      <div class="field">
+        <label>開始時間</label>
+        <input type="time" id="fieldStart">
+      </div>
+      <div class="field">
+        <label>結束時間</label>
+        <input type="time" id="fieldEnd">
       </div>
     </div>
     <div class="field">
@@ -277,8 +290,8 @@ async function loadMonth(){
   const { data, error } = await supabaseClient
     .from('calendar_events')
     .select('*, client_records(client_name)')
-    .gte('event_date', rangeStart)
     .lte('event_date', rangeEnd)
+    .or(`end_date.gte.${rangeStart},and(end_date.is.null,event_date.gte.${rangeStart})`)
     .order('start_time', { ascending: true, nullsFirst: false });
   if(error){ console.error('讀取行事曆失敗', error); monthEvents = []; }
   else monthEvents = data || [];
@@ -300,6 +313,10 @@ function eventKind(e){
   if(e.advisor_id === myId) return 'mine';
   if(e.visibility === 'team') return 'teamshared';
   return 'monitor';
+}
+function eventCoversDate(e, dateStr){
+  const end = e.end_date || e.event_date;
+  return e.event_date <= dateStr && end >= dateStr;
 }
 
 function renderGrid(){
@@ -328,7 +345,7 @@ function renderGrid(){
       html += `<div class="cal-cell outside"><div class="d-num">${c.day}</div></div>`;
       return;
     }
-    const dayEvents = monthEvents.filter(e=>e.event_date === c.dateStr);
+    const dayEvents = monthEvents.filter(e=>eventCoversDate(e, c.dateStr));
     const dots = dayEvents.slice(0,6).map(e=>`<span class="dot ${eventKind(e)}"></span>`).join('');
     const cls = ['cal-cell'];
     if(c.dateStr === t) cls.push('today');
@@ -350,9 +367,12 @@ function renderGrid(){
 }
 
 function formatTimeRange(e){
-  if(!e.start_time) return '';
+  const md = iso => { const d = new Date(iso+'T00:00:00'); return `${d.getMonth()+1}/${d.getDate()}`; };
+  const multiDay = e.end_date && e.end_date !== e.event_date;
+  const rangeText = multiDay ? `${md(e.event_date)}–${md(e.end_date)}　` : '';
+  if(!e.start_time) return rangeText + (multiDay ? '全天' : '');
   const cut = t => t ? t.slice(0,5) : '';
-  return e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time);
+  return rangeText + (e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time));
 }
 
 function renderDayPanel(){
@@ -361,7 +381,7 @@ function renderDayPanel(){
   const wd = ['日','一','二','三','四','五','六'][d.getDay()];
   document.getElementById('dayPanelTitle').textContent = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}（週${wd}）`;
 
-  const dayEvents = monthEvents.filter(e=>e.event_date===selectedDate)
+  const dayEvents = monthEvents.filter(e=>eventCoversDate(e, selectedDate))
     .sort((a,b)=> (a.start_time||'99').localeCompare(b.start_time||'99'));
 
   const list = document.getElementById('dayEventList');
@@ -373,7 +393,7 @@ function renderDayPanel(){
     const kind = eventKind(e);
     const isMine = kind === 'mine';
     const ownerLine = kind==='teamshared' ? `${e._ownerName} · 團隊公告`
-                     : kind==='monitor' ? `${e._ownerName} · 夥伴行程（僅你看得到）`
+                     : kind==='monitor' ? `${e._ownerName} · 夥伴行程`
                      : '';
     const clientLine = e.client_records ? `👤 ${e.client_records.client_name || '（未命名客戶）'}` : '';
     return `
@@ -406,13 +426,26 @@ function escapeHtml(s){
 /* ---------------- 新增／編輯事件 modal ---------------- */
 const eventOverlay = document.getElementById('eventOverlay');
 
+function toggleTimeRow(){
+  const allDay = document.getElementById('fieldAllDay').checked;
+  document.getElementById('timeFieldRow').style.display = allDay ? 'none' : 'grid';
+  if(allDay){
+    document.getElementById('fieldStart').value = '';
+    document.getElementById('fieldEnd').value = '';
+  }
+}
+document.getElementById('fieldAllDay').addEventListener('change', toggleTimeRow);
+
 function openEventModal(existing){
   document.getElementById('eventModalTitle').textContent = existing ? '編輯事件' : '新增事件';
   document.getElementById('eventId').value = existing ? existing.id : '';
   document.getElementById('fieldTitle').value = existing ? existing.title : '';
   document.getElementById('fieldDate').value = existing ? existing.event_date : selectedDate;
+  document.getElementById('fieldEndDate').value = existing ? (existing.end_date || existing.event_date) : selectedDate;
   document.getElementById('fieldStart').value = existing && existing.start_time ? existing.start_time.slice(0,5) : '';
   document.getElementById('fieldEnd').value = existing && existing.end_time ? existing.end_time.slice(0,5) : '';
+  document.getElementById('fieldAllDay').checked = !!(existing && !existing.start_time);
+  toggleTimeRow();
   document.getElementById('fieldClient').value = existing && existing.client_id ? existing.client_id : '';
   document.getElementById('fieldDesc').value = existing ? (existing.description || '') : '';
   document.getElementById('fieldVisibility').checked = !!(existing && existing.visibility === 'team');
@@ -429,17 +462,22 @@ document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
   const title = document.getElementById('fieldTitle').value.trim();
   if(!title){ alert('請輸入標題'); return; }
   const id = document.getElementById('eventId').value;
+  const startDate = document.getElementById('fieldDate').value;
+  let endDate = document.getElementById('fieldEndDate').value || startDate;
+  if(!startDate){ alert('請選擇開始日期'); return; }
+  if(endDate < startDate){ alert('結束日期不能早於開始日期'); return; }
+  const allDay = document.getElementById('fieldAllDay').checked;
   const payload = {
     advisor_id: myId,
     title,
-    event_date: document.getElementById('fieldDate').value,
-    start_time: document.getElementById('fieldStart').value || null,
-    end_time: document.getElementById('fieldEnd').value || null,
+    event_date: startDate,
+    end_date: endDate,
+    start_time: allDay ? null : (document.getElementById('fieldStart').value || null),
+    end_time: allDay ? null : (document.getElementById('fieldEnd').value || null),
     client_id: document.getElementById('fieldClient').value || null,
     description: document.getElementById('fieldDesc').value.trim() || null,
     visibility: (isTeamOwner && document.getElementById('fieldVisibility').checked) ? 'team' : 'private'
   };
-  if(!payload.event_date){ alert('請選擇日期'); return; }
 
   let error;
   if(id){
