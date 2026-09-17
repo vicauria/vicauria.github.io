@@ -205,6 +205,10 @@
   .upgrade-card .u-price{font-family:"Roboto Mono", monospace; font-size:22px; font-weight:600; color:var(--navy);}
   .upgrade-card.master .u-price{color:var(--plum-deep);}
   .upgrade-card .u-price span{font-family:"Noto Sans TC", sans-serif; font-size:12px; font-weight:400; color:var(--ink-soft);}
+  .upgrade-card .u-price-old{
+    font-family:"Roboto Mono", monospace; font-size:14px; font-weight:500;
+    color:var(--ink-soft); text-decoration:line-through; margin-left:8px;
+  }
   .upgrade-card ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; flex:1;}
   .upgrade-card li{font-size:12.5px; color:var(--ink); display:flex; gap:7px; line-height:1.6;}
   .upgrade-card li::before{content:"·"; font-weight:700; color:var(--teal); flex-shrink:0;}
@@ -642,7 +646,7 @@
       <div class="upgrade-card">
         <div class="u-title-row"><div class="u-name">Pro</div></div>
         <div class="u-pitch">客戶量開始起來了，你需要的是效率，不是重複勞動。升級解鎖全面提升工作效率。</div>
-        <div class="u-price">590<span> 元/月</span></div>
+        <div class="u-price">499<span> 元/月</span><span class="u-price-old">790 元/月</span></div>
         <ul>
           <li>客戶資料最多 100 位</li>
           <li>財富地圖追蹤更新＋成長比對</li>
@@ -655,7 +659,7 @@
       <div class="upgrade-card master">
         <div class="u-title-row"><div class="u-name">Master</div><div class="u-tag">限定</div></div>
         <div class="u-pitch">你不只是顧問，你在帶團隊。升級解鎖全面提升管理效率。</div>
-        <div class="u-price">1690<span> 元/月</span></div>
+        <div class="u-price">1499<span> 元/月</span><span class="u-price-old">1790 元/月</span></div>
         <ul>
           <li>客戶資料無上限</li>
           <li>團隊工作量監控</li>
@@ -688,6 +692,18 @@
     <div class="settings-error" id="settingsError"></div>
     <div class="settings-success" id="settingsSuccess"></div>
 
+    <div class="settings-field" id="avatarField">
+      <label>大頭貼</label>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div class="user-avatar" id="settingsAvatarPreview" style="width:52px;height:52px;font-size:20px;">J</div>
+        <div>
+          <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+          <button class="settings-btn" id="btnUploadAvatar" style="margin-top:0;">上傳照片</button>
+          <div id="avatarUploadNote" style="font-size:11px; color:var(--ink-soft); margin-top:6px;"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-field">
       <label>更新密碼</label>
       <input type="password" id="newPasswordInput" placeholder="新密碼（至少6個字元）">
@@ -711,6 +727,20 @@
 <script src="plan-utils.js"></script>
 <script>
   /* ---------- 登入狀態驗證（真正串接 Supabase） ---------- */
+  function applyAvatarDisplay(url, initial){
+    [document.getElementById('userAvatar'), document.getElementById('settingsAvatarPreview')].forEach(el=>{
+      if(!el) return;
+      if(url){
+        el.style.backgroundImage = `url(${url})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.textContent = '';
+      } else {
+        el.style.backgroundImage = 'none';
+        el.textContent = initial;
+      }
+    });
+  }
   (async function checkAuth(){
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session){
@@ -720,10 +750,48 @@
     const user = session.user;
     const name = user.user_metadata?.display_name || user.email || '顧問';
     document.getElementById('userName').textContent = name;
-    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
     document.getElementById('settingsCurrentEmail').textContent = '目前登入：' + user.email;
     window.currentAdvisorId = user.id; // 讓內嵌的模組（例如客戶資料）之後可以用這個 id 存取自己的資料
+
+    const initial = name.charAt(0).toUpperCase();
+    applyAvatarDisplay(null, initial);
+    const { data: profile } = await supabaseClient.from('profiles').select('avatar_url').eq('id', user.id).single();
+    if(profile && profile.avatar_url) applyAvatarDisplay(profile.avatar_url, initial);
   })();
+
+  document.getElementById('btnUploadAvatar').addEventListener('click', ()=>{
+    document.getElementById('avatarFileInput').click();
+  });
+  document.getElementById('avatarFileInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ alert('請選擇圖片檔案'); return; }
+    if(file.size > 2*1024*1024){ alert('檔案太大了，請選擇 2MB 以內的圖片'); return; }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session) return;
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${session.user.id}/avatar.${ext}`;
+
+    const btn = document.getElementById('btnUploadAvatar');
+    const originalText = btn.textContent;
+    btn.textContent = '上傳中…'; btn.disabled = true;
+    try{
+      const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(path, file, { upsert: true });
+      if(uploadError) throw uploadError;
+      const { data: pub } = supabaseClient.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = pub.publicUrl + '?t=' + Date.now(); // 加時間戳，避免瀏覽器快取舊照片
+      const { error: updateError } = await supabaseClient.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
+      if(updateError) throw updateError;
+      applyAvatarDisplay(publicUrl, '');
+    }catch(err){
+      console.error('大頭貼上傳失敗', err);
+      alert('上傳失敗，請檢查網路連線後再試一次。');
+    }finally{
+      btn.textContent = originalText; btn.disabled = false;
+      e.target.value = '';
+    }
+  });
 
   document.getElementById('menuLogout').addEventListener('click', async ()=>{
     await supabaseClient.auth.signOut();
@@ -869,6 +937,14 @@
     if(badge){
       badge.textContent = PLAN_LABEL[plan] || 'Free';
       badge.className = 'user-plan-badge ' + plan;
+    }
+    const avatarField = document.getElementById('avatarField');
+    if(avatarField){
+      const canUpload = rank >= TIER_RANK.pro;
+      document.getElementById('btnUploadAvatar').style.display = canUpload ? 'inline-block' : 'none';
+      document.getElementById('avatarUploadNote').textContent = canUpload
+        ? 'JPG／PNG，2MB 以內'
+        : '大頭貼上傳是 Pro 以上方案的功能，升級後就能設定自己的照片。';
     }
     ['free','pro','master'].forEach(tier=>{
       const btn = document.getElementById('planBtn' + tier.charAt(0).toUpperCase() + tier.slice(1));
