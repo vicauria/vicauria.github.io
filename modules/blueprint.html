@@ -492,15 +492,15 @@ const incomeGroups = [
 ];
 const expenseGroups = [
   {key:"necessary", title:"必要支出", hint:"食衣住行等生活必需",
-   rows:[{name:"房貸／房租", monthly:0, once:0},{name:"三餐飲食", monthly:0, once:0},{name:"交通費", monthly:0, once:0},{name:"水電瓦斯／電信", monthly:0, once:0}]},
+   rows:[{name:"房租", monthly:0, once:0},{name:"三餐飲食", monthly:0, once:0},{name:"交通費", monthly:0, once:0},{name:"水電瓦斯／電信", monthly:0, once:0}]},
   {key:"flexible", title:"浮動支出", hint:"娛樂、治裝等非必要消費",
    rows:[{name:"娛樂消費", monthly:0, once:0},{name:"治裝／美容", monthly:0, once:0}]},
   {key:"insurance", title:"保費支出", hint:"壽險、醫療、意外等保障型保費",
    rows:[{name:"壽險／醫療險", monthly:0, once:0},{name:"意外險", monthly:0, once:0}]},
   {key:"dependent", title:"撫養支出", hint:"子女教育、孝親費等家庭責任支出",
    rows:[{name:"子女教育費", monthly:0, once:0},{name:"孝親費", monthly:0, once:0}]},
-  {key:"loan", title:"貸款支出", hint:"信貸、車貸等非房貸類貸款月付金",
-   rows:[{name:"信貸／車貸", monthly:0, once:0}]}
+  {key:"loan", title:"貸款支出", hint:"房貸、信貸、車貸等貸款月付金",
+   rows:[{name:"房貸月付金", monthly:0, once:0},{name:"信貸／車貸", monthly:0, once:0}]}
 ];
 const assetGroups = [
   {key:"liquid", title:"理財型資產", hint:"現金、活存、定存",
@@ -1076,12 +1076,19 @@ function validateCurrentPage(){
   }
   if(id==='liabilities'){
     const loanGroup = expenseGroups.find(g=>g.key==='loan');
-    const hasLoanExpense = loanGroup && groupHasData(loanGroup);
-    if(hasLoanExpense){
+    const mortgageRow = loanGroup ? loanGroup.rows.find(r=>r.name==='房貸月付金') : null;
+    const otherLoanRow = loanGroup ? loanGroup.rows.find(r=>r.name==='信貸／車貸') : null;
+
+    if(mortgageRow && rowAnnual(mortgageRow) > 0){
+      const mortgageGroup = liabilityGroups.find(g=>g.key==='mortgage');
+      if(!mortgageGroup || !groupHasData(mortgageGroup)){
+        return '你在「錢都去哪了」填了房貸月付金，代表應該有對應的房貸餘額——請在「房貸餘額」填上對應數字，才能繼續下一步。';
+      }
+    }
+    if(otherLoanRow && rowAnnual(otherLoanRow) > 0){
       const otherLoanGroup = liabilityGroups.find(g=>g.key==='otherloan');
-      const hasOtherLoanLiability = otherLoanGroup && groupHasData(otherLoanGroup);
-      if(!hasOtherLoanLiability){
-        return '你在「錢都去哪了」填了貸款支出，代表應該有對應的貸款餘額——請在「信貸／車貸餘額」填上對應數字，才能繼續下一步。';
+      if(!otherLoanGroup || !groupHasData(otherLoanGroup)){
+        return '你在「錢都去哪了」填了信貸／車貸支出，代表應該有對應的貸款餘額——請在「信貸／車貸餘額」填上對應數字，才能繼續下一步。';
       }
     }
   }
@@ -1401,10 +1408,16 @@ function renderGoalCalcCards(){
 
 /* ---------------- 財富願景：目標金額與達成率（報告用） ----------------
    這裡刻意不用風險屬性去假設一個投資報酬率——那樣算出來的達成率容易讓客戶誤以為
-   「這個數字是他一定做得到的」。改成最保守的方式：單純存錢（不計入任何投資成長），
+   「這個數字是他一定做得到的」。改成保守的方式：單純存錢（銀行活存利率情境假設 1%），
    只把通膨考慮進去，讓客戶先看清楚「什麼都不做、只是存」的真實落差。
-   如果客戶有在投資、想看報酬率的威力，交給顧問帶去試算工具箱的計算機當面演示。 */
+   如果客戶有在投資、想看報酬率的威力，交給顧問帶去試算工具箱的計算機當面演示。
+
+   房貸的特別處理：房子淨值（市值－房貸餘額）單獨抓出來、維持不變（不假設房價漲跌，
+   也不模擬房貸攤還進度）；年結餘裡已經扣掉的「房貸月付金」要加回來，因為那筆錢
+   已經反映在「房屋淨值維持不變」這個假設裡，不能在結餘裡重複扣一次，不然這筆本金
+   等於在推算過程中憑空消失。 */
 const VISION_INFLATION_RATE = 0.02;
+const VISION_SAVINGS_RATE = 0.01; // 銀行活存利率情境假設
 function computeGoalTarget(goalName){
   const c = visionA.calc[goalName] || {};
   if(goalName === "樂活退休"){ return parseNum(c.monthly) * 12 * 25; }
@@ -1414,22 +1427,47 @@ function computeGoalTarget(goalName){
 function computeGoalAchievement(goalName){
   const c = visionA.calc[goalName] || {};
   const target = computeGoalTarget(goalName);
-  const netWorth = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0) - liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
-  const annualSurplus = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0) - expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
-  const years = yearsUntil(parseInt(c.age)) || 0;
-  const rate = 0; // 單純存錢，不假設投資報酬率
 
-  // 用複利推估屆時累積：現有淨值成長 + 每年結餘持續投入成長
-  const fvAssets = netWorth * Math.pow(1+rate, years);
+  const assetTotal = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
+  const netWorth = assetTotal - liabilityTotal;
+
+  // 房屋淨值單獨抓出來、維持不變，避免跟下面加回去的房貸月付金重複計算
+  const realEstateGroup = assetGroups.find(g=>g.key==='realestate');
+  const realEstateValue = realEstateGroup ? groupAmountTotal(realEstateGroup) : 0;
+  const mortgageGroup = liabilityGroups.find(g=>g.key==='mortgage');
+  const mortgageBalance = mortgageGroup ? groupAmountTotal(mortgageGroup) : 0;
+  const homeEquity = realEstateValue - mortgageBalance;
+  const liquidNetWorth = netWorth - homeEquity;
+
+  const incomeTotal = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  const expenseTotal = expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
+  let annualSurplus = incomeTotal - expenseTotal;
+
+  // 「房貸月付金」已經反映在「房屋淨值維持不變」的假設裡，結餘裡不能再扣一次
+  const loanGroup = expenseGroups.find(g=>g.key==='loan');
+  const mortgageRow = loanGroup ? loanGroup.rows.find(r=>r.name==='房貸月付金') : null;
+  if(mortgageRow) annualSurplus += rowAnnual(mortgageRow);
+
+  const years = yearsUntil(parseInt(c.age)) || 0;
+  const rate = VISION_SAVINGS_RATE;
+
+  // 用複利推估屆時累積：房屋淨值維持不變 + 流動淨值成長 + 每年結餘持續投入成長
+  const fvLiquid = liquidNetWorth * Math.pow(1+rate, years);
   const fvSavings = rate>0 ? annualSurplus * ((Math.pow(1+rate, years)-1)/rate) : annualSurplus*years;
-  const projected = fvAssets + fvSavings;
+  const projected = homeEquity + fvLiquid + fvSavings;
 
   // 通膨調整後，屆時真正需要準備的金額（今日設定的目標，換算成那個年紀的幣值）
   const inflationAdjustedTarget = target * Math.pow(1+VISION_INFLATION_RATE, years);
   const gap = Math.max(0, inflationAdjustedTarget - projected);
   const rateAchieved = inflationAdjustedTarget>0 ? Math.max(0, projected/inflationAdjustedTarget*100) : null;
 
-  return {target, inflationAdjustedTarget, projected, years, rate, gap, rateAchieved};
+  // 月／年現金流版本（只有樂活退休、旅遊基金這種本來就是用月/年花費倒推目標的，才有意義）
+  const todayMonthly = goalName==='樂活退休' ? parseNum(c.monthly) : (goalName==='旅遊基金' ? parseNum(c.yearly) : null);
+  const inflationAdjustedMonthly = todayMonthly!==null ? todayMonthly * Math.pow(1+VISION_INFLATION_RATE, years) : null;
+  const projectedMonthly = goalName==='樂活退休' ? projected/25/12 : (goalName==='旅遊基金' ? projected/25 : null);
+
+  return {target, inflationAdjustedTarget, projected, years, rate, gap, rateAchieved, todayMonthly, inflationAdjustedMonthly, projectedMonthly};
 }
 
 function buildVisionGoalListHTML(){
@@ -1443,9 +1481,27 @@ function buildVisionGoalListHTML(){
     const ageText = c.age ? c.age+'歲' : '目標當年';
     const diffLabel = r.gap>0 ? '還缺' : '已超過目標';
     const diffValue = r.gap>0 ? r.gap : (r.projected - r.inflationAdjustedTarget);
+    const unitLabel = g==='旅遊基金' ? '/年' : '/月';
+
+    const monthlyRow = r.todayMonthly!==null ? `
+      <div class="vg-grid">
+        <div class="vg-card">
+          <div class="vg-label">今日${g==='旅遊基金'?'年':'月'}目標</div>
+          <div class="vg-value">${money(r.todayMonthly)}<small>${unitLabel}</small></div>
+        </div>
+        <div class="vg-card">
+          <div class="vg-label">通膨調整後（${ageText}需要）</div>
+          <div class="vg-value">${money(r.inflationAdjustedMonthly)}<small>${unitLabel}</small></div>
+        </div>
+        <div class="vg-card ${tier}">
+          <div class="vg-label">預估屆時可支應</div>
+          <div class="vg-value">${money(r.projectedMonthly)}<small>${unitLabel}</small></div>
+        </div>
+      </div>` : '';
 
     return `
       <div class="vg-goal-title">${label}（${ageText}）</div>
+      ${monthlyRow}
       <div class="vg-grid">
         <div class="vg-card">
           <div class="vg-label">通膨調整後目標（${ageText}需要）</div>
@@ -2321,7 +2377,7 @@ function buildReportPages(uid, opts){
     <div class="report-section">
       <h3>財富願景・達成率</h3>
       ${buildVisionGoalListHTML()}
-      <div class="report-note">達成率＝單純存錢累積（不計投資報酬），對比通膨調整後的目標金額。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
+      <div class="report-note">達成率＝單純存錢累積（假設銀行活存利率 1%，不計投資報酬），對比通膨調整後的目標金額；有房貸的話，房屋淨值先當作不變，避免跟月付金重複扣。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
     </div>`;
 
   const financialAnalysisSection = buildFinancialAnalysisHTML();
