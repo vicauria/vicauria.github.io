@@ -220,6 +220,33 @@
   .report-row .k{color:var(--ink-soft);}
   .report-row .v{font-weight:600;color:var(--navy);font-family:"Roboto Mono",monospace;}
   .report-note{background:var(--warm-tint);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--warm-deep);margin-top:10px;line-height:1.8;}
+
+  /* ---------- 圖像化數據卡片（財富願景・達成率 用） ---------- */
+  .vg-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  .vg-grid:last-child{margin-bottom:0;}
+  .vg-card{
+    background:var(--card); border-radius:12px; border:1px solid var(--line);
+    padding:16px 15px; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .vg-card .vg-label{font-size:11px; color:var(--ink-soft); margin-bottom:7px;}
+  .vg-card .vg-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:19px; color:var(--navy); line-height:1.2;}
+  .vg-card .vg-value small{font-size:11px; font-weight:500; color:var(--ink-soft); margin-left:2px;}
+  .vg-card.tier-pos{background:rgba(46,125,91,.10); border-color:rgba(46,125,91,.3);}
+  .vg-card.tier-pos .vg-value{color:var(--positive);}
+  .vg-card.tier-warn{background:rgba(184,121,30,.10); border-color:rgba(184,121,30,.3);}
+  .vg-card.tier-warn .vg-value{color:#B8791E;}
+  .vg-card.tier-neg{background:rgba(179,73,47,.10); border-color:rgba(179,73,47,.3);}
+  .vg-card.tier-neg .vg-value{color:var(--negative);}
+  .vg-card .vg-badge{
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;
+    margin-bottom:8px;
+  }
+  .vg-card.tier-pos .vg-badge{background:rgba(46,125,91,.16); color:var(--positive);}
+  .vg-card.tier-warn .vg-badge{background:rgba(184,121,30,.16); color:#B8791E;}
+  .vg-card.tier-neg .vg-badge{background:rgba(179,73,47,.16); color:var(--negative);}
+  .vg-goal-title{font-size:14px; font-weight:700; color:var(--navy); margin:20px 0 10px;}
+  .vg-goal-title:first-child{margin-top:0;}
+  @media (max-width:520px){.vg-grid{grid-template-columns:1fr;}}
   .report-btn{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
   .report-btn-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
   .report-btn-home{
@@ -1411,18 +1438,31 @@ function buildVisionGoalListHTML(){
     const c = visionA.calc[g] || {};
     const r = computeGoalAchievement(g);
     const rate = r.rateAchieved;
-    const color = rate===null ? 'var(--ink-soft)' : (rate>=100 ? 'var(--positive)' : (rate>=60 ? 'var(--warm-deep)' : 'var(--negative)'));
-    const ageText = c.age ? c.age+'歲・' : '';
-    const rateColorForGap = 'var(--negative)';
+    const tier = rate===null ? '' : (rate>=100 ? 'tier-pos' : (rate>=60 ? 'tier-warn' : 'tier-neg'));
+    const badgeText = rate===null ? '' : (rate>=100 ? '✓ 達標' : (rate>=60 ? '⚠ 接近目標' : '✕ 落差較大'));
+    const ageText = c.age ? c.age+'歲' : '目標當年';
+    const diffLabel = r.gap>0 ? '還缺' : '已超過目標';
+    const diffValue = r.gap>0 ? r.gap : (r.projected - r.inflationAdjustedTarget);
+
     return `
-      <div class="report-row" style="border-bottom:none;padding-bottom:2px;">
-        <span class="k" style="font-weight:700;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:7px;"></span>${label}（${ageText}目標 ${money(r.target)}）</span>
-        <span class="v" style="color:${color};font-weight:700;font-size:16px;">${rate===null?'—':rate.toFixed(0)+'%'}</span>
-      </div>
-      <div style="font-size:12.5px;color:var(--ink-soft);padding:0 0 16px 15px;line-height:2;">
-        考量通膨後，${ageText||'目標當年'}這筆目標實際需要準備 <b style="color:var(--ink);">${money(r.inflationAdjustedTarget)}</b>（以年通膨 2% 估算）<br>
-        依目前資產與每年結餘持續累積，屆時預估可達 <b style="color:var(--ink);">${money(r.projected)}</b>（單純存錢，未計入投資報酬）<br>
-        ${r.gap>0 ? `距離通膨調整後的目標，還缺 <b style="color:${rateColorForGap};">${money(r.gap)}</b>` : `依目前推估，已能覆蓋通膨調整後的目標`}
+      <div class="vg-goal-title">${label}（${ageText}）</div>
+      <div class="vg-grid">
+        <div class="vg-card">
+          <div class="vg-label">通膨調整後目標（${ageText}需要）</div>
+          <div class="vg-value">${money(r.inflationAdjustedTarget)}</div>
+        </div>
+        <div class="vg-card">
+          <div class="vg-label">預估屆時累積（單純存錢）</div>
+          <div class="vg-value">${money(r.projected)}</div>
+        </div>
+        <div class="vg-card ${tier}">
+          <div class="vg-badge">${badgeText}</div>
+          <div class="vg-value">${diffLabel}<br>${money(Math.abs(diffValue))}</div>
+        </div>
+        <div class="vg-card ${tier}">
+          <div class="vg-label">達成率</div>
+          <div class="vg-value">${rate===null?'—':rate.toFixed(0)+'%'}</div>
+        </div>
       </div>`;
   }).join('') || '<div class="report-row"><span class="k">尚未選擇目標</span></div>';
 }
@@ -2281,7 +2321,7 @@ function buildReportPages(uid, opts){
     <div class="report-section">
       <h3>財富願景・達成率</h3>
       ${buildVisionGoalListHTML()}
-      <div class="report-note">達成率＝依目前資產與每年結餘「單純存錢」累積（不假設任何投資報酬率），對比「通膨調整後」的目標金額計算——不是拿今天的目標金額直接比較，因為到了目標那一年，同樣的生活水準會需要更多錢。綠色代表已達標、橘色代表接近、紅色代表落差較大。這裡刻意不計入投資成長，先讓客戶看清楚「只存錢」的真實落差；如果客戶有在投資或想了解報酬率能帶來多少差異，建議顧問當面帶去試算工具箱的計算機實際演示。</div>
+      <div class="report-note">達成率＝單純存錢累積（不計投資報酬），對比通膨調整後的目標金額。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
     </div>`;
 
   const financialAnalysisSection = buildFinancialAnalysisHTML();
