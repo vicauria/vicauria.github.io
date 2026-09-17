@@ -151,7 +151,7 @@
 
 <div class="modal-overlay" id="contractOverlay">
   <div class="modal-box">
-    <h3>新增簽約</h3>
+    <h3 id="modalTitle">新增簽約</h3>
     <div class="field">
       <label>客戶</label>
       <select id="fieldClient">
@@ -169,8 +169,8 @@
     </div>
     <div class="field-row">
       <div class="field">
-        <label>簽約時間</label>
-        <input type="date" id="fieldSignedDate">
+        <label>簽約金額（美金）</label>
+        <input type="number" id="fieldAmount" min="0" placeholder="0">
       </div>
       <div class="field">
         <label>年期（繳幾年）</label>
@@ -183,6 +183,10 @@
         <label id="lumpSumLabel"><input type="radio" name="paymentType" value="lump_sum" checked> 整付</label>
         <label id="installmentLabel"><input type="radio" name="paymentType" value="installment"> 分期</label>
       </div>
+    </div>
+    <div class="field">
+      <label>簽約時間</label>
+      <input type="date" id="fieldSignedDate">
     </div>
     <div class="field" id="lumpSumDateField">
       <label>匯款時間</label>
@@ -200,6 +204,8 @@
 <script>
 let myId = null;
 let clientOptions = [];
+let lastContracts = [];
+let editingContractId = null;
 
 function pad(n){ return String(n).padStart(2,'0'); }
 function toDateStr(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
@@ -238,6 +244,7 @@ async function loadContracts(){
     .select('*, client_records(client_name)')
     .order('signed_date', { ascending:false });
   if(error){ console.error('讀取簽約失敗', error); return; }
+  lastContracts = contracts || [];
 
   const { data: payments } = await supabaseClient
     .from('contract_payments')
@@ -296,6 +303,7 @@ function renderContractList(contracts, paymentsByContract){
           <div class="contract-title">${escapeHtml(c.product_name)}</div>
           <div class="contract-meta">
             <span>👤 ${escapeHtml(clientName)}</span>
+            ${c.amount ? `<span>US$ ${Number(c.amount).toLocaleString('en-US')}</span>` : ''}
             <span>簽約：${c.signed_date}</span>
             <span>${c.payment_type==='lump_sum' ? '整付' : `分期・${c.term_years} 年期`}</span>
           </div>
@@ -303,6 +311,7 @@ function renderContractList(contracts, paymentsByContract){
         </div>
         <div class="contract-actions">
           <button class="btn-toggle-detail" data-id="${c.id}">展開明細</button>
+          <button class="btn-edit-contract" data-id="${c.id}">編輯</button>
           <button class="danger btn-delete-contract" data-id="${c.id}">刪除</button>
         </div>
       </div>
@@ -334,6 +343,12 @@ function renderContractList(contracts, paymentsByContract){
       btn.textContent = showing ? '展開明細' : '收起明細';
     });
   });
+  list.querySelectorAll('.btn-edit-contract').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const c = lastContracts.find(x=>x.id===btn.dataset.id);
+      if(c) openModal(c);
+    });
+  });
   list.querySelectorAll('.btn-delete-contract').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('確定要刪除這筆簽約紀錄嗎？裡面所有的繳費紀錄也會一併刪除，沒辦法復原。')) return;
@@ -361,17 +376,20 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
-/* ---------------- 新增簽約 modal ---------------- */
+/* ---------------- 新增／編輯簽約 modal ---------------- */
 const overlay = document.getElementById('contractOverlay');
-function openModal(){
-  document.getElementById('fieldClient').value = '';
-  document.getElementById('fieldClientManual').value = '';
+function openModal(existing){
+  editingContractId = existing ? existing.id : null;
+  document.getElementById('modalTitle').textContent = existing ? '編輯簽約' : '新增簽約';
   document.getElementById('manualClientField').style.display = 'none';
-  document.getElementById('fieldProduct').value = '';
-  document.getElementById('fieldSignedDate').value = todayStr();
-  document.getElementById('fieldTermYears').value = 1;
-  document.querySelector('input[name=paymentType][value=lump_sum]').checked = true;
-  document.getElementById('fieldRemittanceDate').value = todayStr();
+  document.getElementById('fieldClientManual').value = '';
+  document.getElementById('fieldClient').value = existing && existing.client_id ? existing.client_id : '';
+  document.getElementById('fieldProduct').value = existing ? existing.product_name : '';
+  document.getElementById('fieldAmount').value = existing && existing.amount ? existing.amount : '';
+  document.getElementById('fieldSignedDate').value = existing ? existing.signed_date : todayStr();
+  document.getElementById('fieldTermYears').value = existing ? existing.term_years : 1;
+  document.querySelector('input[name=paymentType][value=' + (existing ? existing.payment_type : 'lump_sum') + ']').checked = true;
+  document.getElementById('fieldRemittanceDate').value = existing && existing.remittance_date ? existing.remittance_date : todayStr();
   updatePaymentTypeUI();
   overlay.classList.add('show');
 }
@@ -387,13 +405,15 @@ function updatePaymentTypeUI(){
 }
 document.querySelectorAll('input[name=paymentType]').forEach(r=>r.addEventListener('change', updatePaymentTypeUI));
 
-document.getElementById('btnAddContract').addEventListener('click', openModal);
+document.getElementById('btnAddContract').addEventListener('click', ()=> openModal());
 document.getElementById('btnCancelContract').addEventListener('click', closeModal);
 overlay.addEventListener('click', (e)=>{ if(e.target.id==='contractOverlay') closeModal(); });
 
 document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
   let clientId = document.getElementById('fieldClient').value;
   const productName = document.getElementById('fieldProduct').value.trim();
+  const amountRaw = document.getElementById('fieldAmount').value;
+  const amount = amountRaw === '' ? null : Number(amountRaw);
   const signedDate = document.getElementById('fieldSignedDate').value;
   const termYears = Math.max(1, parseInt(document.getElementById('fieldTermYears').value, 10) || 1);
   const paymentType = document.querySelector('input[name=paymentType]:checked').value;
@@ -415,17 +435,57 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
     clientId = newClient.id;
   }
 
+  const payload = {
+    advisor_id: myId,
+    client_id: clientId || null,
+    product_name: productName,
+    amount: amount,
+    term_years: termYears,
+    signed_date: signedDate,
+    payment_type: paymentType,
+    remittance_date: paymentType==='lump_sum' ? remittanceDate : null
+  };
+
+  if(editingContractId){
+    // 編輯既有合約：先看年期／繳費方式／簽約時間有沒有改變，改了才需要重新產生繳費排程
+    const original = lastContracts.find(x=>x.id===editingContractId);
+    const scheduleChanged = original && (
+      original.term_years !== termYears ||
+      original.payment_type !== paymentType ||
+      original.signed_date !== signedDate ||
+      (paymentType==='lump_sum' && original.remittance_date !== remittanceDate)
+    );
+
+    if(scheduleChanged){
+      if(!confirm('你改動了年期、繳費方式、簽約時間或匯款日期，繳費排程需要重新產生，目前已標記的「已繳」記錄會被清除，確定要繼續嗎？')) return;
+    }
+
+    const { error } = await supabaseClient.from('contracts').update(payload).eq('id', editingContractId);
+    if(error){ console.error('更新簽約失敗', error); alert('儲存失敗，請檢查網路連線後再試一次。'); return; }
+
+    if(scheduleChanged){
+      const { error: delError } = await supabaseClient.from('contract_payments').delete().eq('contract_id', editingContractId);
+      if(delError){ console.error('清除舊繳費排程失敗', delError); alert('合約已更新，但舊的繳費排程清除失敗，請重新整理後檢查。'); }
+      const paymentRows = [];
+      if(paymentType==='lump_sum'){
+        paymentRows.push({ contract_id: editingContractId, advisor_id: myId, installment_no: 1, due_date: remittanceDate });
+      } else {
+        for(let i=0; i<termYears; i++){
+          paymentRows.push({ contract_id: editingContractId, advisor_id: myId, installment_no: i+1, due_date: addYears(signedDate, i) });
+        }
+      }
+      const { error: payError } = await supabaseClient.from('contract_payments').insert(paymentRows);
+      if(payError){ console.error('新增繳費排程失敗', payError); alert('合約已更新，但繳費排程儲存失敗，請重新整理後檢查。'); }
+    }
+
+    closeModal();
+    loadContracts();
+    return;
+  }
+
   const { data: contract, error } = await supabaseClient
     .from('contracts')
-    .insert({
-      advisor_id: myId,
-      client_id: clientId || null,
-      product_name: productName,
-      term_years: termYears,
-      signed_date: signedDate,
-      payment_type: paymentType,
-      remittance_date: paymentType==='lump_sum' ? remittanceDate : null
-    })
+    .insert(payload)
     .select('id')
     .single();
   if(error){ console.error('新增簽約失敗', error); alert('儲存失敗，請檢查網路連線後再試一次。'); return; }
