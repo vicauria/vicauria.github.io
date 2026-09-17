@@ -476,16 +476,16 @@
         </div>
       </div>
 
-      <div class="nav-group" data-group="contracts">
+      <div class="nav-group" data-group="team">
         <button class="nav-group-header">
-          <span>簽約管理</span>
+          <span>團隊</span>
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-contracts">
-            <span class="collapsed-icon">📝</span>
-            <span class="name"><span class="num">◆</span>簽約管理</span>
-            <span class="desc">合約紀錄／繳費提醒</span>
+          <button class="mod-btn" data-target="frame-team">
+            <span class="collapsed-icon">👥</span>
+            <span class="name"><span class="num">◆</span>團隊</span>
+            <span class="desc">工作量監控／加入其他顧問的團隊</span>
           </button>
         </div>
       </div>
@@ -509,21 +509,16 @@
         </div>
       </div>
 
-      <div class="nav-group" data-group="market">
+      <div class="nav-group" data-group="contracts">
         <button class="nav-group-header">
-          <span>市場情報</span>
+          <span>簽約管理</span>
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-marketnews">
-            <span class="collapsed-icon">📰</span>
-            <span class="name"><span class="num">◆</span>市場快訊</span>
-            <span class="desc">即時財經新聞／自動分類／標明出處</span>
-          </button>
-          <button class="mod-btn" data-target="frame-marketoverview">
-            <span class="collapsed-icon">📊</span>
-            <span class="name"><span class="num">◆</span>市場概況</span>
-            <span class="desc">即時匯率／全球指數／大盤走勢</span>
+          <button class="mod-btn" data-target="frame-contracts">
+            <span class="collapsed-icon">📝</span>
+            <span class="name"><span class="num">◆</span>簽約管理</span>
+            <span class="desc">合約紀錄／繳費提醒</span>
           </button>
         </div>
       </div>
@@ -562,16 +557,21 @@
         </div>
       </div>
 
-      <div class="nav-group" data-group="team">
+      <div class="nav-group" data-group="market">
         <button class="nav-group-header">
-          <span>團隊</span>
+          <span>市場情報</span>
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-team">
-            <span class="collapsed-icon">👥</span>
-            <span class="name"><span class="num">◆</span>團隊</span>
-            <span class="desc">工作量監控／加入其他顧問的團隊</span>
+          <button class="mod-btn" data-target="frame-marketnews">
+            <span class="collapsed-icon">📰</span>
+            <span class="name"><span class="num">◆</span>市場快訊</span>
+            <span class="desc">即時財經新聞／自動分類／標明出處</span>
+          </button>
+          <button class="mod-btn" data-target="frame-marketoverview">
+            <span class="collapsed-icon">📊</span>
+            <span class="name"><span class="num">◆</span>市場概況</span>
+            <span class="desc">即時匯率／全球指數／大盤走勢</span>
           </button>
         </div>
       </div>
@@ -725,6 +725,12 @@
           <div id="avatarUploadNote" style="font-size:11px; color:var(--ink-soft); margin-top:6px;"></div>
         </div>
       </div>
+    </div>
+
+    <div class="settings-field">
+      <label>顯示名稱</label>
+      <input type="text" id="newDisplayNameInput" placeholder="顧問顯示名稱">
+      <button class="settings-btn" id="btnUpdateDisplayName">更新名稱</button>
     </div>
 
     <div class="settings-field">
@@ -887,6 +893,7 @@
     userMenu.classList.remove('show');
     settingsError.classList.remove('show');
     settingsSuccess.classList.remove('show');
+    document.getElementById('newDisplayNameInput').value = document.getElementById('userName').textContent;
     document.getElementById('newPasswordInput').value = '';
     document.getElementById('confirmPasswordInput').value = '';
     document.getElementById('newEmailInput').value = '';
@@ -897,6 +904,26 @@
   });
   settingsOverlay.addEventListener('click', (e)=>{
     if(e.target.id==='settingsOverlay') settingsOverlay.classList.remove('show');
+  });
+
+  document.getElementById('btnUpdateDisplayName').addEventListener('click', async ()=>{
+    const newName = document.getElementById('newDisplayNameInput').value.trim();
+    const btn = document.getElementById('btnUpdateDisplayName');
+    if(!newName){ showSettingsError('請輸入顯示名稱'); return; }
+    btn.disabled = true; btn.textContent = '更新中…';
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { error } = await supabaseClient.auth.updateUser({ data: { display_name: newName } });
+    if(!error && session){
+      await supabaseClient.from('profiles').update({ display_name: newName }).eq('id', session.user.id);
+    }
+    btn.disabled = false; btn.textContent = '更新名稱';
+    if(error){ showSettingsError('更新失敗：' + error.message); return; }
+    document.getElementById('userName').textContent = newName;
+    const initial = newName.charAt(0).toUpperCase();
+    [document.getElementById('userAvatar'), document.getElementById('settingsAvatarPreview'), document.getElementById('userAvatarMenuPreview')].forEach(el=>{
+      if(el && !el.style.backgroundImage) el.textContent = initial;
+    });
+    showSettingsSuccess('顯示名稱已更新成功。');
   });
 
   document.getElementById('btnUpdatePassword').addEventListener('click', async ()=>{
