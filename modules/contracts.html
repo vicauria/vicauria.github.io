@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簽約管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2; --plum:#4A3B5C; --plum-tint:#EFEAF2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
+
+  header{margin-bottom:20px;}
+  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal-deep);font-weight:700;margin-bottom:8px;}
+  header h1{font-size:22px;}
+  header p{font-size:13px;color:var(--ink-soft);margin-top:8px;max-width:620px;}
+
+  .toolbar{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
+  .summary-chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft);
+    background:var(--card); border:1px solid var(--line); padding:8px 14px; border-radius:20px;
+  }
+  .summary-chip b{color:var(--negative);}
+  .btn-add{
+    background:var(--teal); color:#fff; border:none; padding:10px 20px; border-radius:20px;
+    font-size:13px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-add:hover{background:var(--teal-deep);}
+
+  .contract-card{
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(20,50,60,0.05); padding:20px 22px; margin-bottom:14px;
+  }
+  .contract-head{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;}
+  .contract-title{font-family:"Noto Serif TC",serif; font-weight:700; font-size:16px; color:var(--navy);}
+  .contract-meta{font-size:12px; color:var(--ink-soft); margin-top:6px; display:flex; gap:14px; flex-wrap:wrap;}
+  .contract-actions{display:flex; gap:8px; flex-shrink:0;}
+  .contract-actions button{
+    appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink-soft);
+    padding:6px 12px; border-radius:14px; font-size:11.5px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .contract-actions button:hover{border-color:var(--teal); color:var(--teal-deep);}
+  .contract-actions button.danger:hover{border-color:var(--negative); color:var(--negative);}
+
+  .progress-badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700;
+    padding:4px 10px; border-radius:14px; margin-top:10px;
+  }
+  .progress-badge.done{background:rgba(46,125,91,0.12); color:var(--positive);}
+  .progress-badge.pending{background:rgba(184,121,30,0.12); color:#B8791E;}
+  .progress-badge.overdue{background:rgba(179,73,47,0.12); color:var(--negative);}
+
+  .payment-table{width:100%; border-collapse:collapse; margin-top:14px; font-size:12.5px;}
+  .payment-table th{
+    text-align:left; font-family:"Roboto Mono",monospace; font-size:10.5px; color:var(--ink-soft);
+    font-weight:600; padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  .payment-table td{padding:9px 6px; border-bottom:1px solid var(--line);}
+  .payment-table tr:last-child td{border-bottom:none;}
+  .pay-status{font-weight:700; font-size:11.5px;}
+  .pay-status.paid{color:var(--positive);}
+  .pay-status.overdue{color:var(--negative);}
+  .pay-status.upcoming{color:#B8791E;}
+  .pay-status.future{color:var(--ink-soft);}
+  .btn-mark{
+    appearance:none; border:1px solid var(--teal); background:none; color:var(--teal-deep);
+    padding:4px 10px; border-radius:12px; font-size:11px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-mark:hover{background:var(--teal-tint);}
+  .btn-mark.undo{border-color:var(--line); color:var(--ink-soft);}
+
+  .empty-state{
+    background:var(--card); border-radius:var(--radius); border:1px dashed var(--line);
+    padding:50px 30px; text-align:center; color:var(--ink-soft); font-size:13.5px;
+  }
+
+  /* ---- modal ---- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,35,44,0.5);
+    z-index:200; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff; border-radius:18px; padding:26px 28px; width:min(480px,100%);
+    max-height:88vh; overflow-y:auto; box-shadow:0 24px 60px rgba(20,50,60,0.3);
+  }
+  .modal-box h3{font-size:16px; margin-bottom:18px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;}
+  .field input[type=text], .field input[type=date], .field input[type=number], .field select{
+    width:100%; padding:9px 12px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:13px; font-family:"Noto Sans TC",sans-serif; color:var(--ink);
+  }
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .payment-type-toggle{display:flex; gap:10px;}
+  .payment-type-toggle label{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    border:1.5px solid var(--line); border-radius:10px; padding:10px; font-size:12.5px; cursor:pointer;
+  }
+  .payment-type-toggle input{width:auto;}
+  .payment-type-toggle label.active{border-color:var(--teal); background:var(--teal-tint); color:var(--teal-deep); font-weight:700;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:14px; margin-top:20px; align-items:center;}
+  .btn-save{
+    background:var(--navy); color:#fff; border:none; padding:10px 22px; border-radius:18px;
+    font-size:13px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-save:hover{background:var(--teal-deep);}
+  .btn-cancel{background:none; border:none; color:var(--ink-soft); font-size:12.5px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Contracts · 簽約管理</div>
+    <h1>確定簽約的客戶</h1>
+    <p>幫每一筆成交的商品記錄項目、年期、簽約時間；分期的話系統會自動排好每一年的匯款提醒，快到期或已經過期的會標紅提醒你。</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="summary-chip" id="summaryChip">載入中…</div>
+    <button class="btn-add" id="btnAddContract">＋ 新增簽約</button>
+  </div>
+
+  <div id="contractList"></div>
+</div>
+
+<div class="modal-overlay" id="contractOverlay">
+  <div class="modal-box">
+    <h3>新增簽約</h3>
+    <div class="field">
+      <label>客戶</label>
+      <select id="fieldClient"><option value="">選擇客戶</option></select>
+    </div>
+    <div class="field">
+      <label>項目名稱</label>
+      <input type="text" id="fieldProduct" placeholder="例如：XX 儲蓄型保單">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>簽約時間</label>
+        <input type="date" id="fieldSignedDate">
+      </div>
+      <div class="field">
+        <label>年期（繳幾年）</label>
+        <input type="number" id="fieldTermYears" min="1" value="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>繳費方式</label>
+      <div class="payment-type-toggle">
+        <label id="lumpSumLabel"><input type="radio" name="paymentType" value="lump_sum" checked> 整付</label>
+        <label id="installmentLabel"><input type="radio" name="paymentType" value="installment"> 分期</label>
+      </div>
+    </div>
+    <div class="field" id="lumpSumDateField">
+      <label>匯款時間</label>
+      <input type="date" id="fieldRemittanceDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancelContract">取消</button>
+      <button class="btn-save" id="btnSaveContract">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script>
+let myId = null;
+let clientOptions = [];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function toDateStr(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function todayStr(){ return toDateStr(new Date()); }
+function addYears(dateStr, n){
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setFullYear(d.getFullYear() + n);
+  return toDateStr(d);
+}
+
+async function init(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session) return;
+  myId = session.user.id;
+
+  const { data: clients } = await supabaseClient
+    .from('client_records')
+    .select('id, client_name')
+    .eq('advisor_id', myId)
+    .is('deleted_at', null);
+  clientOptions = clients || [];
+  const sel = document.getElementById('fieldClient');
+  clientOptions.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = (c.client_name || '').trim() || '（未命名客戶）';
+    sel.appendChild(opt);
+  });
+
+  await loadContracts();
+}
+
+async function loadContracts(){
+  const { data: contracts, error } = await supabaseClient
+    .from('contracts')
+    .select('*, client_records(client_name)')
+    .order('signed_date', { ascending:false });
+  if(error){ console.error('讀取簽約失敗', error); return; }
+
+  const { data: payments } = await supabaseClient
+    .from('contract_payments')
+    .select('*')
+    .order('due_date', { ascending:true });
+
+  const paymentsByContract = {};
+  (payments||[]).forEach(p=>{
+    if(!paymentsByContract[p.contract_id]) paymentsByContract[p.contract_id] = [];
+    paymentsByContract[p.contract_id].push(p);
+  });
+
+  renderSummary(payments || []);
+  renderContractList(contracts || [], paymentsByContract);
+}
+
+function paymentState(p){
+  if(p.paid) return 'paid';
+  if(p.due_date < todayStr()) return 'overdue';
+  const soon = new Date(); soon.setDate(soon.getDate() + 14);
+  if(p.due_date <= toDateStr(soon)) return 'upcoming';
+  return 'future';
+}
+
+function renderSummary(payments){
+  const overdue = payments.filter(p=>!p.paid && p.due_date < todayStr()).length;
+  const upcoming = payments.filter(p=>paymentState(p)==='upcoming').length;
+  const chip = document.getElementById('summaryChip');
+  if(overdue===0 && upcoming===0){
+    chip.innerHTML = '目前沒有逾期或即將到期的匯款';
+  } else {
+    chip.innerHTML = `${overdue>0?`<b>${overdue} 筆逾期未繳</b>　`:''}${upcoming>0?`${upcoming} 筆 14 天內到期`:''}`;
+  }
+}
+
+function renderContractList(contracts, paymentsByContract){
+  const list = document.getElementById('contractList');
+  if(contracts.length===0){
+    list.innerHTML = '<div class="empty-state">還沒有任何簽約紀錄，點右上角「＋ 新增簽約」開始記錄。</div>';
+    return;
+  }
+
+  list.innerHTML = contracts.map(c=>{
+    const clientName = c.client_records ? (c.client_records.client_name || '（未命名客戶）') : '（客戶已刪除）';
+    const payments = paymentsByContract[c.id] || [];
+    const paidCount = payments.filter(p=>p.paid).length;
+    const hasOverdue = payments.some(p=>!p.paid && p.due_date < todayStr());
+    const allPaid = payments.length>0 && paidCount===payments.length;
+    const badgeClass = allPaid ? 'done' : (hasOverdue ? 'overdue' : 'pending');
+    const badgeText = allPaid ? '✓ 已繳清' : (hasOverdue ? '⚠ 有逾期未繳' : `${paidCount}／${payments.length} 期已繳`);
+
+    return `
+    <div class="contract-card" data-id="${c.id}">
+      <div class="contract-head">
+        <div>
+          <div class="contract-title">${escapeHtml(c.product_name)}</div>
+          <div class="contract-meta">
+            <span>👤 ${escapeHtml(clientName)}</span>
+            <span>簽約：${c.signed_date}</span>
+            <span>${c.payment_type==='lump_sum' ? '整付' : `分期・${c.term_years} 年期`}</span>
+          </div>
+          <div class="progress-badge ${badgeClass}">${badgeText}</div>
+        </div>
+        <div class="contract-actions">
+          <button class="btn-toggle-detail" data-id="${c.id}">展開明細</button>
+          <button class="danger btn-delete-contract" data-id="${c.id}">刪除</button>
+        </div>
+      </div>
+      <table class="payment-table" id="paytable-${c.id}" style="display:none;">
+        <thead><tr><th>期別</th><th>應繳日期</th><th>狀態</th><th>操作</th></tr></thead>
+        <tbody>
+          ${payments.map(p=>{
+            const st = paymentState(p);
+            const stLabel = {paid:'已繳', overdue:'逾期未繳', upcoming:'即將到期', future:'尚未到期'}[st];
+            return `<tr>
+              <td>第 ${p.installment_no} 期</td>
+              <td class="mono">${p.due_date}${p.paid && p.paid_date ? `　（實繳 ${p.paid_date}）` : ''}</td>
+              <td><span class="pay-status ${st}">${stLabel}</span></td>
+              <td>${p.paid
+                ? `<button class="btn-mark undo" data-payment="${p.id}" data-action="unpaid">取消標記</button>`
+                : `<button class="btn-mark" data-payment="${p.id}" data-action="paid">標記已繳</button>`}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.btn-toggle-detail').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const table = document.getElementById('paytable-' + btn.dataset.id);
+      const showing = table.style.display !== 'none';
+      table.style.display = showing ? 'none' : 'table';
+      btn.textContent = showing ? '展開明細' : '收起明細';
+    });
+  });
+  list.querySelectorAll('.btn-delete-contract').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('確定要刪除這筆簽約紀錄嗎？裡面所有的繳費紀錄也會一併刪除，沒辦法復原。')) return;
+      const { error } = await supabaseClient.from('contracts').delete().eq('id', btn.dataset.id);
+      if(error){ alert('刪除失敗，請檢查網路連線後再試一次。'); return; }
+      loadContracts();
+    });
+  });
+  list.querySelectorAll('.btn-mark').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const paid = btn.dataset.action === 'paid';
+      const { error } = await supabaseClient
+        .from('contract_payments')
+        .update({ paid, paid_date: paid ? todayStr() : null })
+        .eq('id', btn.dataset.payment);
+      if(error){ alert('更新失敗，請檢查網路連線後再試一次。'); return; }
+      loadContracts();
+    });
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+/* ---------------- 新增簽約 modal ---------------- */
+const overlay = document.getElementById('contractOverlay');
+function openModal(){
+  document.getElementById('fieldClient').value = '';
+  document.getElementById('fieldProduct').value = '';
+  document.getElementById('fieldSignedDate').value = todayStr();
+  document.getElementById('fieldTermYears').value = 1;
+  document.querySelector('input[name=paymentType][value=lump_sum]').checked = true;
+  document.getElementById('fieldRemittanceDate').value = todayStr();
+  updatePaymentTypeUI();
+  overlay.classList.add('show');
+}
+function closeModal(){ overlay.classList.remove('show'); }
+function updatePaymentTypeUI(){
+  const isLump = document.querySelector('input[name=paymentType]:checked').value === 'lump_sum';
+  document.getElementById('lumpSumDateField').style.display = isLump ? 'block' : 'none';
+  document.getElementById('lumpSumLabel').classList.toggle('active', isLump);
+  document.getElementById('installmentLabel').classList.toggle('active', !isLump);
+}
+document.querySelectorAll('input[name=paymentType]').forEach(r=>r.addEventListener('change', updatePaymentTypeUI));
+
+document.getElementById('btnAddContract').addEventListener('click', openModal);
+document.getElementById('btnCancelContract').addEventListener('click', closeModal);
+overlay.addEventListener('click', (e)=>{ if(e.target.id==='contractOverlay') closeModal(); });
+
+document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
+  const clientId = document.getElementById('fieldClient').value;
+  const productName = document.getElementById('fieldProduct').value.trim();
+  const signedDate = document.getElementById('fieldSignedDate').value;
+  const termYears = Math.max(1, parseInt(document.getElementById('fieldTermYears').value, 10) || 1);
+  const paymentType = document.querySelector('input[name=paymentType]:checked').value;
+  const remittanceDate = document.getElementById('fieldRemittanceDate').value;
+
+  if(!productName){ alert('請輸入項目名稱'); return; }
+  if(!signedDate){ alert('請選擇簽約時間'); return; }
+  if(paymentType==='lump_sum' && !remittanceDate){ alert('請選擇匯款時間'); return; }
+
+  const { data: contract, error } = await supabaseClient
+    .from('contracts')
+    .insert({
+      advisor_id: myId,
+      client_id: clientId || null,
+      product_name: productName,
+      term_years: termYears,
+      signed_date: signedDate,
+      payment_type: paymentType,
+      remittance_date: paymentType==='lump_sum' ? remittanceDate : null
+    })
+    .select('id')
+    .single();
+  if(error){ console.error('新增簽約失敗', error); alert('儲存失敗，請檢查網路連線後再試一次。'); return; }
+
+  const paymentRows = [];
+  if(paymentType==='lump_sum'){
+    paymentRows.push({ contract_id: contract.id, advisor_id: myId, installment_no: 1, due_date: remittanceDate });
+  } else {
+    for(let i=0; i<termYears; i++){
+      paymentRows.push({
+        contract_id: contract.id, advisor_id: myId,
+        installment_no: i+1, due_date: addYears(signedDate, i)
+      });
+    }
+  }
+  const { error: payError } = await supabaseClient.from('contract_payments').insert(paymentRows);
+  if(payError){ console.error('新增繳費排程失敗', payError); alert('合約已建立，但繳費排程儲存失敗，請重新整理後檢查。'); }
+
+  closeModal();
+  loadContracts();
+});
+
+init();
+</script>
+
+</body>
+</html>

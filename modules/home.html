@@ -158,6 +158,12 @@
   <div id="agendaList" style="margin-top:14px;"></div>
 </div>
 
+<div class="tools-section" id="paymentReminderSection" style="display:none;">
+  <div class="tools-title">待繳提醒</div>
+  <div class="tools-sub" id="paymentReminderSub"></div>
+  <div id="paymentReminderList" style="margin-top:14px;"></div>
+</div>
+
 <div class="tools-section">
   <div class="tools-title">Quick Access</div>
   <div class="tools-sub">點一下直接跳過去，不用再回頭找側邊欄</div>
@@ -169,6 +175,7 @@
 <script>
   const TOOLS = [
     {target:'frame-calendar', badge:'📅', title:'行事曆', desc:'約訪行程／團隊公告'},
+    {target:'frame-contracts', badge:'📝', title:'簽約管理', desc:'合約紀錄／繳費提醒'},
     {target:'frame-blueprint', badge:'🗺️', title:'財富地圖', desc:'顧問式引導問卷／財富畫像報告'},
     {target:'frame-clientrecords', badge:'🗂️', title:'客戶資料', desc:'已填答的財富地圖紀錄'},
     {target:'frame-marketnews', badge:'📰', title:'市場快訊', desc:'即時財經新聞／自動分類'},
@@ -208,6 +215,7 @@
           document.getElementById('greeting').innerHTML = 'Hi，歡迎回來，<b>'+name+'</b> 顧問。';
         }
         await loadTodayAgenda(user.id);
+        await loadPaymentReminders(user.id);
       }
     }catch(e){}
 
@@ -264,6 +272,56 @@
       });
       section.style.display = 'block';
     }catch(e){ console.error('讀取今日行程失敗', e); }
+  }
+
+  async function loadPaymentReminders(myId){
+    const section = document.getElementById('paymentReminderSection');
+    const sub = document.getElementById('paymentReminderSub');
+    const list = document.getElementById('paymentReminderList');
+    try{
+      const p = n => String(n).padStart(2,'0');
+      const t = new Date();
+      const todayStr = `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;
+      const soon = new Date(); soon.setDate(soon.getDate() + 14);
+      const soonStr = `${soon.getFullYear()}-${p(soon.getMonth()+1)}-${p(soon.getDate())}`;
+
+      const { data, error } = await supabaseClient
+        .from('contract_payments')
+        .select('id, due_date, installment_no, contract_id, contracts(product_name, client_id, client_records(client_name))')
+        .eq('advisor_id', myId)
+        .eq('paid', false)
+        .lte('due_date', soonStr)
+        .order('due_date', { ascending:true });
+      if(error) throw error;
+
+      if(!data || data.length===0){ section.style.display = 'none'; return; }
+
+      const overdueCount = data.filter(x=>x.due_date < todayStr).length;
+      sub.textContent = overdueCount>0
+        ? `${overdueCount} 筆已逾期，共 ${data.length} 筆需要在近期匯款`
+        : `${data.length} 筆將在 14 天內到期`;
+
+      list.innerHTML = data.map(x=>{
+        const overdue = x.due_date < todayStr;
+        const clientName = x.contracts && x.contracts.client_records ? (x.contracts.client_records.client_name || '（未命名客戶）') : '';
+        const productName = x.contracts ? x.contracts.product_name : '';
+        return `<div class="agenda-row" style="border-color:${overdue?'#B3492F':'#E1E7E7'};">
+          <span class="a-time" style="color:${overdue?'#B3492F':'#2E7391'};">${x.due_date}</span>
+          <div>
+            <div class="a-title">${productName}${overdue?'（已逾期）':''}</div>
+            <div class="a-meta">${clientName ? '👤 '+clientName+'　' : ''}第 ${x.installment_no} 期</div>
+          </div>
+        </div>`;
+      }).join('');
+      list.querySelectorAll('.agenda-row').forEach(row=>{
+        row.addEventListener('click', ()=>{
+          if(window.parent && typeof window.parent.goToModule === 'function'){
+            window.parent.goToModule('frame-contracts');
+          }
+        });
+      });
+      section.style.display = 'block';
+    }catch(e){ console.error('讀取待繳提醒失敗', e); }
   }
 </script>
 
