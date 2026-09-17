@@ -1372,7 +1372,12 @@ function renderGoalCalcCards(){
   });
 }
 
-/* ---------------- 財富願景：目標金額與達成率（報告用） ---------------- */
+/* ---------------- 財富願景：目標金額與達成率（報告用） ----------------
+   這裡刻意不用風險屬性去假設一個投資報酬率——那樣算出來的達成率容易讓客戶誤以為
+   「這個數字是他一定做得到的」。改成最保守的方式：單純存錢（不計入任何投資成長），
+   只把通膨考慮進去，讓客戶先看清楚「什麼都不做、只是存」的真實落差。
+   如果客戶有在投資、想看報酬率的威力，交給顧問帶去試算工具箱的計算機當面演示。 */
+const VISION_INFLATION_RATE = 0.02;
 function computeGoalTarget(goalName){
   const c = visionA.calc[goalName] || {};
   if(goalName === "樂活退休"){ return parseNum(c.monthly) * 12 * 25; }
@@ -1385,20 +1390,40 @@ function computeGoalAchievement(goalName){
   const netWorth = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0) - liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
   const annualSurplus = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0) - expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
   const years = yearsUntil(parseInt(c.age)) || 0;
-  const projected = netWorth + annualSurplus*years;
-  const rate = target>0 ? Math.min(100, Math.max(0, projected/target*100)) : null;
-  return {target, projected, years, rate};
+  const rate = 0; // 單純存錢，不假設投資報酬率
+
+  // 用複利推估屆時累積：現有淨值成長 + 每年結餘持續投入成長
+  const fvAssets = netWorth * Math.pow(1+rate, years);
+  const fvSavings = rate>0 ? annualSurplus * ((Math.pow(1+rate, years)-1)/rate) : annualSurplus*years;
+  const projected = fvAssets + fvSavings;
+
+  // 通膨調整後，屆時真正需要準備的金額（今日設定的目標，換算成那個年紀的幣值）
+  const inflationAdjustedTarget = target * Math.pow(1+VISION_INFLATION_RATE, years);
+  const gap = Math.max(0, inflationAdjustedTarget - projected);
+  const rateAchieved = inflationAdjustedTarget>0 ? Math.max(0, projected/inflationAdjustedTarget*100) : null;
+
+  return {target, inflationAdjustedTarget, projected, years, rate, gap, rateAchieved};
 }
 
 function buildVisionGoalListHTML(){
-  const currentAge = getCurrentAge();
   return visionA.goals.map(g=>{
     const label = g==='自行輸入' ? (visionA.customGoalName||'自訂目標') : g;
     const c = visionA.calc[g] || {};
     const r = computeGoalAchievement(g);
-    const color = r.rate===null ? 'var(--ink-soft)' : (r.rate>=100 ? 'var(--positive)' : (r.rate>=60 ? 'var(--warm-deep)' : 'var(--negative)'));
+    const rate = r.rateAchieved;
+    const color = rate===null ? 'var(--ink-soft)' : (rate>=100 ? 'var(--positive)' : (rate>=60 ? 'var(--warm-deep)' : 'var(--negative)'));
     const ageText = c.age ? c.age+'歲・' : '';
-    return `<div class="report-row"><span class="k"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:7px;"></span>${label}（${ageText}目標 ${money(r.target)}）</span><span class="v" style="color:${color};font-weight:700;">${r.rate===null?'—':r.rate.toFixed(0)+'%'}</span></div>`;
+    const rateColorForGap = 'var(--negative)';
+    return `
+      <div class="report-row" style="border-bottom:none;padding-bottom:2px;">
+        <span class="k" style="font-weight:700;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:7px;"></span>${label}（${ageText}目標 ${money(r.target)}）</span>
+        <span class="v" style="color:${color};font-weight:700;font-size:16px;">${rate===null?'—':rate.toFixed(0)+'%'}</span>
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-soft);padding:0 0 16px 15px;line-height:2;">
+        考量通膨後，${ageText||'目標當年'}這筆目標實際需要準備 <b style="color:var(--ink);">${money(r.inflationAdjustedTarget)}</b>（以年通膨 2% 估算）<br>
+        依目前資產與每年結餘持續累積，屆時預估可達 <b style="color:var(--ink);">${money(r.projected)}</b>（單純存錢，未計入投資報酬）<br>
+        ${r.gap>0 ? `距離通膨調整後的目標，還缺 <b style="color:${rateColorForGap};">${money(r.gap)}</b>` : `依目前推估，已能覆蓋通膨調整後的目標`}
+      </div>`;
   }).join('') || '<div class="report-row"><span class="k">尚未選擇目標</span></div>';
 }
 
@@ -2256,7 +2281,7 @@ function buildReportPages(uid, opts){
     <div class="report-section">
       <h3>財富願景・達成率</h3>
       ${buildVisionGoalListHTML()}
-      <div class="report-note">達成率為粗估：以目前淨值加上距目標年數的預估年結餘累積，對比目標金額計算；綠色代表已達標、橘色代表接近、紅色代表落差較大。實際規劃仍需顧問依市場狀況細算。</div>
+      <div class="report-note">達成率＝依目前資產與每年結餘「單純存錢」累積（不假設任何投資報酬率），對比「通膨調整後」的目標金額計算——不是拿今天的目標金額直接比較，因為到了目標那一年，同樣的生活水準會需要更多錢。綠色代表已達標、橘色代表接近、紅色代表落差較大。這裡刻意不計入投資成長，先讓客戶看清楚「只存錢」的真實落差；如果客戶有在投資或想了解報酬率能帶來多少差異，建議顧問當面帶去試算工具箱的計算機實際演示。</div>
     </div>`;
 
   const financialAnalysisSection = buildFinancialAnalysisHTML();
