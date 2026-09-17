@@ -88,6 +88,12 @@
 
   /* ---------- 下方：工具捷徑卡片 ---------- */
   .tools-section{max-width:1000px; margin:0 auto; padding:36px 24px 36px;}
+  .dual-section-row{
+    max-width:1000px; margin:0 auto; padding:0 24px;
+    display:grid; grid-template-columns:1fr 1fr; gap:24px;
+  }
+  .dual-section-row .tools-section{max-width:none; margin:0; padding:36px 0;}
+  @media (max-width:760px){ .dual-section-row{grid-template-columns:1fr;} }
   .tools-title{
     font-family:"Roboto Mono", monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
     color:var(--teal-deep); font-weight:700; margin-bottom:10px; text-align:center;
@@ -152,16 +158,18 @@
   </div>
 </div>
 
-<div class="tools-section" id="agendaSection" style="display:none;">
-  <div class="tools-title">今日行程</div>
-  <div class="tools-sub" id="agendaSub"></div>
-  <div id="agendaList" style="margin-top:14px;"></div>
-</div>
+<div class="dual-section-row">
+  <div class="tools-section" id="agendaSection" style="display:none;">
+    <div class="tools-title">今日行程</div>
+    <div class="tools-sub" id="agendaSub"></div>
+    <div id="agendaList" style="margin-top:14px;"></div>
+  </div>
 
-<div class="tools-section" id="paymentReminderSection" style="display:none;">
-  <div class="tools-title">待繳提醒</div>
-  <div class="tools-sub" id="paymentReminderSub"></div>
-  <div id="paymentReminderList" style="margin-top:14px;"></div>
+  <div class="tools-section" id="paymentReminderSection" style="display:none;">
+    <div class="tools-title">待繳提醒</div>
+    <div class="tools-sub" id="paymentReminderSub"></div>
+    <div id="paymentReminderList" style="margin-top:14px;"></div>
+  </div>
 </div>
 
 <div class="tools-section">
@@ -294,7 +302,19 @@
         .order('due_date', { ascending:true });
       if(error) throw error;
 
-      if(!data || data.length===0){ section.style.display = 'none'; return; }
+      if(!data || data.length===0){
+        sub.textContent = '目前沒有逾期或即將到期的匯款';
+        list.innerHTML = `<div class="agenda-row" style="justify-content:center; cursor:pointer;"><div class="a-title" style="color:#5B6B70; font-weight:500;">目前沒有待繳款項</div></div>`;
+        list.querySelectorAll('.agenda-row').forEach(row=>{
+          row.addEventListener('click', ()=>{
+            if(window.parent && typeof window.parent.goToModule === 'function'){
+              window.parent.goToModule('frame-contracts');
+            }
+          });
+        });
+        section.style.display = 'block';
+        return;
+      }
 
       const overdueCount = data.filter(x=>x.due_date < todayStr).length;
       sub.textContent = overdueCount>0
