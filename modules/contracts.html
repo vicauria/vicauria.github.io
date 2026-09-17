@@ -19,10 +19,21 @@
   h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
   .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
 
-  header{margin-bottom:20px;}
-  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal-deep);font-weight:700;margin-bottom:8px;}
-  header h1{font-size:22px;}
-  header p{font-size:13px;color:var(--ink-soft);margin-top:8px;max-width:620px;}
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:26px 0 30px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .wrap{padding:0 20px;}
+  header.hero .eyebrow{
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:#BFE0EA; font-weight:700; margin-bottom:8px;
+  }
+  header.hero h1{color:#fff; font-size:clamp(19px,2.4vw,24px); font-weight:700; margin-bottom:0;}
+  header.hero p{max-width:660px; color:#DCEAEE; font-size:13px; line-height:1.8; margin-top:8px;}
 
   .toolbar{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
   .summary-chip{
@@ -119,13 +130,17 @@
 </head>
 <body>
 
-<div class="wrap">
-  <header>
+<body>
+
+<header class="hero">
+  <div class="wrap">
     <div class="eyebrow">Contracts · 簽約管理</div>
     <h1>確定簽約的客戶</h1>
     <p>幫每一筆成交的商品記錄項目、年期、簽約時間；分期的話系統會自動排好每一年的匯款提醒，快到期或已經過期的會標紅提醒你。</p>
-  </header>
+  </div>
+</header>
 
+<div class="wrap">
   <div class="toolbar">
     <div class="summary-chip" id="summaryChip">載入中…</div>
     <button class="btn-add" id="btnAddContract">＋ 新增簽約</button>

@@ -19,12 +19,23 @@
   h1,h2,h3{font-family:"Noto Serif TC",serif;margin:0;color:var(--navy);}
   .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px;}
 
-  header{margin-bottom:20px;}
-  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal-deep);font-weight:700;margin-bottom:8px;}
-  header h1{font-size:22px;}
-  header p{font-size:13px;color:var(--ink-soft);margin-top:8px;max-width:620px;}
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:26px 0 30px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .wrap{padding:0 20px;}
+  header.hero .eyebrow{
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:#BFE0EA; font-weight:700; margin-bottom:8px;
+  }
+  header.hero h1{color:#fff; font-size:clamp(19px,2.4vw,24px); font-weight:700; margin-bottom:0;}
+  header.hero p{max-width:660px; color:#DCEAEE; font-size:13px; line-height:1.8; margin-top:8px;}
 
-  .legend{display:flex; gap:16px; flex-wrap:wrap; margin:14px 0 4px; font-size:11.5px; color:var(--ink-soft);}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin:22px 0 4px; font-size:11.5px; color:var(--ink-soft);}
   .legend span{display:inline-flex; align-items:center; gap:5px;}
   .legend .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
   .dot.mine{background:var(--teal);}
@@ -139,17 +150,20 @@
 </head>
 <body>
 
-<div class="wrap">
-  <header>
+<header class="hero">
+  <div class="wrap">
     <div class="eyebrow">Calendar · 行事曆</div>
     <h1>約訪行程</h1>
     <p>記錄自己的約訪；如果你是團隊主管，可以把重要公告開放給整個團隊看到，也能一次看到底下夥伴的行程安排。</p>
-    <div class="legend">
-      <span><span class="dot mine"></span>我的行程</span>
-      <span><span class="dot teamshared"></span>團隊公告</span>
-      <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程</span>
-    </div>
-  </header>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="legend">
+    <span><span class="dot mine"></span>我的行程</span>
+    <span><span class="dot teamshared"></span>團隊公告</span>
+    <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程</span>
+  </div>
 
   <div class="cal-panel">
     <div class="cal-nav">
