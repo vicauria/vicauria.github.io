@@ -346,6 +346,13 @@
     display:flex; align-items:center; justify-content:center;
     font-family:"Noto Serif TC", serif;
   }
+  .user-menu-avatar{
+    width:56px; height:56px; border-radius:50%; margin:2px auto 14px;
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-light-text) 100%);
+    color:var(--navy); font-weight:800; font-size:22px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Noto Serif TC", serif;
+  }
   .user-info{flex:1; min-width:0; display:flex; align-items:center; gap:8px;}
   .user-name{
     font-size:13px; font-weight:600; color:var(--paper);
@@ -578,6 +585,7 @@
       </div>
 
       <div class="user-menu" id="userMenu">
+        <div class="user-menu-avatar" id="userAvatarMenuPreview">J</div>
         <div class="trial-badge" id="trialBadge" style="display:none;"></div>
         <button class="user-menu-item" id="menuAccountSettings">
           <span class="icon">⚙️</span> 帳號設定
@@ -728,7 +736,7 @@
 <script>
   /* ---------- 登入狀態驗證（真正串接 Supabase） ---------- */
   function applyAvatarDisplay(url, initial){
-    [document.getElementById('userAvatar'), document.getElementById('settingsAvatarPreview')].forEach(el=>{
+    [document.getElementById('userAvatar'), document.getElementById('settingsAvatarPreview'), document.getElementById('userAvatarMenuPreview')].forEach(el=>{
       if(!el) return;
       if(url){
         el.style.backgroundImage = `url(${url})`;
