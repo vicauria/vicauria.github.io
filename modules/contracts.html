@@ -189,7 +189,7 @@
       <input type="date" id="fieldSignedDate">
     </div>
     <div class="field" id="lumpSumDateField">
-      <label>匯款時間</label>
+      <label>匯款時間<span id="remittanceHint" style="font-weight:400; color:var(--ink-soft); font-size:11.5px;"></span></label>
       <input type="date" id="fieldRemittanceDate">
     </div>
     <div class="modal-actions">
@@ -399,9 +399,9 @@ document.getElementById('fieldClient').addEventListener('change', (e)=>{
 function closeModal(){ overlay.classList.remove('show'); }
 function updatePaymentTypeUI(){
   const isLump = document.querySelector('input[name=paymentType]:checked').value === 'lump_sum';
-  document.getElementById('lumpSumDateField').style.display = isLump ? 'block' : 'none';
   document.getElementById('lumpSumLabel').classList.toggle('active', isLump);
   document.getElementById('installmentLabel').classList.toggle('active', !isLump);
+  document.getElementById('remittanceHint').textContent = isLump ? '' : '（第一期匯款日，之後每年會自動排一筆）';
 }
 document.querySelectorAll('input[name=paymentType]').forEach(r=>r.addEventListener('change', updatePaymentTypeUI));
 
@@ -421,7 +421,7 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
 
   if(!productName){ alert('請輸入項目名稱'); return; }
   if(!signedDate){ alert('請選擇簽約時間'); return; }
-  if(paymentType==='lump_sum' && !remittanceDate){ alert('請選擇匯款時間'); return; }
+  if(!remittanceDate){ alert('請選擇匯款時間'); return; }
 
   if(clientId === '__new__'){
     const manualName = document.getElementById('fieldClientManual').value.trim();
@@ -443,7 +443,7 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
     term_years: termYears,
     signed_date: signedDate,
     payment_type: paymentType,
-    remittance_date: paymentType==='lump_sum' ? remittanceDate : null
+    remittance_date: remittanceDate
   };
 
   if(editingContractId){
@@ -453,7 +453,7 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
       original.term_years !== termYears ||
       original.payment_type !== paymentType ||
       original.signed_date !== signedDate ||
-      (paymentType==='lump_sum' && original.remittance_date !== remittanceDate)
+      original.remittance_date !== remittanceDate
     );
 
     if(scheduleChanged){
@@ -471,7 +471,7 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
         paymentRows.push({ contract_id: editingContractId, advisor_id: myId, installment_no: 1, due_date: remittanceDate });
       } else {
         for(let i=0; i<termYears; i++){
-          paymentRows.push({ contract_id: editingContractId, advisor_id: myId, installment_no: i+1, due_date: addYears(signedDate, i) });
+          paymentRows.push({ contract_id: editingContractId, advisor_id: myId, installment_no: i+1, due_date: addYears(remittanceDate, i) });
         }
       }
       const { error: payError } = await supabaseClient.from('contract_payments').insert(paymentRows);
@@ -497,7 +497,7 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
     for(let i=0; i<termYears; i++){
       paymentRows.push({
         contract_id: contract.id, advisor_id: myId,
-        installment_no: i+1, due_date: addYears(signedDate, i)
+        installment_no: i+1, due_date: addYears(remittanceDate, i)
       });
     }
   }

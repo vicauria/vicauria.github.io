@@ -196,6 +196,15 @@
   }
   .cover-bg-lines{position:absolute; inset:0; width:100%; height:100%;}
   .cover-content{position:relative; z-index:2; text-align:center; padding:40px 30px; color:#fff;}
+  .cover-mark{
+    width:80px; height:80px; border-radius:50%; background:#fff; margin:0 auto 26px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 14px 34px rgba(0,0,0,0.24);
+  }
+  .cover-mark img{width:46px; height:auto; display:block;}
+  .cover-crop{position:absolute; width:20px; height:20px; z-index:2;}
+  .cover-crop.tl{top:22px; left:22px; border-top:1.5px solid rgba(243,201,138,0.55); border-left:1.5px solid rgba(243,201,138,0.55);}
+  .cover-crop.br{bottom:22px; right:22px; border-bottom:1.5px solid rgba(243,201,138,0.55); border-right:1.5px solid rgba(243,201,138,0.55);}
   .cover-eyebrow{
     font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
     color:var(--teal-light-text); margin-bottom:30px;
@@ -901,28 +910,6 @@ const PAGES = [
    render: ()=>`
      <div id="assetMount"></div>
      <div class="group-total-row"><span class="k">資產合計</span><span class="v" id="assetTotal">$0</span></div>
-     <div class="group" style="margin-top:24px;">
-       <div class="group-head">
-         <div class="group-title">你的股票／基金／ETF等投資部位<small>用來對比「真正的損益」，選填但強烈建議填寫</small></div>
-       </div>
-       <div class="report-note" style="margin-bottom:16px;margin-top:0;">這裡的損益對比，會拿上方「投資資產」分類裡「股票／基金／ETF」那一格填的<b>目前市值</b>，跟下面填的原始成本做比較——請確保上面那一格已經填了正確的市值，不是留空或 0，否則會誤判成全部虧光。</div>
-       <div class="field-row">
-         <div class="field">
-           <label>目前市值（自動抓取，供核對用）</label>
-           <input type="text" id="in-investCurrentPreview" disabled style="background:var(--paper);color:var(--ink-soft);">
-         </div>
-         <div class="field">
-           <label>原始投入成本（總共投入多少本金，不是市值）</label>
-           <input type="text" inputmode="numeric" id="in-investCostBasis" placeholder="0">
-         </div>
-       </div>
-       <div class="field-row" style="margin-top:16px;">
-         <div class="field">
-           <label>大約已經持有這些部位幾年</label>
-           <input type="number" id="in-investHoldYears" min="0" step="0.5" placeholder="0">
-         </div>
-       </div>
-     </div>
    `},
   {id:"liabilities", stage:"你的起點", icon:"⚖️", n:9,
    title:"你目前的負債", sub:"",
@@ -1303,22 +1290,6 @@ function bindPageInputs(id){
   if(id==='expense') renderDualGroups(expenseGroups, 'expenseMount', 'expenseTotal', {monthLabel:"月支出", onceLabel:"單筆支出", warm:true});
   if(id==='assets'){
     renderSingleGroups(assetGroups, 'assetMount', 'assetTotal');
-    const costEl = document.getElementById('in-investCostBasis');
-    const yearsEl = document.getElementById('in-investHoldYears');
-    const previewEl = document.getElementById('in-investCurrentPreview');
-    costEl.value = investCostBasis ? formatThousands(investCostBasis) : '';
-    yearsEl.value = investHoldYears || '';
-    costEl.addEventListener('input', e=>{ investCostBasis = parseNum(formatOnInput(e)); });
-    yearsEl.addEventListener('input', e=>{ investHoldYears = Number(e.target.value)||0; });
-
-    function updateInvestPreview(){
-      const investGroup = assetGroups.find(g=>g.key==='invest');
-      const currentValue = investGroup ? groupAmountTotal(investGroup) : 0;
-      previewEl.value = money(currentValue) + (currentValue===0 ? '（尚未填寫，請往上填入市值）' : '');
-    }
-    updateInvestPreview();
-    // 資產表格裡任何欄位一有變動，這裡的即時預覽就跟著更新，讓客戶當下就能核對填對了沒有
-    document.getElementById('assetMount').addEventListener('input', updateInvestPreview);
   }
   if(id==='liabilities') renderSingleGroups(liabilityGroups, 'liabilityMount', 'liabilityTotal', {warm:true});
 
@@ -2345,7 +2316,10 @@ function buildReportCoverHTML(){
         <circle cx="340" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
         <circle cx="40" cy="480" r="46" fill="none" stroke="rgba(243,201,138,0.16)" stroke-width="1.5"/>
       </svg>
+      <div class="cover-crop tl"></div>
+      <div class="cover-crop br"></div>
       <div class="cover-content">
+        <div class="cover-mark"><img src="../icons/vicauria-mark.png" alt="Vicauria"></div>
         <div class="cover-eyebrow">Vicauria · Financial Health Check</div>
         <h1 class="cover-title">${namePart}財務健檢報告書</h1>
         <div class="cover-brand-marks">
