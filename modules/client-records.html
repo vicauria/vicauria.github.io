@@ -403,6 +403,46 @@ async function updateRecordField(id, field, value){
   return !error;
 }
 
+/* 下次追蹤日期改動時，自動同步一筆行事曆事件（用 is_followup_reminder 標記，
+   同一個客戶只會有一筆，改日期是更新它，不是每次都新增） */
+async function syncFollowUpToCalendar(clientId, clientName, followUpDate){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session) return;
+  const myId = session.user.id;
+
+  const { data: existing } = await supabaseClient
+    .from('calendar_events')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('advisor_id', myId)
+    .eq('is_followup_reminder', true)
+    .maybeSingle();
+
+  if(!followUpDate){
+    if(existing){
+      const { error } = await supabaseClient.from('calendar_events').delete().eq('id', existing.id);
+      if(error) console.error('刪除追蹤事件失敗', error);
+    }
+    return;
+  }
+
+  const title = `追蹤：${clientName || '（未命名客戶）'}`;
+  if(existing){
+    const { error } = await supabaseClient
+      .from('calendar_events')
+      .update({ event_date: followUpDate, end_date: followUpDate, title })
+      .eq('id', existing.id);
+    if(error) console.error('更新追蹤事件失敗', error);
+  } else {
+    const { error } = await supabaseClient.from('calendar_events').insert({
+      advisor_id: myId, client_id: clientId, title,
+      event_date: followUpDate, end_date: followUpDate,
+      visibility: 'private', is_followup_reminder: true
+    });
+    if(error) console.error('新增追蹤事件失敗', error);
+  }
+}
+
 async function permanentlyDeleteRecord(id){
   const { error } = await supabaseClient.from('client_records').delete().eq('id', id);
   if(error){ console.error('刪除失敗', error); alert('刪除失敗，請檢查網路連線後再試一次。'); }
@@ -698,9 +738,19 @@ async function saveEditField(field, value){
   if(!editingId) return;
   await updateRecordField(editingId, field, value);
 }
-document.getElementById('modalClientNameInput').addEventListener('change', e=> saveEditField('clientName', e.target.value));
+document.getElementById('modalClientNameInput').addEventListener('change', async (e)=>{
+  const value = e.target.value;
+  await saveEditField('clientName', value);
+  const followUpDate = document.getElementById('modalFollowUp').value;
+  if(followUpDate) await syncFollowUpToCalendar(editingId, value, followUpDate);
+});
 document.getElementById('modalStatus').addEventListener('change', e=> saveEditField('status', e.target.value));
-document.getElementById('modalFollowUp').addEventListener('change', e=> saveEditField('followUpDate', e.target.value || null));
+document.getElementById('modalFollowUp').addEventListener('change', async (e)=>{
+  const value = e.target.value || null;
+  await saveEditField('followUpDate', value);
+  const clientName = document.getElementById('modalClientNameInput').value;
+  await syncFollowUpToCalendar(editingId, clientName, value);
+});
 document.getElementById('modalNotes').addEventListener('change', e=> saveEditField('notes', e.target.value));
 document.getElementById('btnCloseModal').addEventListener('click', closeEditModal);
 document.getElementById('editModal').addEventListener('click', (e)=>{
