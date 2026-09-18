@@ -189,38 +189,35 @@
   /* ---------- 報告封面 ---------- */
   .report-cover{
     position:relative; overflow:hidden; border-radius:16px;
-    min-height:520px; display:flex; align-items:center; justify-content:center;
-    background:linear-gradient(150deg, var(--navy) 0%, var(--teal-deep) 55%, var(--teal) 100%);
+    min-height:960px; display:flex; align-items:center; justify-content:center;
+    background:#FBFCFB;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
     margin-bottom:0; padding-bottom:0; border-bottom:none;
   }
   .cover-bg-lines{position:absolute; inset:0; width:100%; height:100%;}
-  .cover-content{position:relative; z-index:2; text-align:center; padding:40px 30px; color:#fff;}
+  .cover-content{position:relative; z-index:2; text-align:center; padding:40px 30px; color:var(--navy);}
   .cover-mark{
-    width:80px; height:80px; border-radius:50%; background:#fff; margin:0 auto 26px;
+    width:84px; height:84px; border-radius:50%; background:#fff; margin:0 auto 28px;
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 14px 34px rgba(0,0,0,0.24);
+    box-shadow:0 14px 34px rgba(22,50,63,0.14); border:1px solid var(--line);
   }
-  .cover-mark img{width:46px; height:auto; display:block;}
-  .cover-crop{position:absolute; width:20px; height:20px; z-index:2;}
-  .cover-crop.tl{top:22px; left:22px; border-top:1.5px solid rgba(243,201,138,0.55); border-left:1.5px solid rgba(243,201,138,0.55);}
-  .cover-crop.br{bottom:22px; right:22px; border-bottom:1.5px solid rgba(243,201,138,0.55); border-right:1.5px solid rgba(243,201,138,0.55);}
+  .cover-mark img{width:48px; height:auto; display:block;}
   .cover-eyebrow{
     font-family:'Roboto Mono',monospace; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
-    color:var(--teal-light-text); margin-bottom:30px;
+    color:var(--teal-deep); margin-bottom:26px;
   }
   .cover-title{
-    font-family:"Noto Serif TC",serif; font-weight:700; color:#fff;
-    font-size:clamp(24px,3.6vw,36px); line-height:1.6; margin-bottom:28px;
+    font-family:"Noto Serif TC",serif; font-weight:700; color:var(--navy);
+    font-size:clamp(26px,3.8vw,40px); line-height:1.6; margin-bottom:26px;
   }
   .cover-brand-marks{
     display:flex; align-items:center; justify-content:center; gap:14px;
     font-family:'Roboto Mono',monospace; font-size:12px; letter-spacing:.14em;
-    color:rgba(255,255,255,0.65); margin-bottom:34px;
+    color:var(--warm-deep); margin-bottom:34px; font-weight:600;
   }
-  .cover-brand-marks .dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.4);}
+  .cover-brand-marks .dot{width:4px;height:4px;border-radius:50%;background:var(--warm);}
   .cover-meta{
-    font-family:'Roboto Mono',monospace; font-size:12px; color:rgba(255,255,255,0.7);
+    font-family:'Roboto Mono',monospace; font-size:12px; color:var(--ink-soft);
     line-height:2.2;
   }
   .report-section:last-child{border-bottom:none;}
@@ -2311,13 +2308,14 @@ function buildReportCoverHTML(){
   const advisorLine = currentAdvisorName ? `顧問：${currentAdvisorName}` : '';
   return `
     <div class="report-cover">
-      <svg class="cover-bg-lines" viewBox="0 0 400 560" preserveAspectRatio="none">
-        <polyline points="0,420 60,380 110,400 170,320 230,340 400,220" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
-        <circle cx="340" cy="90" r="70" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1.5"/>
-        <circle cx="40" cy="480" r="46" fill="none" stroke="rgba(243,201,138,0.16)" stroke-width="1.5"/>
+      <svg class="cover-bg-lines" viewBox="0 0 420 700" preserveAspectRatio="none">
+        <path d="M420,0 L420,190 C330,150 300,70 195,0 Z" fill="#16323F" opacity="0.92"/>
+        <path d="M420,55 L420,255 C310,205 270,120 175,55 Z" fill="#2E7391" opacity="0.65"/>
+        <path d="M420,115 L420,315 C295,255 260,175 190,115 Z" fill="#C97B3D" opacity="0.30"/>
+        <path d="M0,700 L0,510 C90,550 120,630 225,700 Z" fill="#16323F" opacity="0.92"/>
+        <path d="M0,650 L0,450 C110,495 150,575 245,650 Z" fill="#2E7391" opacity="0.65"/>
+        <path d="M0,590 L0,385 C130,435 160,510 230,590 Z" fill="#C97B3D" opacity="0.30"/>
       </svg>
-      <div class="cover-crop tl"></div>
-      <div class="cover-crop br"></div>
       <div class="cover-content">
         <div class="cover-mark"><img src="../icons/vicauria-mark.png" alt="Vicauria"></div>
         <div class="cover-eyebrow">Vicauria · Financial Health Check</div>
