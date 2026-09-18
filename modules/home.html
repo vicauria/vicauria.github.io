@@ -238,6 +238,7 @@
     const p = n => String(n).padStart(2,'0');
     const t = new Date();
     const todayStr = `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;
+    const todayMonthDay = `${p(t.getMonth()+1)}-${p(t.getDate())}`;
     const section = document.getElementById('agendaSection');
     const sub = document.getElementById('agendaSub');
     const list = document.getElementById('agendaList');
@@ -250,7 +251,20 @@
         .order('start_time', { ascending:true, nullsFirst:false });
       if(error) throw error;
 
-      if(!data || data.length===0){
+      const { data: clients } = await supabaseClient
+        .from('client_records')
+        .select('client_name, birthday')
+        .eq('advisor_id', myId)
+        .is('deleted_at', null)
+        .not('birthday', 'is', null);
+      const birthdayNames = (clients||[])
+        .filter(c => c.birthday && c.birthday.slice(5) === todayMonthDay)
+        .map(c => (c.client_name || '').trim() || '（未命名客戶）');
+
+      const birthdayRowsHTML = birthdayNames.map(name => `
+        <div class="agenda-row"><span class="a-time" style="color:#B3492F;">🎂</span><div><div class="a-title">${name} 生日快樂</div></div></div>`).join('');
+
+      if((!data || data.length===0) && birthdayNames.length===0){
         sub.textContent = '今天沒有安排行程，點一下前往行事曆新增';
         list.innerHTML = `<div class="agenda-row" style="justify-content:center; cursor:pointer;"><div class="a-title" style="color:#5B6B70; font-weight:500;">今日無安排</div></div>`;
         list.querySelectorAll('.agenda-row').forEach(row=>{
@@ -264,8 +278,13 @@
         return;
       }
 
-      sub.textContent = `今天共有 ${data.length} 筆安排，點一下直接前往行事曆查看`;
-      list.innerHTML = data.map(e=>{
+      const eventCount = data ? data.length : 0;
+      const subParts = [];
+      if(eventCount>0) subParts.push(`${eventCount} 筆安排`);
+      if(birthdayNames.length>0) subParts.push(`${birthdayNames.length} 位客戶生日`);
+      sub.textContent = subParts.join('、') + '，點一下直接前往行事曆查看';
+
+      list.innerHTML = birthdayRowsHTML + (data||[]).map(e=>{
         const cut = s => s ? s.slice(0,5) : '';
         const time = e.start_time ? (e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time)) : '全天';
         const tag = e.advisor_id===myId ? '' : (e.visibility==='team' ? '（團隊公告）' : '（夥伴行程）');

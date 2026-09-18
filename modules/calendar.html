@@ -41,6 +41,7 @@
   .dot.mine{background:var(--teal);}
   .dot.teamshared{background:var(--warm);}
   .dot.monitor{background:var(--plum);}
+  .dot.birthday{background:var(--negative);}
 
   .cal-panel{
     background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
@@ -95,6 +96,10 @@
   }
   .event-row:last-child{border-bottom:none;}
   .event-row .e-badge{flex-shrink:0; width:8px; height:8px; border-radius:50%; margin-top:6px;}
+  .event-row .e-badge.mine{background:var(--teal);}
+  .event-row .e-badge.teamshared{background:var(--warm);}
+  .event-row .e-badge.monitor{background:var(--plum);}
+  .event-row .e-badge.birthday{background:var(--negative);}
   .event-row .e-body{flex:1; min-width:0;}
   .event-row .e-title{font-size:13.5px; font-weight:700; color:var(--ink);}
   .event-row .e-meta{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
@@ -163,6 +168,7 @@
     <span><span class="dot mine"></span>我的行程</span>
     <span><span class="dot teamshared"></span>團隊公告</span>
     <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程</span>
+    <span><span class="dot birthday"></span>客戶生日</span>
   </div>
 
   <div class="cal-panel">
@@ -275,6 +281,7 @@
 <script src="../supabase-config.js"></script>
 <script>
 let myId = null;
+let clientBirthdaysByMonthDay = {}; // "MM-DD" -> [client name, ...]
 let isTeamOwner = false;
 let currentMonth = new Date(); currentMonth.setDate(1);
 let selectedDate = null; // 'YYYY-MM-DD'
@@ -350,7 +357,7 @@ async function init(){
 
   const { data: clients } = await supabaseClient
     .from('client_records')
-    .select('id, client_name')
+    .select('id, client_name, birthday')
     .eq('advisor_id', myId)
     .is('deleted_at', null);
   clientOptions = clients || [];
@@ -360,6 +367,15 @@ async function init(){
     opt.value = c.id;
     opt.textContent = (c.client_name || '').trim() || '（未命名客戶）';
     sel.appendChild(opt);
+  });
+
+  // 生日只看「月-日」，不管年份，每年都會在同一天提醒
+  clientBirthdaysByMonthDay = {};
+  clientOptions.forEach(c=>{
+    if(!c.birthday) return;
+    const md = c.birthday.slice(5); // "MM-DD"
+    if(!clientBirthdaysByMonthDay[md]) clientBirthdaysByMonthDay[md] = [];
+    clientBirthdaysByMonthDay[md].push((c.client_name || '').trim() || '（未命名客戶）');
   });
 
   selectedDate = todayStr();
@@ -405,6 +421,10 @@ function eventCoversDate(e, dateStr){
   return e.event_date <= dateStr && end >= dateStr;
 }
 
+function birthdaysOnDate(dateStr){
+  return clientBirthdaysByMonthDay[dateStr.slice(5)] || [];
+}
+
 function renderGrid(){
   const grid = document.getElementById('calGrid');
   const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
@@ -433,6 +453,8 @@ function renderGrid(){
     }
     const dayEvents = monthEvents.filter(e=>eventCoversDate(e, c.dateStr));
     const dots = dayEvents.slice(0,6).map(e=>`<span class="dot ${eventKind(e)}"></span>`).join('');
+    const birthdayNames = birthdaysOnDate(c.dateStr);
+    const birthdayDot = birthdayNames.length ? `<span class="dot birthday" title="生日"></span>` : '';
     const holidayName = TW_HOLIDAYS[c.dateStr];
     const cls = ['cal-cell'];
     if(c.dateStr === t) cls.push('today');
@@ -440,7 +462,7 @@ function renderGrid(){
     html += `<div class="${cls.join(' ')}" data-date="${c.dateStr}">
       <div class="d-num${holidayName?' holiday':''}">${c.day}</div>
       ${holidayName ? `<div class="d-holiday-label">${holidayName}</div>` : ''}
-      <div class="d-dots">${dots}</div>
+      <div class="d-dots">${dots}${birthdayDot}</div>
     </div>`;
   });
 
@@ -473,13 +495,21 @@ function renderDayPanel(){
 
   const dayEvents = monthEvents.filter(e=>eventCoversDate(e, selectedDate))
     .sort((a,b)=> (a.start_time||'99').localeCompare(b.start_time||'99'));
+  const birthdayNames = birthdaysOnDate(selectedDate);
+  const birthdayRowsHTML = birthdayNames.map(name => `
+    <div class="event-row">
+      <span class="e-badge birthday"></span>
+      <div class="e-body">
+        <div class="e-title">🎂 ${escapeHtml(name)} 生日快樂</div>
+      </div>
+    </div>`).join('');
 
   const list = document.getElementById('dayEventList');
-  if(dayEvents.length===0){
+  if(dayEvents.length===0 && birthdayNames.length===0){
     list.innerHTML = '<div class="empty-day">這天還沒有安排任何事件</div>';
     return;
   }
-  list.innerHTML = dayEvents.map(e=>{
+  list.innerHTML = birthdayRowsHTML + dayEvents.map(e=>{
     const kind = eventKind(e);
     const isMine = kind === 'mine';
     const ownerLine = kind==='teamshared' ? `${e._ownerName} · 團隊公告`
