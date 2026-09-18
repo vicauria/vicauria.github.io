@@ -1965,6 +1965,18 @@ async function saveClientRecord(){
       trackingClientId = clientId;
     }
 
+    // 財富地圖裡已經填過的「出生年月日」，直接同步成這位客戶的生日，
+    // 行事曆跟今日行程會自動用這個提醒——不用在客戶資料那邊另外手動填一次
+    if(basicA.dobY && basicA.dobM && basicA.dobD){
+      const pad2 = n => String(n).padStart(2,'0');
+      const birthdayStr = `${basicA.dobY}-${pad2(basicA.dobM)}-${pad2(basicA.dobD)}`;
+      const { error: birthdayError } = await supabaseClient
+        .from('client_records')
+        .update({ birthday: birthdayStr })
+        .eq('id', clientId);
+      if(birthdayError) console.error('同步生日失敗', birthdayError);
+    }
+
     // 不論全新客戶或追蹤更新，這裡永遠是「新增一筆報告」，不會覆蓋舊資料
     const { data: reportRow, error: reportError } = await supabaseClient
       .from('client_reports')

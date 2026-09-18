@@ -314,10 +314,6 @@
       <input type="date" id="modalFollowUp">
     </div>
     <div class="modal-field">
-      <label>生日<small style="font-weight:400;color:var(--ink-soft);"> — 會在行事曆跟今日行程提醒你</small></label>
-      <input type="date" id="modalBirthday">
-    </div>
-    <div class="modal-field">
       <label>顧問筆記</label>
       <textarea id="modalNotes" placeholder="這次聯繫聊了什麼、下次該注意什麼…"></textarea>
     </div>
@@ -731,7 +727,6 @@ async function openEditModal(id){
   const statusSelect = document.getElementById('modalStatus');
   statusSelect.innerHTML = STATUS_OPTIONS.map(s=>`<option value="${s.key}" ${((rec.status||'')===s.key)?'selected':''}>${s.label}</option>`).join('');
   document.getElementById('modalFollowUp').value = rec.followUpDate || '';
-  document.getElementById('modalBirthday').value = rec.birthday || '';
   document.getElementById('modalNotes').value = rec.notes || '';
   document.getElementById('editModal').classList.add('show');
 }
@@ -758,7 +753,6 @@ document.getElementById('modalFollowUp').addEventListener('change', async (e)=>{
   await syncFollowUpToCalendar(editingId, clientName, value);
 });
 document.getElementById('modalNotes').addEventListener('change', e=> saveEditField('notes', e.target.value));
-document.getElementById('modalBirthday').addEventListener('change', e=> saveEditField('birthday', e.target.value || null));
 document.getElementById('btnCloseModal').addEventListener('click', closeEditModal);
 document.getElementById('editModal').addEventListener('click', (e)=>{
   if(e.target.id==='editModal') closeEditModal();
