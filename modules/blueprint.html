@@ -479,7 +479,7 @@ jkApplySavedTheme();
 /* =========================================================
    狀態物件（module-level，換頁不會遺失）
 ========================================================= */
-const basicA = {lifeStage:[], dobY:"", dobM:"", dobD:"", gender:"", location:"", job:"", jobOther:""};
+const basicA = {lifeStage:[], dobY:"", dobM:"", dobD:"", gender:"", location:"", locationOther:"", job:"", jobOther:""};
 const backerA = {marital:"", hasChildren:"", children:[], supportParents:""};
 const riskA = {likert:new Array(10).fill(3)};
 const decisionA = {order:[]};
@@ -821,7 +821,7 @@ const PAGES = [
      </div>
    `},
   {id:"profileDetails", stage:"你的輪廓", icon:"👤", n:2,
-   title:"基本資料", sub:"出生年月日會用來估算你的年齡跟目標年數。",
+   title:"", sub:"",
    render: ()=>`
      <div class="field">
        <label>出生年月日</label>
@@ -843,6 +843,9 @@ const PAGES = [
        <div class="choice-group" data-mode="single" data-bind="location">
          <div class="choice-pill">台灣</div><div class="choice-pill">其他</div>
        </div>
+       <div id="locationOtherWrap" style="display:${basicA.location==="其他"?"block":"none"};margin-top:14px;">
+         <input type="text" data-bind="locationOther" placeholder="請輸入你的居住地" value="${basicA.locationOther||''}">
+       </div>
      </div>
    `},
   {id:"job", stage:"你的輪廓", icon:"👤", n:3,
@@ -860,12 +863,12 @@ const PAGES = [
    `},
 
   {id:"maritalChildren", stage:"你的後盾", icon:"🏠", n:4,
-   title:"婚姻與子女", sub:"",
+   title:"", sub:"",
    render: ()=>`
      <div class="field">
        <label>婚姻狀況</label>
        <div class="choice-group" data-mode="single" data-bind="marital">
-         <div class="choice-pill">未婚</div><div class="choice-pill">已婚</div><div class="choice-pill">離異</div><div class="choice-pill">喪偶</div>
+         <div class="choice-pill">未婚</div><div class="choice-pill">已婚</div>
        </div>
      </div>
      <div class="field" style="margin-top:26px;">
@@ -1020,7 +1023,9 @@ function enterPage(idx){
     : `<span class="stage-tag">${p.stage}</span> ・ 第 ${p.n} 題／共 ${TOTAL_QUESTIONS} 題`;
   document.getElementById('progressBarFill').style.width = p.isSummary ? '100%' : ((p.n)/TOTAL_QUESTIONS*100)+'%';
   document.getElementById('stageTitle').textContent = p.title;
+  document.getElementById('stageTitle').style.display = p.title ? '' : 'none';
   document.getElementById('stageSub').textContent = p.sub;
+  document.getElementById('stageSub').style.display = p.sub ? '' : 'none';
   document.getElementById('stageBody').innerHTML = p.render();
   bindPageInputs(p.id);
   showValidateWarn(null);
@@ -1153,6 +1158,9 @@ function bindChoiceGroup(el, stateObj, key){
 function onSingleChoiceChanged(el, stateObj, key){
   if(key==='job'){
     document.getElementById('jobOtherWrap').style.display = (basicA.job==='以上都不是') ? 'block' : 'none';
+  }
+  if(key==='location'){
+    document.getElementById('locationOtherWrap').style.display = (basicA.location==='其他') ? 'block' : 'none';
   }
   if(key==='hasChildren'){
     document.getElementById('childrenListWrap').style.display = (backerA.hasChildren==='有') ? 'block' : 'none';
@@ -1830,7 +1838,7 @@ function buildFullAnswerSummaryHTML(){
       <div class="summary-row"><span class="k">Q1 人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
       <div class="summary-row"><span class="k">Q2 出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD?basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD:'—'}</span></div>
       <div class="summary-row"><span class="k">Q3 性別</span><span class="v">${basicA.gender||'—'}</span></div>
-      <div class="summary-row"><span class="k">Q4 居住地</span><span class="v">${basicA.location||'—'}</span></div>
+      <div class="summary-row"><span class="k">Q4 居住地</span><span class="v">${basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—')}</span></div>
       <div class="summary-row"><span class="k">Q5 職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
       <div class="summary-row"><span class="k">Q6 婚姻狀況</span><span class="v">${backerA.marital||'—'}</span></div>
       <div class="summary-row"><span class="k">Q7 子女</span><span class="v">${childrenText}</span></div>
@@ -1853,7 +1861,7 @@ function renderSummaryProfileHTML(){
       <div class="report-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
       <div class="report-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
       <div class="report-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
-      <div class="report-row"><span class="k">居住地</span><span class="v">${basicA.location||'—'}</span></div>
+      <div class="report-row"><span class="k">居住地</span><span class="v">${basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—')}</span></div>
       <div class="report-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
     </div>
     <div class="report-section">
@@ -1876,7 +1884,7 @@ function renderSummaryHTML(){
       <div class="summary-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
       <div class="summary-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
       <div class="summary-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
-      <div class="summary-row"><span class="k">居住地</span><span class="v">${basicA.location||'—'}</span></div>
+      <div class="summary-row"><span class="k">居住地</span><span class="v">${basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—')}</span></div>
       <div class="summary-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
     </div>
     <div class="summary-block">

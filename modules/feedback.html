@@ -159,7 +159,8 @@
     });
 
     if(error){
-      showError('送出失敗，請檢查網路連線後再試一次。');
+      console.error('意見送出失敗', error);
+      showError('送出失敗，請檢查網路連線後再試一次。（詳細原因：' + error.message + '）');
       submitBtn.disabled = false;
       submitBtn.textContent = '送出意見';
       return;
