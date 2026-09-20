@@ -137,6 +137,9 @@ const RECENT_DAYS = 2; // 只保留當天／前一天的新聞，市場變化快
 // 五個主題，各自用 Google 新聞關鍵字搜尋（自然涵蓋經濟日報、鉅亨網、中央社、今周刊等多家媒體，
 // 不再只靠單一來源），並各自設定「多久才需要重新檢查一次」（毫秒）
 const TOPIC_CONFIG = [
+  {key:"stocks",  label:"股市要聞", refreshMs: 6*60*60*1000,
+    query:"台股 OR 加權指數 OR 美股 OR 那斯達克 OR 道瓊 OR 標普500",
+    words:["台股","加權指數","上市","上櫃","美股","那斯達克","道瓊","標普","台積電","外資","法人","大盤","收盤","開盤","漲跌"]},
   {key:"rate",    label:"央行利率", refreshMs: 24*60*60*1000,
     query:"央行 OR 升息 OR 降息 OR 重貼現率",
     words:["央行","升息","降息","利率","聯準會","Fed","FOMC","重貼現率","準備金率","台美利差","匯率","基準利率"]},
@@ -150,11 +153,12 @@ const TOPIC_CONFIG = [
     query:"勞保 OR 勞退 OR 退休金缺口",
     words:["勞保","勞退","退休金","提繳率","年金","缺口","國民年金","勞工保險","退休"]},
   {key:"intl",    label:"國際財經", refreshMs: 24*60*60*1000,
-    query:"全球經濟 OR 通膨 OR 國際股市",
-    words:["全球","通膨","股市","震盪","供應鏈","資本流向","美股","歐股","日股","經濟成長","衰退","貿易"]}
+    query:"全球經濟 OR 通膨 OR 國際貿易",
+    words:["全球","通膨","震盪","供應鏈","資本流向","經濟成長","衰退","貿易"]}
 ];
 const CATEGORIES = [
   {key:"all", label:"全部"},
+  {key:"stocks", label:"股市要聞"},
   {key:"intl", label:"國際財經"},
   {key:"pension", label:"退休議題"},
   {key:"tax", label:"稅務法規"},
@@ -170,6 +174,34 @@ function stripHtml(html){
   const div = document.createElement('div');
   div.innerHTML = html || '';
   return (div.textContent || div.innerText || '').replace(/\s+/g,' ').trim();
+}
+
+function normalizeTitle(title){
+  return (title || '').replace(/[\s\p{P}\p{S}]/gu, '').toLowerCase();
+}
+function bigrams(str){
+  const set = new Set();
+  for(let i=0; i<str.length-1; i++) set.add(str.slice(i,i+2));
+  return set;
+}
+function titleSimilarity(a, b){
+  const setA = bigrams(a), setB = bigrams(b);
+  if(setA.size===0 || setB.size===0) return 0;
+  let overlap = 0;
+  setA.forEach(g=>{ if(setB.has(g)) overlap++; });
+  return overlap / Math.min(setA.size, setB.size); // 用較短的那篇當分母，抓「短標題完全包含在長標題裡」這種常見情況
+}
+// 同一則新聞被不同媒體、不同分類重複報導，用標題相似度去重（不是只比對完全相同的字串），
+// 相似度門檻抓到八成以上才視為同一篇，保留最早抓到的那一則
+function dedupeGlobally(items){
+  const kept = [];
+  items.forEach(item=>{
+    const norm = normalizeTitle(item.title);
+    const isDup = kept.some(k => titleSimilarity(norm, k._norm) >= 0.8);
+    if(!isDup){ item._norm = norm; kept.push(item); }
+  });
+  kept.forEach(k=> delete k._norm);
+  return kept;
 }
 
 function timeAgo(dateStr){
@@ -302,7 +334,7 @@ async function loadAllFeeds(forceAll){
 
   if(dueTopics.length===0){
     // 全部主題都還在各自的快取有效期內，完全不打任何 API，直接沿用本機快取
-    allItems = TOPIC_CONFIG.flatMap(t => cache.topics[t.key]?.items || []).filter(i => isWithinRecentDays(i.pubDate, RECENT_DAYS));
+    allItems = dedupeGlobally(TOPIC_CONFIG.flatMap(t => cache.topics[t.key]?.items || []).filter(i => isWithinRecentDays(i.pubDate, RECENT_DAYS)).sort((a,b)=> new Date(b.pubDate) - new Date(a.pubDate)));
     stateBox.style.display = allItems.length ? 'none' : 'block';
     if(!allItems.length) stateBox.innerHTML = '<div class="icon">🗂️</div>目前沒有快取資料，請按「重新整理」。';
     list.style.display = allItems.length ? 'flex' : 'none';
@@ -326,13 +358,7 @@ async function loadAllFeeds(forceAll){
       const topic = dueTopics[i];
       if(r.status==='fulfilled'){
         anySuccess = true;
-        // 同標題去重
-        const seen = new Set();
-        const items = r.value.filter(it=>{
-          if(seen.has(it.title)) return false;
-          seen.add(it.title);
-          return true;
-        }).sort((a,b)=> new Date(b.pubDate) - new Date(a.pubDate));
+        const items = r.value.sort((a,b)=> new Date(b.pubDate) - new Date(a.pubDate));
         cache.topics[topic.key] = { lastFetch: now, items };
       } else {
         errorMessages.push(r.reason && r.reason.message ? r.reason.message : String(r.reason));
@@ -344,7 +370,7 @@ async function loadAllFeeds(forceAll){
     }
     saveCache(cache);
 
-    allItems = TOPIC_CONFIG.flatMap(t => cache.topics[t.key]?.items || []).filter(i => isWithinRecentDays(i.pubDate, RECENT_DAYS));
+    allItems = dedupeGlobally(TOPIC_CONFIG.flatMap(t => cache.topics[t.key]?.items || []).filter(i => isWithinRecentDays(i.pubDate, RECENT_DAYS)).sort((a,b)=> new Date(b.pubDate) - new Date(a.pubDate)));
     stateBox.style.display = 'none';
     list.style.display = 'flex';
     renderFilters();
