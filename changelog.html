@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>更新紀錄 — Vicauria 顧問工作台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal-deep:#1F5C73; --teal:#2E7391; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --plum:#4A3B5C; --plum-tint:#EFEAF2;
+    --paper:#F5F7F6; --card:#FFFFFF; --ink:#182226; --ink-soft:#5B6B70;
+    --positive:#2E7D5B; --line:rgba(22,50,63,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"Noto Sans TC", sans-serif; background:var(--paper); color:var(--ink); line-height:1.7;}
+  a{color:var(--teal-deep);}
+  .wrap{max-width:720px; margin:0 auto; padding:0 28px;}
+
+  .page-head{padding:44px 0 8px;}
+  .eyebrow{
+    font-family:"Roboto Mono", monospace; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--teal-deep); font-weight:700; margin-bottom:10px;
+  }
+  h1{font-family:"Noto Serif TC", serif; font-weight:800; font-size:24px; color:var(--navy); margin:0 0 10px;}
+  .page-head p{font-size:13px; color:var(--ink-soft); max-width:560px;}
+
+  main{padding:24px 0 80px;}
+
+  .entry{
+    background:var(--card); border-radius:16px; border:1px solid var(--line);
+    padding:20px 24px; margin-bottom:14px;
+  }
+  .entry-head{display:flex; align-items:baseline; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .v-num{
+    font-family:"Roboto Mono", monospace; font-weight:700; font-size:15px; color:var(--navy);
+    background:var(--teal-tint); padding:3px 10px; border-radius:8px;
+  }
+  .entry.baseline .v-num{background:var(--plum-tint); color:var(--plum);}
+  .v-date{font-size:11.5px; color:var(--ink-soft); font-family:"Roboto Mono", monospace;}
+  .entry ul{margin:0; padding-left:20px; font-size:13px; color:var(--ink);}
+  .entry li{margin-bottom:5px; line-height:1.7;}
+  .entry li:last-child{margin-bottom:0;}
+  .entry-note{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+
+  footer{
+    border-top:1px solid var(--line); padding:26px 0 40px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:11.5px; color:var(--ink-soft); flex-wrap:wrap; gap:10px;
+  }
+  footer .tagline{font-family:"Roboto Mono", monospace; letter-spacing:.06em;}
+  footer a{margin-left:14px; color:var(--teal-deep);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow">Changelog · 更新紀錄</div>
+    <h1>版本更新紀錄</h1>
+    <p>版本號規則：最後一碼是小修（bug 修正、文案調整），中間一碼是新增功能，第一碼留給正式對外上線的里程碑（v1.0.0）。同一天不管改幾次，每次都會往上跳一碼，用版本號就能分辨是第幾次異動，不用再靠日期去猜。</p>
+  </div>
+
+  <main>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v0.9.5</span><span class="v-date">2026-09-23</span></div>
+      <ul>
+        <li>側邊欄新增版本號顯示，並新增這個更新紀錄頁面</li>
+        <li>新增服務提供者資訊／訂閱收費／退款政策頁面</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v0.9.4</span><span class="v-date">2026-09-23</span></div>
+      <ul>
+        <li>行事曆週期性事件、團隊公告正式加上方案限制（Free 僅能新增單筆事件；團隊公告限 Master 方案）</li>
+        <li>簽約管理鎖定為 Pro 以上方案</li>
+        <li>移除行事曆鎖定提示文字，改為單純灰階呈現</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v0.9.3</span><span class="v-date">2026-09-23</span></div>
+      <ul>
+        <li>升級方案卡片新增月繳／年繳切換</li>
+        <li>年繳平均月費改為與總金額同一行顯示，切換時畫面不再跳動</li>
+        <li>大頭貼上傳列入 Pro 方案功能清單</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v0.9.2</span><span class="v-date">2026-09-23</span></div>
+      <ul>
+        <li>意見箱送出後新增「預計 1-2 個工作天回覆」提示</li>
+        <li>市場情報（市場快訊／市場概況）鎖定為 Pro 以上方案</li>
+        <li>更新方案定價與完整功能對照表</li>
+      </ul>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v0.9.1</span><span class="v-date">2026-09-23</span></div>
+      <ul>
+        <li>修正團隊行事曆會把組員私人行程外洩給團隊主管的問題</li>
+        <li>修正財富地圖存檔後，客戶資料列表不會即時更新的問題</li>
+        <li>修正財富地圖產出報告後，切回頁籤仍停留在報告畫面、沒有重置成新問卷的問題</li>
+      </ul>
+    </div>
+
+    <div class="entry baseline">
+      <div class="entry-head"><span class="v-num">v0.9.0</span><span class="v-date">基準版本 · baseline</span></div>
+      <div class="entry-note">在這之前的開發過程沒有正式記錄版本號，沒辦法精準回推每一次異動；這裡列的是設立版本制度那天，Vicauria 已經具備的主要功能，作為往後計數的起點。</div>
+      <ul style="margin-top:10px;">
+        <li>財富地圖問卷＋追蹤更新／成長比對＋歷史報告</li>
+        <li>客戶資料管理（容量限制、狀態追蹤）</li>
+        <li>行事曆（事件管理、客戶生日提醒）</li>
+        <li>團隊管理（邀請碼加入、工作量監控）</li>
+        <li>簽約管理（合約紀錄、繳費提醒）</li>
+        <li>沙盤推演＋試算工具箱（現金流量表／資產負債表／貸款試算／通膨效率快篩）</li>
+        <li>市場情報（市場快訊／市場概況）</li>
+        <li>意見箱</li>
+        <li>會員分級系統（Free／Pro／Master）＋主題色系＋帳號設定</li>
+        <li>藍新金流商店申請中（尚未正式上線收費）</li>
+      </ul>
+    </div>
+
+  </main>
+
+  <footer>
+    <span class="tagline">Victory × Aura × Via</span>
+    <span>Vicauria 顧問工作台 · <a href="legal.html">服務資訊與條款</a></span>
+  </footer>
+</div>
+
+</body>
+</html>
