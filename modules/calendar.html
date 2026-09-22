@@ -151,11 +151,6 @@
     background:none; border:none; color:var(--negative); font-size:12.5px; cursor:pointer;
     font-family:"Noto Sans TC",sans-serif;
   }
-  .lock-note{
-    font-size:11.5px; color:var(--warm-deep); background:var(--warm-tint);
-    padding:8px 10px; border-radius:8px; margin-top:8px; line-height:1.6;
-  }
-  .lock-note a{color:var(--warm-deep); font-weight:700; text-decoration:underline;}
   .visibility-toggle.is-disabled{opacity:.55;}
 </style>
 </head>
@@ -242,7 +237,6 @@
           <div class="vt-sub">例如每週一固定開會，勾選後不用每週手動新增一次</div>
         </span>
       </label>
-      <div id="recurringLockNote" class="lock-note" style="display:none;">🔒 週期性事件是 Pro 以上方案的功能，<a href="../pricing.html" target="_blank">升級解鎖</a>。</div>
       <div id="recurringOptions" style="display:none; margin-top:10px;" class="field-row">
         <div class="field">
           <label>每幾週重複一次</label>
@@ -595,11 +589,10 @@ function openEventModal(existing){
   const defaultUntil = new Date(selectedDate + 'T00:00:00'); defaultUntil.setMonth(defaultUntil.getMonth()+3);
   document.getElementById('fieldRecurUntil').value = toDateStr(defaultUntil);
   toggleRecurringOptions();
-  // 週期性事件是 Pro 以上方案的功能，Free 方案只能新增單筆事件
+  // 週期性事件是 Pro 以上方案的功能，Free 方案只能新增單筆事件（用灰階呈現，不額外顯示文字說明）
   const canRecur = TIER_RANK[myPlan] >= TIER_RANK.pro;
   document.getElementById('fieldRecurring').disabled = !canRecur;
   document.getElementById('recurringToggleLabel').classList.toggle('is-disabled', !canRecur);
-  document.getElementById('recurringLockNote').style.display = canRecur ? 'none' : 'block';
   eventOverlay.classList.add('show');
 }
 function closeEventModal(){ eventOverlay.classList.remove('show'); }
