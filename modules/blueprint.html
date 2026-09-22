@@ -1000,6 +1000,15 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
 }
 
+// 讓外層的 workbench.html 可以問「現在停在報告畫面嗎？」——
+// 如果是，切走這個分頁時就會把這個 iframe 重新整理一次，這樣下次切回來就是
+// 全新的「請客戶同意」畫面，不會停留在剛剛那份已經產出的報告上。
+// 只在停留在「報告畫面」時才會被觸發重置，填寫到一半離開再回來不會受影響。
+window.isBlueprintOnReportScreen = function(){
+  const el = document.getElementById('screen-report');
+  return !!(el && el.classList.contains('active'));
+};
+
 /* ---------------- 同意書 ---------------- */
 const consentCheckbox = document.getElementById('consentCheckbox');
 const consentBtn = document.getElementById('consentBtn');
