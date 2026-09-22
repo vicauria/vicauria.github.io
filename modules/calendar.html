@@ -151,6 +151,12 @@
     background:none; border:none; color:var(--negative); font-size:12.5px; cursor:pointer;
     font-family:"Noto Sans TC",sans-serif;
   }
+  .lock-note{
+    font-size:11.5px; color:var(--warm-deep); background:var(--warm-tint);
+    padding:8px 10px; border-radius:8px; margin-top:8px; line-height:1.6;
+  }
+  .lock-note a{color:var(--warm-deep); font-weight:700; text-decoration:underline;}
+  .visibility-toggle.is-disabled{opacity:.55;}
 </style>
 </head>
 <body>
@@ -229,13 +235,14 @@
       </div>
     </div>
     <div class="field" id="recurringField">
-      <label class="visibility-toggle" style="margin-bottom:10px;">
+      <label class="visibility-toggle" id="recurringToggleLabel" style="margin-bottom:10px;">
         <input type="checkbox" id="fieldRecurring">
         <span>
           <span class="vt-text">設為週期性事件</span>
           <div class="vt-sub">例如每週一固定開會，勾選後不用每週手動新增一次</div>
         </span>
       </label>
+      <div id="recurringLockNote" class="lock-note" style="display:none;">🔒 週期性事件是 Pro 以上方案的功能，<a href="../pricing.html" target="_blank">升級解鎖</a>。</div>
       <div id="recurringOptions" style="display:none; margin-top:10px;" class="field-row">
         <div class="field">
           <label>每幾週重複一次</label>
@@ -278,8 +285,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase-config.js"></script>
+<script src="../plan-utils.js"></script>
 <script>
+const TIER_RANK = { free:0, pro:1, master:2 };
 let myId = null;
+let myPlan = 'free';
 let clientBirthdaysByMonthDay = {}; // "MM-DD" -> [client name, ...]
 let isTeamOwner = false;
 let currentMonth = new Date(); currentMonth.setDate(1);
@@ -347,9 +357,13 @@ async function init(){
   if(!session) return;
   myId = session.user.id;
 
+  const effective = await fetchEffectivePlan();
+  myPlan = effective.plan;
+
   const { data: ownedTeams } = await supabaseClient.from('teams').select('id').eq('owner_id', myId);
+  // 團隊公告是 Master 方案才有的功能；就算曾經是團隊擁有者，降級後這個開關也要跟著收回
   isTeamOwner = !!(ownedTeams && ownedTeams.length > 0);
-  if(isTeamOwner){
+  if(isTeamOwner && TIER_RANK[myPlan] >= TIER_RANK.master){
     document.getElementById('visibilityField').style.display = 'block';
   }
 
@@ -581,6 +595,11 @@ function openEventModal(existing){
   const defaultUntil = new Date(selectedDate + 'T00:00:00'); defaultUntil.setMonth(defaultUntil.getMonth()+3);
   document.getElementById('fieldRecurUntil').value = toDateStr(defaultUntil);
   toggleRecurringOptions();
+  // 週期性事件是 Pro 以上方案的功能，Free 方案只能新增單筆事件
+  const canRecur = TIER_RANK[myPlan] >= TIER_RANK.pro;
+  document.getElementById('fieldRecurring').disabled = !canRecur;
+  document.getElementById('recurringToggleLabel').classList.toggle('is-disabled', !canRecur);
+  document.getElementById('recurringLockNote').style.display = canRecur ? 'none' : 'block';
   eventOverlay.classList.add('show');
 }
 function closeEventModal(){ eventOverlay.classList.remove('show'); }
@@ -603,7 +622,11 @@ document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
   if(!startDate){ alert('請選擇開始日期'); return; }
   if(endDate < startDate){ alert('結束日期不能早於開始日期'); return; }
   const allDay = document.getElementById('fieldAllDay').checked;
-  const isRecurring = !id && document.getElementById('fieldRecurring').checked;
+  // 週期性事件僅 Pro 以上方案開放；就算前端checkbox被繞過，這裡也再擋一次
+  const canRecur = TIER_RANK[myPlan] >= TIER_RANK.pro;
+  const isRecurring = !id && canRecur && document.getElementById('fieldRecurring').checked;
+  // 團隊公告僅 Master 方案開放
+  const canAnnounce = isTeamOwner && TIER_RANK[myPlan] >= TIER_RANK.master;
 
   const basePayload = {
     advisor_id: myId,
@@ -612,7 +635,7 @@ document.getElementById('btnSaveEvent').addEventListener('click', async ()=>{
     end_time: allDay ? null : (document.getElementById('fieldEnd').value || null),
     client_id: document.getElementById('fieldClient').value || null,
     description: document.getElementById('fieldDesc').value.trim() || null,
-    visibility: (isTeamOwner && document.getElementById('fieldVisibility').checked) ? 'team' : 'private'
+    visibility: (canAnnounce && document.getElementById('fieldVisibility').checked) ? 'team' : 'private'
   };
 
   let error;
