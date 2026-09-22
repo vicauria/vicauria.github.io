@@ -209,6 +209,7 @@
     font-family:"Roboto Mono", monospace; font-size:14px; font-weight:500;
     color:var(--ink-soft); text-decoration:line-through; margin-left:8px;
   }
+  .upgrade-card .u-annual{font-size:11.5px; color:var(--ink-soft); margin-top:-4px;}
   .upgrade-card ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; flex:1;}
   .upgrade-card li{font-size:12.5px; color:var(--ink); display:flex; gap:7px; line-height:1.6;}
   .upgrade-card li::before{content:"·"; font-weight:700; color:var(--teal); flex-shrink:0;}
@@ -289,6 +290,12 @@
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     background:rgba(0,0,0,0.45); color:#fff; font-size:11px;
   }
+
+  /* ---------- 分級鎖定的模組（例如市場情報，Free 方案不開放） ---------- */
+  .mod-lock-icon{display:none; font-size:11px; margin-left:5px; vertical-align:middle;}
+  .mod-btn.mod-locked{opacity:.6;}
+  .mod-btn.mod-locked .mod-lock-icon{display:inline;}
+  .mod-btn.mod-locked .desc{font-style:italic;}
 
   /* ---------- 帳號設定彈窗 ---------- */
   .settings-overlay{
@@ -563,14 +570,14 @@
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-marketnews">
+          <button class="mod-btn" data-target="frame-marketnews" data-min-plan="pro">
             <span class="collapsed-icon">📰</span>
-            <span class="name"><span class="num">◆</span>市場快訊</span>
+            <span class="name"><span class="num">◆</span>市場快訊<span class="mod-lock-icon">🔒</span></span>
             <span class="desc">即時財經新聞／自動分類／標明出處</span>
           </button>
-          <button class="mod-btn" data-target="frame-marketoverview">
+          <button class="mod-btn" data-target="frame-marketoverview" data-min-plan="pro">
             <span class="collapsed-icon">📊</span>
-            <span class="name"><span class="num">◆</span>市場概況</span>
+            <span class="name"><span class="num">◆</span>市場概況<span class="mod-lock-icon">🔒</span></span>
             <span class="desc">即時匯率／全球指數／大盤走勢</span>
           </button>
         </div>
@@ -659,8 +666,9 @@
         <div class="u-price">0<span> 元/月</span></div>
         <ul>
           <li>客戶資料最多 20 位</li>
-          <li>試算工具箱全部 5 大模組</li>
-          <li>財富地圖問卷（首次填答）</li>
+          <li>財富地圖問卷（僅首次填答，無追蹤比對）</li>
+          <li>沙盤推演＋試算工具箱全部模組</li>
+          <li>行事曆僅單筆事件</li>
           <li>經典藍綠主題</li>
         </ul>
         <button class="upgrade-btn current" id="planBtnFree" disabled>目前方案</button>
@@ -669,10 +677,14 @@
       <div class="upgrade-card">
         <div class="u-title-row"><div class="u-name">Pro</div></div>
         <div class="u-pitch">客戶量開始起來了，你需要的是效率，不是重複勞動。升級解鎖全面提升工作效率。</div>
-        <div class="u-price">499<span> 元/月</span><span class="u-price-old">790 元/月</span></div>
+        <div class="u-price">1080<span> 元/月</span><span class="u-price-old">1380 元/月</span></div>
+        <div class="u-annual">年繳 11,988 元（平均一個月只要 999）</div>
         <ul>
           <li>客戶資料最多 100 位</li>
-          <li>財富地圖追蹤更新＋成長比對</li>
+          <li>財富地圖追蹤更新＋成長比對，歷史報告回顧</li>
+          <li>簽約管理</li>
+          <li>行事曆週期性事件＋提醒</li>
+          <li>市場情報（市場快訊／市場概況）</li>
           <li>3 套主題色系（酒紅／森林／石墨）</li>
           <li>Free 的所有功能</li>
         </ul>
@@ -682,10 +694,12 @@
       <div class="upgrade-card master">
         <div class="u-title-row"><div class="u-name">Master</div><div class="u-tag">限定</div></div>
         <div class="u-pitch">你不只是顧問，你在帶團隊。升級解鎖全面提升管理效率。</div>
-        <div class="u-price">1499<span> 元/月</span><span class="u-price-old">1790 元/月</span></div>
+        <div class="u-price">2980<span> 元/月</span><span class="u-price-old">3280 元/月</span></div>
+        <div class="u-annual">年繳 33,588 元（平均一個月只要 2,799）</div>
         <ul>
           <li>客戶資料無上限</li>
           <li>團隊工作量監控</li>
+          <li>行事曆可發布團隊公告</li>
           <li>2 套限定主題色系（墨紫／黑金）</li>
           <li>Pro 的所有功能</li>
         </ul>
@@ -697,7 +711,10 @@
       <thead><tr><th></th><th>Free</th><th>Pro</th><th>Master</th></tr></thead>
       <tbody>
         <tr><th>客戶資料容量</th><td>20 位</td><td>100 位</td><td>無上限</td></tr>
-        <tr><th>追蹤更新＋成長比對</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>財富地圖追蹤＋成長比對</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>簽約管理</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>行事曆</th><td>單筆事件</td><td>週期性＋提醒</td><td>+ 團隊公告</td></tr>
+        <tr><th>市場情報</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
         <tr><th>主題色系</th><td>經典藍綠</td><td>+酒紅／森林／石墨</td><td>+墨紫／黑金（限定）</td></tr>
         <tr><th>團隊工作量監控</th><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
       </tbody>
@@ -1042,10 +1059,20 @@
   });
   const themeGrid = document.getElementById('themeSwatchGrid');
 
+  // ---- 依方案鎖定的整個模組（例如市場情報，Free 方案完全不開放） ----
+  function applyModuleLocks(){
+    document.querySelectorAll('.mod-btn[data-min-plan]').forEach(btn=>{
+      const required = btn.dataset.minPlan;
+      const locked = TIER_RANK[required] > TIER_RANK[myPlan];
+      btn.classList.toggle('mod-locked', locked);
+    });
+  }
+
   (async function initTheme(){
     const effective = await fetchEffectivePlan();
     myPlan = effective.plan;
     applyCurrentPlanToAccountUI(myPlan);
+    applyModuleLocks();
     const trialBadge = document.getElementById('trialBadge');
     if(effective.inTrial){
       const left = daysLeft(effective.trialEndsAt);
@@ -1088,6 +1115,14 @@
 
   function activateFrame(targetId, opts){
     opts = opts || {};
+    // 依方案鎖定的模組（例如市場情報）：Free 方案不管從哪裡進來（選單、goToModule、瀏覽器上一頁）
+    // 都一律擋下來，改跳出升級彈窗，不會真的切換過去。
+    const targetBtn = Array.from(buttons).find(b=> b.dataset.target === targetId);
+    const requiredPlan = targetBtn && targetBtn.dataset.minPlan;
+    if(requiredPlan && TIER_RANK[requiredPlan] > TIER_RANK[myPlan]){
+      upgradeOverlay.classList.add('show');
+      return;
+    }
     // 財富地圖那個分頁：如果離開時它正停在「已產出的報告」畫面，代表這份問卷已經填完存檔了，
     // 離開前先把它重新整理一次（背景進行，使用者看不到），這樣下次切回財富地圖時，
     // 會是全新的「請客戶同意」畫面，不會停留在上一位客戶剛產出的報告上。
