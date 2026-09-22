@@ -1090,6 +1090,13 @@
     opts = opts || {};
     buttons.forEach(b=> b.classList.toggle('active', b.dataset.target === targetId));
     frames.forEach(f=> f.classList.toggle('active', f.id === targetId));
+    // 客戶資料那個分頁是背景常駐的 iframe，切換過去時強制它重新抓一次最新資料，
+    // 這樣財富地圖剛存的新客戶／剛更新的追蹤紀錄，切過去就會是最新的，不用整頁刷新。
+    if(targetId === 'frame-clientrecords'){
+      const frame = document.getElementById('frame-clientrecords');
+      try{ frame.contentWindow && frame.contentWindow.refreshClientRecords && frame.contentWindow.refreshClientRecords(); }
+      catch(e){ /* iframe 還沒載入完成就先略過，它自己 init() 時也會抓一次最新資料 */ }
+    }
     const activeBtn = Array.from(buttons).find(b=> b.dataset.target === targetId);
     const nameEl = document.getElementById('mobileCurrentName');
     if(nameEl){
