@@ -88,7 +88,6 @@
   aside.sidebar.pinned-collapsed .user-info{display:none;}
   aside.sidebar.pinned-collapsed .user-box{justify-content:center; padding:14px 6px;}
   aside.sidebar.pinned-collapsed .user-menu{left:8px; transform:none;}
-  aside.sidebar.pinned-collapsed .sidebar-footer{display:none;}
   .brand{
     padding:18px 20px 14px;
     border-bottom:1px solid var(--line);
@@ -398,7 +397,10 @@
     font-size:11px; color:rgba(245,247,246,0.34); line-height:1.7;
   }
   .sidebar-footer .plus{color:var(--teal-light-text); font-weight:600;}
-  .sidebar-footer a:hover{color:var(--teal-light-text);}
+  .user-version-tag{
+    flex-shrink:0; font-family:"Roboto Mono", monospace; font-size:9px;
+    color:rgba(245,247,246,0.26); letter-spacing:.02em; cursor:default; user-select:none;
+  }
 
   /* ---------- Main content ---------- */
   main{flex:1; height:100vh; position:relative; background:var(--paper);}
@@ -618,6 +620,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge">Free</span>
+        <span class="user-version-tag" id="userVersionTag">v2.9.6</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -645,10 +648,6 @@
           <span class="icon">↩</span> 登出
         </button>
       </div>
-    </div>
-
-    <div class="sidebar-footer">
-      <a href="changelog.html" target="_blank" style="color:inherit; text-decoration:none;">v0.9.5 · 更新紀錄</a>
     </div>
   </aside>
 
@@ -910,6 +909,24 @@
   userBox.addEventListener('mouseenter', ()=>{
     clearTimeout(userMenuCloseTimer);
   });
+
+  // ---- 版本號：不是連結、不會有底線或手指游標，一般人不會知道能點。
+  // 開發者自己知道的隱藏入口：連續點 5 下（2 秒內）才會開更新紀錄頁 ----
+  (function setupHiddenChangelogAccess(){
+    const tag = document.getElementById('userVersionTag');
+    if(!tag) return;
+    let clicks = [];
+    tag.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const now = Date.now();
+      clicks = clicks.filter(t => now - t < 2000);
+      clicks.push(now);
+      if(clicks.length >= 5){
+        clicks = [];
+        window.open('changelog.html', '_blank');
+      }
+    });
+  })();
 
   // ---- 升級方案：置中彈窗顯示，不另開分頁 ----
   const upgradeOverlay = document.getElementById('upgradeOverlay');
