@@ -77,7 +77,20 @@
     font-family:"Roboto Mono", monospace; font-size:16px; font-weight:500;
     color:var(--ink-soft); text-decoration:line-through; margin-left:8px;
   }
-  .plan-annual{font-size:12px; color:var(--ink-soft);}
+  .plan-cycle{
+    display:inline-flex; background:var(--paper); border:1px solid var(--line); border-radius:20px;
+    padding:3px; gap:2px; width:fit-content;
+  }
+  .plan-cycle-opt{
+    border:none; background:none; font-family:"Noto Sans TC", sans-serif; font-size:12px; font-weight:700;
+    color:var(--ink-soft); padding:6px 14px; border-radius:16px; cursor:pointer; transition:background .15s ease, color .15s ease;
+  }
+  .plan-cycle-opt.active{background:var(--teal); color:#fff;}
+  .plan-card.master .plan-cycle-opt.active{background:var(--plum);}
+  .plan-price[hidden]{display:none;}
+  .plan-price .num-avg{
+    font-family:"Roboto Mono", monospace; font-size:13px; font-weight:600; color:var(--positive); margin-left:6px;
+  }
 
   .plan-features{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
   .plan-features li{
@@ -187,40 +200,49 @@
       </div>
     </div>
 
-    <div class="plan-card pro">
+    <div class="plan-card pro" data-cycle="monthly">
       <div class="plan-name">Pro</div>
       <div class="plan-pitch">客戶量開始起來了，你需要的是效率，不是重複勞動。</div>
-      <div class="plan-price"><span class="num">1080</span><span class="unit">元 / 月</span><span class="num-old">1380 元 / 月</span></div>
-      <div class="plan-annual">年繳 11,988 元（平均一個月只要 999）</div>
+      <div class="plan-cycle">
+        <button type="button" class="plan-cycle-opt active" data-cycle="monthly">月繳</button>
+        <button type="button" class="plan-cycle-opt" data-cycle="annual">年繳</button>
+      </div>
+      <div class="plan-price" data-view="monthly"><span class="num">1080</span><span class="unit">元 / 月</span><span class="num-old">1380 元 / 月</span></div>
+      <div class="plan-price" data-view="annual" hidden><span class="num">11988</span><span class="unit">元 / 年</span><span class="num-avg">→ 999 元/月</span></div>
       <ul class="plan-features">
         <li>客戶資料最多 100 位</li>
-        <li>財富地圖追蹤更新＋成長比對——半年後回訪直接帶入舊資料微調，自動比對前後變化，並可回顧歷史報告</li>
+        <li>財富地圖追蹤更新＋成長比對</li>
         <li>簽約管理</li>
         <li>行事曆——週期性事件＋提醒通知</li>
         <li>市場情報（市場快訊／市場概況）</li>
+        <li>大頭貼上傳</li>
         <li>3 套主題色系（酒紅穩重／森林穩健／石墨現代）</li>
         <li>Free 的所有功能</li>
       </ul>
       <div class="plan-cta">
-        <button class="plan-btn primary" onclick="showToast('Pro')">升級到 Pro</button>
+        <button class="plan-btn primary" onclick="showToast('Pro', this)">升級到 Pro</button>
       </div>
     </div>
 
-    <div class="plan-card master">
+    <div class="plan-card master" data-cycle="monthly">
       <div class="plan-tag">限定</div>
       <div class="plan-name">Master</div>
       <div class="plan-pitch">你不只是顧問，你在帶團隊。</div>
-      <div class="plan-price"><span class="num">2980</span><span class="unit">元 / 月</span><span class="num-old">3280 元 / 月</span></div>
-      <div class="plan-annual">年繳 33,588 元（平均一個月只要 2,799）</div>
+      <div class="plan-cycle">
+        <button type="button" class="plan-cycle-opt active" data-cycle="monthly">月繳</button>
+        <button type="button" class="plan-cycle-opt" data-cycle="annual">年繳</button>
+      </div>
+      <div class="plan-price" data-view="monthly"><span class="num">2980</span><span class="unit">元 / 月</span><span class="num-old">3280 元 / 月</span></div>
+      <div class="plan-price" data-view="annual" hidden><span class="num">33588</span><span class="unit">元 / 年</span><span class="num-avg">→ 2,799 元/月</span></div>
       <ul class="plan-features">
         <li>客戶資料無上限</li>
-        <li>團隊工作量監控——看得到底下顧問的案件狀況（僅彙總數據，不會看到組員的個別行事曆或客戶內容）</li>
-        <li>行事曆——可發布團隊公告，全體成員都看得到</li>
+        <li>團隊工作量監控</li>
+        <li>行事曆——可發布團隊公告</li>
         <li>2 套限定主題色系（墨紫尊爵／黑金尊爵）</li>
         <li>Pro 的所有功能</li>
       </ul>
       <div class="plan-cta">
-        <button class="plan-btn master-btn" onclick="showToast('Master')">升級到 Master</button>
+        <button class="plan-btn master-btn" onclick="showToast('Master', this)">升級到 Master</button>
       </div>
     </div>
 
@@ -241,6 +263,7 @@
         <tr><th>簽約管理</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
         <tr><th>行事曆</th><td>僅單筆事件</td><td>週期性事件＋提醒</td><td>+ 團隊公告</td></tr>
         <tr><th>市場情報（快訊／概況）</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>大頭貼上傳</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
         <tr><th>主題色系</th><td>經典藍綠</td><td>+ 酒紅／森林／石墨</td><td>+ 墨紫／黑金（限定）</td></tr>
         <tr><th>團隊工作量監控</th><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
       </tbody>
@@ -267,13 +290,30 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  function showToast(plan){
+  function showToast(plan, btnEl){
+    const card = btnEl && btnEl.closest ? btnEl.closest('.plan-card') : null;
+    const cycle = card && card.dataset.cycle === 'annual' ? '年繳' : '月繳';
     const el = document.getElementById('toast');
-    el.textContent = '已收到升級到 ' + plan + ' 的請求，我確認後會幫你開通。';
+    el.textContent = '已收到升級到 ' + plan + '（' + cycle + '）的請求，我確認後會幫你開通。';
     el.classList.add('show');
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(()=>el.classList.remove('show'), 3200);
   }
+
+  // ---- Pro／Master 卡片的月繳／年繳切換：只切換顯示的價格 ----
+  document.querySelectorAll('.plan-card .plan-cycle').forEach(toggle=>{
+    const card = toggle.closest('.plan-card');
+    toggle.querySelectorAll('.plan-cycle-opt').forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        const cycle = opt.dataset.cycle;
+        card.dataset.cycle = cycle;
+        toggle.querySelectorAll('.plan-cycle-opt').forEach(o=> o.classList.toggle('active', o===opt));
+        card.querySelectorAll('[data-view]').forEach(el=>{
+          el.hidden = el.dataset.view !== cycle;
+        });
+      });
+    });
+  });
 </script>
 
 </body>

@@ -209,7 +209,20 @@
     font-family:"Roboto Mono", monospace; font-size:14px; font-weight:500;
     color:var(--ink-soft); text-decoration:line-through; margin-left:8px;
   }
-  .upgrade-card .u-annual{font-size:11.5px; color:var(--ink-soft); margin-top:-4px;}
+  .upgrade-card .u-price-avg{
+    font-family:"Roboto Mono", monospace; font-size:12.5px; font-weight:600; color:var(--positive); margin-left:6px;
+  }
+  .upgrade-card .u-cycle{
+    display:inline-flex; background:var(--paper); border:1px solid var(--line-card); border-radius:20px;
+    padding:3px; gap:2px; width:fit-content;
+  }
+  .upgrade-card .u-cycle-opt{
+    border:none; background:none; font-family:"Noto Sans TC", sans-serif; font-size:11px; font-weight:700;
+    color:var(--ink-soft); padding:5px 13px; border-radius:16px; cursor:pointer; transition:background .15s ease, color .15s ease;
+  }
+  .upgrade-card .u-cycle-opt.active{background:var(--teal); color:#fff;}
+  .upgrade-card.master .u-cycle-opt.active{background:var(--plum);}
+  .upgrade-card .u-price[hidden]{display:none;}
   .upgrade-card ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; flex:1;}
   .upgrade-card li{font-size:12.5px; color:var(--ink); display:flex; gap:7px; line-height:1.6;}
   .upgrade-card li::before{content:"·"; font-weight:700; color:var(--teal); flex-shrink:0;}
@@ -674,28 +687,37 @@
         <button class="upgrade-btn current" id="planBtnFree" disabled>目前方案</button>
       </div>
 
-      <div class="upgrade-card">
+      <div class="upgrade-card" data-cycle="monthly">
         <div class="u-title-row"><div class="u-name">Pro</div></div>
         <div class="u-pitch">客戶量開始起來了，你需要的是效率，不是重複勞動。升級解鎖全面提升工作效率。</div>
-        <div class="u-price">1080<span> 元/月</span><span class="u-price-old">1380 元/月</span></div>
-        <div class="u-annual">年繳 11,988 元（平均一個月只要 999）</div>
+        <div class="u-cycle">
+          <button type="button" class="u-cycle-opt active" data-cycle="monthly">月繳</button>
+          <button type="button" class="u-cycle-opt" data-cycle="annual">年繳</button>
+        </div>
+        <div class="u-price" data-view="monthly">1080<span> 元/月</span><span class="u-price-old">1380 元/月</span></div>
+        <div class="u-price" data-view="annual" hidden>11988<span> 元/年</span><span class="u-price-avg">→ 999 元/月</span></div>
         <ul>
           <li>客戶資料最多 100 位</li>
           <li>財富地圖追蹤更新＋成長比對，歷史報告回顧</li>
           <li>簽約管理</li>
           <li>行事曆週期性事件＋提醒</li>
           <li>市場情報（市場快訊／市場概況）</li>
+          <li>大頭貼上傳</li>
           <li>3 套主題色系（酒紅／森林／石墨）</li>
           <li>Free 的所有功能</li>
         </ul>
-        <button class="upgrade-btn primary" id="planBtnPro" onclick="jkUpgradeRequest('Pro')">升級到 Pro</button>
+        <button class="upgrade-btn primary" id="planBtnPro" onclick="jkUpgradeRequest('Pro', this)">升級到 Pro</button>
       </div>
 
-      <div class="upgrade-card master">
+      <div class="upgrade-card master" data-cycle="monthly">
         <div class="u-title-row"><div class="u-name">Master</div><div class="u-tag">限定</div></div>
         <div class="u-pitch">你不只是顧問，你在帶團隊。升級解鎖全面提升管理效率。</div>
-        <div class="u-price">2980<span> 元/月</span><span class="u-price-old">3280 元/月</span></div>
-        <div class="u-annual">年繳 33,588 元（平均一個月只要 2,799）</div>
+        <div class="u-cycle">
+          <button type="button" class="u-cycle-opt active" data-cycle="monthly">月繳</button>
+          <button type="button" class="u-cycle-opt" data-cycle="annual">年繳</button>
+        </div>
+        <div class="u-price" data-view="monthly">2980<span> 元/月</span><span class="u-price-old">3280 元/月</span></div>
+        <div class="u-price" data-view="annual" hidden>33588<span> 元/年</span><span class="u-price-avg">→ 2,799 元/月</span></div>
         <ul>
           <li>客戶資料無上限</li>
           <li>團隊工作量監控</li>
@@ -703,7 +725,7 @@
           <li>2 套限定主題色系（墨紫／黑金）</li>
           <li>Pro 的所有功能</li>
         </ul>
-        <button class="upgrade-btn master-btn" id="planBtnMaster" onclick="jkUpgradeRequest('Master')">升級到 Master</button>
+        <button class="upgrade-btn master-btn" id="planBtnMaster" onclick="jkUpgradeRequest('Master', this)">升級到 Master</button>
       </div>
     </div>
 
@@ -715,6 +737,7 @@
         <tr><th>簽約管理</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
         <tr><th>行事曆</th><td>單筆事件</td><td>週期性＋提醒</td><td>+ 團隊公告</td></tr>
         <tr><th>市場情報</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><th>大頭貼上傳</th><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
         <tr><th>主題色系</th><td>經典藍綠</td><td>+酒紅／森林／石墨</td><td>+墨紫／黑金（限定）</td></tr>
         <tr><th>團隊工作量監控</th><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
       </tbody>
@@ -894,10 +917,27 @@
   upgradeOverlay.addEventListener('click', (e)=>{
     if(e.target.id==='upgradeOverlay') upgradeOverlay.classList.remove('show');
   });
-  function jkUpgradeRequest(planName){
-    // TODO：綠界金流申請通過後，這裡改接真正的付款/升級流程
-    jkShowToast('已收到升級到 ' + planName + ' 的請求，我確認後會幫你開通。');
+  function jkUpgradeRequest(planName, btnEl){
+    // TODO：藍新金流申請通過後，這裡改接真正的付款/升級流程
+    const card = btnEl && btnEl.closest ? btnEl.closest('.upgrade-card') : null;
+    const cycle = card && card.dataset.cycle === 'annual' ? '年繳' : '月繳';
+    jkShowToast('已收到升級到 ' + planName + '（' + cycle + '）的請求，我確認後會幫你開通。');
   }
+
+  // ---- Pro／Master 卡片的月繳／年繳切換：只切換顯示的價格，不影響鎖定判斷 ----
+  document.querySelectorAll('.upgrade-card .u-cycle').forEach(toggle=>{
+    const card = toggle.closest('.upgrade-card');
+    toggle.querySelectorAll('.u-cycle-opt').forEach(opt=>{
+      opt.addEventListener('click', ()=>{
+        const cycle = opt.dataset.cycle;
+        card.dataset.cycle = cycle;
+        toggle.querySelectorAll('.u-cycle-opt').forEach(o=> o.classList.toggle('active', o===opt));
+        card.querySelectorAll('[data-view]').forEach(el=>{
+          el.hidden = el.dataset.view !== cycle;
+        });
+      });
+    });
+  });
   const jkToastEl = document.getElementById('jkToast');
   function jkShowToast(msg){
     jkToastEl.textContent = msg;
@@ -1031,7 +1071,7 @@
         const label = PLAN_LABEL[tier];
         btn.textContent = '升級到 ' + label;
         btn.classList.add(tier==='pro' ? 'primary' : 'master-btn');
-        btn.onclick = ()=> jkUpgradeRequest(label);
+        btn.onclick = ()=> jkUpgradeRequest(label, btn);
       }
     });
   }
