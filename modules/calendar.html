@@ -159,7 +159,7 @@
   <div class="wrap">
     <div class="eyebrow">Calendar · 行事曆</div>
     <h1>約訪行程</h1>
-    <p>記錄自己的約訪；如果你是團隊主管，可以把重要公告開放給整個團隊看到，也能一次看到底下夥伴的行程安排。</p>
+    <p>記錄自己的約訪；如果你是團隊主管，可以把重要公告開放給整個團隊看到。每位夥伴的個人行程只有自己看得到，不會出現在其他人的行事曆上。</p>
   </div>
 </header>
 
@@ -167,7 +167,6 @@
   <div class="legend">
     <span><span class="dot mine"></span>我的行程</span>
     <span><span class="dot teamshared"></span>團隊公告</span>
-    <span id="monitorLegend" style="display:none;"><span class="dot monitor"></span>夥伴行程</span>
     <span><span class="dot birthday"></span>客戶生日</span>
   </div>
 
@@ -352,7 +351,6 @@ async function init(){
   isTeamOwner = !!(ownedTeams && ownedTeams.length > 0);
   if(isTeamOwner){
     document.getElementById('visibilityField').style.display = 'block';
-    document.getElementById('monitorLegend').style.display = 'inline-flex';
   }
 
   const { data: clients } = await supabaseClient
@@ -394,11 +392,14 @@ async function loadMonth(){
     .select('*, client_records(client_name)')
     .lte('event_date', rangeEnd)
     .or(`end_date.gte.${rangeStart},and(end_date.is.null,event_date.gte.${rangeStart})`)
+    // 只要「自己的行程」或「visibility=team 的團隊公告」，不要把別人的私人行程也抓進來
+    // （正式的隔離是靠資料庫的 RLS 規則把關，這裡是前端多一層保險，避免顯示邏輯出錯時外洩）
+    .or(`advisor_id.eq.${myId},visibility.eq.team`)
     .order('start_time', { ascending: true, nullsFirst: false });
   if(error){ console.error('讀取行事曆失敗', error); monthEvents = []; }
-  else monthEvents = data || [];
+  else monthEvents = (data || []).filter(e => e.advisor_id === myId || e.visibility === 'team');
 
-  // 補上每筆事件建立者的名字（給團隊公告／夥伴監控用）
+  // 補上團隊公告建立者的名字（顯示「是誰發的公告」用）
   const otherIds = [...new Set(monthEvents.filter(e=>e.advisor_id!==myId).map(e=>e.advisor_id))];
   let nameMap = {};
   if(otherIds.length){
@@ -413,8 +414,7 @@ async function loadMonth(){
 
 function eventKind(e){
   if(e.advisor_id === myId) return 'mine';
-  if(e.visibility === 'team') return 'teamshared';
-  return 'monitor';
+  return 'teamshared'; // 能被抓到這裡代表一定是 visibility=team 的團隊公告（見 loadMonth 的過濾邏輯）
 }
 function eventCoversDate(e, dateStr){
   const end = e.end_date || e.event_date;
@@ -512,9 +512,7 @@ function renderDayPanel(){
   list.innerHTML = birthdayRowsHTML + dayEvents.map(e=>{
     const kind = eventKind(e);
     const isMine = kind === 'mine';
-    const ownerLine = kind==='teamshared' ? `${e._ownerName} · 團隊公告`
-                     : kind==='monitor' ? `${e._ownerName} · 夥伴行程`
-                     : '';
+    const ownerLine = kind==='teamshared' ? `${e._ownerName} · 團隊公告` : '';
     const clientLine = e.client_records ? `👤 ${e.client_records.client_name || '（未命名客戶）'}` : '';
     return `
     <div class="event-row">
