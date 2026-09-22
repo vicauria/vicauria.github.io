@@ -1088,6 +1088,19 @@
 
   function activateFrame(targetId, opts){
     opts = opts || {};
+    // 財富地圖那個分頁：如果離開時它正停在「已產出的報告」畫面，代表這份問卷已經填完存檔了，
+    // 離開前先把它重新整理一次（背景進行，使用者看不到），這樣下次切回財富地圖時，
+    // 會是全新的「請客戶同意」畫面，不會停留在上一位客戶剛產出的報告上。
+    // 只在真的停在報告畫面時才會重置，正在填寫到一半的問卷不會受影響。
+    const currentActiveFrame = Array.from(frames).find(f=> f.classList.contains('active'));
+    if(currentActiveFrame && currentActiveFrame.id === 'frame-blueprint' && targetId !== 'frame-blueprint'){
+      try{
+        if(currentActiveFrame.contentWindow && currentActiveFrame.contentWindow.isBlueprintOnReportScreen && currentActiveFrame.contentWindow.isBlueprintOnReportScreen()){
+          currentActiveFrame.src = currentActiveFrame.src;
+        }
+      }catch(e){ /* 存取不到就略過，不影響切換分頁 */ }
+    }
+
     buttons.forEach(b=> b.classList.toggle('active', b.dataset.target === targetId));
     frames.forEach(f=> f.classList.toggle('active', f.id === targetId));
     // 客戶資料那個分頁是背景常駐的 iframe，切換過去時強制它重新抓一次最新資料，
