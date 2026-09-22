@@ -803,6 +803,20 @@ document.getElementById('btnToggleTrash').addEventListener('click', ()=>{
   currentPlan = await fetchCurrentPlan();
   render();
 })();
+
+// 從財富地圖填完問卷、用瀏覽器「返回」回到這頁時，瀏覽器常常會直接還原離開前的舊畫面
+// （bfcache），不會重新執行上面 init() 的抓資料流程，導致剛存好的客戶沒出現，要手動整頁
+// 刷新才看得到。這裡偵測「這次顯示是不是從快取還原的」，是的話就重新抓一次最新資料。
+window.addEventListener('pageshow', (event)=>{
+  if(event.persisted){
+    render();
+  }
+});
+
+// 工作台（workbench.html）把每個模組都放在背景 iframe 裡，切換選單只是顯示/隱藏，
+// 不是真的重新載入這頁，所以財富地圖存新客戶之後，這頁不會自動知道要重抓資料。
+// 讓外層的 workbench.html 在「切換到客戶資料這個分頁」時可以呼叫這個函式，強制重新整理。
+window.refreshClientRecords = render;
 </script>
 
 </body>
