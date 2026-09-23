@@ -200,7 +200,8 @@
       <label for="chartSymbolSelect">標的</label>
       <select id="chartSymbolSelect">
         <optgroup label="指數">
-          <option value="TVC:TWII" selected>台灣加權指數</option>
+          <option value="TWSE:0050" selected>元大台灣50（台股參考）</option>
+          <option value="TVC:TWII">台灣加權指數（需登入 TradingView 帳號）</option>
           <option value="FOREXCOM:SPXUSD">標普 500</option>
           <option value="FOREXCOM:NSXUSD">那斯達克</option>
           <option value="FOREXCOM:DJI">道瓊工業</option>
@@ -217,7 +218,7 @@
       <div id="tvChartContainer" style="height:600px;"></div>
     </div>
     <div class="note-box">
-      行情資料由 <a href="https://www.tradingview.com" target="_blank" rel="noopener" style="color:var(--teal-deep);">TradingView</a> 提供，僅供參考、非投資建議。上方下拉選單是常用標的快捷；也可以直接點圖表左上角的標的名稱，開啟 TradingView 內建搜尋，換成任何你想看的股票或指數。圖表內建日／週／月切換與畫線工具。
+      行情資料由 <a href="https://www.tradingview.com" target="_blank" rel="noopener" style="color:var(--teal-deep);">TradingView</a> 提供，僅供參考、非投資建議。上方下拉選單是常用標的快捷；也可以直接點圖表左上角的標的名稱，開啟 TradingView 內建搜尋，換成任何你想看的股票或指數。圖表內建日／週／月切換與畫線工具。台灣加權指數等部分海外指數屬於 TradingView 的授權資料，若圖表一直空白或卡在載入中，通常是因為要先登入 TradingView 帳號才能查看，並非網站異常；預設改用元大台灣50（0050）當作台股參考，不需要登入就能正常顯示。
     </div>
   </div>
 
