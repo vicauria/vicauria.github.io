@@ -265,13 +265,14 @@
 
   /* ---------- 浮動聊天泡泡：登入後不管切到哪一頁都會浮在畫面上，可以拖曳移動 ---------- */
   .float-chat-bubble{
-    position:fixed; right:24px; bottom:24px; width:56px; height:56px; border-radius:50%;
-    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-deep) 100%); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-size:24px;
-    box-shadow:0 8px 24px rgba(20,50,60,0.35); cursor:grab; z-index:500; user-select:none;
-    touch-action:none;
+    position:fixed; right:24px; bottom:24px; width:68px; height:68px; border-radius:50%;
+    background:#fff; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(20,50,60,0.35), inset 0 0 0 2.5px var(--teal);
+    cursor:grab; z-index:500; user-select:none; touch-action:none; padding:9px;
   }
   .float-chat-bubble:active{cursor:grabbing;}
+  .float-chat-bubble img{width:100%; height:100%; object-fit:contain; pointer-events:none; -webkit-user-drag:none;}
   .fcb-badge{
     position:absolute; top:-3px; right:-3px; background:var(--negative); color:#fff;
     font-size:10px; font-weight:700; min-width:18px; height:18px; border-radius:9px;
@@ -503,7 +504,7 @@
 <div class="jk-toast" id="jkToast"></div>
 
 <div class="float-chat-bubble" id="floatChatBubble" title="訊息">
-  <span>💬</span>
+  <img src="icons/vicauria-mark.png" alt="訊息" draggable="false">
   <span class="fcb-badge" id="fcbBadge">0</span>
 </div>
 <div class="float-chat-panel" id="floatChatPanel">
@@ -511,7 +512,7 @@
     <span>訊息</span>
     <button class="fcp-close" id="fcpClose" title="關閉">✕</button>
   </div>
-  <iframe id="floatChatFrame" title="訊息"></iframe>
+  <iframe id="floatChatFrame" src="modules/messages.html" title="訊息"></iframe>
 </div>
 
 <div class="mobile-topbar">
@@ -574,20 +575,6 @@
             <span class="collapsed-icon">👥</span>
             <span class="name"><span class="num">◆</span>團隊</span>
             <span class="desc">工作量監控／加入其他顧問的團隊</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="nav-group" data-group="messages">
-        <button class="nav-group-header">
-          <span>訊息</span>
-          <span class="chevron">▾</span>
-        </button>
-        <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-messages">
-            <span class="collapsed-icon">💬</span>
-            <span class="name"><span class="num">◆</span>訊息</span>
-            <span class="desc">團隊私訊／傳照片，公事不用跳出去別的軟體</span>
           </button>
         </div>
       </div>
@@ -722,7 +709,6 @@
     <iframe id="frame-loan" src="modules/loan.html" title="貸款試算室"></iframe>
     <iframe id="frame-efficiency" src="modules/efficiency.html" title="資金效率健檢"></iframe>
     <iframe id="frame-team" src="modules/team.html" title="團隊"></iframe>
-    <iframe id="frame-messages" src="modules/messages.html" title="訊息"></iframe>
     <iframe id="frame-feedback" src="modules/feedback.html" title="意見箱"></iframe>
     <iframe id="frame-marketnews" src="modules/market-news.html" title="市場快訊"></iframe>
     <iframe id="frame-marketoverview" src="modules/market-overview.html" title="市場概況"></iframe>
@@ -1423,8 +1409,8 @@
       if(Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
       if(!moved) return;
       let newLeft = origLeft + dx, newTop = origTop + dy;
-      newLeft = Math.max(4, Math.min(window.innerWidth - 60, newLeft));
-      newTop = Math.max(4, Math.min(window.innerHeight - 60, newTop));
+      newLeft = Math.max(4, Math.min(window.innerWidth - 72, newLeft));
+      newTop = Math.max(4, Math.min(window.innerHeight - 72, newTop));
       bubble.style.right = 'auto'; bubble.style.bottom = 'auto';
       bubble.style.left = newLeft + 'px'; bubble.style.top = newTop + 'px';
       if(panel.style.display === 'flex') positionPanelNearBubble();
@@ -1432,8 +1418,19 @@
     bubble.addEventListener('pointerup', ()=>{
       dragging = false;
       if(moved){
+        // 放開後不管拖到哪，一律吸附到畫面左邊或右邊，垂直位置維持放開當下的高度，
+        // 這樣才不會卡在畫面中間擋到內容，跟手機「輔助觸控」那個泡泡的行為一樣
         const rect = bubble.getBoundingClientRect();
-        try{ localStorage.setItem(POS_KEY, JSON.stringify({ left: rect.left, top: rect.top })); }catch(e){}
+        const margin = 20;
+        const snapToLeft = (rect.left + rect.width / 2) < (window.innerWidth / 2);
+        const finalLeft = snapToLeft ? margin : (window.innerWidth - rect.width - margin);
+        const finalTop = Math.max(4, Math.min(window.innerHeight - rect.height - 4, rect.top));
+        bubble.style.transition = 'left .22s ease';
+        bubble.style.left = finalLeft + 'px';
+        bubble.style.top = finalTop + 'px';
+        setTimeout(()=>{ bubble.style.transition = ''; }, 240);
+        try{ localStorage.setItem(POS_KEY, JSON.stringify({ left: finalLeft, top: finalTop })); }catch(e){}
+        if(panel.style.display === 'flex') setTimeout(positionPanelNearBubble, 240);
       } else {
         toggleChatPanel();
       }
