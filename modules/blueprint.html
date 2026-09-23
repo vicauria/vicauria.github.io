@@ -236,22 +236,11 @@
     font-family:'Roboto Mono',monospace; font-size:12px; color:var(--ink-soft);
     line-height:2.2;
   }
-  /* 封面重點數字卡：淨資產／儲蓄率／財務個性類型 */
-  .cover-stats{
-    display:flex; gap:12px; justify-content:center; margin:30px 0 34px; flex-wrap:wrap;
-  }
-  .cover-stat-card{
-    background:#fff; border:1px solid var(--line); border-radius:12px;
-    padding:14px 20px; min-width:118px; box-shadow:0 8px 20px rgba(22,50,63,0.08);
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
-  }
-  .cover-stat-label{font-size:10.5px; color:var(--ink-soft); letter-spacing:.06em; margin-bottom:6px;}
-  .cover-stat-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:19px; color:var(--navy);}
-  .cover-stat-value.small{font-family:"Noto Serif TC",serif; font-size:15px; font-weight:700;}
-
   /* 理財型(無風險) / 投資型(風險性) 資產比例圓餅圖 */
+  .risk-split-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;}
+  @media (max-width:760px){.risk-split-row{grid-template-columns:1fr;}}
   .risk-split-card{
-    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-top:14px;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
   .risk-split-title{font-size:12.5px; font-weight:700; color:var(--navy); margin-bottom:12px;}
@@ -333,6 +322,11 @@
   .donut-center .dc-value{font-family:"Roboto Mono",monospace;font-weight:800;font-size:22px;color:var(--navy);}
   .donut-center .dc-value.negative{color:var(--negative);}
   .donut-center .dc-label{font-size:10.5px;color:var(--ink-soft);margin-top:3px;}
+  .chart-card .highlight-stat{margin-bottom:16px;}
+  .chart-card .highlight-stat .hs-label{font-size:11.5px;color:var(--ink-soft);margin-bottom:5px;}
+  .chart-card .highlight-stat .hs-value{font-family:"Roboto Mono",monospace;font-weight:800;font-size:30px;color:var(--navy);}
+  .chart-card .highlight-stat .hs-value.negative{color:var(--negative);}
+  .chart-card .highlight-stat .hs-value.positive{color:var(--positive);}
   .legend{width:100%;margin-top:14px;text-align:left;}
   .legend-row{display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:12px;}
   .legend-dot{width:9px;height:9px;border-radius:50%;flex:none;}
@@ -353,24 +347,12 @@
   .risk-type-body ul{margin:0 0 12px;padding-left:20px;}
   .risk-type-body li{font-size:13px;color:var(--ink);line-height:1.9;}
 
-  /* 財務個性量表分數長條圖：讓「為什麼被歸類成這個類型」看得到依據 */
-  .risk-bar-chart{
-    background:var(--paper); border-radius:12px; padding:16px 18px; margin-top:4px;
-    -webkit-print-color-adjust:exact; print-color-adjust:exact;
-  }
-  .risk-bar-chart-title{font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;}
-  .risk-bar-row{display:flex; align-items:center; gap:10px; margin-bottom:7px;}
-  .risk-bar-row:last-child{margin-bottom:0;}
-  .risk-bar-label{width:26px; font-family:"Roboto Mono",monospace; font-size:11px; color:var(--ink-soft); flex-shrink:0;}
-  .risk-bar-track{flex:1; height:10px; background:#E7ECEC; border-radius:5px; overflow:hidden;}
-  .risk-bar-fill{height:100%; background:linear-gradient(90deg,var(--teal-deep),var(--teal)); border-radius:5px;}
-  .risk-bar-score{width:16px; text-align:right; font-family:"Roboto Mono",monospace; font-weight:700; font-size:12px; color:var(--navy); flex-shrink:0;}
-
   /* ---------- 財務分析（narrative） ---------- */
   .fa-section h3{font-size:16px;margin-bottom:16px;}
   .fa-subhead{font-size:14px;color:var(--teal-deep);font-family:"Noto Serif TC",serif;margin:22px 0 10px;padding-top:16px;border-top:1px solid var(--line);}
   .fa-subhead:first-of-type{border-top:none;padding-top:0;margin-top:8px;}
   .fa-p{font-size:13.5px;color:var(--ink);line-height:2;margin:0 0 12px;}
+  .fa-hl{color:var(--negative);font-weight:800;}
   .fa-priority-card{display:flex;gap:14px;background:var(--paper);border-radius:10px;padding:18px 20px;margin-bottom:14px;}
   .fa-priority-num{
     flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;
@@ -772,18 +754,6 @@ const MONEY_MEANING_OPTIONS = ["自由","安全感","照顧家人","享受當下
 const LIFE_EVENTS = ["婚姻變動","財務變動","家庭變動","健康事件","職業變動"];
 
 function riskScore(){ return riskA.likert.reduce((s,v)=>s+(v||0),0); }
-function buildRiskLikertBarsHTML(){
-  return riskA.likert.map((v,i)=>{
-    const val = v||0;
-    const pct = (val/5)*100;
-    return `
-      <div class="risk-bar-row">
-        <div class="risk-bar-label">Q${i+1}</div>
-        <div class="risk-bar-track"><div class="risk-bar-fill" style="width:${pct}%;"></div></div>
-        <div class="risk-bar-score">${val||'—'}</div>
-      </div>`;
-  }).join('');
-}
 const RISK_TYPES = [
   {min:10, max:17, emoji:"🛡️", name:"安心守護型",
    bodyHTML:`
@@ -1794,18 +1764,18 @@ function buildFinancialAnalysisHTML(){
 
   let overview = '';
   if(m.age!==null){
-    overview += `我看到您目前每個月有 ${money(Math.round(m.monthlySavings))} 元的儲蓄`;
-    overview += m.incomeTotal>0 ? `，儲蓄率達到 ${(m.savingsRate*100).toFixed(1)}%` : '';
+    overview += `我看到您目前<span class="fa-hl">每個月有 ${money(Math.round(m.monthlySavings))} 元的儲蓄</span>`;
+    overview += m.incomeTotal>0 ? `<span class="fa-hl">，儲蓄率達到 ${(m.savingsRate*100).toFixed(1)}%</span>` : '';
     overview += m.monthlySavings>=0 ? '，這是一個很好的開始，代表您有能力為未來累積財富。' : '，目前收支較為緊繃，這是我們可以一起優先改善的地方。';
     overview += m.liabilityTotal===0 ? '同時，您沒有任何負債，這讓您的財務基礎非常穩固。' : `目前您還有 ${money(m.liabilityTotal)} 元的負債需要留意，會影響資金運用的彈性。`;
-    overview += `然而，以您 ${m.age} 歲的年紀，${familyDesc ? familyDesc+'，' : ''}肩上承擔著重要的家庭責任，有幾個地方值得我們一起多加留意。`;
+    overview += `然而，<span class="fa-hl">以您 ${m.age} 歲的年紀</span>，${familyDesc ? familyDesc+'，' : ''}肩上承擔著重要的家庭責任，有幾個地方值得我們一起多加留意。`;
   } else {
     overview = '以下是根據您目前提供的資料，為您整理的財務全貌與建議方向。';
   }
 
   const concernParts = [];
   if(m.emergencyMonths!==null && m.emergencyMonths<6){
-    concernParts.push(`您現有的 ${money(Math.round(m.liquidAssets))} 元活存，大約只能支撐家庭 ${m.emergencyMonths.toFixed(1)} 個月的開銷`);
+    concernParts.push(`<span class="fa-hl">您現有的 ${money(Math.round(m.liquidAssets))} 元活存，大約只能支撐家庭 ${m.emergencyMonths.toFixed(1)} 個月的開銷</span>`);
   }
   let overview2 = '';
   if(concernParts.length>0){
@@ -2261,6 +2231,10 @@ function buildCashflowBreakdownHTML(uid, opts){
           </table>
         </div>
         <div class="chart-card">
+          <div class="highlight-stat">
+            <div class="hs-label">年度現金流結餘</div>
+            <div class="hs-value" id="cfHighlightVal-${uid}">$0</div>
+          </div>
           <h4>整體收支結構</h4>
           <div class="chart-sub" id="cfChartSub-${uid}">占總收入的比例</div>
           <div class="donut-wrap">
@@ -2312,6 +2286,10 @@ function buildBalanceBreakdownHTML(uid, opts){
           </table>
         </div>
         <div class="chart-card">
+          <div class="highlight-stat">
+            <div class="hs-label">淨值</div>
+            <div class="hs-value" id="baHighlightVal-${uid}">$0</div>
+          </div>
           <h4>資產配置結構</h4>
           <div class="chart-sub">占總資產的比例</div>
           <div class="donut-wrap">
@@ -2319,31 +2297,46 @@ function buildBalanceBreakdownHTML(uid, opts){
               <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
               <g id="baDonutSeg-${uid}" transform="rotate(-90 100 100)"></g>
             </svg>
-            <div class="donut-center">
-              <div class="dc-value" id="baDonutVal-${uid}">$0</div>
-              <div class="dc-label">淨值</div>
-            </div>
           </div>
           <div class="legend" id="baLegend-${uid}"></div>
         </div>
         ${ratioBlock}
       </div>
-      <div class="risk-split-card">
-        <div class="risk-split-title">資產風險屬性比例（理財型資產＝無風險資產　vs　投資型資產＝風險性資產）</div>
-        <div class="risk-split-body">
-          <div class="donut-wrap">
-            <svg viewBox="0 0 200 200" width="150" height="150">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
-              <g id="riskSplitSeg-${uid}" transform="rotate(-90 100 100)"></g>
-            </svg>
-            <div class="donut-center">
-              <div class="dc-value" id="riskSplitPct-${uid}">0%</div>
-              <div class="dc-label">風險性資產佔比</div>
+      <div class="risk-split-row">
+        <div class="risk-split-card">
+          <div class="risk-split-title">資產風險屬性比例（含不動產）</div>
+          <div class="risk-split-body">
+            <div class="donut-wrap">
+              <svg viewBox="0 0 200 200" width="150" height="150">
+                <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
+                <g id="riskSplitSegRe-${uid}" transform="rotate(-90 100 100)"></g>
+              </svg>
+              <div class="donut-center">
+                <div class="dc-value" id="riskSplitPctRe-${uid}">0%</div>
+                <div class="dc-label">風險性資產佔比</div>
+              </div>
             </div>
+            <div class="risk-split-legend" id="riskSplitLegendRe-${uid}"></div>
           </div>
-          <div class="risk-split-legend" id="riskSplitLegend-${uid}"></div>
+          <div class="risk-split-note">＊無風險資產＝理財型資產；風險性資產＝投資型資產＋不動產。</div>
         </div>
-        <div class="risk-split-note">＊此比例僅計算「理財型資產」與「投資型資產」兩項，占兩者合計的百分比，不含不動產與其他資產。</div>
+        <div class="risk-split-card">
+          <div class="risk-split-title">資產風險屬性比例（不含不動產）</div>
+          <div class="risk-split-body">
+            <div class="donut-wrap">
+              <svg viewBox="0 0 200 200" width="150" height="150">
+                <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
+                <g id="riskSplitSeg-${uid}" transform="rotate(-90 100 100)"></g>
+              </svg>
+              <div class="donut-center">
+                <div class="dc-value" id="riskSplitPct-${uid}">0%</div>
+                <div class="dc-label">風險性資產佔比</div>
+              </div>
+            </div>
+            <div class="risk-split-legend" id="riskSplitLegend-${uid}"></div>
+          </div>
+          <div class="risk-split-note">＊此版本僅計算「理財型資產」與「投資型資產」兩項，避免持有不動產的人稀釋掉風險性資產的顯示比例。</div>
+        </div>
       </div>
     </div>`;
 }
@@ -2367,6 +2360,8 @@ function fillCashflowBreakdown(uid){
   setText('bdIncomeTotal', money(totalIncome));
   setText('bdExpenseTotal', money(totalExpense));
   const netEl = el('bdNet'); if(netEl){ netEl.textContent = money(net); netEl.style.color = net>=0?'var(--positive)':'var(--negative)'; }
+  const cfHighlightEl = el('cfHighlightVal');
+  if(cfHighlightEl){ cfHighlightEl.textContent = money(net); cfHighlightEl.className = "hs-value"+(net>=0?" positive":" negative"); }
   setText('cfRatioSavings', pctStr(savingsRate));
   setText('cfRatioFinIncome', pctStr(finIncomeRatio));
   setText('cfRatioNecessary', pctStr(totalIncome>0?necessary/totalIncome:0));
@@ -2418,14 +2413,17 @@ function fillBalanceBreakdown(uid){
   setText('baAssetTotal', money(assetTotal));
   setText('baLiabilityTotal', money(liabilityTotal));
   const netEl = el('baNet'); if(netEl){ netEl.textContent = money(netWorth); netEl.style.color = netWorth>=0?'var(--positive)':'var(--negative)'; }
+  const baHighlightEl = el('baHighlightVal');
+  if(baHighlightEl){ baHighlightEl.textContent = money(netWorth); baHighlightEl.className = "hs-value"+(netWorth>=0?" positive":" negative"); }
   setText('baRatioDebt', pctStr(assetTotal>0?liabilityTotal/assetTotal:0));
   setText('baRatioLiquidity', liabilityTotal>0 ? pctStr(liquid/liabilityTotal) : '—');
   setText('baRatioRealestate', pctStr(assetTotal>0?realestate/assetTotal:0));
   setText('baRatioInvest', pctStr(assetTotal>0?invest/assetTotal:0));
 
-  const segWrap = el('baDonutSeg'), legend = el('baLegend'), dv = el('baDonutVal');
+  const segWrap = el('baDonutSeg'), legend = el('baLegend');
   segWrap.innerHTML=''; legend.innerHTML='';
-  if(assetTotal<=0){ dv.textContent='$0'; return; }
+  if(assetTotal<=0){ /* 無資產資料，圓餅圖留空 */ }
+  else {
   const cats = [
     {k:liquid,label:"理財型資產",color:"#9C7A3C"}, {k:invest,label:"投資資產",color:"#2E7391"},
     {k:realestate,label:"不動產",color:"#1F5C73"}, {k:other,label:"其他資產",color:"#5FA8C7"}
@@ -2445,39 +2443,38 @@ function fillBalanceBreakdown(uid){
     legend.appendChild(row);
     cum += len;
   });
-  dv.textContent = money(netWorth);
-  dv.className = "dc-value"+(netWorth<0?" negative":"");
-
-  // 理財型資產(無風險)／投資型資產(風險性) 佔比圓餅圖
-  const riskSplitSeg = el('riskSplitSeg'), riskSplitLegend = el('riskSplitLegend'), riskSplitPct = el('riskSplitPct');
-  if(riskSplitSeg && riskSplitLegend && riskSplitPct){
-    riskSplitSeg.innerHTML = ''; riskSplitLegend.innerHTML = '';
-    const splitBase = liquid + invest;
-    if(splitBase<=0){
-      riskSplitPct.textContent = '—';
-    } else {
-      const splitCats = [
-        {k:liquid, label:"理財型資產（無風險）", color:"#2E7391"},
-        {k:invest, label:"投資型資產（風險性）", color:"#C97B3D"}
-      ];
-      let cum2=0;
-      splitCats.forEach(c=>{
-        if(c.k<=0) return;
-        const frac = c.k/splitBase, len = frac*CF_DONUT_C;
-        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        circle.setAttribute("cx","100"); circle.setAttribute("cy","100"); circle.setAttribute("r",CF_DONUT_R);
-        circle.setAttribute("fill","none"); circle.setAttribute("stroke",c.color); circle.setAttribute("stroke-width","30");
-        circle.setAttribute("stroke-dasharray", `${len} ${CF_DONUT_C-len}`);
-        circle.setAttribute("stroke-dashoffset", `${-cum2}`);
-        riskSplitSeg.appendChild(circle);
-        const row = document.createElement("div"); row.className="item";
-        row.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${c.label}</span><span class="amt">${pctStr(frac)}</span>`;
-        riskSplitLegend.appendChild(row);
-        cum2 += len;
-      });
-      riskSplitPct.textContent = pctStr(invest/splitBase);
-    }
   }
+
+  // 理財型資產(無風險)／投資型資產(風險性) 佔比圓餅圖（有兩個版本：含不動產、不含不動產）
+  const fillRiskSplitDonut = (segId, legendId, pctId, safeAmt, riskAmt) => {
+    const segWrap2 = el(segId), legend2 = el(legendId), pctEl = el(pctId);
+    if(!segWrap2 || !legend2 || !pctEl) return;
+    segWrap2.innerHTML = ''; legend2.innerHTML = '';
+    const base = safeAmt + riskAmt;
+    if(base<=0){ pctEl.textContent = '—'; return; }
+    const cats = [
+      {k:safeAmt, label:"無風險資產", color:"#2E7391"},
+      {k:riskAmt, label:"風險性資產", color:"#C97B3D"}
+    ];
+    let cum=0;
+    cats.forEach(c=>{
+      if(c.k<=0) return;
+      const frac = c.k/base, len = frac*CF_DONUT_C;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      circle.setAttribute("cx","100"); circle.setAttribute("cy","100"); circle.setAttribute("r",CF_DONUT_R);
+      circle.setAttribute("fill","none"); circle.setAttribute("stroke",c.color); circle.setAttribute("stroke-width","30");
+      circle.setAttribute("stroke-dasharray", `${len} ${CF_DONUT_C-len}`);
+      circle.setAttribute("stroke-dashoffset", `${-cum}`);
+      segWrap2.appendChild(circle);
+      const row = document.createElement("div"); row.className="item";
+      row.innerHTML = `<span class="dot" style="background:${c.color}"></span><span>${c.label}</span><span class="amt">${pctStr(frac)}</span>`;
+      legend2.appendChild(row);
+      cum += len;
+    });
+    pctEl.textContent = pctStr(riskAmt/base);
+  };
+  fillRiskSplitDonut('riskSplitSegRe','riskSplitLegendRe','riskSplitPctRe', liquid, invest+realestate);
+  fillRiskSplitDonut('riskSplitSeg','riskSplitLegend','riskSplitPct', liquid, invest);
 }
 
 function pctStr(n){ if(!isFinite(n)) return "0%"; return (n*100).toFixed(1)+"%"; }
@@ -2493,31 +2490,6 @@ function buildReportCoverHTML(){
   const dateStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
   const namePart = loadedClientName ? loadedClientName+' ' : '';
   const advisorLine = currentAdvisorName ? `顧問：${currentAdvisorName}` : '';
-
-  const assetTotalCv = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
-  const liabilityTotalCv = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
-  const netWorthCv = assetTotalCv - liabilityTotalCv;
-  const incomeTotalCv = incomeGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
-  const expenseTotalCv = expenseGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
-  const savingsRateCv = incomeTotalCv>0 ? ((incomeTotalCv-expenseTotalCv)/incomeTotalCv*100) : null;
-  const rTypeCv = riskType();
-
-  const statCards = `
-    <div class="cover-stats">
-      <div class="cover-stat-card">
-        <div class="cover-stat-label">淨資產</div>
-        <div class="cover-stat-value">${money(netWorthCv)}</div>
-      </div>
-      <div class="cover-stat-card">
-        <div class="cover-stat-label">儲蓄率</div>
-        <div class="cover-stat-value">${savingsRateCv===null ? '—' : savingsRateCv.toFixed(0)+'%'}</div>
-      </div>
-      <div class="cover-stat-card">
-        <div class="cover-stat-label">財務個性類型</div>
-        <div class="cover-stat-value small">${rTypeCv ? rTypeCv.emoji+' '+rTypeCv.name : '—'}</div>
-      </div>
-    </div>`;
-
   return `
     <div class="report-cover">
       <svg class="cover-bg-lines" viewBox="0 0 420 700" preserveAspectRatio="none">
@@ -2535,7 +2507,6 @@ function buildReportCoverHTML(){
         <div class="cover-brand-marks">
           <span>Victory</span><span class="dot"></span><span>Aura</span><span class="dot"></span><span>Via</span>
         </div>
-        ${statCards}
         <div class="cover-meta">
           ${advisorLine ? `<div>${advisorLine}</div>` : ''}
           <div>產出日期：${dateStr}</div>
@@ -2555,10 +2526,6 @@ function buildReportPages(uid, opts){
     <div class="report-section">
       <h3>財務個性</h3>
       <div class="report-row"><span class="k">你的類型</span><span class="v">${rType.emoji} ${rType.name}</span></div>
-      <div class="risk-bar-chart">
-        <div class="risk-bar-chart-title">量表分數分布（每題 1～5 分，5 分表示最同意，總分 ${riskScore()} 分）</div>
-        ${buildRiskLikertBarsHTML()}
-      </div>
       <div class="risk-type-body">${rType.bodyHTML}</div>
     </div>` : `<div class="report-section"><h3>財務個性</h3><p style="color:var(--ink-soft);font-size:13px;">尚未完成測驗。</p></div>`;
 
