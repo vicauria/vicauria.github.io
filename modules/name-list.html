@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>名單管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2; --teal-light-text:#BFE0EA;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --paper:#F5F7F6; --card:#FFFFFF; --ink:#182226; --ink-soft:#5B6B70; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+    --a-color:#B3492F; --b-color:#A85F27; --c-color:#5B6B70;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
+
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:32px 0 40px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-70px; top:-70px; width:200px; height:200px;
+    border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:8px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
+  header.hero p{max-width:640px; color:#DCEAEE; font-size:13px; line-height:1.8;}
+
+  main{margin-top:-20px; position:relative; z-index:10; padding-bottom:140px;}
+
+  .tier-legend{
+    display:flex; flex-wrap:wrap; gap:10px 18px; background:var(--card); border-radius:var(--radius);
+    border:1px solid var(--line); box-shadow:0 10px 30px rgba(20,50,60,0.08); padding:16px 20px; margin-bottom:20px;
+    font-size:12.5px; color:var(--ink-soft);
+  }
+  .tier-legend b{color:var(--navy);}
+  .tier-legend .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;}
+
+  .board{display:flex; flex-direction:column; gap:32px;}
+
+  .tier-card{
+    background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,50,60,0.08); overflow:hidden;
+  }
+  .tier-head{
+    padding:16px 18px; display:flex; align-items:center; justify-content:space-between; color:#fff;
+  }
+  .tier-head.a{background:linear-gradient(135deg,var(--a-color),#8f3823);}
+  .tier-head.b{background:linear-gradient(135deg,var(--b-color),#7c4a1e);}
+  .tier-head.c{background:linear-gradient(135deg,#3C5560,var(--c-color));}
+  .tier-head h3{color:#fff; font-size:15px;}
+  .tier-head .tier-sub{font-size:11px; opacity:.85; margin-top:2px;}
+  .tier-count{
+    font-family:"Roboto Mono",monospace; font-size:12px; background:rgba(255,255,255,0.18);
+    padding:3px 10px; border-radius:12px; font-weight:700;
+  }
+
+  .tier-table-wrap{padding:10px 10px 14px;}
+  table.tier-table{width:100%; border-collapse:collapse;}
+  table.tier-table th{
+    font-size:10.5px; color:var(--ink-soft); text-align:left; font-weight:700; padding:6px 8px;
+    text-transform:uppercase; letter-spacing:.05em; border-bottom:1.5px solid var(--line);
+  }
+  table.tier-table th.col-name{width:18%;}
+  table.tier-table th.col-contact{width:20%;}
+  table.tier-table th.col-del{width:30px;}
+  table.tier-table td{padding:4px 4px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.tier-table tr:last-child td{border-bottom:none;}
+  table.tier-table input, table.tier-table textarea{
+    width:100%; border:1.5px solid transparent; border-radius:8px; padding:7px 8px;
+    font-family:"Noto Sans TC",sans-serif; font-size:12.5px; color:var(--ink); background:transparent;
+    resize:none; line-height:1.5;
+  }
+  table.tier-table input:hover, table.tier-table textarea:hover{background:var(--paper);}
+  table.tier-table input:focus, table.tier-table textarea:focus{
+    outline:none; border-color:var(--teal); background:#fff;
+  }
+  table.tier-table textarea{min-height:34px;}
+  .row-del-btn{
+    background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;
+    padding:4px; border-radius:6px; line-height:1;
+  }
+  .row-del-btn:hover{color:var(--negative); background:var(--warm-tint);}
+
+  .add-row-btn{
+    width:calc(100% - 20px); margin:6px 10px 4px; padding:8px; border:1.5px dashed var(--line);
+    border-radius:10px; background:none; color:var(--ink-soft); font-size:12px; cursor:pointer;
+    font-family:"Noto Sans TC",sans-serif; font-weight:700;
+  }
+  .add-row-btn:hover{border-color:var(--teal); color:var(--teal-deep); background:var(--teal-tint);}
+
+  .tier-empty{padding:18px 14px; text-align:center; color:var(--ink-soft); font-size:12px;}
+
+  .save-hint{
+    position:fixed; right:20px; bottom:20px; background:var(--navy); color:#fff; font-size:12px;
+    padding:8px 16px; border-radius:20px; opacity:0; transform:translateY(6px); transition:all .25s ease;
+    pointer-events:none; z-index:50; font-family:"Noto Sans TC",sans-serif;
+  }
+  .save-hint.show{opacity:1; transform:translateY(0);}
+
+  .not-logged-in{padding:60px 20px; text-align:center; color:var(--ink-soft); font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Prospect List · 列名單</div>
+    <h1>名單管理</h1>
+    <p>業務天龍八部的第一步：把想得到的名字先列出來，依熟悉度分成 A／B／C 三區，之後暖身、邀約、跟進都從這裡開始。直接點格子就能輸入，會自動儲存。</p>
+  </header>
+
+  <main>
+    <div class="tier-legend" id="tierLegend">
+      <span><span class="dot" style="background:var(--a-color);"></span><b>A 名單</b>　關係最近、隨時約得到的人</span>
+      <span><span class="dot" style="background:var(--b-color);"></span><b>B 名單</b>　認識、但需要先暖身的人</span>
+      <span><span class="dot" style="background:var(--c-color);"></span><b>C 名單</b>　剛認識或還不熟，要先培養關係</span>
+    </div>
+
+    <div id="boardWrap">
+      <div class="not-logged-in" id="notLoggedIn" style="display:none;">目前沒有偵測到登入狀態，請重新整理這個頁面，或重新登入後再試一次。</div>
+      <div class="board" id="board" style="display:none;">
+        <div class="tier-card" data-tier="A">
+          <div class="tier-head a">
+            <div><h3>A 名單</h3><div class="tier-sub">最熟、可以直接約</div></div>
+            <span class="tier-count" id="countA">0</span>
+          </div>
+          <div class="tier-table-wrap"><table class="tier-table"><thead>
+            <tr><th class="col-name">姓名</th><th class="col-contact">聯絡方式</th><th>備註</th><th class="col-del"></th></tr>
+          </thead><tbody id="tbodyA"></tbody></table>
+          <div class="tier-empty" id="emptyA" style="display:none;">還沒有名單，點下面「新增一列」開始列名單吧。</div></div>
+          <button class="add-row-btn" data-add-tier="A">＋ 新增一列</button>
+        </div>
+
+        <div class="tier-card" data-tier="B">
+          <div class="tier-head b">
+            <div><h3>B 名單</h3><div class="tier-sub">認識、需要先暖身</div></div>
+            <span class="tier-count" id="countB">0</span>
+          </div>
+          <div class="tier-table-wrap"><table class="tier-table"><thead>
+            <tr><th class="col-name">姓名</th><th class="col-contact">聯絡方式</th><th>備註</th><th class="col-del"></th></tr>
+          </thead><tbody id="tbodyB"></tbody></table>
+          <div class="tier-empty" id="emptyB" style="display:none;">還沒有名單，點下面「新增一列」開始列名單吧。</div></div>
+          <button class="add-row-btn" data-add-tier="B">＋ 新增一列</button>
+        </div>
+
+        <div class="tier-card" data-tier="C">
+          <div class="tier-head c">
+            <div><h3>C 名單</h3><div class="tier-sub">剛認識，還要培養關係</div></div>
+            <span class="tier-count" id="countC">0</span>
+          </div>
+          <div class="tier-table-wrap"><table class="tier-table"><thead>
+            <tr><th class="col-name">姓名</th><th class="col-contact">聯絡方式</th><th>備註</th><th class="col-del"></th></tr>
+          </thead><tbody id="tbodyC"></tbody></table>
+          <div class="tier-empty" id="emptyC" style="display:none;">還沒有名單，點下面「新增一列」開始列名單吧。</div></div>
+          <button class="add-row-btn" data-add-tier="C">＋ 新增一列</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="save-hint" id="saveHint">已儲存</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-config.js"></script>
+<script>
+let myUserId = null;
+let entries = []; // 目前這位顧問所有名單列（三區都在同一份陣列裡，用 tier 區分）
+let saveHintTimer = null;
+
+function showSaveHint(){
+  const hint = document.getElementById('saveHint');
+  hint.classList.add('show');
+  clearTimeout(saveHintTimer);
+  saveHintTimer = setTimeout(()=> hint.classList.remove('show'), 1200);
+}
+
+function rowsForTier(tier){
+  return entries.filter(e=> e.tier === tier).sort((a,b)=> (a.sort_order||0) - (b.sort_order||0));
+}
+
+function renderRow(entry){
+  const tr = document.createElement('tr');
+  tr.dataset.id = entry.id;
+
+  const tdName = document.createElement('td');
+  const inputName = document.createElement('input');
+  inputName.type = 'text'; inputName.placeholder = '姓名'; inputName.value = entry.name || '';
+  inputName.dataset.field = 'name';
+  tdName.appendChild(inputName);
+
+  const tdContact = document.createElement('td');
+  const inputContact = document.createElement('input');
+  inputContact.type = 'text'; inputContact.placeholder = '電話／LINE'; inputContact.value = entry.contact || '';
+  inputContact.dataset.field = 'contact';
+  tdContact.appendChild(inputContact);
+
+  const tdNote = document.createElement('td');
+  const inputNote = document.createElement('textarea');
+  inputNote.rows = 1; inputNote.placeholder = '關係、備註…'; inputNote.value = entry.note || '';
+  inputNote.dataset.field = 'note';
+  tdNote.appendChild(inputNote);
+
+  const tdDel = document.createElement('td');
+  const delBtn = document.createElement('button');
+  delBtn.className = 'row-del-btn'; delBtn.title = '刪除這一列'; delBtn.textContent = '✕';
+  delBtn.dataset.delId = entry.id;
+  tdDel.appendChild(delBtn);
+
+  tr.appendChild(tdName); tr.appendChild(tdContact); tr.appendChild(tdNote); tr.appendChild(tdDel);
+  return tr;
+}
+
+function renderTier(tier){
+  const tbody = document.getElementById('tbody' + tier);
+  const empty = document.getElementById('empty' + tier);
+  const count = document.getElementById('count' + tier);
+  const rows = rowsForTier(tier);
+  tbody.innerHTML = '';
+  rows.forEach(r => tbody.appendChild(renderRow(r)));
+  empty.style.display = rows.length === 0 ? 'block' : 'none';
+  count.textContent = rows.length;
+}
+
+function renderAll(){
+  ['A','B','C'].forEach(renderTier);
+}
+
+// 第一次使用這個功能（完全沒有任何名單資料）時，預先建好空白列，
+// 讓畫面看起來像張準備好的 Excel 表格可以直接填，而不是要一列一列自己按新增
+const DEFAULT_ROW_COUNTS = { A: 20, B: 50, C: 30 };
+
+async function seedDefaultRows(){
+  const seedRows = [];
+  ['A','B','C'].forEach(tier=>{
+    for(let i=0; i<DEFAULT_ROW_COUNTS[tier]; i++){
+      seedRows.push({ advisor_id: myUserId, tier, name: '', contact: '', note: '', sort_order: i });
+    }
+  });
+  const { data, error } = await supabaseClient.from('name_list_entries').insert(seedRows).select('*');
+  if(error){ console.error('預建空白名單失敗', error); return; }
+  entries = data || [];
+}
+
+async function loadEntries(){
+  const { data, error } = await supabaseClient.from('name_list_entries')
+    .select('*').eq('advisor_id', myUserId).order('sort_order', { ascending: true });
+  if(error){ console.error('讀取名單失敗', error); return; }
+  entries = data || [];
+  if(entries.length === 0){ await seedDefaultRows(); } // 完全是新使用者才預建空白列，之後刪光了也不會又自動補回來
+  renderAll();
+}
+
+async function addRow(tier){
+  const existing = rowsForTier(tier);
+  const nextOrder = existing.length ? Math.max(...existing.map(e=>e.sort_order||0)) + 1 : 0;
+  const { data, error } = await supabaseClient.from('name_list_entries')
+    .insert({ advisor_id: myUserId, tier, name: '', contact: '', note: '', sort_order: nextOrder })
+    .select('*').single();
+  if(error){ console.error('新增失敗', error); alert('新增失敗，請稍後再試。'); return; }
+  entries.push(data);
+  renderTier(tier);
+  // 新增之後把游標帶到新那一列的姓名欄位，可以直接打字
+  const tbody = document.getElementById('tbody' + tier);
+  const newRow = tbody.querySelector(`tr[data-id="${data.id}"]`);
+  if(newRow) newRow.querySelector('input[data-field="name"]').focus();
+}
+
+async function deleteRow(id, tier){
+  if(!confirm('確定要刪除這一列嗎？')) return;
+  const { error } = await supabaseClient.from('name_list_entries').delete().eq('id', id).eq('advisor_id', myUserId);
+  if(error){ console.error('刪除失敗', error); alert('刪除失敗，請稍後再試。'); return; }
+  entries = entries.filter(e=> e.id !== id);
+  renderTier(tier);
+}
+
+// 欄位失焦時才存檔，避免每打一個字就打一次資料庫
+document.getElementById('board').addEventListener('focusout', async (e)=>{
+  const field = e.target.dataset && e.target.dataset.field;
+  if(!field) return;
+  const tr = e.target.closest('tr');
+  const id = tr.dataset.id;
+  const value = e.target.value;
+  const entry = entries.find(en=> en.id === id);
+  if(!entry || entry[field] === value) return; // 沒有改變就不用打資料庫
+  entry[field] = value;
+  const { error } = await supabaseClient.from('name_list_entries')
+    .update({ [field]: value }).eq('id', id).eq('advisor_id', myUserId);
+  if(error){ console.error('儲存失敗', error); return; }
+  showSaveHint();
+});
+
+document.getElementById('board').addEventListener('click', (e)=>{
+  const addBtn = e.target.closest('[data-add-tier]');
+  if(addBtn){ addRow(addBtn.dataset.addTier); return; }
+  const delBtn = e.target.closest('[data-del-id]');
+  if(delBtn){
+    const tier = delBtn.closest('.tier-card').dataset.tier;
+    deleteRow(delBtn.dataset.delId, tier);
+  }
+});
+
+(async function init(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session){
+    document.getElementById('notLoggedIn').style.display = 'block';
+    return;
+  }
+  myUserId = session.user.id;
+  document.getElementById('board').style.display = 'grid';
+  await loadEntries();
+})();
+</script>
+</body>
+</html>
