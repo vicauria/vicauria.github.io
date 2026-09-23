@@ -117,6 +117,16 @@
   .post-head{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
   .post-author{font-weight:700; color:var(--navy); font-size:13.5px;}
   .post-time{font-size:11px; color:var(--ink-soft);}
+  .post-delete-btn{
+    margin-left:auto; background:none; border:none; color:var(--ink-soft); font-size:11px;
+    cursor:pointer; font-family:"Noto Sans TC",sans-serif; padding:2px 4px;
+  }
+  .post-delete-btn:hover{color:#B3432E;}
+  .comment-delete-btn{
+    margin-left:6px; background:none; border:none; color:var(--ink-soft); font-size:10.5px;
+    cursor:pointer; font-family:"Noto Sans TC",sans-serif; padding:0;
+  }
+  .comment-delete-btn:hover{color:#B3432E;}
   .post-content{font-size:13.5px; color:var(--ink); line-height:1.7; white-space:pre-wrap;}
   .post-image{max-width:280px; border-radius:10px; margin-top:10px; display:block; cursor:pointer;}
   .comments-list{margin-top:12px; padding-left:14px; border-left:2px solid var(--line);}
@@ -440,19 +450,22 @@ async function resolveDiscussTeams(){
 
 function renderPost(p, nameMap, comments){
   const authorName = nameMap[p.author_id] || '（未命名顧問）';
+  const isMyPost = p.author_id === myUserId;
   return `
     <div class="post-item" data-post-id="${p.id}">
       <div class="post-head">
         <span class="post-author">${authorName}</span>
         <span class="post-time">${fmtDiscussTime(p.created_at)}</span>
+        ${isMyPost ? `<button class="post-delete-btn" data-delete-post="${p.id}">刪除</button>` : ''}
       </div>
       ${p.content ? `<div class="post-content">${p.content.replace(/</g,'&lt;')}</div>` : ''}
       ${p.image_url ? `<img class="post-image" data-post-img="${p.id}" alt="照片">` : ''}
       <div class="comments-list">
         ${comments.map(c=>`
-          <div class="comment-item">
+          <div class="comment-item" data-comment-id="${c.id}">
             <span class="comment-author">${nameMap[c.author_id] || '（未命名顧問）'}</span>
             <span class="comment-time">${fmtDiscussTime(c.created_at)}</span>
+            ${c.author_id === myUserId ? `<button class="comment-delete-btn" data-delete-comment="${c.id}">刪除</button>` : ''}
             <div class="comment-content">${(c.content||'').replace(/</g,'&lt;')}</div>
           </div>
         `).join('')}
@@ -495,20 +508,42 @@ async function loadPosts(){
 }
 
 document.getElementById('postsList').addEventListener('click', async (e)=>{
-  const btn = e.target.closest('.btn-comment-submit');
-  if(!btn) return;
-  const postItem = btn.closest('.post-item');
-  const input = postItem.querySelector('.comment-input');
-  const content = input.value.trim();
-  if(!content) return;
-  btn.disabled = true;
-  const { error } = await supabaseClient.from('team_post_comments').insert({
-    post_id: postItem.dataset.postId, author_id: myUserId, content
-  });
-  btn.disabled = false;
-  if(error){ console.error('留言失敗', error); alert('留言失敗，請稍後再試。'); return; }
-  input.value = '';
-  loadPosts();
+  const commentSubmitBtn = e.target.closest('.btn-comment-submit');
+  if(commentSubmitBtn){
+    const postItem = commentSubmitBtn.closest('.post-item');
+    const input = postItem.querySelector('.comment-input');
+    const content = input.value.trim();
+    if(!content) return;
+    commentSubmitBtn.disabled = true;
+    const { error } = await supabaseClient.from('team_post_comments').insert({
+      post_id: postItem.dataset.postId, author_id: myUserId, content
+    });
+    commentSubmitBtn.disabled = false;
+    if(error){ console.error('留言失敗', error); alert('留言失敗，請稍後再試。'); return; }
+    input.value = '';
+    loadPosts();
+    return;
+  }
+
+  const delPostBtn = e.target.closest('[data-delete-post]');
+  if(delPostBtn){
+    if(!confirm('確定要刪除這則討論嗎？刪除後留言也會一併隱藏，無法復原。')) return;
+    const { error } = await supabaseClient.from('team_posts')
+      .update({ deleted_at: new Date().toISOString() }).eq('id', delPostBtn.dataset.deletePost).eq('author_id', myUserId);
+    if(error){ console.error('刪除失敗', error); alert('刪除失敗，請稍後再試。'); return; }
+    loadPosts();
+    return;
+  }
+
+  const delCommentBtn = e.target.closest('[data-delete-comment]');
+  if(delCommentBtn){
+    if(!confirm('確定要刪除這則留言嗎？')) return;
+    const { error } = await supabaseClient.from('team_post_comments')
+      .update({ deleted_at: new Date().toISOString() }).eq('id', delCommentBtn.dataset.deleteComment).eq('author_id', myUserId);
+    if(error){ console.error('刪除失敗', error); alert('刪除失敗，請稍後再試。'); return; }
+    loadPosts();
+    return;
+  }
 });
 
 document.getElementById('btnAttachPostPhoto').addEventListener('click', ()=> document.getElementById('postPhotoInput').click());
