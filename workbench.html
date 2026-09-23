@@ -265,14 +265,20 @@
 
   /* ---------- 浮動聊天泡泡：登入後不管切到哪一頁都會浮在畫面上，可以拖曳移動 ---------- */
   .float-chat-bubble{
-    position:fixed; right:24px; bottom:24px; width:68px; height:68px; border-radius:50%;
-    background:#fff; overflow:hidden;
+    position:fixed; right:24px; bottom:24px; width:60px; height:60px;
+    border-radius:30px 30px 30px 8px; /* 左下角收尖，做出對話框的「角」的感覺 */
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-deep) 100%);
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 8px 24px rgba(20,50,60,0.35), inset 0 0 0 2.5px var(--teal);
-    cursor:grab; z-index:500; user-select:none; touch-action:none; padding:9px;
+    box-shadow:0 8px 24px rgba(20,50,60,0.35);
+    cursor:grab; z-index:500; user-select:none; touch-action:none;
   }
   .float-chat-bubble:active{cursor:grabbing;}
-  .float-chat-bubble img{width:100%; height:100%; object-fit:contain; pointer-events:none; -webkit-user-drag:none;}
+  .fcb-logo-badge{
+    width:34px; height:34px; border-radius:50%; background:#fff;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; padding:6px;
+    pointer-events:none; flex-shrink:0;
+  }
+  .fcb-logo-badge img{width:100%; height:100%; object-fit:contain; pointer-events:none; -webkit-user-drag:none;}
   .fcb-badge{
     position:absolute; top:-3px; right:-3px; background:var(--negative); color:#fff;
     font-size:10px; font-weight:700; min-width:18px; height:18px; border-radius:9px;
@@ -282,8 +288,12 @@
   .float-chat-panel{
     position:fixed; right:24px; bottom:92px; width:340px; height:460px; background:#fff;
     border-radius:16px; box-shadow:0 20px 60px rgba(20,50,60,0.3); z-index:500;
-    display:none; flex-direction:column; overflow:hidden;
+    display:flex; flex-direction:column; overflow:hidden;
+    /* 用透明度＋不可點來「隱藏」，而不是 display:none — 面板裡的 iframe 一直保持正常顯示狀態，
+       不會因為曾經被 display:none 蓋住而讀不到自己的版面尺寸，內容才不會空白 */
+    opacity:0; pointer-events:none; visibility:hidden; transition:opacity .15s ease;
   }
+  .float-chat-panel.open{opacity:1; pointer-events:auto; visibility:visible;}
   .fcp-head{
     background:var(--navy); color:#fff; padding:11px 16px; display:flex; align-items:center;
     justify-content:space-between; font-weight:700; font-size:13px; flex-shrink:0;
@@ -504,7 +514,7 @@
 <div class="jk-toast" id="jkToast"></div>
 
 <div class="float-chat-bubble" id="floatChatBubble" title="訊息">
-  <img src="icons/vicauria-mark.png" alt="訊息" draggable="false">
+  <span class="fcb-logo-badge"><img src="icons/vicauria-mark.png" alt="訊息" draggable="false"></span>
   <span class="fcb-badge" id="fcbBadge">0</span>
 </div>
 <div class="float-chat-panel" id="floatChatPanel">
@@ -1380,19 +1390,19 @@
     }
 
     function toggleChatPanel(){
-      const isOpen = panel.style.display === 'flex';
+      const isOpen = panel.classList.contains('open');
       if(isOpen){
-        panel.style.display = 'none';
+        panel.classList.remove('open');
         return;
       }
       if(!frame.src || !frame.src.includes('messages.html')){
         frame.src = 'modules/messages.html';
       }
       positionPanelNearBubble();
-      panel.style.display = 'flex';
+      panel.classList.add('open');
       setBadge(0);
     }
-    closeBtn.addEventListener('click', ()=>{ panel.style.display = 'none'; });
+    closeBtn.addEventListener('click', ()=>{ panel.classList.remove('open'); });
 
     // ---- 拖曳邏輯：移動距離超過一點點才算拖曳，不然點一下也會被誤判成拖曳而打不開視窗 ----
     let dragging = false, moved = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
@@ -1413,7 +1423,7 @@
       newTop = Math.max(4, Math.min(window.innerHeight - 72, newTop));
       bubble.style.right = 'auto'; bubble.style.bottom = 'auto';
       bubble.style.left = newLeft + 'px'; bubble.style.top = newTop + 'px';
-      if(panel.style.display === 'flex') positionPanelNearBubble();
+      if(panel.classList.contains('open')) positionPanelNearBubble();
     });
     bubble.addEventListener('pointerup', ()=>{
       dragging = false;
@@ -1430,7 +1440,7 @@
         bubble.style.top = finalTop + 'px';
         setTimeout(()=>{ bubble.style.transition = ''; }, 240);
         try{ localStorage.setItem(POS_KEY, JSON.stringify({ left: finalLeft, top: finalTop })); }catch(e){}
-        if(panel.style.display === 'flex') setTimeout(positionPanelNearBubble, 240);
+        if(panel.classList.contains('open')) setTimeout(positionPanelNearBubble, 240);
       } else {
         toggleChatPanel();
       }
@@ -1441,7 +1451,7 @@
       .on('postgres_changes', { event:'INSERT', schema:'public', table:'direct_messages' }, payload=>{
         const msg = payload.new;
         if(!window.currentAdvisorId || msg.sender_id === window.currentAdvisorId) return;
-        if(panel.style.display === 'flex') return; // 視窗開著看得到，不用額外提醒
+        if(panel.classList.contains('open')) return; // 視窗開著看得到，不用額外提醒
         setBadge(unreadCount + 1);
       })
       .subscribe();
