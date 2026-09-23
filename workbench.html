@@ -1395,10 +1395,27 @@
       }
     }
 
+    // ---- 未讀提醒：直接跟資料庫查「還沒被標記已讀、而且不是自己發的」訊息筆數，
+    // 這樣泡泡上顯示的數字才會是真的未讀數，而不是只靠這次連線期間收到的新訊息去累加 ----
+    async function refreshUnreadCount(){
+      try{
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(!session) return;
+        const { count, error } = await supabaseClient
+          .from('direct_messages')
+          .select('id', { count: 'exact', head: true })
+          .is('read_at', null)
+          .neq('sender_id', session.user.id);
+        if(error) return;
+        setBadge(count || 0);
+      }catch(e){}
+    }
+
     function toggleChatPanel(){
       const isOpen = panel.classList.contains('open');
       if(isOpen){
         panel.classList.remove('open');
+        setTimeout(refreshUnreadCount, 200); // 視窗關閉時，剛剛看過的對話已經被標記已讀了，重新抓一次真實未讀數
         return;
       }
       if(!frame.src || !frame.src.includes('messages.html')){
@@ -1406,9 +1423,13 @@
       }
       positionPanelNearBubble();
       panel.classList.add('open');
-      setBadge(0);
     }
-    closeBtn.addEventListener('click', ()=>{ panel.classList.remove('open'); });
+    closeBtn.addEventListener('click', ()=>{
+      panel.classList.remove('open');
+      setTimeout(refreshUnreadCount, 200);
+    });
+
+    refreshUnreadCount(); // 一打開頁面就先抓一次目前累積的未讀數，不用等點開泡泡或收到新訊息才顯示
 
     // ---- 拖曳邏輯：移動距離超過一點點才算拖曳，不然點一下也會被誤判成拖曳而打不開視窗 ----
     let dragging = false, moved = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
@@ -1459,6 +1480,10 @@
         if(!window.currentAdvisorId || msg.sender_id === window.currentAdvisorId) return;
         if(panel.classList.contains('open')) return; // 視窗開著看得到，不用額外提醒
         setBadge(unreadCount + 1);
+      })
+      .on('postgres_changes', { event:'UPDATE', schema:'public', table:'direct_messages' }, ()=>{
+        // 訊息被標記已讀（例如在別的分頁 / 裝置點開對話）時，重新抓一次真實未讀數，避免泡泡上的數字跟實際不同步
+        if(!panel.classList.contains('open')) refreshUnreadCount();
       })
       .subscribe();
   })();
