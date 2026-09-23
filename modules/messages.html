@@ -189,6 +189,7 @@ let contacts = [];
 let activeContact = null;
 let activeConversation = null;
 let currentChannel = null;
+let stickToBottom = true; // 是否要一直貼在最底部（剛開對話、或使用者本來就停在最底下時，收到新內容要自動跟著捲到底）
 const signedUrlCache = new Map();
 
 function fmtTime(iso){
@@ -322,6 +323,13 @@ function scrollChatToBottom(){
   box.scrollTop = box.scrollHeight;
 }
 
+// 聊天視窗捲動時，判斷使用者是不是還停在最底部附近；如果自己往上捲去看舊訊息，
+// 之後新訊息／照片載入就不要再硬把畫面拉走
+document.getElementById('chatMessages').addEventListener('scroll', ()=>{
+  const box = document.getElementById('chatMessages');
+  stickToBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 60;
+});
+
 function appendMessage(m){
   const box = document.getElementById('chatMessages');
   const row = document.createElement('div');
@@ -337,6 +345,7 @@ function appendMessage(m){
     const img = document.createElement('img');
     img.alt = '照片';
     bubble.appendChild(img);
+    img.addEventListener('load', ()=>{ if(stickToBottom) scrollChatToBottom(); }); // 照片是非同步載入的，載完圖片框變高之後要再貼回底部一次，不然會停在照片載入前的位置
     getSignedUrl(m.image_url).then(url=>{
       if(url){ img.src = url; img.addEventListener('click', ()=> window.open(url, '_blank')); }
     });
@@ -356,7 +365,7 @@ function subscribeToConversation(convoId){
       const msg = payload.new;
       if(msg.sender_id === myUserId) return; // 自己送出的訊息送出當下就已經畫面上加過了
       appendMessage(msg);
-      scrollChatToBottom();
+      if(stickToBottom) scrollChatToBottom();
       supabaseClient.from('direct_messages').update({ read_at: new Date().toISOString() }).eq('id', msg.id).then(()=>{});
     })
     .subscribe();
@@ -378,11 +387,17 @@ async function openConversation(contact){
   document.getElementById('chatActive').style.display = 'flex';
   document.getElementById('chatHeaderName').textContent = contact.display_name;
   document.getElementById('chatMessages').innerHTML = '';
+  stickToBottom = true; // 每次打開一個對話，都先預設要停在最新（未讀）訊息那邊，而不是從最上面看起
 
   const { data: msgs } = await supabaseClient.from('direct_messages')
     .select('*').eq('conversation_id', convo.id).order('created_at', { ascending: true });
   (msgs||[]).forEach(appendMessage);
   scrollChatToBottom();
+  // 文字訊息馬上就能量到正確高度，但照片要等載入後才知道實際高度，
+  // 所以再多補幾次捲動，確保最後真的停在最底部（最新／未讀訊息）而不是卡在中間
+  requestAnimationFrame(scrollChatToBottom);
+  setTimeout(scrollChatToBottom, 150);
+  setTimeout(scrollChatToBottom, 500);
 
   const unreadIds = (msgs||[]).filter(m=> m.sender_id!==myUserId && !m.read_at).map(m=>m.id);
   if(unreadIds.length){
