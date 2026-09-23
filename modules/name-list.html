@@ -22,7 +22,7 @@
     -webkit-font-smoothing:antialiased;
   }
   h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
-  .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
+  .wrap{width:100%; margin:0 auto; padding:0 28px;}
 
   header.hero{
     background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
@@ -46,7 +46,8 @@
   .tier-legend b{color:var(--navy);}
   .tier-legend .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;}
 
-  .board{display:flex; flex-direction:column; gap:32px;}
+  .board{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; align-items:start;}
+  @media (max-width:920px){ .board{grid-template-columns:1fr;} }
 
   .tier-card{
     background:var(--card); border-radius:var(--radius); border:1px solid var(--line);
@@ -71,8 +72,7 @@
     font-size:10.5px; color:var(--ink-soft); text-align:left; font-weight:700; padding:6px 8px;
     text-transform:uppercase; letter-spacing:.05em; border-bottom:1.5px solid var(--line);
   }
-  table.tier-table th.col-name{width:18%;}
-  table.tier-table th.col-contact{width:20%;}
+  table.tier-table th.col-name{width:32%;}
   table.tier-table th.col-del{width:30px;}
   table.tier-table td{padding:4px 4px; border-bottom:1px solid var(--line); vertical-align:top;}
   table.tier-table tr:last-child td{border-bottom:none;}
@@ -136,7 +136,7 @@
             <span class="tier-count" id="countA">0</span>
           </div>
           <div class="tier-table-wrap"><table class="tier-table"><thead>
-            <tr><th class="col-name">姓名</th><th class="col-contact">聯絡方式</th><th>備註</th><th class="col-del"></th></tr>
+            <tr><th class="col-name">姓名</th><th>備註</th><th class="col-del"></th></tr>
           </thead><tbody id="tbodyA"></tbody></table>
           <div class="tier-empty" id="emptyA" style="display:none;">還沒有名單，點下面「新增一列」開始列名單吧。</div></div>
           <button class="add-row-btn" data-add-tier="A">＋ 新增一列</button>
@@ -148,7 +148,7 @@
             <span class="tier-count" id="countB">0</span>
           </div>
           <div class="tier-table-wrap"><table class="tier-table"><thead>
-            <tr><th class="col-name">姓名</th><th class="col-contact">聯絡方式</th><th>備註</th><th class="col-del"></th></tr>
+            <tr><th class="col-name">姓名</th><th>備註</th><th class="col-del"></th></tr>
           </thead><tbody id="tbodyB"></tbody></table>
           <div class="tier-empty" id="emptyB" style="display:none;">還沒有名單，點下面「新增一列」開始列名單吧。</div></div>
           <button class="add-row-btn" data-add-tier="B">＋ 新增一列</button>
@@ -160,7 +160,7 @@
             <span class="tier-count" id="countC">0</span>
           </div>
           <div class="tier-table-wrap"><table class="tier-table"><thead>
-            <tr><th class="col-name">姓名</th><th class="col-contact">聯絡方式</th><th>備註</th><th class="col-del"></th></tr>
+            <tr><th class="col-name">姓名</th><th>備註</th><th class="col-del"></th></tr>
           </thead><tbody id="tbodyC"></tbody></table>
           <div class="tier-empty" id="emptyC" style="display:none;">還沒有名單，點下面「新增一列」開始列名單吧。</div></div>
           <button class="add-row-btn" data-add-tier="C">＋ 新增一列</button>
@@ -200,12 +200,6 @@ function renderRow(entry){
   inputName.dataset.field = 'name';
   tdName.appendChild(inputName);
 
-  const tdContact = document.createElement('td');
-  const inputContact = document.createElement('input');
-  inputContact.type = 'text'; inputContact.placeholder = '電話／LINE'; inputContact.value = entry.contact || '';
-  inputContact.dataset.field = 'contact';
-  tdContact.appendChild(inputContact);
-
   const tdNote = document.createElement('td');
   const inputNote = document.createElement('textarea');
   inputNote.rows = 1; inputNote.placeholder = '關係、備註…'; inputNote.value = entry.note || '';
@@ -218,7 +212,7 @@ function renderRow(entry){
   delBtn.dataset.delId = entry.id;
   tdDel.appendChild(delBtn);
 
-  tr.appendChild(tdName); tr.appendChild(tdContact); tr.appendChild(tdNote); tr.appendChild(tdDel);
+  tr.appendChild(tdName); tr.appendChild(tdNote); tr.appendChild(tdDel);
   return tr;
 }
 
@@ -245,7 +239,7 @@ async function seedDefaultRows(){
   const seedRows = [];
   ['A','B','C'].forEach(tier=>{
     for(let i=0; i<DEFAULT_ROW_COUNTS[tier]; i++){
-      seedRows.push({ advisor_id: myUserId, tier, name: '', contact: '', note: '', sort_order: i });
+      seedRows.push({ advisor_id: myUserId, tier, name: '', note: '', sort_order: i });
     }
   });
   const { data, error } = await supabaseClient.from('name_list_entries').insert(seedRows).select('*');
@@ -266,7 +260,7 @@ async function addRow(tier){
   const existing = rowsForTier(tier);
   const nextOrder = existing.length ? Math.max(...existing.map(e=>e.sort_order||0)) + 1 : 0;
   const { data, error } = await supabaseClient.from('name_list_entries')
-    .insert({ advisor_id: myUserId, tier, name: '', contact: '', note: '', sort_order: nextOrder })
+    .insert({ advisor_id: myUserId, tier, name: '', note: '', sort_order: nextOrder })
     .select('*').single();
   if(error){ console.error('新增失敗', error); alert('新增失敗，請稍後再試。'); return; }
   entries.push(data);
