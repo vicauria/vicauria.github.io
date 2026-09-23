@@ -1405,6 +1405,7 @@
           .from('direct_messages')
           .select('id', { count: 'exact', head: true })
           .is('read_at', null)
+          .is('deleted_at', null)
           .neq('sender_id', session.user.id);
         if(error) return;
         setBadge(count || 0);
