@@ -237,8 +237,12 @@
     line-height:2.2;
   }
   /* 理財型(無風險) / 投資型(風險性) 資產比例圓餅圖 */
-  .risk-split-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;}
+  .risk-split-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;
+    page-break-inside:avoid; break-inside:avoid;
+  }
   @media (max-width:760px){.risk-split-row{grid-template-columns:1fr;}}
+  .risk-split-card{page-break-inside:avoid; break-inside:avoid;}
   .risk-split-card{
     background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
