@@ -122,6 +122,32 @@
 </style>
 </head>
 <body>
+<script>
+// 保險機制：這個頁面不管出什麼錯，畫面一定要顯示看得懂的紅字說明，不會再讓妳看到一片空白猜不出原因
+window.addEventListener('error', function(e){
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;inset:0;background:#fff;color:#B3492F;padding:20px;font-family:sans-serif;font-size:13px;line-height:1.8;overflow:auto;z-index:99999;white-space:pre-wrap;';
+  box.textContent = '訊息頁面載入時發生錯誤：\n' + (e.message || (e.error && e.error.message) || String(e)) + '\n\n（檔案：' + (e.filename||'') + ' 第 ' + (e.lineno||'?') + ' 行）';
+  document.body.appendChild(box);
+});
+window.addEventListener('unhandledrejection', function(e){
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;inset:0;background:#fff;color:#B3492F;padding:20px;font-family:sans-serif;font-size:13px;line-height:1.8;overflow:auto;z-index:99999;white-space:pre-wrap;';
+  const reason = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+  box.textContent = '訊息頁面連線／執行時發生錯誤：\n' + reason;
+  document.body.appendChild(box);
+});
+// 10 秒後如果連線還是卡住（一直沒進到聊天畫面），顯示提示而不是放著空白
+setTimeout(function(){
+  if(!window.__vicauriaMsgLoaded){
+    const box = document.createElement('div');
+    box.id = 'vicauriaTimeoutHint';
+    box.style.cssText = 'position:fixed; left:12px; right:12px; bottom:12px; background:#FBEFE2; color:#A85F27; padding:10px 14px; border-radius:8px; font-size:12px; font-family:sans-serif; z-index:99998;';
+    box.textContent = '（如果一直看不到聯絡人清單，可能是網路連線問題，或畫面需要重新整理一次。）';
+    document.body.appendChild(box);
+  }
+}, 10000);
+</script>
 
 <header class="hero">
   <div class="eyebrow">Messages · 訊息</div>
@@ -135,7 +161,7 @@
 <div class="msg-shell">
   <aside class="contacts">
     <div class="contacts-head">同團隊夥伴</div>
-    <div id="contactsList"></div>
+    <div id="contactsList"><div class="contacts-empty">載入中…</div></div>
   </aside>
   <section class="chat-panel">
     <div class="chat-empty" id="chatEmpty">選一位同事開始聊天</div>
@@ -432,8 +458,12 @@ document.getElementById('photoInput').addEventListener('change', async (e)=>{
 });
 
 (async function init(){
+  window.__vicauriaMsgLoaded = true; // 只要跑到這裡，代表程式碼真的有在執行、supabase 有連上，10秒提示就不用再跳出來
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if(!session) return;
+  if(!session){
+    document.getElementById('contactsList').innerHTML = '<div class="contacts-empty">目前沒有偵測到登入狀態，請重新整理這個頁面，或重新登入後再試一次。</div>';
+    return;
+  }
   myUserId = session.user.id;
   const { data: profile } = await supabaseClient.from('profiles').select('plan').eq('id', myUserId).single();
   const myPlan = (profile && profile.plan) || 'free';
