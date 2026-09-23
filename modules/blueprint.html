@@ -257,44 +257,61 @@
   .report-row .v{font-weight:600;color:var(--navy);font-family:"Roboto Mono",monospace;}
   .report-note{background:var(--warm-tint);border-radius:10px;padding:16px 18px;font-size:13px;color:var(--warm-deep);margin-top:10px;line-height:1.8;}
 
-  /* ---------- 圖像化數據卡片（財富願景・達成率 用） ---------- */
-  .vg-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
-  .vg-grid:last-child{margin-bottom:0;}
-  .vg-card{
-    background:var(--card); border-radius:12px; border:1px solid var(--line);
-    padding:16px 15px; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  /* ---------- 財富願景・達成率：總覽 chips + 手風琴（圓環＋一句話＋細節卡） ---------- */
+  .vg-overview{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .vg-chip{
+    display:flex; align-items:center; gap:7px; font-size:12px; font-weight:700;
+    padding:6px 13px; border-radius:20px; background:var(--paper); color:var(--ink);
   }
-  .vg-card .vg-label{font-size:11px; color:var(--ink-soft); margin-bottom:7px;}
-  .vg-card .vg-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:19px; color:var(--navy); line-height:1.2;}
-  .vg-card .vg-value small{font-size:11px; font-weight:500; color:var(--ink-soft); margin-left:2px;}
-  .vg-card.tier-pos{background:rgba(46,125,91,.10); border-color:rgba(46,125,91,.3);}
-  .vg-card.tier-pos .vg-value{color:var(--positive);}
-  .vg-card.tier-warn{background:rgba(184,121,30,.10); border-color:rgba(184,121,30,.3);}
-  .vg-card.tier-warn .vg-value{color:#B8791E;}
-  .vg-card.tier-neg{background:rgba(179,73,47,.10); border-color:rgba(179,73,47,.3);}
-  .vg-card.tier-neg .vg-value{color:var(--negative);}
-  .vg-card .vg-badge{
-    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;
-    margin-bottom:8px;
-  }
-  .vg-card.tier-pos .vg-badge{background:rgba(46,125,91,.16); color:var(--positive);}
-  .vg-card.tier-warn .vg-badge{background:rgba(184,121,30,.16); color:#B8791E;}
-  .vg-card.tier-neg .vg-badge{background:rgba(179,73,47,.16); color:var(--negative);}
-  .vg-goal-title{font-size:14px; font-weight:700; color:var(--navy); margin:20px 0 10px;}
-  .vg-goal-title:first-child{margin-top:0;}
-  @media (max-width:520px){.vg-grid{grid-template-columns:1fr;}}
+  .vg-chip .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .vg-chip .bg-pos{background:var(--positive);} .vg-chip .dot.bg-pos{background:var(--positive);}
+  .vg-chip .dot.bg-warn{background:#B8791E;} .vg-chip .dot.bg-neg{background:var(--negative);}
 
-  /* 達成率進度條（財富願景頁用） */
-  .vg-progress-wrap{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
-  .vg-progress-track{
-    flex:1; height:9px; background:var(--paper); border-radius:5px; overflow:hidden;
+  .vg-acc-item{border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden;}
+  .vg-acc-item:last-child{margin-bottom:0;}
+  .vg-acc-head{
+    display:flex; align-items:center; gap:10px; padding:13px 15px; cursor:pointer;
+    background:var(--card); user-select:none; flex-wrap:wrap;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
-  .vg-progress-fill{height:100%; border-radius:5px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
-  .vg-progress-fill.tier-pos{background:var(--positive);}
-  .vg-progress-fill.tier-warn{background:#B8791E;}
-  .vg-progress-fill.tier-neg{background:var(--negative);}
-  .vg-progress-pct{font-family:"Roboto Mono",monospace; font-weight:800; font-size:13px; color:var(--navy); min-width:44px; text-align:right;}
+  .vg-acc-head:hover{background:var(--paper);}
+  .vg-tier-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0; background:var(--ink-soft);}
+  .vg-tier-dot.tier-pos{background:var(--positive);}
+  .vg-tier-dot.tier-warn{background:#B8791E;}
+  .vg-tier-dot.tier-neg{background:var(--negative);}
+  .vg-acc-name{font-weight:700; color:var(--navy); font-size:14px; flex:1;}
+  .vg-status-badge{font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--paper); color:var(--ink-soft);}
+  .vg-status-badge.tier-pos{background:rgba(46,125,91,.16); color:var(--positive);}
+  .vg-status-badge.tier-warn{background:rgba(184,121,30,.16); color:#B8791E;}
+  .vg-status-badge.tier-neg{background:rgba(179,73,47,.16); color:var(--negative);}
+  .vg-acc-pct{font-family:"Roboto Mono",monospace; font-weight:800; font-size:14px; color:var(--navy); min-width:42px; text-align:right;}
+  .vg-acc-chev{font-size:11px; color:var(--ink-soft); transition:transform .2s ease;}
+  .vg-acc-item.open .vg-acc-chev{transform:rotate(180deg);}
+  .vg-acc-panel{padding:0 15px 16px;}
+  .vg-acc-panel[hidden]{display:none;}
+  .vg-combo-top{display:flex; align-items:center; gap:20px; padding:14px 0 16px; flex-wrap:wrap; border-top:1px dashed var(--line);}
+  .vg-ring-wrap{position:relative; width:96px; height:96px; flex-shrink:0;}
+  .vg-ring-fill.tier-pos{stroke:var(--positive);}
+  .vg-ring-fill.tier-warn{stroke:#B8791E;}
+  .vg-ring-fill.tier-neg{stroke:var(--negative);}
+  .vg-ring-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .vg-ring-center .pct{font-family:"Roboto Mono",monospace; font-weight:800; font-size:17px; color:var(--navy);}
+  .vg-ring-center .lbl{font-size:9px; color:var(--ink-soft); margin-top:1px;}
+  .vg-sentence{flex:1; min-width:200px; font-size:13.5px; line-height:1.9; color:var(--ink);}
+  .vg-sentence b{font-weight:800;}
+  .vg-sentence b.tier-pos{color:var(--positive);}
+  .vg-sentence b.tier-warn{color:#B8791E;}
+  .vg-sentence b.tier-neg{color:var(--negative);}
+  .vg-mini-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:480px){.vg-mini-grid{grid-template-columns:1fr;}}
+  .vg-mini-card{background:var(--paper); border-radius:9px; padding:10px 12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .vg-mini-card .lbl{font-size:10px; color:var(--ink-soft); margin-bottom:4px;}
+  .vg-mini-card .val{font-family:"Roboto Mono",monospace; font-weight:800; font-size:13px; color:var(--navy); font-variant-numeric:tabular-nums;}
+  @media print{
+    .vg-acc-panel[hidden]{display:block !important;}
+    .vg-acc-chev{display:none !important;}
+    .vg-acc-head{cursor:default;}
+  }
   .report-btn{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
   .report-btn-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
   .report-btn-home{
@@ -1506,65 +1523,91 @@ function computeGoalAchievement(goalName){
   return {target, inflationAdjustedTarget, projected, years, rate, gap, rateAchieved, todayMonthly, inflationAdjustedMonthly, projectedMonthly};
 }
 
-function buildVisionGoalListHTML(){
-  return visionA.goals.map(g=>{
+const VG_RING_R = 44, VG_RING_C = 2*Math.PI*44;
+function buildVisionGoalListHTML(uid){
+  if(visionA.goals.length===0) return '<div class="report-row"><span class="k">尚未選擇目標</span></div>';
+
+  // 總覽 chips：幾個達標／接近／落差較大（只有 1 個目標時不重複顯示）
+  let overviewRow = '';
+  if(visionA.goals.length>1){
+    const tiers = visionA.goals.map(g=>{
+      const rate = computeGoalAchievement(g).rateAchieved;
+      return rate===null ? null : (rate>=100 ? 'pos' : (rate>=60 ? 'warn' : 'neg'));
+    });
+    const posN = tiers.filter(t=>t==='pos').length, warnN = tiers.filter(t=>t==='warn').length, negN = tiers.filter(t=>t==='neg').length;
+    const chips = [];
+    if(posN>0) chips.push(`<div class="vg-chip"><span class="dot bg-pos"></span>${posN} 個達標</div>`);
+    if(warnN>0) chips.push(`<div class="vg-chip"><span class="dot bg-warn"></span>${warnN} 個接近目標</div>`);
+    if(negN>0) chips.push(`<div class="vg-chip"><span class="dot bg-neg"></span>${negN} 個落差較大</div>`);
+    overviewRow = chips.length ? `<div class="vg-overview">${chips.join('')}</div>` : '';
+  }
+
+  const items = visionA.goals.map((g,i)=>{
     const label = g==='自行輸入' ? (visionA.customGoalName||'自訂目標') : g;
     const c = visionA.calc[g] || {};
     const r = computeGoalAchievement(g);
     const rate = r.rateAchieved;
     const tier = rate===null ? '' : (rate>=100 ? 'tier-pos' : (rate>=60 ? 'tier-warn' : 'tier-neg'));
-    const badgeText = rate===null ? '' : (rate>=100 ? '✓ 達標' : (rate>=60 ? '⚠ 接近目標' : '✕ 落差較大'));
+    const badgeText = rate===null ? '尚未填寫' : (rate>=100 ? '✓ 達標' : (rate>=60 ? '⚠ 接近目標' : '✕ 落差較大'));
     const ageText = c.age ? c.age+'歲' : '目標當年';
-    const diffLabel = r.gap>0 ? '還缺' : '已超過目標';
+    const diffLabel = r.gap>0 ? '還差' : '已超過目標';
     const diffValue = r.gap>0 ? r.gap : (r.projected - r.inflationAdjustedTarget);
-    const unitLabel = g==='旅遊基金' ? '/年' : '/月';
+    const unitLabel = g==='旅遊基金' ? '年' : '月';
+    const pctText = rate===null ? '—' : rate.toFixed(0)+'%';
 
-    const monthlyRow = r.todayMonthly!==null ? `
-      <div class="vg-grid">
-        <div class="vg-card">
-          <div class="vg-label">今日${g==='旅遊基金'?'年':'月'}目標</div>
-          <div class="vg-value">${money(r.todayMonthly)}<small>${unitLabel}</small></div>
-        </div>
-        <div class="vg-card">
-          <div class="vg-label">通膨調整後（${ageText}需要）</div>
-          <div class="vg-value">${money(r.inflationAdjustedMonthly)}<small>${unitLabel}</small></div>
-        </div>
-        <div class="vg-card ${tier}">
-          <div class="vg-label">預估屆時可支應</div>
-          <div class="vg-value">${money(r.projectedMonthly)}<small>${unitLabel}</small></div>
-        </div>
-      </div>` : '';
+    const ringPct = rate===null ? 0 : Math.min(100, Math.max(0, rate));
+    const ringLen = (ringPct/100)*VG_RING_C;
+    const ringDash = `${ringLen.toFixed(1)} ${(VG_RING_C-ringLen).toFixed(1)}`;
 
-    const progressPct = rate===null ? 0 : Math.min(100, Math.max(0, rate));
-    const progressRow = rate===null ? '' : `
-      <div class="vg-progress-wrap">
-        <div class="vg-progress-track"><div class="vg-progress-fill ${tier}" style="width:${progressPct}%;"></div></div>
-        <div class="vg-progress-pct">${rate.toFixed(0)}%</div>
-      </div>`;
+    const monthlyGap = r.todayMonthly!==null ? (r.inflationAdjustedMonthly - r.projectedMonthly) : null;
+    const sentence = r.todayMonthly!==null
+      ? `到 <b>${ageText}</b>時，預估每${unitLabel}可支應 <b class="hl ${tier}">${money(r.projectedMonthly)}</b> 元${g==='旅遊基金'?'旅遊':'生活'}費，${monthlyGap>0 ? `每${unitLabel}還差 <b class="hl tier-neg">${money(monthlyGap)}</b> 元` : `已超過每${unitLabel}所需，進度領先`}。`
+      : `到 <b>${ageText}</b>時，預估累積 <b class="hl ${tier}">${money(r.projected)}</b>，${r.gap>0 ? `還差 <b class="hl tier-neg">${money(r.gap)}</b>` : `已超過目標 <b class="hl tier-pos">${money(Math.abs(diffValue))}</b>，進度領先`}。`;
 
+    const miniCards = [
+      {lbl:'通膨調整後目標', val: money(r.inflationAdjustedTarget)},
+      {lbl:'預估屆時累積', val: money(r.projected)},
+    ];
+    if(r.todayMonthly!==null) miniCards.push({lbl:`每${unitLabel}可支應（預估）`, val: money(r.projectedMonthly)});
+    miniCards.push({lbl:diffLabel, val: money(Math.abs(diffValue)), color: r.gap>0 ? 'var(--negative)' : 'var(--positive)'});
+
+    const accId = `vgAcc${uid}-${i}`;
     return `
-      <div class="vg-goal-title">${label}（${ageText}）</div>
-      ${progressRow}
-      ${monthlyRow}
-      <div class="vg-grid">
-        <div class="vg-card">
-          <div class="vg-label">通膨調整後目標（${ageText}需要）</div>
-          <div class="vg-value">${money(r.inflationAdjustedTarget)}</div>
+      <div class="vg-acc-item${i===0?' open':''}" id="${accId}">
+        <div class="vg-acc-head" onclick="toggleVgAcc('${accId}')">
+          <span class="vg-tier-dot ${tier}"></span>
+          <span class="vg-acc-name">${label}（${ageText}）</span>
+          <span class="vg-status-badge ${tier}">${badgeText}</span>
+          <span class="vg-acc-pct">${pctText}</span>
+          <span class="vg-acc-chev">▾</span>
         </div>
-        <div class="vg-card">
-          <div class="vg-label">預估屆時累積（單純存錢）</div>
-          <div class="vg-value">${money(r.projected)}</div>
-        </div>
-        <div class="vg-card ${tier}">
-          <div class="vg-badge">${badgeText}</div>
-          <div class="vg-value">${diffLabel}<br>${money(Math.abs(diffValue))}</div>
-        </div>
-        <div class="vg-card ${tier}">
-          <div class="vg-label">達成率</div>
-          <div class="vg-value">${rate===null?'—':rate.toFixed(0)+'%'}</div>
+        <div class="vg-acc-panel"${i===0?'':' hidden'}>
+          <div class="vg-combo-top">
+            <div class="vg-ring-wrap">
+              <svg viewBox="0 0 104 104" width="104" height="104">
+                <circle cx="52" cy="52" r="44" fill="none" stroke="#E7ECEC" stroke-width="12"></circle>
+                ${rate!==null ? `<circle class="vg-ring-fill ${tier}" cx="52" cy="52" r="44" fill="none" stroke-width="12" stroke-linecap="round" stroke-dasharray="${ringDash}" transform="rotate(-90 52 52)"></circle>` : ''}
+              </svg>
+              <div class="vg-ring-center"><div class="pct">${pctText}</div><div class="lbl">達成率</div></div>
+            </div>
+            <div class="vg-sentence">${sentence}</div>
+          </div>
+          <div class="vg-mini-grid">
+            ${miniCards.map(c=>`<div class="vg-mini-card"><div class="lbl">${c.lbl}</div><div class="val"${c.color?` style="color:${c.color}"`:''}>${c.val}</div></div>`).join('')}
+          </div>
         </div>
       </div>`;
-  }).join('') || '<div class="report-row"><span class="k">尚未選擇目標</span></div>';
+  }).join('');
+
+  return overviewRow + items;
+}
+function toggleVgAcc(id){
+  const item = document.getElementById(id);
+  if(!item) return;
+  const panel = item.querySelector('.vg-acc-panel');
+  const open = !panel.hidden;
+  panel.hidden = open;
+  item.classList.toggle('open', !open);
 }
 
 /* ---------------- 財務分析（依客戶資料自動生成的敘述型報告） ---------------- */
@@ -2532,7 +2575,7 @@ function buildReportPages(uid, opts){
   const visionSection = `
     <div class="report-section">
       <h3>財富願景・達成率</h3>
-      ${buildVisionGoalListHTML()}
+      ${buildVisionGoalListHTML(uid)}
       <div class="report-note">達成率＝單純存錢累積（假設銀行活存利率 1%，不計投資報酬），對比通膨調整後的目標金額；有房貸的話，房屋淨值先當作不變，避免跟月付金重複扣。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
     </div>`;
 
