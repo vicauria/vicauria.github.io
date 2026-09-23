@@ -262,6 +262,39 @@
     z-index:400; max-width:calc(100vw - 40px); text-align:center;
   }
   .jk-toast.show{opacity:1; transform:translate(-50%, 0);}
+
+  /* ---------- 浮動聊天泡泡：登入後不管切到哪一頁都會浮在畫面上，可以拖曳移動 ---------- */
+  .float-chat-bubble{
+    position:fixed; right:24px; bottom:24px; width:56px; height:56px; border-radius:50%;
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-deep) 100%); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    box-shadow:0 8px 24px rgba(20,50,60,0.35); cursor:grab; z-index:500; user-select:none;
+    touch-action:none;
+  }
+  .float-chat-bubble:active{cursor:grabbing;}
+  .fcb-badge{
+    position:absolute; top:-3px; right:-3px; background:var(--negative); color:#fff;
+    font-size:10px; font-weight:700; min-width:18px; height:18px; border-radius:9px;
+    display:none; align-items:center; justify-content:center; padding:0 4px;
+    font-family:"Roboto Mono",monospace; pointer-events:none;
+  }
+  .float-chat-panel{
+    position:fixed; right:24px; bottom:92px; width:340px; height:460px; background:#fff;
+    border-radius:16px; box-shadow:0 20px 60px rgba(20,50,60,0.3); z-index:500;
+    display:none; flex-direction:column; overflow:hidden;
+  }
+  .fcp-head{
+    background:var(--navy); color:#fff; padding:11px 16px; display:flex; align-items:center;
+    justify-content:space-between; font-weight:700; font-size:13px; flex-shrink:0;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .fcp-close{background:none; border:none; color:#fff; font-size:15px; cursor:pointer; opacity:.8;}
+  .fcp-close:hover{opacity:1;}
+  .float-chat-panel iframe{flex:1; border:none; width:100%;}
+  @media (max-width:480px){
+    .float-chat-panel{width:calc(100vw - 32px); height:64vh; right:16px; bottom:84px;}
+    .float-chat-bubble{right:16px; bottom:16px;}
+  }
   .user-menu-item{
     width:100%; display:flex; align-items:center; gap:9px; text-align:left;
     padding:10px 12px; border:none; background:none; border-radius:8px;
@@ -468,6 +501,18 @@
 </head>
 <body>
 <div class="jk-toast" id="jkToast"></div>
+
+<div class="float-chat-bubble" id="floatChatBubble" title="訊息">
+  <span>💬</span>
+  <span class="fcb-badge" id="fcbBadge">0</span>
+</div>
+<div class="float-chat-panel" id="floatChatPanel">
+  <div class="fcp-head">
+    <span>訊息</span>
+    <button class="fcp-close" id="fcpClose" title="關閉">✕</button>
+  </div>
+  <iframe id="floatChatFrame" title="訊息"></iframe>
+</div>
 
 <div class="mobile-topbar">
   <button class="mobile-menu-btn" id="btnMobileMenu" aria-label="開啟選單">☰</button>
@@ -1306,6 +1351,104 @@
       navigator.serviceWorker.register('sw.js').catch(()=>{});
     });
   }
+
+  // ---- 浮動聊天泡泡：可拖曳移動、點一下（沒有拖曳的話）打開/關閉小聊天視窗 ----
+  (function setupFloatChat(){
+    const bubble = document.getElementById('floatChatBubble');
+    const panel = document.getElementById('floatChatPanel');
+    const frame = document.getElementById('floatChatFrame');
+    const closeBtn = document.getElementById('fcpClose');
+    const badge = document.getElementById('fcbBadge');
+    const POS_KEY = 'jk_float_chat_pos';
+    let unreadCount = 0;
+
+    // 記住泡泡上次被拖到哪裡（只存在這台裝置這個瀏覽器裡，換裝置不會同步）
+    try{
+      const saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+      if(saved && typeof saved.left === 'number' && typeof saved.top === 'number'){
+        bubble.style.right = 'auto'; bubble.style.bottom = 'auto';
+        bubble.style.left = saved.left + 'px'; bubble.style.top = saved.top + 'px';
+      }
+    }catch(e){}
+
+    function positionPanelNearBubble(){
+      const rect = bubble.getBoundingClientRect();
+      const panelW = panel.offsetWidth || 340, panelH = panel.offsetHeight || 460;
+      let left = rect.left;
+      let top = rect.top - panelH - 12;
+      if(top < 8) top = Math.min(rect.bottom + 12, window.innerHeight - panelH - 8);
+      left = Math.max(8, Math.min(window.innerWidth - panelW - 8, left));
+      top = Math.max(8, top);
+      panel.style.right = 'auto'; panel.style.bottom = 'auto';
+      panel.style.left = left + 'px'; panel.style.top = top + 'px';
+    }
+
+    function setBadge(n){
+      unreadCount = n;
+      if(n > 0){
+        badge.textContent = n > 9 ? '9+' : String(n);
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    function toggleChatPanel(){
+      const isOpen = panel.style.display === 'flex';
+      if(isOpen){
+        panel.style.display = 'none';
+        return;
+      }
+      if(!frame.src || !frame.src.includes('messages.html')){
+        frame.src = 'modules/messages.html';
+      }
+      positionPanelNearBubble();
+      panel.style.display = 'flex';
+      setBadge(0);
+    }
+    closeBtn.addEventListener('click', ()=>{ panel.style.display = 'none'; });
+
+    // ---- 拖曳邏輯：移動距離超過一點點才算拖曳，不然點一下也會被誤判成拖曳而打不開視窗 ----
+    let dragging = false, moved = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
+    bubble.addEventListener('pointerdown', (e)=>{
+      dragging = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      const rect = bubble.getBoundingClientRect();
+      origLeft = rect.left; origTop = rect.top;
+      bubble.setPointerCapture(e.pointerId);
+    });
+    bubble.addEventListener('pointermove', (e)=>{
+      if(!dragging) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if(Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      if(!moved) return;
+      let newLeft = origLeft + dx, newTop = origTop + dy;
+      newLeft = Math.max(4, Math.min(window.innerWidth - 60, newLeft));
+      newTop = Math.max(4, Math.min(window.innerHeight - 60, newTop));
+      bubble.style.right = 'auto'; bubble.style.bottom = 'auto';
+      bubble.style.left = newLeft + 'px'; bubble.style.top = newTop + 'px';
+      if(panel.style.display === 'flex') positionPanelNearBubble();
+    });
+    bubble.addEventListener('pointerup', ()=>{
+      dragging = false;
+      if(moved){
+        const rect = bubble.getBoundingClientRect();
+        try{ localStorage.setItem(POS_KEY, JSON.stringify({ left: rect.left, top: rect.top })); }catch(e){}
+      } else {
+        toggleChatPanel();
+      }
+    });
+
+    // ---- 未讀提醒：訂閱整張私訊表的新增事件，RLS 會自動只送「我看得到」的那幾筆，安全不會外洩其他團隊的訊息 ----
+    supabaseClient.channel('float-chat-unread')
+      .on('postgres_changes', { event:'INSERT', schema:'public', table:'direct_messages' }, payload=>{
+        const msg = payload.new;
+        if(!window.currentAdvisorId || msg.sender_id === window.currentAdvisorId) return;
+        if(panel.style.display === 'flex') return; // 視窗開著看得到，不用額外提醒
+        setBadge(unreadCount + 1);
+      })
+      .subscribe();
+  })();
 </script>
 
 </body>
