@@ -394,7 +394,9 @@ async function sendText(){
 }
 document.getElementById('btnSend').addEventListener('click', sendText);
 document.getElementById('chatTextInput').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter'){ e.preventDefault(); sendText(); }
+  // 注意：用注音／拼音等輸入法打字時，選字確認也會觸發一次 Enter，
+  // 這時候 e.isComposing 會是 true，要跳過，不然中文訊息會被送兩次
+  if(e.key === 'Enter' && !e.isComposing){ e.preventDefault(); sendText(); }
 });
 
 document.getElementById('btnAttachPhoto').addEventListener('click', ()=>{
