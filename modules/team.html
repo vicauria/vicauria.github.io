@@ -90,6 +90,12 @@
   }
   table.workload-table td.num{font-family:"Roboto Mono",monospace; font-weight:700; text-align:center;}
   .member-row-name{font-weight:700; color:var(--navy);}
+  .mrn-line{display:flex; align-items:center; gap:6px;}
+  .mrn-dot{font-size:12px; flex-shrink:0;}
+  .mrn-suggestion{
+    font-weight:500; font-size:11.5px; color:var(--ink-soft); margin-top:3px;
+    line-height:1.5; max-width:260px;
+  }
   .btn-remove{
     background:none; border:none; color:var(--negative); font-size:12px; font-weight:700; cursor:pointer;
   }
@@ -192,6 +198,30 @@ async function ensureMyTeam(){
   return team;
 }
 
+// 把工作量的原始數字，翻譯成「要不要關心一下」的燈號跟建議文字。
+// 規則：
+//   🔴 紅燈：超過 7 天沒有新增/更新任何客戶紀錄 → 可能停滯了，最優先關心
+//   🟡 黃燈：待追蹤（已到期還沒處理）累積 3 筆以上 → 可能忙不過來或忘記了
+//   🆕 新加入：目前一筆客戶紀錄都還沒有 → 不算問題，但也值得留意進度
+//   🟢 綠燈：以上都沒有，狀況正常
+// 只用現有彙總數字計算，不會額外去看任何一筆客戶的內容。
+function computeWorkloadHealth(r){
+  if((r.total_count||0) === 0){
+    return { dot:'🆕', priority:2, suggestion:'剛加入團隊，還沒有建立任何客戶紀錄，可以關心一下上手狀況。' };
+  }
+  const daysSince = r.last_activity_at
+    ? Math.floor((Date.now() - new Date(r.last_activity_at).getTime()) / 86400000)
+    : Infinity;
+  if(daysSince >= 7){
+    const daysText = daysSince === Infinity ? '很長一段時間' : `${daysSince} 天`;
+    return { dot:'🔴', priority:0, suggestion:`已經 ${daysText} 沒有新增或更新任何客戶紀錄了，建議關心一下最近的狀況。` };
+  }
+  if((r.overdue_count||0) >= 3){
+    return { dot:'🟡', priority:1, suggestion:`有 ${r.overdue_count} 筆待追蹤已經到期，可能忙不過來了，建議提醒一下。` };
+  }
+  return { dot:'🟢', priority:3, suggestion:'' };
+}
+
 async function loadWorkload(teamId){
   const { data, error } = await supabaseClient.rpc('get_team_workload', { p_team_id: teamId });
   const area = document.getElementById('workloadArea');
@@ -200,6 +230,11 @@ async function loadWorkload(teamId){
     area.innerHTML = '<div class="empty-hint">目前團隊裡還沒有其他顧問加入。</div>';
     return;
   }
+  // 每個人先算出燈號跟建議文字，再依「最需要關心的排最前面」排序：紅 → 黃 → 新加入 → 綠，
+  // 同一個等級內，待追蹤數字多的排前面
+  const rows = data.map(r=>({ ...r, _health: computeWorkloadHealth(r) }))
+    .sort((a,b)=> a._health.priority - b._health.priority || (b.overdue_count||0) - (a.overdue_count||0));
+
   area.innerHTML = `
     <table class="workload-table">
       <thead>
@@ -210,9 +245,12 @@ async function loadWorkload(teamId){
         </tr>
       </thead>
       <tbody>
-        ${data.map(r=>`
+        ${rows.map(r=>`
           <tr data-advisor="${r.advisor_id}">
-            <td class="member-row-name">${r.display_name}</td>
+            <td class="member-row-name">
+              <div class="mrn-line"><span class="mrn-dot" title="狀態">${r._health.dot}</span>${r.display_name}</div>
+              ${r._health.suggestion ? `<div class="mrn-suggestion">${r._health.suggestion}</div>` : ''}
+            </td>
             <td class="num" style="color:${r.today_count>0?'var(--teal-deep)':'var(--ink-soft)'};font-weight:700;">${r.today_count}</td>
             <td class="num">${r.tracking_count}</td>
             <td class="num">${r.proposal_count}</td>
@@ -225,7 +263,7 @@ async function loadWorkload(teamId){
         `).join('')}
       </tbody>
     </table>
-    <div class="sub" style="margin-top:10px;">「今日新增/更新」是台北時間今天內，新建立或有異動的客戶紀錄筆數，自動統計，顧問不用額外填寫任何東西。</div>
+    <div class="sub" style="margin-top:10px;">「今日新增/更新」是台北時間今天內，新建立或有異動的客戶紀錄筆數，自動統計，顧問不用額外填寫任何東西。清單已經自動把最需要關心的人排在最前面。</div>
   `;
   area.querySelectorAll('.btn-remove').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
