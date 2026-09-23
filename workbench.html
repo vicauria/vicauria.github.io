@@ -288,20 +288,26 @@
   .float-chat-panel{
     position:fixed; right:24px; bottom:92px; width:340px; height:460px; background:#fff;
     border-radius:16px; box-shadow:0 20px 60px rgba(20,50,60,0.3); z-index:500;
-    display:flex; flex-direction:column; overflow:hidden;
+    overflow:hidden;
     /* 用透明度＋不可點來「隱藏」，而不是 display:none — 面板裡的 iframe 一直保持正常顯示狀態，
        不會因為曾經被 display:none 蓋住而讀不到自己的版面尺寸，內容才不會空白 */
     opacity:0; pointer-events:none; visibility:hidden; transition:opacity .15s ease;
   }
   .float-chat-panel.open{opacity:1; pointer-events:auto; visibility:visible;}
   .fcp-head{
-    background:var(--navy); color:#fff; padding:11px 16px; display:flex; align-items:center;
-    justify-content:space-between; font-weight:700; font-size:13px; flex-shrink:0;
+    position:absolute; top:0; left:0; right:0; height:44px; box-sizing:border-box;
+    background:var(--navy); color:#fff; padding:0 16px; display:flex; align-items:center;
+    justify-content:space-between; font-weight:700; font-size:13px;
     font-family:"Noto Sans TC",sans-serif;
   }
   .fcp-close{background:none; border:none; color:#fff; font-size:15px; cursor:pointer; opacity:.8;}
   .fcp-close:hover{opacity:1;}
-  .float-chat-panel iframe{flex:1; border:none; width:100%;}
+  /* 不用 flex:1 撐 iframe 的高度 — iframe 在 flex 版面下常常撐不出正確高度（已確認過），
+     改成直接指定「從標題列下面開始，貼到面板最底部」，不會再量出 0 高度 */
+  .float-chat-panel iframe{
+    position:absolute; top:44px; left:0; right:0; bottom:0; width:100%; height:calc(100% - 44px);
+    border:none; display:block;
+  }
   @media (max-width:480px){
     .float-chat-panel{width:calc(100vw - 32px); height:64vh; right:16px; bottom:84px;}
     .float-chat-bubble{right:16px; bottom:16px;}
