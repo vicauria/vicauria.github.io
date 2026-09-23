@@ -101,6 +101,41 @@
   }
   .btn-remove:hover{text-decoration:underline;}
 
+  .team-switch-row{margin-bottom:16px;}
+  .team-switch-row select{
+    padding:8px 12px; border:1.5px solid var(--line); border-radius:8px; font-size:13px;
+    font-family:"Noto Sans TC",sans-serif; color:var(--navy); background:var(--paper);
+  }
+  .post-compose textarea{
+    width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:9px;
+    font-family:"Noto Sans TC",sans-serif; font-size:13.5px; resize:vertical; min-height:56px;
+  }
+  .post-compose textarea:focus{outline:none; border-color:var(--teal);}
+  .post-compose-row{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  .post-item{padding:16px 0; border-bottom:1px dashed var(--line);}
+  .post-item:last-child{border-bottom:none;}
+  .post-head{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .post-author{font-weight:700; color:var(--navy); font-size:13.5px;}
+  .post-time{font-size:11px; color:var(--ink-soft);}
+  .post-content{font-size:13.5px; color:var(--ink); line-height:1.7; white-space:pre-wrap;}
+  .post-image{max-width:280px; border-radius:10px; margin-top:10px; display:block; cursor:pointer;}
+  .comments-list{margin-top:12px; padding-left:14px; border-left:2px solid var(--line);}
+  .comment-item{margin-bottom:8px; font-size:12.5px;}
+  .comment-author{font-weight:700; color:var(--navy);}
+  .comment-time{color:var(--ink-soft); font-size:10.5px; margin-left:6px;}
+  .comment-content{margin-top:2px; color:var(--ink); line-height:1.6;}
+  .comment-compose{display:flex; gap:8px; margin-top:10px;}
+  .comment-compose input{
+    flex:1; padding:8px 12px; border:1.5px solid var(--line); border-radius:16px; font-size:12.5px;
+    font-family:"Noto Sans TC",sans-serif;
+  }
+  .comment-compose input:focus{outline:none; border-color:var(--teal);}
+  .btn-comment-submit{
+    background:var(--teal); color:#fff; border:none; padding:8px 16px; border-radius:16px;
+    font-size:12px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .btn-comment-submit:hover{background:var(--teal-deep);}
+
   .empty-hint{color:var(--ink-soft); font-size:13px; text-align:center; padding:24px;}
   .success-msg{
     display:none; background:rgba(46,125,91,0.08); border:1px solid rgba(46,125,91,0.25);
@@ -161,6 +196,26 @@
     <div id="myTeamsArea" style="margin-top:18px;"></div>
   </div>
 
+  <div class="card" id="discussCard" style="display:none;">
+    <h3>團隊討論</h3>
+    <div class="sub">給同團隊夥伴留言、討論公事用的，站內就能聊，不用另外開群組。單獨想私聊某個人，用左邊選單的「訊息」。</div>
+    <div class="team-switch-row" id="discussTeamSwitchWrap" style="display:none;">
+      <select id="discussTeamSelect"></select>
+    </div>
+
+    <div class="post-compose">
+      <textarea id="postContentInput" placeholder="想跟團隊說些什麼？" rows="2"></textarea>
+      <div class="post-compose-row">
+        <input type="file" id="postPhotoInput" accept="image/*" style="display:none;">
+        <button type="button" class="btn outline" id="btnAttachPostPhoto">📷 加照片</button>
+        <span id="postPhotoName" style="font-size:12px;color:var(--ink-soft);"></span>
+        <button class="btn" id="btnSubmitPost" style="margin-left:auto;">發佈</button>
+      </div>
+    </div>
+
+    <div id="postsList" style="margin-top:18px;"></div>
+  </div>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -201,7 +256,7 @@ async function ensureMyTeam(){
 // 把工作量的原始數字，翻譯成「要不要關心一下」的燈號跟建議文字。
 // 規則：
 //   🔴 紅燈：超過 7 天沒有新增/更新任何客戶紀錄 → 可能停滯了，最優先關心
-//   🟡 黃燈：待追蹤（已到期還沒處理）累積 3 筆以上 → 可能忙不過來或忘記了
+//   🟡 黃燈：追蹤中＋已提案的客戶累積到 5 筆以上 → 手上案量偏大，可能忙不過來
 //   🆕 新加入：目前一筆客戶紀錄都還沒有 → 不算問題，但也值得留意進度
 //   🟢 綠燈：以上都沒有，狀況正常
 // 只用現有彙總數字計算，不會額外去看任何一筆客戶的內容。
@@ -216,8 +271,9 @@ function computeWorkloadHealth(r){
     const daysText = daysSince === Infinity ? '很長一段時間' : `${daysSince} 天`;
     return { dot:'🔴', priority:0, suggestion:`已經 ${daysText} 沒有新增或更新任何客戶紀錄了，建議關心一下最近的狀況。` };
   }
-  if((r.overdue_count||0) >= 3){
-    return { dot:'🟡', priority:1, suggestion:`有 ${r.overdue_count} 筆待追蹤已經到期，可能忙不過來了，建議提醒一下。` };
+  const activeLoad = (r.tracking_count||0) + (r.proposal_count||0);
+  if(activeLoad >= 5){
+    return { dot:'🟡', priority:1, suggestion:`追蹤中＋已提案的客戶累積到 ${activeLoad} 筆，案量有點大，建議關心一下進度。` };
   }
   return { dot:'🟢', priority:3, suggestion:'' };
 }
@@ -357,6 +413,159 @@ document.getElementById('btnJoinTeam').addEventListener('click', async ()=>{
   loadMyTeams();
 });
 
+/* ---------------- 團隊討論（公告＋留言） ---------------- */
+let currentDiscussTeamId = null;
+let pendingPostPhoto = null;
+const discussSignedUrlCache = new Map();
+
+async function getDiscussSignedUrl(path){
+  if(discussSignedUrlCache.has(path)) return discussSignedUrlCache.get(path);
+  const { data, error } = await supabaseClient.storage.from('chat-images').createSignedUrl(path, 14400);
+  if(error){ console.error('取得照片連結失敗', error); return null; }
+  discussSignedUrlCache.set(path, data.signedUrl);
+  return data.signedUrl;
+}
+function fmtDiscussTime(iso){
+  return new Date(iso).toLocaleString('zh-TW', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+async function resolveDiscussTeams(){
+  const teams = [];
+  const { data: owned } = await supabaseClient.from('teams').select('id, name').eq('owner_id', myUserId).maybeSingle();
+  if(owned) teams.push({ id: owned.id, name: owned.name || '我的團隊' });
+  const { data: joined } = await supabaseClient.from('team_members').select('team_id, teams(name)').eq('advisor_id', myUserId);
+  (joined||[]).forEach(r=>{ if(r.team_id) teams.push({ id: r.team_id, name: r.teams?.name || '團隊' }); });
+  return teams;
+}
+
+function renderPost(p, nameMap, comments){
+  const authorName = nameMap[p.author_id] || '（未命名顧問）';
+  return `
+    <div class="post-item" data-post-id="${p.id}">
+      <div class="post-head">
+        <span class="post-author">${authorName}</span>
+        <span class="post-time">${fmtDiscussTime(p.created_at)}</span>
+      </div>
+      ${p.content ? `<div class="post-content">${p.content.replace(/</g,'&lt;')}</div>` : ''}
+      ${p.image_url ? `<img class="post-image" data-post-img="${p.id}" alt="照片">` : ''}
+      <div class="comments-list">
+        ${comments.map(c=>`
+          <div class="comment-item">
+            <span class="comment-author">${nameMap[c.author_id] || '（未命名顧問）'}</span>
+            <span class="comment-time">${fmtDiscussTime(c.created_at)}</span>
+            <div class="comment-content">${(c.content||'').replace(/</g,'&lt;')}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="comment-compose">
+        <input type="text" class="comment-input" placeholder="留言回覆…">
+        <button class="btn-comment-submit">送出</button>
+      </div>
+    </div>
+  `;
+}
+
+async function loadPosts(){
+  const list = document.getElementById('postsList');
+  list.innerHTML = '<div class="empty-hint">載入中…</div>';
+  const { data: posts, error } = await supabaseClient.from('team_posts')
+    .select('*').eq('team_id', currentDiscussTeamId).is('deleted_at', null)
+    .order('created_at', { ascending: false });
+  if(error){ list.innerHTML = '<div class="empty-hint">讀取討論串失敗，請稍後再試。</div>'; return; }
+  if(!posts || posts.length===0){ list.innerHTML = '<div class="empty-hint">還沒有人發過討論，開頭第一句話吧。</div>'; return; }
+
+  const { data: members } = await supabaseClient.rpc('get_team_members', { p_team_id: currentDiscussTeamId });
+  const nameMap = {}; (members||[]).forEach(m=> nameMap[m.advisor_id]=m.display_name);
+
+  const postIds = posts.map(p=>p.id);
+  const { data: comments } = await supabaseClient.from('team_post_comments')
+    .select('*').in('post_id', postIds).is('deleted_at', null).order('created_at', { ascending: true });
+  const commentsByPost = {};
+  (comments||[]).forEach(c=>{ (commentsByPost[c.post_id] = commentsByPost[c.post_id]||[]).push(c); });
+
+  list.innerHTML = posts.map(p => renderPost(p, nameMap, commentsByPost[p.id]||[])).join('');
+  posts.forEach(p=>{
+    if(!p.image_url) return;
+    const img = list.querySelector(`img[data-post-img="${p.id}"]`);
+    if(!img) return;
+    getDiscussSignedUrl(p.image_url).then(url=>{
+      if(url){ img.src = url; img.addEventListener('click', ()=> window.open(url, '_blank')); }
+    });
+  });
+}
+
+document.getElementById('postsList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.btn-comment-submit');
+  if(!btn) return;
+  const postItem = btn.closest('.post-item');
+  const input = postItem.querySelector('.comment-input');
+  const content = input.value.trim();
+  if(!content) return;
+  btn.disabled = true;
+  const { error } = await supabaseClient.from('team_post_comments').insert({
+    post_id: postItem.dataset.postId, author_id: myUserId, content
+  });
+  btn.disabled = false;
+  if(error){ console.error('留言失敗', error); alert('留言失敗，請稍後再試。'); return; }
+  input.value = '';
+  loadPosts();
+});
+
+document.getElementById('btnAttachPostPhoto').addEventListener('click', ()=> document.getElementById('postPhotoInput').click());
+document.getElementById('postPhotoInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ alert('請選擇圖片檔案。'); e.target.value=''; return; }
+  if(file.size > 5*1024*1024){ alert('照片太大了，請選擇 5MB 以內的圖片。'); e.target.value=''; return; }
+  pendingPostPhoto = file;
+  document.getElementById('postPhotoName').textContent = file.name;
+});
+
+document.getElementById('btnSubmitPost').addEventListener('click', async ()=>{
+  const content = document.getElementById('postContentInput').value.trim();
+  if(!content && !pendingPostPhoto){ alert('請輸入內容或加一張照片。'); return; }
+  const btn = document.getElementById('btnSubmitPost');
+  btn.disabled = true; btn.textContent = '發佈中…';
+  try{
+    let imagePath = null;
+    if(pendingPostPhoto){
+      const ext = (pendingPostPhoto.name.split('.').pop() || 'jpg').toLowerCase();
+      imagePath = `${currentDiscussTeamId}/posts/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabaseClient.storage.from('chat-images').upload(imagePath, pendingPostPhoto);
+      if(upErr) throw upErr;
+    }
+    const { error } = await supabaseClient.from('team_posts').insert({
+      team_id: currentDiscussTeamId, author_id: myUserId, content: content || null, image_url: imagePath
+    });
+    if(error) throw error;
+    document.getElementById('postContentInput').value = '';
+    pendingPostPhoto = null;
+    document.getElementById('postPhotoName').textContent = '';
+    document.getElementById('postPhotoInput').value = '';
+    loadPosts();
+  }catch(err){
+    console.error('發佈失敗', err);
+    alert('發佈失敗，請稍後再試。');
+  }finally{
+    btn.disabled = false; btn.textContent = '發佈';
+  }
+});
+
+async function initDiscussSection(){
+  const discussTeams = await resolveDiscussTeams();
+  if(discussTeams.length === 0) return; // 沒有任何團隊時不顯示討論卡片
+  document.getElementById('discussCard').style.display = 'block';
+  if(discussTeams.length > 1){
+    const wrap = document.getElementById('discussTeamSwitchWrap');
+    wrap.style.display = 'block';
+    const sel = document.getElementById('discussTeamSelect');
+    sel.innerHTML = discussTeams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    sel.addEventListener('change', ()=>{ currentDiscussTeamId = sel.value; loadPosts(); });
+  }
+  currentDiscussTeamId = discussTeams[0].id;
+  loadPosts();
+}
+
 (async function init(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session){ return; }
@@ -365,6 +574,7 @@ document.getElementById('btnJoinTeam').addEventListener('click', async ()=>{
   myPlan = (profile && profile.plan) || 'free';
   await initMasterSection();
   await loadMyTeams();
+  await initDiscussSection();
 })();
 </script>
 
