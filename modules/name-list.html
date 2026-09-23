@@ -34,7 +34,7 @@
   }
   header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:8px;}
   header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
-  header.hero p{max-width:640px; color:#DCEAEE; font-size:13px; line-height:1.8;}
+  header.hero p{color:#DCEAEE; font-size:13px; line-height:1.8;}
 
   main{margin-top:-20px; position:relative; z-index:10; padding-bottom:140px;}
 
@@ -113,14 +113,15 @@
 </head>
 <body>
 
-<div class="wrap">
-  <header class="hero">
+<header class="hero">
+  <div class="wrap">
     <div class="eyebrow">Prospect List · 列名單</div>
     <h1>名單管理</h1>
     <p>業務天龍八部的第一步：把想得到的名字先列出來，依熟悉度分成 A／B／C 三區，之後暖身、邀約、跟進都從這裡開始。直接點格子就能輸入，會自動儲存。</p>
-  </header>
+  </div>
+</header>
 
-  <main>
+<main class="wrap">
     <div class="tier-legend" id="tierLegend">
       <span><span class="dot" style="background:var(--a-color);"></span><b>A 名單</b>　關係最近、隨時約得到的人</span>
       <span><span class="dot" style="background:var(--b-color);"></span><b>B 名單</b>　認識、但需要先暖身的人</span>
@@ -167,8 +168,7 @@
         </div>
       </div>
     </div>
-  </main>
-</div>
+</main>
 
 <div class="save-hint" id="saveHint">已儲存</div>
 
@@ -272,7 +272,6 @@ async function addRow(tier){
 }
 
 async function deleteRow(id, tier){
-  if(!confirm('確定要刪除這一列嗎？')) return;
   const { error } = await supabaseClient.from('name_list_entries').delete().eq('id', id).eq('advisor_id', myUserId);
   if(error){ console.error('刪除失敗', error); alert('刪除失敗，請稍後再試。'); return; }
   entries = entries.filter(e=> e.id !== id);
