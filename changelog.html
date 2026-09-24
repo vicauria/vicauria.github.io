@@ -67,6 +67,15 @@
   <main>
 
     <div class="entry">
+      <div class="entry-head"><span class="v-num">v2.13.2</span><span class="v-date">2026-09-24</span></div>
+      <ul>
+        <li>修正聊天泡泡收不到即時未讀提醒的問題：聊天視窗關著時，對方傳來的訊息不會再被自動標成已讀，泡泡上的數字會馬上跳出來</li>
+        <li>即時連線改成確認登入後才建立，斷線（電腦休眠、網路不穩）會自動重連並補抓漏掉的訊息；另外每 30 秒、切回分頁時都會再確認一次，確保提醒不會漏</li>
+        <li>聊天視窗左邊的聯絡人清單也改成即時更新，別人傳訊息來時未讀數字和最新訊息預覽會直接出現，不用重新整理</li>
+      </ul>
+    </div>
+
+    <div class="entry">
       <div class="entry-head"><span class="v-num">v2.13.1</span><span class="v-date">2026-09-23</span></div>
       <ul>
         <li>資產風險屬性比例的兩張圓餅圖（含不動產／不含不動產）存成 PDF 時加上不分頁保護，不會再被硬切成兩半</li>

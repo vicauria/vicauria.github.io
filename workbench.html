@@ -687,7 +687,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v2.13.1</span>
+        <span class="user-version-tag" id="userVersionTag">v2.13.2</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -1430,6 +1430,8 @@
       }
       positionPanelNearBubble();
       panel.classList.add('open');
+      // 視窗關著的時候收到的訊息不會被自動標記已讀；現在打開看到了，才把目前這個對話標成已讀
+      try{ frame.contentWindow && frame.contentWindow.markActiveConversationRead && frame.contentWindow.markActiveConversationRead(); }catch(e){}
     }
     closeBtn.addEventListener('click', ()=>{
       panel.classList.remove('open');
@@ -1480,19 +1482,69 @@
       }
     });
 
-    // ---- 未讀提醒：訂閱整張私訊表的新增事件，RLS 會自動只送「我看得到」的那幾筆，安全不會外洩其他團隊的訊息 ----
-    supabaseClient.channel('float-chat-unread')
-      .on('postgres_changes', { event:'INSERT', schema:'public', table:'direct_messages' }, payload=>{
-        const msg = payload.new;
-        if(!window.currentAdvisorId || msg.sender_id === window.currentAdvisorId) return;
-        if(panel.classList.contains('open')) return; // 視窗開著看得到，不用額外提醒
-        setBadge(unreadCount + 1);
-      })
-      .on('postgres_changes', { event:'UPDATE', schema:'public', table:'direct_messages' }, ()=>{
-        // 訊息被標記已讀（例如在別的分頁 / 裝置點開對話）時，重新抓一次真實未讀數，避免泡泡上的數字跟實際不同步
-        if(!panel.classList.contains('open')) refreshUnreadCount();
-      })
-      .subscribe();
+    // 短時間內連續收到好幾個事件時，只合併成一次查詢，避免一直打資料庫
+    let refreshTimer = null;
+    function scheduleRefresh(delay){
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(refreshUnreadCount, delay || 600);
+    }
+
+    // ---- 未讀提醒（即時）：訂閱整張私訊表的新增／更新事件，RLS 會自動只送「我看得到」的那幾筆 ----
+    // 修正重點：
+    // 1. 以前是頁面一載入就馬上訂閱，那時候登入狀態可能還沒從瀏覽器還原，
+    //    即時連線會用「未登入」身分連上，RLS 就把所有訊息都擋掉，泡泡永遠收不到通知。
+    //    現在改成先確認登入、把登入憑證交給即時連線之後才訂閱。
+    // 2. 連線斷掉（電腦休眠、切到背景太久、網路不穩）時會自動重連，重連成功後先補抓一次真實未讀數，
+    //    斷線期間漏掉的訊息也不會不見。
+    let rtChannel = null, rtRetryTimer = null, myId = null;
+    async function startUnreadRealtime(){
+      clearTimeout(rtRetryTimer);
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if(!session){ rtRetryTimer = setTimeout(startUnreadRealtime, 3000); return; }
+      myId = session.user.id;
+      try{ await supabaseClient.realtime.setAuth(session.access_token); }catch(e){}
+      if(rtChannel){ try{ supabaseClient.removeChannel(rtChannel); }catch(e){} rtChannel = null; }
+
+      rtChannel = supabaseClient.channel('float-chat-unread-' + myId)
+        .on('postgres_changes', { event:'INSERT', schema:'public', table:'direct_messages' }, payload=>{
+          const msg = payload.new;
+          if(msg.sender_id === myId) return;
+          if(panel.classList.contains('open')) return; // 視窗開著看得到，不用額外提醒
+          setBadge(unreadCount + 1);   // 先立刻 +1，畫面馬上有反應
+          scheduleRefresh(800);        // 再跟資料庫對一次真實數字，避免誤差
+        })
+        .on('postgres_changes', { event:'UPDATE', schema:'public', table:'direct_messages' }, ()=>{
+          // 訊息被標記已讀（例如在別的分頁 / 裝置點開對話）時，重新抓一次真實未讀數
+          if(!panel.classList.contains('open')) scheduleRefresh(400);
+        })
+        .subscribe(status=>{
+          if(status === 'SUBSCRIBED'){
+            refreshUnreadCount(); // 連上（或重連上）的當下補抓一次，斷線期間漏掉的也會算進來
+          } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+            clearTimeout(rtRetryTimer);
+            rtRetryTimer = setTimeout(startUnreadRealtime, 5000);
+          }
+        });
+    }
+    startUnreadRealtime();
+
+    // 登入憑證大約每小時會自動換新，換新時同步交給即時連線，避免用過期憑證被 RLS 擋掉
+    supabaseClient.auth.onAuthStateChange((event, session)=>{
+      if(event === 'TOKEN_REFRESHED' && session){
+        try{ supabaseClient.realtime.setAuth(session.access_token); }catch(e){}
+      }
+    });
+
+    // ---- 保險機制：就算即時連線因為任何原因沒收到，也不會永遠不更新 ----
+    // 切回這個分頁、視窗重新取得焦點、網路恢復時都補抓一次；另外每 30 秒在背景輕量檢查一次
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible' && !panel.classList.contains('open')) scheduleRefresh(200);
+    });
+    window.addEventListener('focus', ()=>{ if(!panel.classList.contains('open')) scheduleRefresh(200); });
+    window.addEventListener('online', ()=>{ scheduleRefresh(500); startUnreadRealtime(); });
+    setInterval(()=>{
+      if(document.visibilityState === 'visible' && !panel.classList.contains('open')) refreshUnreadCount();
+    }, 30000);
   })();
 </script>
 
