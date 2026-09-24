@@ -208,6 +208,52 @@
   .rt-grid-2col{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
   @media (max-width:520px){.rt-grid-2col{grid-template-columns:1fr;}}
 
+  /* ---------- 正算／反算 切換 ---------- */
+  .mode-tabs{max-width:640px;}
+  .mode-tabs button{text-align:left; padding:12px 16px;}
+  .mode-tabs button .mode-ic{margin-right:6px;}
+
+  /* ---------- 反算（以終為始）結果 ---------- */
+  .rv-hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 70%,var(--teal) 100%);
+    color:#fff; border-radius:var(--radius); padding:26px 28px; margin-bottom:16px;
+    box-shadow:0 12px 28px rgba(22,50,63,0.22);
+  }
+  .rv-hero-label{font-size:13.5px; color:#DCEAEE; line-height:1.8;}
+  .rv-hero-label b{color:#fff; font-family:"Roboto Mono",monospace;}
+  .rv-hero-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:clamp(28px,4.4vw,40px); color:#F3C98A; margin:8px 0 4px; line-height:1.2;}
+  .rv-hero-value small{font-size:15px; font-weight:500; color:rgba(255,255,255,.75); margin-left:4px;}
+  .rv-hero-sub{font-size:12px; color:#BFE0EA;}
+  .rv-hero.done .rv-hero-value{color:#9FE0BE;}
+
+  .rv-flow{display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:10px; align-items:stretch; margin-bottom:14px;}
+  .rv-flow .rv-op{display:flex; align-items:center; justify-content:center; font-family:"Roboto Mono",monospace; font-size:20px; font-weight:800; color:var(--ink-soft);}
+  @media (max-width:760px){.rv-flow{grid-template-columns:1fr;} .rv-flow .rv-op{padding:0; line-height:1;}}
+
+  .rv-sec-title{font-family:"Noto Serif TC",serif; font-size:15px; color:var(--navy); margin:26px 0 12px;}
+  .rv-sec-title small{font-family:"Noto Sans TC",sans-serif; font-size:11.5px; font-weight:400; color:var(--ink-soft); margin-left:6px;}
+  .rv-paths{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:640px){.rv-paths{grid-template-columns:1fr;}}
+  .rv-path{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; display:flex; gap:12px;}
+  .rv-path-key{
+    flex-shrink:0; width:26px; height:26px; border-radius:8px; background:var(--teal-tint); color:var(--teal-deep);
+    font-family:"Roboto Mono",monospace; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;
+  }
+  .rv-path-title{font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .rv-path-value{font-family:"Roboto Mono",monospace; font-weight:800; font-size:19px; color:var(--navy); line-height:1.3;}
+  .rv-path-value small{font-size:12px; font-weight:500; color:var(--ink-soft); margin-left:2px;}
+  .rv-path-note{font-size:11px; color:var(--ink-soft); margin-top:4px; line-height:1.6;}
+
+  .rv-sens-wrap{overflow-x:auto; background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:20px;}
+  .rv-sens{width:100%; border-collapse:collapse; font-size:13px; min-width:420px;}
+  .rv-sens th{font-size:11.5px; font-weight:700; color:var(--ink-soft); text-align:right; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--paper);}
+  .rv-sens th:first-child, .rv-sens td:first-child{text-align:left;}
+  .rv-sens td{padding:11px 16px; text-align:right; border-bottom:1px solid var(--line); font-family:"Roboto Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink);}
+  .rv-sens tr:last-child td{border-bottom:none;}
+  .rv-sens td.muted{font-family:"Noto Sans TC",sans-serif; font-size:12px; color:var(--ink-soft); text-align:right;}
+  .rv-sens tr.current td{background:var(--teal-tint); font-weight:800; color:var(--navy);}
+  .rv-sens tr.current td:first-child::after{content:"目前假設"; font-family:"Noto Sans TC",sans-serif; font-size:10px; font-weight:700; color:#fff; background:var(--teal-deep); border-radius:10px; padding:2px 7px; margin-left:8px;}
+
   /* 退休試算專用：把原本橫幅樣式的狀態卡片，濃縮成跟其他stat-card一樣的尺寸 */
   .status-banner-compact{
     display:block !important; padding:18px 16px !important; border-width:1px !important;
@@ -444,6 +490,10 @@
 
   <!-- ============ 退休基金 ============ -->
   <section class="tab-panel active" id="panel-retirement">
+    <div class="sub-tabs mode-tabs" id="rtModeTabs">
+      <button class="active" data-mode="forward"><span class="mode-ic">➡️</span>正算：看達成率<div class="stat-note">我現在有多少、每月投多少 → 能達成目標幾 %</div></button>
+      <button data-mode="reverse"><span class="mode-ic">🎯</span>反算：以終為始<div class="stat-note">先定好目標 → 回推現在每月該投入多少</div></button>
+    </div>
     <div class="grid1200">
       <div class="card">
         <h3>人生時間軸</h3>
@@ -489,7 +539,7 @@
             <div class="input-suffix"><input type="number" id="in-rtAssets" value="500000"></div>
           </div>
           <div class="field">
-            <div class="field-label"><span>每月可投資金額</span></div>
+            <div class="field-label"><span id="lbl-rtMonthlyInvest">每月可投資金額</span></div>
             <div class="input-suffix"><input type="number" id="in-rtMonthlyInvest" value="10000"></div>
           </div>
         </div>
@@ -620,6 +670,106 @@
         </div>
         <div class="note-box" style="margin-top:14px;">
           粗估公式：實質報酬率 ＝ (1+名目報酬率)÷(1+通膨率)－1；退休時可用資產以實質報酬率複利估算現有資產與每月投入金額（換算為今日購買力）；所需準備總額 ＝ （理想月生活費－勞保勞退月收入）×12÷實質報酬率；達成率 ＝ 預估退休月收入÷理想月生活費。
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ 反算：以終為始 ============ -->
+    <div class="result-section" id="rt-reverseSection">
+      <div class="rv-hero" id="rv-hero">
+        <div class="rv-hero-label" id="rv-heroLabel"></div>
+        <div class="rv-hero-value" id="rv-heroValue">$0</div>
+        <div class="rv-hero-sub" id="rv-heroSub"></div>
+      </div>
+
+      <div class="rv-flow">
+        <div class="stat-card">
+          <div class="stat-label">① 退休時需要準備</div>
+          <div class="stat-value tier-target" id="rv-required">$0</div>
+          <div class="stat-note" id="rv-requiredNote">扣掉勞保勞退後，靠投資支應的部分</div>
+        </div>
+        <div class="rv-op">−</div>
+        <div class="stat-card">
+          <div class="stat-label">② 現有資產到時會長成</div>
+          <div class="stat-value" id="rv-fvAssets">$0</div>
+          <div class="stat-note" id="rv-fvAssetsNote">現有資產放著複利成長</div>
+        </div>
+        <div class="rv-op">＝</div>
+        <div class="stat-card" id="rv-card-gap">
+          <div class="stat-label">③ 還要靠每月投入補足</div>
+          <div class="stat-value" id="rv-gap">$0</div>
+          <div class="stat-note">這就是「現在要開始做的事」</div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="rv-card-compare" style="margin-bottom:6px;">
+        <div class="stat-label">對照你目前每月的投入</div>
+        <div class="stat-value" id="rv-compare">—</div>
+        <div class="stat-note" id="rv-compareNote"></div>
+      </div>
+
+      <h4 class="rv-sec-title">以終為始，這幾條路都能讓你達標<small>挑一條最適合的開始</small></h4>
+      <div class="rv-paths">
+        <div class="rv-path">
+          <div class="rv-path-key">A</div>
+          <div>
+            <div class="rv-path-title">每月定期投入</div>
+            <div class="rv-path-value" id="rv-pathMonthly">$0</div>
+            <div class="rv-path-note" id="rv-pathMonthlyNote"></div>
+          </div>
+        </div>
+        <div class="rv-path">
+          <div class="rv-path-key">B</div>
+          <div>
+            <div class="rv-path-title">今天一次到位</div>
+            <div class="rv-path-value" id="rv-pathLump">$0</div>
+            <div class="rv-path-note" id="rv-pathLumpNote"></div>
+          </div>
+        </div>
+        <div class="rv-path">
+          <div class="rv-path-key">C</div>
+          <div>
+            <div class="rv-path-title">維持目前投入，延後退休</div>
+            <div class="rv-path-value" id="rv-pathDelay">—</div>
+            <div class="rv-path-note" id="rv-pathDelayNote"></div>
+          </div>
+        </div>
+        <div class="rv-path">
+          <div class="rv-path-key">D</div>
+          <div>
+            <div class="rv-path-title">維持目前投入，調整退休生活費</div>
+            <div class="rv-path-value" id="rv-pathAdjust">$0</div>
+            <div class="rv-path-note" id="rv-pathAdjustNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="rv-sec-title">報酬率不同，每月要投入的金額差多少<small>工具選擇會直接影響每月壓力</small></h4>
+      <div class="rv-sens-wrap">
+        <table class="rv-sens">
+          <thead><tr><th>金融工具報酬率</th><th>退休時需要準備</th><th>每月需投入</th></tr></thead>
+          <tbody id="rv-sensBody"></tbody>
+        </table>
+      </div>
+
+      <div class="tips-box">
+        <div class="tips-head">💡 試算提醒<span>依這次反推結果</span></div>
+        <div class="tip-item"><span class="tip-n">1</span><div><b>目標拆解</b><p id="rv-tip-1"></p></div></div>
+        <div class="tip-item"><span class="tip-n">2</span><div><b>這代表什麼</b><p id="rv-tip-2"></p></div></div>
+        <div class="tip-item"><span class="tip-n">3</span><div><b>下一步建議</b><p id="rv-tip-3"></p></div></div>
+      </div>
+
+      <div class="warn-box" id="rv-gapWarning" style="display:none;"></div>
+
+      <details class="formula-details">
+        <summary>計算公式說明</summary>
+        <div class="note-box" style="margin:0 20px 20px;">
+          反算公式（與正算同一套假設，只是把「每月投入」變成要求的答案）：實質報酬率 ＝ (1+名目報酬率)÷(1+通膨率)－1；
+          ① 退休時需要準備 ＝ （理想月生活費－勞保勞退月收入）×12÷實質報酬率；
+          ② 現有資產到時會長成 ＝ 現有資產×(1+實質報酬率)^年數；
+          ③ 缺口 ＝ ①－②；
+          每月需投入 ＝ 缺口 ÷［12×((1+實質報酬率)^年數－1)÷實質報酬率］；
+          今天一次到位 ＝ 缺口 ÷ (1+實質報酬率)^年數。以上皆以今日購買力表示。
         </div>
       </details>
     </div>
@@ -1631,7 +1781,225 @@ function calcRetirement(){
   document.getElementById('rt-resultSection').classList.add('show');
 }
 
-document.getElementById('btn-calcRetirement').addEventListener('click', calcRetirement);
+/* ---------------- 退休基金：反算（以終為始） ----------------
+   跟正算用完全同一套假設（實質報酬率、勞保勞退、所需準備總額的公式），
+   差別只在於：正算是「給每月投入 → 算達成率」，反算是「給目標 → 回推每月該投入多少」。 */
+
+// 年金終值係數：每年投入 1 元、連續 n 年，以實質報酬率 r 複利，到期會變成多少（跟正算的公式一致）
+function rtAnnuityFactor(n, r){
+  if(n<=0) return 0;
+  return Math.abs(r)>0.0001 ? (Math.pow(1+r, n)-1)/r : n;
+}
+// 所需準備總額（跟正算同一條公式）
+function rtRequiredAsset(investGapTarget, realReturn){
+  const DRAWDOWN_HORIZON_YEARS = 30;
+  if(realReturn > 0.0005) return investGapTarget*12/realReturn;
+  if(Math.abs(realReturn) < 0.0005) return investGapTarget*12*DRAWDOWN_HORIZON_YEARS;
+  return investGapTarget*12 * (1-Math.pow(1+realReturn,-DRAWDOWN_HORIZON_YEARS))/realReturn;
+}
+// 反過來：手上有這麼多資產，退休後每月能支應多少（所需準備總額公式的反函數）
+function rtAffordableMonthly(asset, realReturn){
+  const DRAWDOWN_HORIZON_YEARS = 30;
+  if(realReturn > 0.0005) return asset*realReturn/12;
+  if(Math.abs(realReturn) < 0.0005) return asset/(12*DRAWDOWN_HORIZON_YEARS);
+  return asset*realReturn/(12*(1-Math.pow(1+realReturn,-DRAWDOWN_HORIZON_YEARS)));
+}
+function rtLaborMonthlyTotal(inflation){
+  if(!laborOn) return { total:0, laborPensionMonthly:0, pensionMonthly:0 };
+  const laborSalary = +document.getElementById('in-laborSalary').value || 0;
+  const laborYears = +document.getElementById('in-laborYears').value;
+  const voluntaryPct = (+document.getElementById('in-laborVoluntary').value)/100;
+  const pensionReturn = (+document.getElementById('in-laborReturn').value)/100;
+  const laborExisting = +document.getElementById('in-laborExisting').value || 0;
+  const laborPensionMonthly = calcLaborPension(laborSalary, laborYears);
+  const pensionMonthly = calcLaborLumpSum(laborSalary, laborYears, voluntaryPct, pensionReturn, laborExisting, inflation) / PENSION_PAYOUT_MONTHS;
+  return { total: laborPensionMonthly + pensionMonthly, laborPensionMonthly, pensionMonthly };
+}
+// 在某個報酬率假設下，回推每月需投入多少
+function rtSolveMonthly(p, nominalReturn){
+  const realReturn = (1+nominalReturn)/(1+p.inflation) - 1;
+  const required = rtRequiredAsset(Math.max(0, p.desiredMonthly - p.laborTotal), realReturn);
+  const fvAssets = p.assets * Math.pow(1+realReturn, p.years);
+  const gap = Math.max(0, required - fvAssets);
+  const af = rtAnnuityFactor(p.years, realReturn);
+  const needMonthly = gap<=0 ? 0 : (af>0 ? gap/(12*af) : Infinity);
+  return { realReturn, required, fvAssets, gap, af, needMonthly };
+}
+
+function calcRetirementReverse(){
+  const currentAge = +document.getElementById('in-rtCurrentAge').value;
+  const retireAge = +document.getElementById('in-rtRetireAge').value;
+  const desiredMonthly = +document.getElementById('in-rtMonthlyIncome').value || 0;
+  const nominalReturn = (+document.getElementById('in-rtReturn').value) / 100;
+  const inflation = (+document.getElementById('in-rtInflation').value) / 100;
+  const assets = +document.getElementById('in-rtAssets').value || 0;
+  const currentMonthly = +document.getElementById('in-rtMonthlyInvest').value || 0;
+  const laborClaimAge = +document.getElementById('in-laborClaimAge').value;
+  const years = Math.max(0, retireAge - currentAge);
+  updateTimelineVisual();
+
+  const labor = rtLaborMonthlyTotal(inflation);
+  const p = { desiredMonthly, inflation, assets, years, laborTotal: labor.total };
+  const s = rtSolveMonthly(p, nominalReturn);
+  const { realReturn, required, fvAssets, gap, needMonthly } = s;
+  const lumpNow = gap<=0 ? 0 : gap / Math.pow(1+realReturn, years);
+  const done = gap <= 0;
+
+  // ---- 大標：以終為始的答案 ----
+  const hero = document.getElementById('rv-hero');
+  hero.classList.toggle('done', done);
+  document.getElementById('rv-heroLabel').innerHTML =
+    `想在 <b>${retireAge}</b> 歲退休後，每月有 <b>${money(desiredMonthly)}</b> 的生活費（今日購買力），從現在起：`;
+  if(done){
+    document.getElementById('rv-heroValue').innerHTML = '不需要再額外投入';
+    document.getElementById('rv-heroSub').textContent = `光靠現有資產 ${money(assets)} 以 ${(nominalReturn*100).toFixed(1)}% 報酬率複利 ${years} 年，就足以支應目標。`;
+  } else if(!isFinite(needMonthly)){
+    document.getElementById('rv-heroValue').innerHTML = money(gap) + '<small>今天就要到位</small>';
+    document.getElementById('rv-heroSub').textContent = '距離退休已經沒有時間可以分期投入，缺口需要一次補足。';
+  } else {
+    document.getElementById('rv-heroValue').innerHTML = '每月投入 ' + money(needMonthly) + '<small>/月</small>';
+    document.getElementById('rv-heroSub').textContent = `連續投入 ${years} 年（${years*12} 個月），以 ${(nominalReturn*100).toFixed(1)}% 報酬率、${(inflation*100).toFixed(1)}% 通膨估算`
+      + (realReturn <= 0.0005 ? '（報酬率不高於通膨，改以退休後 30 年把本金用完估算）' : '');
+  }
+
+  // ---- ①－②＝③ ----
+  document.getElementById('rv-required').textContent = money(required);
+  document.getElementById('rv-requiredNote').textContent = laborOn
+    ? `目標 ${money(desiredMonthly)}/月 扣掉勞保勞退約 ${money(labor.total)}/月，剩下靠投資支應`
+    : '未計入勞保勞退，全部靠投資支應';
+  document.getElementById('rv-fvAssets').textContent = money(fvAssets);
+  document.getElementById('rv-fvAssetsNote').textContent = `現有 ${money(assets)} 複利 ${years} 年`;
+  const gapEl = document.getElementById('rv-gap');
+  gapEl.textContent = done ? '$0（已足夠）' : money(gap);
+  gapEl.className = 'stat-value ' + (done ? 'tier-pos' : 'tier-neg');
+  document.getElementById('rv-card-gap').className = 'stat-card ' + (done ? 'card-tier-pos' : 'card-tier-warn');
+
+  // ---- 對照目前每月投入 ----
+  const cmpEl = document.getElementById('rv-compare');
+  const cmpCard = document.getElementById('rv-card-compare');
+  if(done){
+    cmpEl.textContent = '已達標'; cmpEl.className = 'stat-value tier-pos';
+    cmpCard.className = 'stat-card card-tier-pos';
+    document.getElementById('rv-compareNote').textContent = currentMonthly>0 ? `目前每月 ${money(currentMonthly)} 的投入可以視為額外的安全墊。` : '';
+  } else if(currentMonthly<=0){
+    cmpEl.textContent = '尚未填寫'; cmpEl.className = 'stat-value';
+    cmpCard.className = 'stat-card';
+    document.getElementById('rv-compareNote').textContent = '在上方「目前每月已投入」填入金額，就能看出每月還差多少。';
+  } else {
+    const diff = needMonthly - currentMonthly;
+    if(diff >= 1){ // 差不到 1 元視為已達標，避免四捨五入出現「還差 $0」
+      cmpEl.innerHTML = `每月還差 ${money(diff)}<small>/月</small>`; cmpEl.className = 'stat-value tier-neg';
+      cmpCard.className = 'stat-card card-tier-' + (currentMonthly >= needMonthly*0.6 ? 'warn' : 'neg');
+      document.getElementById('rv-compareNote').textContent = `需要 ${money(needMonthly)}/月，目前 ${money(currentMonthly)}/月，已做到 ${Math.min(100, currentMonthly/needMonthly*100).toFixed(0)}%`;
+    } else {
+      cmpEl.innerHTML = (-diff >= 1) ? `每月多出 ${money(-diff)}<small>/月</small>` : '剛好達標'; cmpEl.className = 'stat-value tier-pos';
+      cmpCard.className = 'stat-card card-tier-pos';
+      document.getElementById('rv-compareNote').textContent = `需要 ${money(needMonthly)}/月，目前 ${money(currentMonthly)}/月，照現在的節奏就能達標`;
+    }
+  }
+
+  // ---- 四條路 ----
+  // A 每月定期投入
+  document.getElementById('rv-pathMonthly').innerHTML = done ? '$0' : (isFinite(needMonthly) ? money(needMonthly)+'<small>/月</small>' : '—');
+  document.getElementById('rv-pathMonthlyNote').textContent = done ? '現有資產已足夠' :
+    (isFinite(needMonthly) ? `持續 ${years} 年，累計投入本金約 ${money(needMonthly*12*years)}` : '已沒有分期的時間');
+  // B 今天一次到位
+  document.getElementById('rv-pathLump').textContent = money(lumpNow);
+  document.getElementById('rv-pathLumpNote').textContent = done ? '現有資產已足夠' : `今天多放這筆進去，之後不用每月再投入`;
+  // C 維持目前投入，延後退休
+  const delayEl = document.getElementById('rv-pathDelay'), delayNote = document.getElementById('rv-pathDelayNote');
+  if(done){
+    delayEl.textContent = '不需延後'; delayNote.textContent = `${retireAge} 歲就能退休`;
+  } else {
+    let foundAge = null;
+    for(let age = retireAge+1; age <= 85; age++){
+      const n = age - currentAge;
+      const proj = assets*Math.pow(1+realReturn, n) + currentMonthly*12*rtAnnuityFactor(n, realReturn);
+      if(proj >= required){ foundAge = age; break; }
+    }
+    if(currentMonthly>0 && needMonthly < currentMonthly + 1){
+      delayEl.textContent = '不需延後'; delayNote.textContent = '目前的投入已經足夠';
+    } else if(foundAge){
+      delayEl.innerHTML = `${foundAge} 歲<small>退休</small>`;
+      delayNote.textContent = `比原本晚 ${foundAge-retireAge} 年，每月維持 ${money(currentMonthly)} 就夠`;
+    } else {
+      delayEl.textContent = '85 歲仍不足';
+      delayNote.textContent = currentMonthly>0 ? `每月 ${money(currentMonthly)} 延到 85 歲還是不夠，需要搭配 A 或 B` : '目前沒有每月投入，只靠延後退休無法達標';
+    }
+  }
+  // D 維持目前投入，調整退休生活費
+  const projectedNow = fvAssets + currentMonthly*12*rtAnnuityFactor(years, realReturn);
+  const affordable = rtAffordableMonthly(projectedNow, realReturn) + labor.total;
+  const adjustEl = document.getElementById('rv-pathAdjust');
+  adjustEl.innerHTML = money(affordable)+'<small>/月</small>';
+  document.getElementById('rv-pathAdjustNote').textContent = affordable >= desiredMonthly
+    ? `比目標 ${money(desiredMonthly)} 還多，可以考慮提早退休或提高生活品質`
+    : `比目標少 ${money(desiredMonthly-affordable)}/月，約是目標的 ${(affordable/desiredMonthly*100).toFixed(0)}%`;
+
+  // ---- 報酬率敏感度表 ----
+  const base = Math.round(nominalReturn*1000)/10;
+  const rows = [];
+  [-2,-1,0,1,2].forEach(d=>{
+    const r = Math.round((base + d)*10)/10;
+    if(r < 0 || r > 12) return;
+    const sr = rtSolveMonthly(p, r/100);
+    if(sr.realReturn <= 0.0005 && d !== 0){
+      // 報酬率不高於通膨：錢放著會被通膨吃掉，無法「只靠被動收入」過退休生活，這種情境不列數字避免誤導
+      rows.push(`<tr><td>${r.toFixed(1)}%</td><td class="muted" colspan="2">不高於通膨，錢放著會縮水，不建議</td></tr>`);
+      return;
+    }
+    const monthlyText = sr.gap<=0 ? '已足夠' : (isFinite(sr.needMonthly) ? money(sr.needMonthly) : '需一次補足');
+    rows.push(`<tr class="${d===0?'current':''}"><td>${r.toFixed(1)}%</td><td>${money(sr.required)}</td><td>${monthlyText}</td></tr>`);
+  });
+  document.getElementById('rv-sensBody').innerHTML = rows.join('');
+
+  // ---- 試算提醒 ----
+  if(done){
+    document.getElementById('rv-tip-1').textContent = `退休時需要準備 ${money(required)}，現有資產到時約可長成 ${money(fvAssets)}，已經足夠。`;
+    document.getElementById('rv-tip-2').textContent = '目前的資產基礎已能支撐目標，重點會從「累積」轉成「守住」：避免過度承擔風險、留意通膨與醫療支出。';
+    document.getElementById('rv-tip-3').textContent = '可以回到「正算」看看在目前投入下的達成率，或試著把目標生活費往上調，看看還有多少彈性空間。';
+  } else {
+    document.getElementById('rv-tip-1').textContent = `退休時需要準備 ${money(required)}，現有資產到時約長成 ${money(fvAssets)}，還差 ${money(gap)}，換算成每月要投入 ${isFinite(needMonthly)?money(needMonthly):'—'}。`;
+    document.getElementById('rv-tip-2').textContent = '這筆每月投入就是「以終為始」要從今天開始做的事；越早開始，複利的時間越長，每月壓力越小。';
+    document.getElementById('rv-tip-3').textContent = '如果每月金額壓力太大，可以參考 A～D 四條路混搭：例如先一次投入一部分（B）降低每月負擔，或延後幾年退休（C），再搭配下方報酬率表挑選合適的工具。';
+  }
+
+  const claimGapYears = laborClaimAge - retireAge;
+  const gapWarnEl = document.getElementById('rv-gapWarning');
+  if(laborOn && claimGapYears>0){
+    gapWarnEl.innerHTML = `<b>注意時間差：</b>勞保要到 ${laborClaimAge} 歲才能請領，退休後有 ${claimGapYears} 年還沒有勞保收入，這段期間的生活費要另外備好。`;
+    gapWarnEl.style.display = 'block';
+  } else {
+    gapWarnEl.style.display = 'none';
+  }
+
+  document.getElementById('rt-reverseSection').classList.add('show');
+}
+
+/* ---------------- 退休基金：正算／反算切換 ---------------- */
+let rtMode = 'forward';
+let rtHasCalculated = false;
+const rtCalcBtn = document.getElementById('btn-calcRetirement');
+function applyRtMode(){
+  document.querySelectorAll('#rtModeTabs button').forEach(b=> b.classList.toggle('active', b.dataset.mode===rtMode));
+  const isRev = rtMode === 'reverse';
+  document.getElementById('lbl-rtMonthlyInvest').textContent = isRev ? '目前每月已投入（對照用，選填）' : '每月可投資金額';
+  rtCalcBtn.textContent = isRev ? '回推現在每月該投入多少' : '計算退休基金';
+  document.getElementById('rt-resultSection').classList.remove('show');
+  document.getElementById('rt-reverseSection').classList.remove('show');
+  if(rtHasCalculated) (isRev ? calcRetirementReverse : calcRetirement)();
+}
+document.querySelectorAll('#rtModeTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(btn.dataset.mode === rtMode) return;
+    rtMode = btn.dataset.mode;
+    applyRtMode();
+  });
+});
+rtCalcBtn.addEventListener('click', ()=>{
+  rtHasCalculated = true;
+  if(rtMode === 'reverse') calcRetirementReverse(); else calcRetirement();
+});
 updateTimelineVisual();
 
 /* ---------------- 投資理財 ---------------- */
