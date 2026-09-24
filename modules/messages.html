@@ -275,6 +275,11 @@ async function loadContactsAndConversations(){
     const bt = b._lastMsg ? new Date(b._lastMsg.created_at).getTime() : 0;
     return bt - at;
   });
+  // 清單重新載入後，把「目前打開的對話對象」指向新的那筆資料，後續的未讀數更新才會反映在畫面上
+  if(activeContact){
+    const fresh = contacts.find(c=>c.advisor_id === activeContact.advisor_id);
+    if(fresh){ fresh._convo = fresh._convo || activeContact._convo; activeContact = fresh; }
+  }
   renderContacts();
 }
 
@@ -411,6 +416,37 @@ document.getElementById('chatMessages').addEventListener('click', async (e)=>{
   markMessageRecalled(msgId);
 });
 
+/* ---------------- 這個聊天畫面現在「真的有人在看」嗎？ ----------------
+   這個頁面會被放在工作台右下角的浮動聊天視窗裡，視窗「關起來」時其實只是被藏起來，頁面還活著、
+   還在接收即時訊息。以前不管有沒有人在看，收到訊息就直接標成已讀，
+   結果對方傳來的訊息在視窗關著時就被偷偷標成已讀，泡泡上的未讀提醒永遠跳不出來。
+   現在只有真的看得到的時候才標已讀。 */
+function isChatVisible(){
+  if(document.visibilityState !== 'visible') return false;
+  try{
+    const fe = window.frameElement;
+    if(fe){
+      const floatPanel = fe.closest('.float-chat-panel');
+      if(floatPanel && !floatPanel.classList.contains('open')) return false;
+    }
+  }catch(e){}
+  return true;
+}
+
+// 把目前打開的這個對話裡，對方傳來、還沒讀的訊息全部標成已讀（工作台打開浮動視窗時也會呼叫這個）
+window.markActiveConversationRead = async function(){
+  if(!activeConversation || !myUserId) return;
+  await supabaseClient.from('direct_messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('conversation_id', activeConversation.id)
+    .neq('sender_id', myUserId)
+    .is('read_at', null);
+  if(activeContact && activeContact._unread){ activeContact._unread = 0; renderContacts(); }
+};
+document.addEventListener('visibilitychange', ()=>{
+  if(isChatVisible()) window.markActiveConversationRead();
+});
+
 function subscribeToConversation(convoId){
   if(currentChannel){ supabaseClient.removeChannel(currentChannel); currentChannel = null; }
   currentChannel = supabaseClient.channel(`dm-${convoId}`)
@@ -419,7 +455,14 @@ function subscribeToConversation(convoId){
       if(msg.sender_id === myUserId) return; // 自己送出的訊息送出當下就已經畫面上加過了
       appendMessage(msg);
       if(stickToBottom) scrollChatToBottom();
-      supabaseClient.from('direct_messages').update({ read_at: new Date().toISOString() }).eq('id', msg.id).then(()=>{});
+      if(activeContact){ activeContact._lastMsg = msg; }
+      if(isChatVisible()){
+        supabaseClient.from('direct_messages').update({ read_at: new Date().toISOString() }).eq('id', msg.id).then(()=>{});
+        renderContacts();
+      } else if(activeContact){
+        activeContact._unread = (activeContact._unread||0) + 1;
+        renderContacts();
+      }
     })
     .on('postgres_changes', { event:'UPDATE', schema:'public', table:'direct_messages', filter:`conversation_id=eq.${convoId}` }, payload=>{
       const msg = payload.new;
@@ -539,7 +582,39 @@ document.getElementById('photoInput').addEventListener('change', async (e)=>{
     if(!team) await supabaseClient.from('teams').insert({ owner_id: myUserId });
   }
   await initTeams();
+  try{ await supabaseClient.realtime.setAuth(session.access_token); }catch(e){}
+  subscribeToContactList();
 })();
+
+/* ---------------- 聯絡人清單的即時更新 ----------------
+   以前只有「目前打開的那個對話」有即時訂閱，其他人傳訊息來時，左邊清單的未讀數字、最新訊息預覽都不會動，
+   要重新整理才看得到。現在另外訂閱一條，別的對話有新訊息時就重新整理清單。 */
+let listChannel = null, listReloadTimer = null, listRetryTimer = null;
+function scheduleListReload(){
+  clearTimeout(listReloadTimer);
+  listReloadTimer = setTimeout(()=>{ if(currentTeamId) loadContactsAndConversations(); }, 500);
+}
+function subscribeToContactList(){
+  clearTimeout(listRetryTimer);
+  if(listChannel){ try{ supabaseClient.removeChannel(listChannel); }catch(e){} listChannel = null; }
+  listChannel = supabaseClient.channel(`dm-list-${myUserId}`)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'direct_messages' }, payload=>{
+      const msg = payload.new;
+      if(msg.sender_id === myUserId) return;
+      if(activeConversation && msg.conversation_id === activeConversation.id) return; // 目前打開的對話由上面那條訂閱處理
+      scheduleListReload();
+    })
+    .subscribe(status=>{
+      if(status === 'SUBSCRIBED'){
+        scheduleListReload(); // 連上／重連上時補抓一次，斷線期間漏掉的也會補回來
+      } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+        listRetryTimer = setTimeout(subscribeToContactList, 5000);
+      }
+    });
+}
+supabaseClient.auth.onAuthStateChange((event, s)=>{
+  if(event === 'TOKEN_REFRESHED' && s){ try{ supabaseClient.realtime.setAuth(s.access_token); }catch(e){} }
+});
 </script>
 
 </body>
