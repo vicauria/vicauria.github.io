@@ -686,8 +686,8 @@
       <div class="user-avatar" id="userAvatar" title="選單" style="cursor:pointer;">J</div>
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
-        <span class="user-plan-badge free" id="userPlanBadge">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v2.14.0</span>
+        <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
+        <span class="user-version-tag" id="userVersionTag">v3.0.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -696,7 +696,7 @@
         <button class="user-menu-item" id="menuAccountSettings">
           <span class="icon">⚙️</span> 帳號設定
         </button>
-        <button class="user-menu-item" id="menuUpgrade">
+        <button class="user-menu-item" id="menuUpgrade" style="display:none;">
           <span class="icon">⬆</span> 升級方案
         </button>
         <div class="user-menu-fontsize">
@@ -1203,6 +1203,11 @@
     const effective = await fetchEffectivePlan();
     myPlan = effective.plan;
     applyCurrentPlanToAccountUI(myPlan);
+    // 全面免費開放期間：不顯示方案標籤、不顯示「升級方案」入口；恢復分級收費時（plan-utils.js 的 FREE_FOR_ALL 改成 false）才會出現
+    if(!effective.freeForAll){
+      document.getElementById('userPlanBadge').style.display = '';
+      document.getElementById('menuUpgrade').style.display = '';
+    }
     applyModuleLocks();
     const trialBadge = document.getElementById('trialBadge');
     if(effective.inTrial){
