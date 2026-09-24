@@ -538,8 +538,8 @@
             <div class="field-label"><span>現有資產</span></div>
             <div class="input-suffix"><input type="number" id="in-rtAssets" value="500000"></div>
           </div>
-          <div class="field">
-            <div class="field-label"><span id="lbl-rtMonthlyInvest">每月可投資金額</span></div>
+          <div class="field" id="fld-rtMonthlyInvest">
+            <div class="field-label"><span>每月可投資金額</span></div>
             <div class="input-suffix"><input type="number" id="in-rtMonthlyInvest" value="10000"></div>
           </div>
         </div>
@@ -702,12 +702,6 @@
         </div>
       </div>
 
-      <div class="stat-card" id="rv-card-compare" style="margin-bottom:6px;">
-        <div class="stat-label">對照你目前每月的投入</div>
-        <div class="stat-value" id="rv-compare">—</div>
-        <div class="stat-note" id="rv-compareNote"></div>
-      </div>
-
       <h4 class="rv-sec-title">以終為始，這幾條路都能讓你達標<small>挑一條最適合的開始</small></h4>
       <div class="rv-paths">
         <div class="rv-path">
@@ -729,7 +723,7 @@
         <div class="rv-path">
           <div class="rv-path-key">C</div>
           <div>
-            <div class="rv-path-title">維持目前投入，延後退休</div>
+            <div class="rv-path-title" id="rv-pathDelayTitle">延後退休</div>
             <div class="rv-path-value" id="rv-pathDelay">—</div>
             <div class="rv-path-note" id="rv-pathDelayNote"></div>
           </div>
@@ -737,7 +731,7 @@
         <div class="rv-path">
           <div class="rv-path-key">D</div>
           <div>
-            <div class="rv-path-title">維持目前投入，調整退休生活費</div>
+            <div class="rv-path-title">什麼都不做的話</div>
             <div class="rv-path-value" id="rv-pathAdjust">$0</div>
             <div class="rv-path-note" id="rv-pathAdjustNote"></div>
           </div>
@@ -1833,7 +1827,6 @@ function calcRetirementReverse(){
   const nominalReturn = (+document.getElementById('in-rtReturn').value) / 100;
   const inflation = (+document.getElementById('in-rtInflation').value) / 100;
   const assets = +document.getElementById('in-rtAssets').value || 0;
-  const currentMonthly = +document.getElementById('in-rtMonthlyInvest').value || 0;
   const laborClaimAge = +document.getElementById('in-laborClaimAge').value;
   const years = Math.max(0, retireAge - currentAge);
   updateTimelineVisual();
@@ -1874,30 +1867,6 @@ function calcRetirementReverse(){
   gapEl.className = 'stat-value ' + (done ? 'tier-pos' : 'tier-neg');
   document.getElementById('rv-card-gap').className = 'stat-card ' + (done ? 'card-tier-pos' : 'card-tier-warn');
 
-  // ---- 對照目前每月投入 ----
-  const cmpEl = document.getElementById('rv-compare');
-  const cmpCard = document.getElementById('rv-card-compare');
-  if(done){
-    cmpEl.textContent = '已達標'; cmpEl.className = 'stat-value tier-pos';
-    cmpCard.className = 'stat-card card-tier-pos';
-    document.getElementById('rv-compareNote').textContent = currentMonthly>0 ? `目前每月 ${money(currentMonthly)} 的投入可以視為額外的安全墊。` : '';
-  } else if(currentMonthly<=0){
-    cmpEl.textContent = '尚未填寫'; cmpEl.className = 'stat-value';
-    cmpCard.className = 'stat-card';
-    document.getElementById('rv-compareNote').textContent = '在上方「目前每月已投入」填入金額，就能看出每月還差多少。';
-  } else {
-    const diff = needMonthly - currentMonthly;
-    if(diff >= 1){ // 差不到 1 元視為已達標，避免四捨五入出現「還差 $0」
-      cmpEl.innerHTML = `每月還差 ${money(diff)}<small>/月</small>`; cmpEl.className = 'stat-value tier-neg';
-      cmpCard.className = 'stat-card card-tier-' + (currentMonthly >= needMonthly*0.6 ? 'warn' : 'neg');
-      document.getElementById('rv-compareNote').textContent = `需要 ${money(needMonthly)}/月，目前 ${money(currentMonthly)}/月，已做到 ${Math.min(100, currentMonthly/needMonthly*100).toFixed(0)}%`;
-    } else {
-      cmpEl.innerHTML = (-diff >= 1) ? `每月多出 ${money(-diff)}<small>/月</small>` : '剛好達標'; cmpEl.className = 'stat-value tier-pos';
-      cmpCard.className = 'stat-card card-tier-pos';
-      document.getElementById('rv-compareNote').textContent = `需要 ${money(needMonthly)}/月，目前 ${money(currentMonthly)}/月，照現在的節奏就能達標`;
-    }
-  }
-
   // ---- 四條路 ----
   // A 每月定期投入
   document.getElementById('rv-pathMonthly').innerHTML = done ? '$0' : (isFinite(needMonthly) ? money(needMonthly)+'<small>/月</small>' : '—');
@@ -1906,35 +1875,33 @@ function calcRetirementReverse(){
   // B 今天一次到位
   document.getElementById('rv-pathLump').textContent = money(lumpNow);
   document.getElementById('rv-pathLumpNote').textContent = done ? '現有資產已足夠' : `今天多放這筆進去，之後不用每月再投入`;
-  // C 維持目前投入，延後退休
+  // C 延後退休：晚 5 年退休（最多到 85 歲），每月需要投入多少
   const delayEl = document.getElementById('rv-pathDelay'), delayNote = document.getElementById('rv-pathDelayNote');
+  const delayYears = Math.min(5, 85 - retireAge);
+  document.getElementById('rv-pathDelayTitle').textContent = delayYears>0 ? `延後 ${delayYears} 年，${retireAge+delayYears} 歲退休` : '延後退休';
   if(done){
     delayEl.textContent = '不需延後'; delayNote.textContent = `${retireAge} 歲就能退休`;
+  } else if(delayYears<=0){
+    delayEl.textContent = '—'; delayNote.textContent = '已經設定到 85 歲，無法再延後';
   } else {
-    let foundAge = null;
-    for(let age = retireAge+1; age <= 85; age++){
-      const n = age - currentAge;
-      const proj = assets*Math.pow(1+realReturn, n) + currentMonthly*12*rtAnnuityFactor(n, realReturn);
-      if(proj >= required){ foundAge = age; break; }
-    }
-    if(currentMonthly>0 && needMonthly < currentMonthly + 1){
-      delayEl.textContent = '不需延後'; delayNote.textContent = '目前的投入已經足夠';
-    } else if(foundAge){
-      delayEl.innerHTML = `${foundAge} 歲<small>退休</small>`;
-      delayNote.textContent = `比原本晚 ${foundAge-retireAge} 年，每月維持 ${money(currentMonthly)} 就夠`;
+    const d = rtSolveMonthly({ ...p, years: years + delayYears }, nominalReturn);
+    if(d.gap<=0){
+      delayEl.textContent = '不需再投入';
+      delayNote.textContent = `晚 ${delayYears} 年退休，現有資產就足夠`;
     } else {
-      delayEl.textContent = '85 歲仍不足';
-      delayNote.textContent = currentMonthly>0 ? `每月 ${money(currentMonthly)} 延到 85 歲還是不夠，需要搭配 A 或 B` : '目前沒有每月投入，只靠延後退休無法達標';
+      delayEl.innerHTML = money(d.needMonthly)+'<small>/月</small>';
+      delayNote.textContent = isFinite(needMonthly)
+        ? `多累積 ${delayYears} 年，每月比 A 少投入 ${money(needMonthly - d.needMonthly)}`
+        : `多累積 ${delayYears} 年，就能改成分期投入`;
     }
   }
-  // D 維持目前投入，調整退休生活費
-  const projectedNow = fvAssets + currentMonthly*12*rtAnnuityFactor(years, realReturn);
-  const affordable = rtAffordableMonthly(projectedNow, realReturn) + labor.total;
+  // D 什麼都不做：只靠現有資產＋勞保勞退，退休後每月能有多少
+  const affordable = rtAffordableMonthly(fvAssets, realReturn) + labor.total;
   const adjustEl = document.getElementById('rv-pathAdjust');
   adjustEl.innerHTML = money(affordable)+'<small>/月</small>';
   document.getElementById('rv-pathAdjustNote').textContent = affordable >= desiredMonthly
-    ? `比目標 ${money(desiredMonthly)} 還多，可以考慮提早退休或提高生活品質`
-    : `比目標少 ${money(desiredMonthly-affordable)}/月，約是目標的 ${(affordable/desiredMonthly*100).toFixed(0)}%`;
+    ? `只靠現有資產${laborOn?'＋勞保勞退':''}就超過目標 ${money(desiredMonthly)}`
+    : `只靠現有資產${laborOn?'＋勞保勞退':''}，退休後每月比目標少 ${money(desiredMonthly-affordable)}，只有目標的 ${(affordable/desiredMonthly*100).toFixed(0)}%`;
 
   // ---- 報酬率敏感度表 ----
   const base = Math.round(nominalReturn*1000)/10;
@@ -1983,7 +1950,7 @@ const rtCalcBtn = document.getElementById('btn-calcRetirement');
 function applyRtMode(){
   document.querySelectorAll('#rtModeTabs button').forEach(b=> b.classList.toggle('active', b.dataset.mode===rtMode));
   const isRev = rtMode === 'reverse';
-  document.getElementById('lbl-rtMonthlyInvest').textContent = isRev ? '目前每月已投入（對照用，選填）' : '每月可投資金額';
+  document.getElementById('fld-rtMonthlyInvest').hidden = isRev; // 反算時每月投入是要求的答案，不用填
   rtCalcBtn.textContent = isRev ? '回推現在每月該投入多少' : '計算退休基金';
   document.getElementById('rt-resultSection').classList.remove('show');
   document.getElementById('rt-reverseSection').classList.remove('show');

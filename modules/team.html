@@ -171,6 +171,13 @@
 
 <main class="wrap">
 
+  <div class="card" id="createTeamCard" style="display:none;">
+    <h3>建立你自己的團隊</h3>
+    <div class="sub">想帶團隊的話，可以建立一個自己的團隊，拿到邀請碼給夥伴加入，就能看到大家的工作量統計、在團隊裡討論。只是想加入別人的團隊的話，不用建立，直接在下面輸入邀請碼就好。</div>
+    <button class="btn" id="btnCreateTeam">建立我的團隊</button>
+    <div class="error-msg" id="createTeamErrorMsg"></div>
+  </div>
+
   <div class="card" id="masterCard" style="display:none;">
     <div class="team-name-row">
       <h3 id="teamNameDisplay" style="margin-bottom:0;">我的團隊</h3>
@@ -230,6 +237,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase-config.js"></script>
+<script src="../plan-utils.js"></script>
 <script src="../theme-config.js"></script>
 <script>
 jkApplySavedTheme();
@@ -342,9 +350,36 @@ async function loadWorkload(teamId){
 
 async function initMasterSection(){
   if(myPlan !== 'master') return;
-  document.getElementById('masterCard').style.display = 'block';
+  // 全面免費開放期間，每個人都能建立團隊；但不會一打開頁面就自動幫每個人建一個空團隊，
+  // 要自己按「建立我的團隊」才會建立（已經有團隊的人直接顯示管理畫面）
+  if(typeof FREE_FOR_ALL !== 'undefined' && FREE_FOR_ALL){
+    const { data: existing } = await supabaseClient.from('teams').select('id').eq('owner_id', myUserId).maybeSingle();
+    if(!existing){
+      const card = document.getElementById('createTeamCard');
+      card.style.display = 'block';
+      document.getElementById('btnCreateTeam').addEventListener('click', async ()=>{
+        const btn = document.getElementById('btnCreateTeam');
+        btn.disabled = true; btn.textContent = '建立中…';
+        const created = await ensureMyTeam();
+        if(!created){
+          btn.disabled = false; btn.textContent = '建立我的團隊';
+          const err = document.getElementById('createTeamErrorMsg');
+          err.textContent = '建立失敗，請稍後再試一次。'; err.classList.add('show');
+          return;
+        }
+        card.style.display = 'none';
+        await openMasterSection(created);
+      });
+      return;
+    }
+  }
   const team = await ensureMyTeam();
   if(!team) return;
+  await openMasterSection(team);
+}
+
+async function openMasterSection(team){
+  document.getElementById('masterCard').style.display = 'block';
   document.getElementById('teamNameDisplay').textContent = team.name || '我的團隊';
   document.getElementById('inviteCodeBox').textContent = team.invite_code.toUpperCase();
   document.getElementById('btnCopyCode').addEventListener('click', ()=>{
@@ -605,8 +640,9 @@ async function initDiscussSection(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session){ return; }
   myUserId = session.user.id;
-  const { data: profile } = await supabaseClient.from('profiles').select('plan').eq('id', myUserId).single();
-  myPlan = (profile && profile.plan) || 'free';
+  // 方案判斷統一走 plan-utils.js（全面免費開放期間每個人都有完整權限）
+  const effective = await fetchEffectivePlan();
+  myPlan = effective.plan;
   await initMasterSection();
   await loadMyTeams();
   await initDiscussSection();

@@ -271,7 +271,7 @@
         <input type="text" id="searchInput" placeholder="搜尋客戶名稱…">
         <button class="search-clear" id="searchClear">✕</button>
       </div>
-      <div class="count-label" id="countLabel">目前 0 筆 ／ 上限 不限</div>
+      <div class="count-label" id="countLabel">目前 0 筆</div>
     </div>
     <div style="display:flex; align-items:center; gap:14px;">
       <div class="count-label" id="dueLabel"></div>
@@ -522,7 +522,10 @@ async function render(){
   lastFetchedRecords = records;
   const limit = PLAN_LIMITS[currentPlan];
   const limitText = limit ? limit : '不限';
-  document.getElementById('countLabel').innerHTML = '目前 <b>'+records.length+'</b> 筆 ／ 上限 '+limitText+(limit && records.length>=limit ? ' <span style="color:var(--negative);font-weight:700;">（已達上限）</span>' : '');
+  // 沒有容量上限時（例如目前全面免費開放期間）只顯示筆數，不顯示「上限」字樣
+  document.getElementById('countLabel').innerHTML = limit
+    ? '目前 <b>'+records.length+'</b> 筆 ／ 上限 '+limitText+(records.length>=limit ? ' <span style="color:var(--negative);font-weight:700;">（已達上限）</span>' : '')
+    : '目前 <b>'+records.length+'</b> 筆';
   document.getElementById('trashCount').textContent = trashed.length;
   const dueCount = records.filter(r=>{ const d=daysUntil(r.followUpDate); return d!==null && d<=0; }).length;
   document.getElementById('dueLabel').innerHTML = dueCount>0 ? '<span style="color:var(--negative);font-weight:700;">'+dueCount+' 筆待追蹤</span>' : '';
