@@ -215,7 +215,7 @@
 
   <div class="card" id="discussCard" style="display:none;">
     <h3>團隊討論</h3>
-    <div class="sub">給同團隊夥伴留言、討論公事用的，站內就能聊，不用另外開群組。單獨想私聊某個人，用左邊選單的「訊息」。</div>
+    <div class="sub">給同團隊夥伴留言、討論公事用的，站內就能聊，不用另外開群組。單獨想私聊某個人，用右下角的聊天泡泡。</div>
     <div class="team-switch-row" id="discussTeamSwitchWrap" style="display:none;">
       <select id="discussTeamSelect"></select>
     </div>
@@ -519,7 +519,12 @@ async function loadPosts(){
   const { data: posts, error } = await supabaseClient.from('team_posts')
     .select('*').eq('team_id', currentDiscussTeamId).is('deleted_at', null)
     .order('created_at', { ascending: false });
-  if(error){ list.innerHTML = '<div class="empty-hint">讀取討論串失敗，請稍後再試。</div>'; return; }
+  if(error){
+    console.error('讀取討論串失敗', error);
+    // 把資料庫回傳的原因一起顯示出來，出問題時截圖就能直接看出是哪裡壞掉
+    list.innerHTML = '<div class="empty-hint">讀取討論串失敗，請稍後再試。<br><small style="opacity:.7;">（原因：'+(error.message||error.code||'未知').replace(/</g,'&lt;')+'）</small></div>';
+    return;
+  }
   if(!posts || posts.length===0){ list.innerHTML = '<div class="empty-hint">還沒有人發過討論，開頭第一句話吧。</div>'; return; }
 
   const { data: members } = await supabaseClient.rpc('get_team_members', { p_team_id: currentDiscussTeamId });
@@ -615,7 +620,7 @@ document.getElementById('btnSubmitPost').addEventListener('click', async ()=>{
     loadPosts();
   }catch(err){
     console.error('發佈失敗', err);
-    alert('發佈失敗，請稍後再試。');
+    alert('發佈失敗，請稍後再試。\n（原因：' + (err && (err.message || err.error || err.code) || '未知') + '）');
   }finally{
     btn.disabled = false; btn.textContent = '發佈';
   }
