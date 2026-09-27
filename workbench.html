@@ -695,7 +695,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.1.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.2.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -704,6 +704,9 @@
         <button class="user-menu-item" id="menuAccountSettings">
           <span class="icon">⚙️</span> 帳號設定
         </button>
+        <a class="user-menu-item" id="menuAdmin" href="admin.html" target="_blank" rel="noopener" style="display:none; text-decoration:none;">
+          <span class="icon">🛠</span> 管理後台
+        </a>
         <button class="user-menu-item" id="menuUpgrade" style="display:none;">
           <span class="icon">⬆</span> 升級方案
         </button>
@@ -909,6 +912,11 @@
     document.getElementById('userName').textContent = name;
     document.getElementById('settingsCurrentEmail').textContent = '目前登入：' + user.email;
     window.currentAdvisorId = user.id; // 讓內嵌的模組（例如客戶資料）之後可以用這個 id 存取自己的資料
+
+    // 管理後台入口：只有在管理者名單裡的帳號才看得到（資料庫還沒設定後台時，呼叫會失敗，入口就維持隱藏）
+    supabaseClient.rpc('vc_is_admin').then(({ data, error })=>{
+      if(!error && data === true) document.getElementById('menuAdmin').style.display = '';
+    });
 
     const initial = name.charAt(0).toUpperCase();
     applyAvatarDisplay(null, initial);
