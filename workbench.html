@@ -336,6 +336,14 @@
   }
   .font-size-pill:hover{border-color:var(--teal); color:var(--teal);}
   .font-size-pill.active{background:var(--navy); border-color:var(--navy); color:#fff;}
+  /* 聊天泡泡 顯示／隱藏（樣式跟字體大小按鈕一樣，但用獨立 class，避免被字體大小的切換邏輯影響） */
+  .chat-pills{display:flex; gap:6px;}
+  .chat-pill{
+    flex:1; padding:6px 0; border-radius:8px; border:1px solid var(--line); background:var(--card);
+    font-size:12px; font-weight:700; color:var(--ink-soft); cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+  }
+  .chat-pill:hover{border-color:var(--teal); color:var(--teal);}
+  .chat-pill.active{background:var(--navy); border-color:var(--navy); color:#fff;}
 
   .theme-swatch-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
   .theme-swatch{
@@ -687,7 +695,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.0.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.1.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -705,6 +713,13 @@
             <button class="font-size-pill" data-size="small">小</button>
             <button class="font-size-pill" data-size="medium">中</button>
             <button class="font-size-pill" data-size="large">大</button>
+          </div>
+        </div>
+        <div class="user-menu-fontsize">
+          <div class="user-menu-label">聊天泡泡</div>
+          <div class="chat-pills" id="chatBubblePills">
+            <button class="chat-pill" data-bubble="show">顯示</button>
+            <button class="chat-pill" data-bubble="hide">隱藏</button>
           </div>
         </div>
         <div class="user-menu-fontsize">
@@ -1444,6 +1459,23 @@
     });
 
     refreshUnreadCount(); // 一打開頁面就先抓一次目前累積的未讀數，不用等點開泡泡或收到新訊息才顯示
+
+    // ---- 聊天泡泡 顯示／隱藏：在頭像選單裡切換，記在這台裝置的瀏覽器裡 ----
+    const BUBBLE_HIDDEN_KEY = 'jk_float_chat_hidden';
+    function applyBubbleVisibility(hidden){
+      bubble.style.display = hidden ? 'none' : '';
+      if(hidden) panel.classList.remove('open');
+      document.querySelectorAll('#chatBubblePills .chat-pill').forEach(p=>{
+        p.classList.toggle('active', (p.dataset.bubble === 'hide') === hidden);
+      });
+      try{ localStorage.setItem(BUBBLE_HIDDEN_KEY, hidden ? '1' : '0'); }catch(e){}
+    }
+    let bubbleHidden = false;
+    try{ bubbleHidden = localStorage.getItem(BUBBLE_HIDDEN_KEY) === '1'; }catch(e){}
+    applyBubbleVisibility(bubbleHidden);
+    document.querySelectorAll('#chatBubblePills .chat-pill').forEach(p=>{
+      p.addEventListener('click', ()=> applyBubbleVisibility(p.dataset.bubble === 'hide'));
+    });
 
     // ---- 拖曳邏輯：移動距離超過一點點才算拖曳，不然點一下也會被誤判成拖曳而打不開視窗 ----
     let dragging = false, moved = false, startX = 0, startY = 0, origLeft = 0, origTop = 0;
