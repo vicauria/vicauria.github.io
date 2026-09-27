@@ -261,12 +261,26 @@ function showJoinSuccess(text){
 }
 
 /* ---------------- Master：我的團隊 ---------------- */
+// 找「我自己帶領的團隊」。
+// 注意：不能用 maybeSingle()——萬一資料庫裡同一個人有兩筆團隊，maybeSingle 會直接報錯回傳空值，
+// 程式會以為「還沒有團隊」又再建一個，重複的團隊就會越滾越多。改成照建立時間取第一筆，永遠只拿一個。
+async function fetchMyOwnedTeam(cols){
+  const { data } = await supabaseClient.from('teams').select(cols || '*')
+    .eq('owner_id', myUserId).order('created_at', { ascending: true }).limit(1);
+  return (data && data[0]) || null;
+}
+
 async function ensureMyTeam(){
-  let { data: team } = await supabaseClient.from('teams').select('*').eq('owner_id', myUserId).maybeSingle();
+  let team = await fetchMyOwnedTeam('*');
   if(!team){
     const { data: created, error } = await supabaseClient.from('teams').insert({ owner_id: myUserId }).select('*').single();
-    if(error){ console.error('建立團隊失敗', error); return null; }
-    team = created;
+    if(error){
+      // 同時有另一個畫面剛好也在建立（資料庫有「一人一團隊」限制會擋下第二筆），直接改抓已經建好的那一筆
+      team = await fetchMyOwnedTeam('*');
+      if(!team){ console.error('建立團隊失敗', error); return null; }
+    } else {
+      team = created;
+    }
   }
   return team;
 }
@@ -353,7 +367,7 @@ async function initMasterSection(){
   // 全面免費開放期間，每個人都能建立團隊；但不會一打開頁面就自動幫每個人建一個空團隊，
   // 要自己按「建立我的團隊」才會建立（已經有團隊的人直接顯示管理畫面）
   if(typeof FREE_FOR_ALL !== 'undefined' && FREE_FOR_ALL){
-    const { data: existing } = await supabaseClient.from('teams').select('id').eq('owner_id', myUserId).maybeSingle();
+    const existing = await fetchMyOwnedTeam('id');
     if(!existing){
       const card = document.getElementById('createTeamCard');
       card.style.display = 'block';
@@ -476,7 +490,7 @@ function fmtDiscussTime(iso){
 
 async function resolveDiscussTeams(){
   const teams = [];
-  const { data: owned } = await supabaseClient.from('teams').select('id, name').eq('owner_id', myUserId).maybeSingle();
+  const owned = await fetchMyOwnedTeam('id, name');
   if(owned) teams.push({ id: owned.id, name: owned.name || '我的團隊' });
   const { data: joined } = await supabaseClient.from('team_members').select('team_id, teams(name)').eq('advisor_id', myUserId);
   (joined||[]).forEach(r=>{ if(r.team_id) teams.push({ id: r.team_id, name: r.teams?.name || '團隊' }); });
