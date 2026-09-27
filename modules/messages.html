@@ -211,7 +211,10 @@ async function getSignedUrl(path){
 /* ---------------- 團隊解析：主管自己的團隊 + 有加入的團隊，兩種都算 ---------------- */
 async function resolveMyTeams(){
   const teams = [];
-  const { data: owned } = await supabaseClient.from('teams').select('id, name').eq('owner_id', myUserId).maybeSingle();
+  // 不用 maybeSingle：同一個人萬一有兩筆團隊會報錯，改成照建立時間取第一筆
+  const { data: ownedRows } = await supabaseClient.from('teams').select('id, name')
+    .eq('owner_id', myUserId).order('created_at', { ascending: true }).limit(1);
+  const owned = (ownedRows && ownedRows[0]) || null;
   if(owned) teams.push({ id: owned.id, name: owned.name || '我的團隊' });
   const { data: joined } = await supabaseClient.from('team_members').select('team_id, teams(name)').eq('advisor_id', myUserId);
   (joined||[]).forEach(r=>{ if(r.team_id) teams.push({ id: r.team_id, name: r.teams?.name || '團隊' }); });
@@ -578,8 +581,8 @@ document.getElementById('photoInput').addEventListener('change', async (e)=>{
   const { data: profile } = await supabaseClient.from('profiles').select('plan').eq('id', myUserId).single();
   const myPlan = (profile && profile.plan) || 'free';
   if(myPlan === 'master'){
-    const { data: team } = await supabaseClient.from('teams').select('id').eq('owner_id', myUserId).maybeSingle();
-    if(!team) await supabaseClient.from('teams').insert({ owner_id: myUserId });
+    const { data: teamRows } = await supabaseClient.from('teams').select('id').eq('owner_id', myUserId).limit(1);
+    if(!teamRows || teamRows.length === 0) await supabaseClient.from('teams').insert({ owner_id: myUserId });
   }
   await initTeams();
   try{ await supabaseClient.realtime.setAuth(session.access_token); }catch(e){}
