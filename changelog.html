@@ -67,6 +67,14 @@
   <main>
 
     <div class="entry">
+      <div class="entry-head"><span class="v-num">v3.2.1</span><span class="v-date">2026-09-27</span></div>
+      <ul>
+        <li>修正同一個人被重複建立好幾個團隊的問題：舊版在查詢「我帶領的團隊」時，只要資料庫裡有兩筆就會誤判成沒有團隊而再建一筆，現在改成永遠只取一個</li>
+        <li>資料庫加上「一人只能帶一個團隊」的限制，並清除已經重複的空團隊</li>
+      </ul>
+    </div>
+
+    <div class="entry">
       <div class="entry-head"><span class="v-num">v3.2.0</span><span class="v-date">2026-09-27</span></div>
       <ul>
         <li>新增管理後台（僅管理者可進入）：總覽註冊人數、活躍人數、客戶紀錄與報告數量、每週新註冊趨勢</li>
