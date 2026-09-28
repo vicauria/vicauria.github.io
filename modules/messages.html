@@ -582,7 +582,10 @@ document.getElementById('photoInput').addEventListener('change', async (e)=>{
   const myPlan = (profile && profile.plan) || 'free';
   if(myPlan === 'master'){
     const { data: teamRows } = await supabaseClient.from('teams').select('id').eq('owner_id', myUserId).limit(1);
-    if(!teamRows || teamRows.length === 0) await supabaseClient.from('teams').insert({ owner_id: myUserId });
+    if(!teamRows || teamRows.length === 0){
+      const dn = ((session.user.user_metadata && session.user.user_metadata.display_name) || '').trim() || (session.user.email || '').split('@')[0] || '顧問';
+      await supabaseClient.from('teams').insert({ owner_id: myUserId, name: dn + '的團隊' });
+    }
   }
   await initTeams();
   try{ await supabaseClient.realtime.setAuth(session.access_token); }catch(e){}

@@ -180,7 +180,7 @@
 
   <div class="card" id="masterCard" style="display:none;">
     <div class="team-name-row">
-      <h3 id="teamNameDisplay" style="margin-bottom:0;">我的團隊</h3>
+      <h3 id="teamNameDisplay" style="margin-bottom:0;"></h3>
       <button class="btn-edit-name" id="btnEditTeamName" title="編輯團隊名稱">✎</button>
     </div>
     <div class="team-name-edit-row" id="teamNameEditRow" style="display:none;">
@@ -243,6 +243,15 @@
 jkApplySavedTheme();
 
 let myUserId = null;
+let myUser = null;
+
+// 團隊預設名稱：「顧問名稱的團隊」（例如「Jess的團隊」）。自己改過名字的團隊不會被動到。
+function myDefaultTeamName(){
+  const u = myUser || {};
+  const n = ((u.user_metadata && u.user_metadata.display_name) || '').trim() || (u.email || '').split('@')[0] || '顧問';
+  return n + '的團隊';
+}
+function isUnnamedTeam(name){ return !name || name.trim() === '' || name.trim() === '我的團隊'; }
 let myPlan = 'free';
 
 function showMasterSuccess(text){
@@ -273,7 +282,7 @@ async function fetchMyOwnedTeam(cols){
 async function ensureMyTeam(){
   let team = await fetchMyOwnedTeam('*');
   if(!team){
-    const { data: created, error } = await supabaseClient.from('teams').insert({ owner_id: myUserId }).select('*').single();
+    const { data: created, error } = await supabaseClient.from('teams').insert({ owner_id: myUserId, name: myDefaultTeamName() }).select('*').single();
     if(error){
       // 同時有另一個畫面剛好也在建立（資料庫有「一人一團隊」限制會擋下第二筆），直接改抓已經建好的那一筆
       team = await fetchMyOwnedTeam('*');
@@ -394,7 +403,13 @@ async function initMasterSection(){
 
 async function openMasterSection(team){
   document.getElementById('masterCard').style.display = 'block';
-  document.getElementById('teamNameDisplay').textContent = team.name || '我的團隊';
+  // 舊團隊還是預設的「我的團隊」→ 自動換成「顧問名稱的團隊」（自己改過名的不動）
+  if(isUnnamedTeam(team.name)){
+    const autoName = myDefaultTeamName();
+    const { error: renameErr } = await supabaseClient.from('teams').update({ name: autoName }).eq('id', team.id);
+    if(!renameErr) team.name = autoName;
+  }
+  document.getElementById('teamNameDisplay').textContent = team.name || myDefaultTeamName();
   document.getElementById('inviteCodeBox').textContent = team.invite_code.toUpperCase();
   document.getElementById('btnCopyCode').addEventListener('click', ()=>{
     navigator.clipboard.writeText(team.invite_code.toUpperCase());
@@ -418,7 +433,7 @@ async function openMasterSection(team){
     document.getElementById('btnEditTeamName').style.display = 'inline-block';
   });
   document.getElementById('btnSaveTeamName').addEventListener('click', async ()=>{
-    const newName = nameInput.value.trim() || '我的團隊';
+    const newName = nameInput.value.trim() || myDefaultTeamName();
     const { error } = await supabaseClient.from('teams').update({ name: newName }).eq('id', team.id);
     if(error){ showMasterSuccess('儲存失敗，請稍後再試。'); return; }
     team.name = newName;
@@ -659,6 +674,7 @@ async function initDiscussSection(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session){ return; }
   myUserId = session.user.id;
+  myUser = session.user;
   // 方案判斷統一走 plan-utils.js（全面免費開放期間每個人都有完整權限）
   const effective = await fetchEffectivePlan();
   myPlan = effective.plan;
