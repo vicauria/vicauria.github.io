@@ -709,7 +709,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.3.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.3.1</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -1096,11 +1096,17 @@
     const newName = document.getElementById('newDisplayNameInput').value.trim();
     const btn = document.getElementById('btnUpdateDisplayName');
     if(!newName){ showSettingsError('請輸入顯示名稱'); return; }
+    const oldName = document.getElementById('userName').textContent.trim();
     btn.disabled = true; btn.textContent = '更新中…';
     const { data: { session } } = await supabaseClient.auth.getSession();
     const { error } = await supabaseClient.auth.updateUser({ data: { display_name: newName } });
     if(!error && session){
       await supabaseClient.from('profiles').update({ display_name: newName }).eq('id', session.user.id);
+      // 團隊名稱如果還是預設的「舊名稱的團隊」（或更早的「我的團隊」），跟著換成新名稱；自己改過名的團隊不動
+      const emailPrefix = (session.user.email || '').split('@')[0];
+      const defaultNames = ['我的團隊', oldName + '的團隊', emailPrefix + '的團隊'];
+      await supabaseClient.from('teams').update({ name: newName + '的團隊' })
+        .eq('owner_id', session.user.id).in('name', defaultNames);
     }
     btn.disabled = false; btn.textContent = '更新名稱';
     if(error){ showSettingsError('更新失敗：' + error.message); return; }
