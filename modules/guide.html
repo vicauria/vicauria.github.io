@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>使用導覽 — Vicauria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2; --teal-light-text:#BFE0EA;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Noto Sans TC",sans-serif; line-height:1.75; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy); text-wrap:balance;}
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+  a{color:var(--teal-deep);}
+
+  /* ---------- 頁首 ---------- */
+  header.hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
+    color:#fff; padding:34px 0 70px; position:relative; overflow:hidden;
+  }
+  header.hero::after{
+    content:""; position:absolute; right:-80px; top:-80px; width:240px; height:240px; border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
+  }
+  .eyebrow{font-family:"Roboto Mono",monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:10px;}
+  header.hero h1{color:#fff; font-size:clamp(22px,3.2vw,30px); font-weight:700; margin-bottom:10px;}
+  header.hero p{max-width:640px; color:#DCEAEE; font-size:14px; margin:0;}
+
+  /* ---------- 章節導覽 ---------- */
+  .toc{
+    position:sticky; top:0; z-index:20; margin-top:-34px;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:6px;
+    display:flex; gap:4px; overflow-x:auto; box-shadow:0 10px 30px rgba(20,50,60,0.08);
+  }
+  .toc a{
+    flex:1; min-width:max-content; text-align:center; padding:10px 14px; border-radius:8px;
+    font-size:13px; font-weight:700; color:var(--ink-soft); text-decoration:none;
+  }
+  .toc a:hover{background:var(--paper); color:var(--navy);}
+  .toc a.active{background:var(--navy); color:#fff;}
+
+  section.chapter{padding-top:44px; scroll-margin-top:70px;}
+  .chapter-head{margin-bottom:20px;}
+  .chapter-head .kicker{font-family:"Roboto Mono",monospace; font-size:11px; letter-spacing:.18em; color:var(--warm-deep); font-weight:700; margin-bottom:6px;}
+  .chapter-head h2{font-size:clamp(19px,2.4vw,23px); margin-bottom:6px;}
+  .chapter-head p{font-size:13.5px; color:var(--ink-soft); margin:0; max-width:680px;}
+
+  /* ---------- 快速上手 ---------- */
+  .quick-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media (max-width:760px){.quick-grid{grid-template-columns:1fr;}}
+  .quick{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 18px 16px;}
+  .quick .ic{font-size:22px; margin-bottom:8px;}
+  .quick h3{font-size:15px; margin-bottom:6px;}
+  .quick p{font-size:13px; color:var(--ink); margin:0;}
+  .quick small{display:block; font-size:12px; color:var(--ink-soft); margin-top:8px;}
+
+  /* ---------- 成交流程 ---------- */
+  .flow{position:relative; padding-left:0; list-style:none; margin:0;}
+  .flow-step{position:relative; display:grid; grid-template-columns:44px 1fr; gap:16px; padding-bottom:22px;}
+  .flow-step::before{
+    content:""; position:absolute; left:21px; top:44px; bottom:0; width:2px; background:var(--line);
+  }
+  .flow-step:last-child::before{display:none;}
+  .flow-num{
+    width:44px; height:44px; border-radius:50%; background:var(--navy); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-family:"Roboto Mono",monospace; font-weight:700; font-size:15px;
+    position:relative; z-index:1;
+  }
+  .flow-step.bonus .flow-num{background:var(--warm-deep);}
+  .flow-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .flow-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:8px;}
+  .flow-top h3{font-size:16px;}
+  .flow-top .where{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .flow-card ul{margin:0 0 0; padding-left:20px; font-size:13.5px;}
+  .flow-card li{margin-bottom:4px;}
+  .tip{
+    margin-top:12px; background:var(--warm-tint); border-radius:10px; padding:12px 14px;
+    font-size:13px; color:var(--ink); display:flex; gap:10px;
+  }
+  .tip .tip-label{flex-shrink:0; font-weight:800; color:var(--warm-deep); font-size:12px; padding-top:1px;}
+
+  .go-btn{
+    display:inline-flex; align-items:center; gap:5px; padding:6px 13px; border-radius:16px;
+    border:1.5px solid var(--teal); background:var(--card); color:var(--teal-deep);
+    font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .go-btn:hover{background:var(--teal); color:#fff;}
+  body.standalone .go-btn{display:none;}
+
+  /* ---------- 功能說明 ---------- */
+  .search-row{margin-bottom:16px;}
+  .search-row input{
+    width:100%; padding:12px 16px; border:1.5px solid var(--line); border-radius:10px;
+    font-family:inherit; font-size:14px; background:var(--card); color:var(--ink);
+  }
+  .search-row input:focus{outline:none; border-color:var(--teal);}
+  .group-title{
+    font-family:"Roboto Mono",monospace; font-size:11px; letter-spacing:.16em; color:var(--ink-soft);
+    font-weight:700; margin:22px 0 10px; text-transform:uppercase;
+  }
+  .group-title:first-of-type{margin-top:0;}
+  details.mod{background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden;}
+  details.mod[hidden]{display:none;}
+  details.mod summary{
+    list-style:none; cursor:pointer; padding:15px 18px; display:flex; align-items:center; gap:12px;
+  }
+  details.mod summary::-webkit-details-marker{display:none;}
+  details.mod summary:hover{background:var(--paper);}
+  details.mod summary:focus-visible{outline:2px solid var(--teal); outline-offset:-2px;}
+  .mod-ic{font-size:20px; width:30px; text-align:center; flex-shrink:0;}
+  .mod-title{flex:1; min-width:0;}
+  .mod-title b{display:block; font-size:14.5px; color:var(--navy);}
+  .mod-title span{display:block; font-size:12.5px; color:var(--ink-soft);}
+  .chev{color:var(--ink-soft); font-size:12px; transition:transform .2s ease; flex-shrink:0;}
+  details.mod[open] .chev{transform:rotate(180deg);}
+  .mod-body{padding:4px 20px 18px 60px; font-size:13.5px;}
+  @media (max-width:560px){.mod-body{padding-left:20px;}}
+  .mod-body h4{font-size:13px; font-family:"Noto Sans TC",sans-serif; font-weight:800; color:var(--teal-deep); margin:14px 0 6px;}
+  .mod-body h4:first-child{margin-top:4px;}
+  .mod-body ol, .mod-body ul{margin:0; padding-left:20px;}
+  .mod-body li{margin-bottom:4px;}
+  .mod-body .go-row{margin-top:14px;}
+  kbd, .ui{
+    font-family:inherit; font-size:12.5px; font-weight:700; background:var(--paper); border:1px solid var(--line);
+    border-radius:5px; padding:0 6px; white-space:nowrap; color:var(--navy);
+  }
+  .no-result{display:none; text-align:center; color:var(--ink-soft); font-size:13.5px; padding:24px;}
+
+  /* ---------- 常見問題 ---------- */
+  .faq details{background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:10px;}
+  .faq summary{list-style:none; cursor:pointer; padding:15px 18px; font-weight:700; font-size:14px; color:var(--navy); display:flex; justify-content:space-between; gap:12px;}
+  .faq summary::-webkit-details-marker{display:none;}
+  .faq summary::after{content:"＋"; color:var(--ink-soft); flex-shrink:0;}
+  .faq details[open] summary::after{content:"－";}
+  .faq .ans{padding:0 18px 16px; font-size:13.5px; color:var(--ink);}
+
+  .closing{
+    margin:40px 0 60px; background:var(--navy); color:#fff; border-radius:var(--radius); padding:26px 28px;
+    display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap;
+  }
+  .closing h3{color:#fff; font-size:17px; margin-bottom:4px;}
+  .closing p{margin:0; font-size:13px; color:#CFE0E5;}
+  .closing .go-btn{border-color:#fff; background:transparent; color:#fff;}
+  .closing .go-btn:hover{background:#fff; color:var(--navy);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Guide · 使用導覽</div>
+    <h1>從第一次登入，到成交第一位客戶</h1>
+    <p>這一頁把 Vicauria 每個功能怎麼用、以及怎麼把它們串成一套「找客戶 → 了解客戶 → 提案 → 成交 → 長期經營」的工作流程，一次講清楚。第一次使用建議從上往下看一遍，之後忘記某個功能怎麼用，再回來用搜尋找就好。</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" id="toc">
+    <a href="#start" class="active">快速上手</a>
+    <a href="#flow">成交流程</a>
+    <a href="#modules">功能說明</a>
+    <a href="#faq">常見問題</a>
+  </nav>
+
+  <!-- =============== 快速上手 =============== -->
+  <section class="chapter" id="start">
+    <div class="chapter-head">
+      <div class="kicker">STEP 0</div>
+      <h2>開始前，先花 3 分鐘做這三件事</h2>
+      <p>設定好之後，產出的報告、團隊裡的夥伴看到的，都會是你的名字。</p>
+    </div>
+    <div class="quick-grid">
+      <div class="quick">
+        <div class="ic">🪪</div>
+        <h3>設定顯示名稱與大頭貼</h3>
+        <p>點左下角頭像 → <span class="ui">⚙️ 帳號設定</span>，改「顯示名稱」、上傳大頭貼。</p>
+        <small>顯示名稱會印在財富地圖報告封面的「顧問：」那一行，建議用你希望客戶稱呼你的名字。</small>
+      </div>
+      <div class="quick">
+        <div class="ic">🧭</div>
+        <h3>認識左邊選單</h3>
+        <p>功能依工作流程分組：客戶探索、行事曆、團隊、簽約管理、試算工具箱、市場情報、意見回饋。點分組標題就會展開。</p>
+        <small>按 <span class="ui">⟨⟨</span> 可以把選單收成小圖示，讓畫面更寬。</small>
+      </div>
+      <div class="quick">
+        <div class="ic">📱</div>
+        <h3>手機加到主畫面</h3>
+        <p>用手機瀏覽器打開工作台，選「分享」→「加入主畫面」（Android 是選單裡的「安裝應用程式」），就能像 App 一樣全螢幕開啟。</p>
+        <small>手機版左上角的 <span class="ui">☰</span> 可以打開選單。</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== 成交流程 =============== -->
+  <section class="chapter" id="flow">
+    <div class="chapter-head">
+      <div class="kicker">WORKFLOW</div>
+      <h2>一位客戶從認識到成交，在 Vicauria 裡怎麼走</h2>
+      <p>每一步都對應到工作台裡的一個功能。照這個順序做，客戶的資料、行程、追蹤提醒、合約都會自動串在一起，不用自己另外記。</p>
+    </div>
+
+    <ol class="flow">
+      <li class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>列名單：先知道要找誰</h3><div class="where">客戶探索 › 名單管理</div></div>
+            <button class="go-btn" data-go="frame-namelist">前往名單管理 →</button>
+          </div>
+          <ul>
+            <li>把人脈依熟悉程度分到三區：<b>A 最熟、可以直接約</b>／<b>B 認識、需要先暖身</b>／<b>C 剛認識、還要培養關係</b>。</li>
+            <li>直接點格子輸入姓名與備註，離開格子就自動儲存；列不夠用就按 <span class="ui">＋ 新增一列</span>。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>先把 A 名單寫滿，每週固定從 A 名單挑 3 位約見面。備註欄記下對方最近的人生事件（換工作、結婚、生小孩），約的時候就有自然的開場理由。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>約訪：把見面時間記下來</h3><div class="where">行事曆</div></div>
+            <button class="go-btn" data-go="frame-calendar">前往行事曆 →</button>
+          </div>
+          <ul>
+            <li>按 <span class="ui">＋ 新增事件</span>，填標題、日期時間；已經建檔的客戶可以在「連結客戶」選起來。</li>
+            <li>當天的行程會出現在首頁的「今日行程」，打開工作台第一眼就看得到。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>邀約時用「幫你做一次財務健檢，看看錢都去哪了、離目標還有多遠」當理由，比直接談商品容易答應得多，也正好銜接下一步的財富地圖。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>面談：用財富地圖帶客戶聊</h3><div class="where">客戶探索 › 財富地圖</div></div>
+            <button class="go-btn" data-go="frame-blueprint">前往財富地圖 →</button>
+          </div>
+          <ul>
+            <li>先把畫面轉給客戶，讓客戶自己閱讀並勾選「個人資料蒐集告知暨同意書」，再按 <span class="ui">同意並開始</span>。</li>
+            <li>問卷分成六關：你的輪廓 → 你的後盾 → 錢都去哪了 → 你的起點 → 財務個性 → 財富願景，最後是總覽。</li>
+            <li>財富願景選好目標後，可以按目標卡上的 <span class="ui">🔗 計算機試算</span>，當場用沙盤推演算給客戶看。</li>
+            <li>最後按 <span class="ui">開始生成報告書 →</span>，報告會自動存進「客戶資料」。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>把問卷當成聊天的引導，不要變成身家調查。「財務個性」那幾題請客戶自己作答，答完你就知道他怕什麼、在意什麼，後面提案時要強調「安全」還是「成長」就很清楚了。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>交付報告：讓客戶看見自己的財務全貌</h3><div class="where">財富地圖 › 報告畫面</div></div>
+          </div>
+          <ul>
+            <li>報告有兩個版本：<b>客戶版・財富畫像</b>（給客戶）與 <b>顧問版・分析筆記</b>（多了每題答題簡表，給你自己看）。先在上方切換好版本。</li>
+            <li>按 <span class="ui">📄 產出報告（列印／存成 PDF）</span>，在列印視窗選「另存為 PDF」，就能傳給客戶。</li>
+            <li>報告內容包含收支總結、資產負債總結、財務個性、財富願景達成率、30 年後的差距曲線，以及「給你的財務小結」。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>不要急著在同一次會談就提商品。用「財富願景・達成率」和「可以先顧的幾件事」收尾，約好下一次見面「一起討論怎麼補上這個缺口」——第二次見面的成交率通常高很多。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>建檔追蹤：別讓客戶從手上溜走</h3><div class="where">客戶探索 › 客戶資料</div></div>
+            <button class="go-btn" data-go="frame-clientrecords">前往客戶資料 →</button>
+          </div>
+          <ul>
+            <li>剛填完的客戶會顯示「尚未命名」，按 <span class="ui">✎ 編輯狀態／筆記／追蹤日期</span>：取名稱（建議用代號）、設狀態、寫顧問筆記、設「下次追蹤日期」。</li>
+            <li>設了追蹤日期，行事曆會自動出現「追蹤：客戶名」；到期的客戶會被排到最上面並標紅。</li>
+            <li>客戶的生日會從財富地圖自動同步，生日當天首頁和行事曆都會提醒你。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>狀態照實更新：追蹤中 → 提案中 → 已成交／已流失。每週打開客戶資料，先處理紅字「待追蹤」的人，就不會漏掉任何一位熱客戶。生日當天傳一句祝福，是最不刻意的關係經營。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">6</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>試算提案：把缺口變成具體數字</h3><div class="where">試算工具箱 › 沙盤推演必勝</div></div>
+            <button class="go-btn" data-go="frame-simulation">前往沙盤推演 →</button>
+          </div>
+          <ul>
+            <li>退休基金可以切換兩種模式：<b>➡️ 正算</b>（照現在的存法，能達成幾 %）與 <b>🎯 反算・以終為始</b>（先定目標，回推現在每月要投入多少）。</li>
+            <li>反算會列出四條路：A 每月定期投入、B 今天一次到位、C 延後幾年退休、D 什麼都不做的話——讓客戶自己選。</li>
+            <li>另外還有購屋、教育、遺贈、投資理財四個分頁；有貸款需求的客戶可以用「貸款試算室」算月付金與利差。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>先用正算讓客戶看到「照現在這樣只做到 60%」，再切到反算給出「每月多投入 X 元就能達標」。答案是客戶自己在四條路裡選的，會比你直接推薦更容易點頭。報酬率敏感度表則可以自然帶到「工具選擇」的討論。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">7</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>成交簽約：登錄合約，繳費不漏接</h3><div class="where">簽約管理</div></div>
+            <button class="go-btn" data-go="frame-contracts">前往簽約管理 →</button>
+          </div>
+          <ul>
+            <li>按 <span class="ui">＋ 新增簽約</span>，選客戶、填項目名稱、簽約金額（美金）、年期、繳費方式、簽約時間與匯款時間。分期的話之後每年會自動排好一期。</li>
+            <li>14 天內要繳、或已經逾期的款項，會出現在首頁的「待繳提醒」；繳了就按 <span class="ui">標記已繳</span>。</li>
+            <li>記得回到客戶資料，把這位客戶的狀態改成「已成交」。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>在繳費日前主動提醒客戶，是建立信任最簡單的方式，也讓客戶記得「這個顧問很可靠」，轉介紹就會自己發生。</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step">
+        <div class="flow-num">8</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>定期回訪：用成長報告創造下一次成交</h3><div class="where">客戶資料 › 追蹤更新／比對報告</div></div>
+            <button class="go-btn" data-go="frame-clientrecords">前往客戶資料 →</button>
+          </div>
+          <ul>
+            <li>半年到一年後，在客戶卡上按 <span class="ui">🔄 追蹤更新</span>，會帶入上次的答案，只要修改有變動的地方，送出後會新增一份報告，舊的不會被蓋掉。</li>
+            <li>有兩份以上報告時，展開 <span class="ui">📋 報告紀錄</span>，選兩份按 <span class="ui">開始比對 →</span>，就會產出淨資產、儲蓄率、負債比的前後比較與走勢圖。</li>
+          </ul>
+          <div class="tip"><span class="tip-label">成交心法</span><span>比對報告讓客戶「看見」自己這一年的進步，是加碼規劃與請客戶轉介紹的最好時機：「你這一年淨資產成長了 X，身邊有沒有朋友也想做一次這樣的健檢？」</span></div>
+        </div>
+      </li>
+
+      <li class="flow-step bonus">
+        <div class="flow-num">＋</div>
+        <div class="flow-card">
+          <div class="flow-top">
+            <div><h3>帶團隊：一起衝，進度一眼看清楚</h3><div class="where">團隊・聊天泡泡・行事曆團隊公告</div></div>
+            <button class="go-btn" data-go="frame-team">前往團隊 →</button>
+          </div>
+          <ul>
+            <li>在團隊頁按 <span class="ui">建立我的團隊</span>，把邀請碼給夥伴；夥伴在自己的帳號輸入邀請碼、按 <span class="ui">加入團隊</span> 就完成。</li>
+            <li>「團隊工作量」會用燈號標出需要關心的夥伴（🔴 超過 7 天沒動靜、🟡 手上案量偏多、🆕 還沒有客戶），而且<b>只看得到數字</b>，看不到夥伴的客戶內容。</li>
+            <li>用「團隊討論」發公告、分享心得；想私聊某個人，用右下角的聊天泡泡；重要日子可以在行事曆勾「開放給團隊」變成團隊公告。</li>
+          </ul>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- =============== 功能說明 =============== -->
+  <section class="chapter" id="modules">
+    <div class="chapter-head">
+      <div class="kicker">REFERENCE</div>
+      <h2>每個功能怎麼用</h2>
+      <p>依左邊選單的分組排列。點標題展開說明，也可以直接搜尋功能名稱或關鍵字（例如「PDF」「生日」「利差」）。</p>
+    </div>
+
+    <div class="search-row"><input type="search" id="modSearch" placeholder="搜尋功能或關鍵字…" aria-label="搜尋功能"></div>
+
+    <div id="modList">
+      <div class="group-title" data-group>首頁與基本設定</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">🏠</span><span class="mod-title"><b>首頁</b><span>今天要做什麼，一眼看完</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>你會看到</h4>
+          <ul>
+            <li><b>今日行程</b>：今天的約訪、客戶生日（🎂）、團隊公告。點任何一項就會跳到行事曆。</li>
+            <li><b>待繳提醒</b>：14 天內到期與已逾期的繳費，逾期的會標紅。點一下跳到簽約管理。</li>
+            <li><b>Quick Access</b>：各功能的捷徑卡，點了直接切換過去。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-home">前往首頁 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">⚙️</span><span class="mod-title"><b>個人設定（左下角頭像選單）</b><span>帳號、字體大小、聊天泡泡、主題色系</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>選單裡有什麼</h4>
+          <ul>
+            <li><span class="ui">⚙️ 帳號設定</span>：上傳大頭貼（JPG／PNG，2MB 以內）、改顯示名稱、改密碼（至少 6 個字元）、改 Email（要到新信箱點確認連結才會生效）。</li>
+            <li><b>字體大小</b>：小／中／大，看不清楚時調大。</li>
+            <li><b>聊天泡泡</b>：顯示／隱藏右下角的聊天泡泡。</li>
+            <li><b>主題色系</b>：6 套配色可以選，會套用到所有功能。</li>
+            <li><span class="ui">↩ 登出</span></li>
+          </ul>
+          <h4>小提醒</h4>
+          <ul><li>字體大小、聊天泡泡、主題色系是記在「這台裝置的瀏覽器」，換電腦要重新選一次。</li></ul>
+        </div>
+      </details>
+
+      <div class="group-title" data-group>客戶探索</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">🗺️</span><span class="mod-title"><b>財富地圖</b><span>顧問式引導問卷，產出客戶的財務健檢報告書</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>怎麼用</h4>
+          <ol>
+            <li>讓客戶閱讀並勾選同意書，按 <span class="ui">同意並開始</span>。</li>
+            <li>依序填完六關：你的輪廓、你的後盾、錢都去哪了（收入／支出）、你的起點（資產／負債）、財務個性、財富願景。每頁用 <span class="ui">下一步 →</span> 前進。</li>
+            <li>在總覽頁按 <span class="ui">開始生成報告書 →</span>，約 20 秒後報告就會出來。</li>
+            <li>用上方按鈕切換「客戶版／顧問版」，再按 <span class="ui">📄 產出報告（列印／存成 PDF）</span>。</li>
+          </ol>
+          <h4>小技巧</h4>
+          <ul>
+            <li>收入、支出、資產每一頁都至少要填一筆；支出填了房貸或信貸月付，負債頁就要填對應的餘額。</li>
+            <li>金額欄位打字時會自動加千分位，不用自己打逗號。</li>
+            <li>填到一半切去別的功能再回來，進度還在；但<b>重新整理頁面會清空</b>，填的時候要留意。</li>
+            <li>報告產生後會自動存進「客戶資料」，出生年月日也會自動變成客戶生日提醒。</li>
+            <li>想讓封面印出客戶名字：先到客戶資料幫客戶命名，再按「查看最新報告」列印。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-blueprint">前往財富地圖 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">📇</span><span class="mod-title"><b>客戶資料</b><span>所有客戶與報告、狀態、追蹤提醒、報告比對</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>每張客戶卡可以做的事</h4>
+          <ul>
+            <li><span class="ui">查看最新報告 →</span>：開新分頁看報告，也可以從這裡列印。</li>
+            <li><span class="ui">✎ 編輯狀態／筆記／追蹤日期</span>：客戶名稱、狀態（追蹤中／提案中／已成交／已流失）、下次追蹤日期、顧問筆記，改完自動儲存。</li>
+            <li><span class="ui">🔄 追蹤更新</span>：重新填一次財富地圖，會帶入上次的答案，送出後新增一份報告。</li>
+            <li><span class="ui">📋 報告紀錄</span>：看這位客戶的每一份報告；有兩份以上時可以選兩份按 <span class="ui">開始比對 →</span>，產出成長比對報告（可列印成 PDF）。</li>
+          </ul>
+          <h4>小技巧</h4>
+          <ul>
+            <li>上方搜尋框可以用客戶名稱找人；紅字「N 筆待追蹤」代表今天該聯絡的人。</li>
+            <li>設定追蹤日期後，行事曆會自動出現「追蹤：客戶名」；改日期或清空也會同步。</li>
+            <li>刪除的客戶會先放進 <span class="ui">🗑️ 已刪除</span>，可以還原；按「永久刪除」才會真的消失。</li>
+            <li>客戶名稱建議用代號，避免留下完整真實姓名。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-clientrecords">前往客戶資料 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">📝</span><span class="mod-title"><b>名單管理</b><span>把人脈分成 A／B／C 三區列名單</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>怎麼用</h4>
+          <ul>
+            <li>三區分別是 A（最熟、可以直接約）、B（認識、需要先暖身）、C（剛認識，還要培養關係）。</li>
+            <li>直接點格子輸入姓名、備註，離開格子就會自動儲存；按 <span class="ui">＋ 新增一列</span> 加列。</li>
+          </ul>
+          <h4>小提醒</h4>
+          <ul>
+            <li>按列尾的 <span class="ui">✕</span> 會直接刪除那一列、沒辦法復原，刪之前確認一下。</li>
+            <li>名單是獨立的，約到面談後，再用財富地圖正式建立客戶資料。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-namelist">前往名單管理 →</button></div>
+        </div>
+      </details>
+
+      <div class="group-title" data-group>行事曆與團隊</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">📅</span><span class="mod-title"><b>行事曆</b><span>約訪行程、客戶生日、團隊公告</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>怎麼用</h4>
+          <ol>
+            <li>用 <span class="ui">←</span> <span class="ui">→</span> <span class="ui">今天</span> 切換月份，點某一天看當天的清單。</li>
+            <li>按 <span class="ui">＋ 新增事件</span>：填標題、日期（可以跨好幾天）、時間或勾「全天」，可選擇連結客戶、寫備註。</li>
+            <li>要固定重複的行程，勾「設為週期性事件」，設定每幾週一次、重複到哪一天。</li>
+            <li>點事件旁的 <span class="ui">✎</span> 編輯，或刪除。</li>
+          </ol>
+          <h4>小技巧</h4>
+          <ul>
+            <li>月曆已經標好台灣的國定假日與補假。</li>
+            <li>客戶生日、客戶資料設定的追蹤日期，都會自動出現在月曆上。</li>
+            <li>有建立團隊的人，新增事件時可以勾「開放給團隊」，就會變成團隊成員都看得到的公告。</li>
+            <li>個人行程只有你自己看得到。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-calendar">前往行事曆 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">👥</span><span class="mod-title"><b>團隊</b><span>建立或加入團隊、工作量統計、團隊討論</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>想帶團隊</h4>
+          <ol>
+            <li>按 <span class="ui">建立我的團隊</span>，按 <span class="ui">✎</span> 幫團隊取名字。</li>
+            <li>按 <span class="ui">複製邀請碼</span> 傳給夥伴。</li>
+            <li>夥伴加入後，「團隊工作量」會列出每個人的追蹤中、提案中、已成交、已流失、待追蹤的客戶數量，並用燈號標出需要關心的人。</li>
+          </ol>
+          <h4>想加入別人的團隊</h4>
+          <ul><li>在「加入其他顧問的團隊」輸入邀請碼，按 <span class="ui">加入團隊</span>。不想待了可以按「退出」。</li></ul>
+          <h4>團隊討論</h4>
+          <ul><li>輸入內容、可以 <span class="ui">📷 加照片</span>，按 <span class="ui">發佈</span>；每則貼文下面可以留言回覆。</li></ul>
+          <h4>隱私</h4>
+          <ul><li>帶團隊的人<b>只看得到數字</b>，看不到夥伴客戶的姓名、筆記或問卷內容。</li></ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-team">前往團隊 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">💬</span><span class="mod-title"><b>訊息（右下角聊天泡泡）</b><span>同團隊夥伴一對一私訊</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>怎麼用</h4>
+          <ul>
+            <li>點右下角的聊天泡泡打開視窗，左邊選一位夥伴開始聊；可以傳文字或 <span class="ui">📷</span> 照片。</li>
+            <li>泡泡上的紅色數字是未讀訊息數。自己傳錯的訊息可以按「收回」。</li>
+            <li>泡泡可以拖曳到畫面左邊或右邊；不想看到它，可以在頭像選單裡選「隱藏」。</li>
+          </ul>
+          <h4>小提醒</h4>
+          <ul><li>聊天對象是同一個團隊的夥伴，所以要先建立或加入團隊才會有聯絡人。</li></ul>
+        </div>
+      </details>
+
+      <div class="group-title" data-group>簽約管理</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">📑</span><span class="mod-title"><b>簽約管理</b><span>成交合約紀錄與每期繳費提醒</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>怎麼用</h4>
+          <ol>
+            <li>按 <span class="ui">＋ 新增簽約</span>。客戶可以從客戶資料選，或選「＋ 新增客戶（尚未填財富地圖）」直接輸入姓名。</li>
+            <li>填項目名稱、簽約金額（美金）、年期、繳費方式（整付／分期）、簽約時間、匯款時間。分期的話之後每年會自動排一期。</li>
+            <li>按 <span class="ui">展開明細</span> 看每一期，繳了就按 <span class="ui">標記已繳</span>。</li>
+          </ol>
+          <h4>小提醒</h4>
+          <ul>
+            <li>上方會統計逾期未繳、14 天內到期的筆數；首頁的「待繳提醒」也會顯示。</li>
+            <li>修改年期、繳費方式或日期，會重新排程並清掉已繳標記（會先跳確認）。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-contracts">前往簽約管理 →</button></div>
+        </div>
+      </details>
+
+      <div class="group-title" data-group>試算工具箱</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">🎯</span><span class="mod-title"><b>沙盤推演必勝</b><span>退休、購屋、教育、遺贈、投資理財試算</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <h4>五個分頁</h4>
+          <ul>
+            <li><b>🌤️ 退休基金</b>：輸入年齡、退休後每月生活費、報酬率與通膨、現有資產，也可以把勞保勞退一起算進來。
+              <ul>
+                <li><b>➡️ 正算：看達成率</b>——照現在的存法，能達成目標幾 %、還有多少缺口。</li>
+                <li><b>🎯 反算：以終為始</b>——先定目標，回推現在每月該投入多少，並列出四條路與不同報酬率的對照表。</li>
+              </ul>
+            </li>
+            <li><b>🏠 購屋基金</b>：購屋能力試算（每月要存多少、頭期款、房貸月付、寬限期安排），以及房地合一稅試算。</li>
+            <li><b>🎓 教育基金</b>：子女教育金每月需存多少，含教育通膨。</li>
+            <li><b>🗺️ 遺贈方案</b>：遺產稅試算、法定應繼分與自訂分配模擬、最低稅負，輸入後自動計算。</li>
+            <li><b>📈 投資理財</b>：本金加定期投入，多少年後累積多少、達成率與實質購買力。</li>
+          </ul>
+          <h4>小提醒</h4>
+          <ul>
+            <li>試算結果不會存檔。要留給客戶，可以截圖，或用瀏覽器列印。</li>
+            <li>在財富地圖的財富願景目標卡上按 <span class="ui">🔗 計算機試算</span>，會直接開到對應的分頁。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-simulation">前往沙盤推演 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">💧</span><span class="mod-title"><b>收支現金流</b><span>快速算出年度結餘與儲蓄率</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li>在收入、支出表填金額：「月收入」會自動乘 12，「年度一次性」只加一次；可以 <span class="ui">＋ 新增項目</span>。</li>
+            <li>按 <span class="ui">產生結果 →</span>，看年度總收入、總支出、結餘、儲蓄率、圓餅圖與各項比率；可以按 <span class="ui">📄 產出報告（列印／存成 PDF）</span>。</li>
+            <li>這是獨立的快速試算，不會存檔；要完整留存客戶資料，請用財富地圖。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-cashflow">前往收支現金流 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">⚖️</span><span class="mod-title"><b>資產負債表</b><span>總資產、總負債、淨值、負債比</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li>填入四類資產（理財型、投資、不動產、其他）與負債，按 <span class="ui">產生結果 →</span>。</li>
+            <li>看淨值、配置圓餅圖與負債比等比率；負債比超過 50% 會標示提醒。可以列印／存成 PDF。</li>
+            <li>一樣是獨立試算、不會存檔。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-balance">前往資產負債表 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">🏦</span><span class="mod-title"><b>貸款試算室</b><span>車貸信貸、房貸、寬限期、利率比較、利差</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li>六個分頁：車貸／信貸、房貸、寬限期試算、利率比較（A、B 兩個方案比一比）、貸款利差試算、抵押資金運用計算。</li>
+            <li>金額單位是「萬元」，輸入後即時計算每月應繳、總利息、總還款。</li>
+            <li>利差類的報酬率是假設值，不代表保證收益，跟客戶說明時要講清楚。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-loan">前往貸款試算室 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">🔥</span><span class="mod-title"><b>資金效率健檢</b><span>放著不動的錢，被通膨吃掉多少</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li>輸入目前資金、放置年數、通膨率、銀行利率，按 <span class="ui">算出我的實質變化</span>。</li>
+            <li>適合當作面談開場，讓客戶直觀感受「錢放著也會變少」。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-efficiency">前往資金效率健檢 →</button></div>
+        </div>
+      </details>
+
+      <div class="group-title" data-group>市場情報</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">📰</span><span class="mod-title"><b>市場快訊</b><span>自動分類的最新財經新聞</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li>用上方分類切換：股市要聞、國際財經、退休議題、稅務法規、房市住宅、央行利率。</li>
+            <li>每則新聞標有來源媒體與時間，按 <span class="ui">閱讀全文 →</span> 看原文；按 <span class="ui">重新整理</span> 抓最新。</li>
+            <li>適合拿來當跟客戶聊天的開場話題。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-marketnews">前往市場快訊 →</button></div>
+        </div>
+      </details>
+
+      <details class="mod">
+        <summary><span class="mod-ic">🌐</span><span class="mod-title"><b>市場概況</b><span>匯率換算與全球指數走勢圖</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li><b>即時匯率</b>：美元、港幣、日圓、韓元、泰銖對台幣，還有雙向換算（按 <span class="ui">⇄</span> 交換方向）。匯率是市場中間價、每天更新一次，不是銀行牌告價。</li>
+            <li><b>市場行情</b>：從「標的」選單切換標普 500、0050、那斯達克、道瓊、日經、恒生、匯率等走勢圖。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-marketoverview">前往市場概況 →</button></div>
+        </div>
+      </details>
+
+      <div class="group-title" data-group>意見回饋</div>
+
+      <details class="mod">
+        <summary><span class="mod-ic">💌</span><span class="mod-title"><b>意見箱</b><span>回報問題、提出建議</span></span><span class="chev">▾</span></summary>
+        <div class="mod-body">
+          <ul>
+            <li>選類別（功能異常／算錯了、功能建議、其他），在「詳細說明」寫下在哪個功能、發生什麼事、你原本期待的結果，按 <span class="ui">送出意見</span>。</li>
+            <li>預計 1 到 2 個工作天會回覆。</li>
+          </ul>
+          <div class="go-row"><button class="go-btn" data-go="frame-feedback">前往意見箱 →</button></div>
+        </div>
+      </details>
+
+      <div class="no-result" id="noResult">找不到符合的功能，換個關鍵字試試看。</div>
+    </div>
+  </section>
+
+  <!-- =============== 常見問題 =============== -->
+  <section class="chapter faq" id="faq">
+    <div class="chapter-head">
+      <div class="kicker">FAQ</div>
+      <h2>常見問題</h2>
+    </div>
+
+    <details><summary>我的客戶資料，別人看得到嗎？</summary>
+      <div class="ans">看不到。財富地圖、客戶資料、行事曆的個人行程、簽約管理、名單，都只有你自己的帳號看得到。就算加入團隊，帶團隊的人也只看得到統計數字，看不到任何客戶的姓名或內容。</div></details>
+
+    <details><summary>報告要怎麼存成 PDF 傳給客戶？</summary>
+      <div class="ans">在報告畫面先切換好「客戶版」或「顧問版」，按 <span class="ui">📄 產出報告（列印／存成 PDF）</span>，在跳出的列印視窗把「目的地」選成「另存為 PDF」，存檔後就能用 LINE 或 Email 傳給客戶。手機上也可以用系統的列印／分享功能存成 PDF。</div></details>
+
+    <details><summary>為什麼報告封面沒有客戶的名字？</summary>
+      <div class="ans">剛填完的新客戶還沒有名字。到「客戶資料」按 <span class="ui">✎ 編輯狀態／筆記／追蹤日期</span> 幫客戶命名，再按 <span class="ui">查看最新報告 →</span>，從那裡列印就會有名字。</div></details>
+
+    <details><summary>換電腦或用手機登入，資料還在嗎？</summary>
+      <div class="ans">在。客戶資料、報告、行事曆、簽約、名單、團隊與訊息都存在雲端，用同一個帳號登入就看得到。只有試算工具箱（沙盤推演、收支現金流、資產負債表、貸款試算室、資金效率健檢）的數字不會存檔，另外字體大小、主題色系這類畫面設定是記在各自的裝置上。</div></details>
+
+    <details><summary>剛新增的客戶，為什麼在行事曆或簽約管理的選單裡找不到？</summary>
+      <div class="ans">重新整理一次工作台（瀏覽器的重新整理）就會出現。剛建立或剛加入團隊後，團隊討論和聊天泡泡的聯絡人也是一樣，重新整理就會更新。</div></details>
+
+    <details><summary>財富地圖填到一半，可以先去做別的事嗎？</summary>
+      <div class="ans">可以切到其他功能再回來，填過的內容都還在；但如果按了瀏覽器的重新整理或關掉頁面，填到一半的內容會清空，建議一次填完。</div></details>
+
+    <details><summary>客戶半年後資料變了，要重新填一份嗎？</summary>
+      <div class="ans">不用從頭填。到「客戶資料」按 <span class="ui">🔄 追蹤更新</span>，會帶入上次的答案，只改有變動的地方就好，送出後會新增一份報告，舊報告保留著，之後可以拿兩份來比對成長。</div></details>
+
+    <details><summary>忘記密碼怎麼辦？</summary>
+      <div class="ans">在登入頁點「忘記密碼」，輸入註冊的 Email，到信箱點重設連結就能設定新密碼。登入後也可以在頭像選單的「帳號設定」修改密碼。</div></details>
+
+    <details><summary>遇到問題或有想要的功能？</summary>
+      <div class="ans">到左邊選單最下面的「意見箱」寫下來，會在 1 到 2 個工作天內回覆。描述越具體（在哪個功能、做了什麼、看到什麼），越快能處理。</div></details>
+  </section>
+
+  <div class="closing">
+    <div>
+      <h3>準備好了嗎？從第一位客戶開始</h3>
+      <p>打開財富地圖，約一位 A 名單的朋友做一次財務健檢。</p>
+    </div>
+    <button class="go-btn" data-go="frame-blueprint">開始使用財富地圖 →</button>
+  </div>
+</div>
+
+<script src="../theme-config.js"></script>
+<script>
+jkApplySavedTheme();
+
+// ---- 「前往」按鈕：在工作台裡面時直接切換功能；單獨打開這一頁時隱藏這些按鈕 ----
+let canGo = false;
+try{ canGo = !!(window.parent && window.parent !== window && typeof window.parent.goToModule === 'function'); }catch(e){ canGo = false; }
+if(!canGo) document.body.classList.add('standalone');
+document.querySelectorAll('[data-go]').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    if(canGo) window.parent.goToModule(btn.dataset.go);
+  });
+});
+
+// ---- 功能搜尋 ----
+const mods = Array.from(document.querySelectorAll('#modList details.mod'));
+const groupTitles = Array.from(document.querySelectorAll('#modList [data-group]'));
+document.getElementById('modSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  let shown = 0;
+  mods.forEach(m=>{
+    const hit = !q || m.textContent.toLowerCase().includes(q);
+    m.hidden = !hit;
+    if(hit){ shown++; if(q) m.open = true; }
+    else m.open = false;
+  });
+  // 分組標題：底下沒有符合的功能就一起藏起來
+  groupTitles.forEach(t=>{
+    let el = t.nextElementSibling, any = false;
+    while(el && !el.hasAttribute('data-group')){
+      if(el.matches('details.mod') && !el.hidden) any = true;
+      el = el.nextElementSibling;
+    }
+    t.hidden = !any;
+  });
+  if(!q) mods.forEach(m=> m.open = false);
+  document.getElementById('noResult').style.display = shown ? 'none' : 'block';
+});
+
+// ---- 章節導覽：捲動時標示目前所在章節 ----
+const tocLinks = Array.from(document.querySelectorAll('#toc a'));
+const chapters = tocLinks.map(a=> document.querySelector(a.getAttribute('href')));
+function updateToc(){
+  let current = chapters[0];
+  chapters.forEach(c=>{ if(c.getBoundingClientRect().top <= 90) current = c; });
+  tocLinks.forEach(a=> a.classList.toggle('active', a.getAttribute('href') === '#'+current.id));
+}
+window.addEventListener('scroll', updateToc, { passive:true });
+updateToc();
+</script>
+</body>
+</html>

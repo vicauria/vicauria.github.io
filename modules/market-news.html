@@ -380,7 +380,7 @@ async function loadAllFeeds(forceAll){
     document.getElementById('updateMeta').innerHTML = metaHtml;
   } catch(err){
     stateBox.style.display = 'block';
-    stateBox.innerHTML = '<div class="icon">⚠️</div>這次抓取失敗了，以下是詳細原因：<br><div style="text-align:left;max-width:480px;margin:14px auto 0;font-family:\'Roboto Mono\',monospace;font-size:11.5px;color:var(--negative);background:var(--paper);padding:12px 16px;border-radius:8px;">'+err.message+'</div><br>按上方「重新整理」再試一次看看。若持續失敗，請把這個畫面截圖給 Claude。';
+    stateBox.innerHTML = '<div class="icon">⚠️</div>這次抓取失敗了，以下是詳細原因：<br><div style="text-align:left;max-width:480px;margin:14px auto 0;font-family:\'Roboto Mono\',monospace;font-size:11.5px;color:var(--negative);background:var(--paper);padding:12px 16px;border-radius:8px;">'+err.message+'</div><br>按上方「重新整理」再試一次看看。若持續失敗，請把這個畫面截圖，到「意見箱」回報給我們。';
     list.style.display = 'none';
     document.getElementById('updateMeta').textContent = '抓取失敗';
   } finally {

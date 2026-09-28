@@ -2075,12 +2075,16 @@ async function checkClientLimitBeforeSave(){
   return (count||0) < limit;
 }
 
+// 報告頁一打開（renderReport）就已經自動存檔了，這裡記住那次存檔，列印時等它完成就好，
+// 不要再存一次——不然每按一次「列印／存PDF」客戶資料裡就會多一份一模一樣的報告
+let reportSavePromise = null;
+
 async function handleGenerateReport(){
-  const canSave = await checkClientLimitBeforeSave();
-  if(!canSave){
-    alert('這個帳號的客戶資料已達目前方案的容量上限，這筆問卷不會被存進「客戶資料」清單，但報告仍然可以正常查看與列印／存成PDF。想繼續保留更多客戶紀錄，需要升級方案。');
-  } else {
-    await saveClientRecord();
+  if(reportSavePromise){
+    const saved = await reportSavePromise.catch(()=>false);
+    if(saved === false && !isViewingSavedRecord){
+      alert('這個帳號的客戶資料已達目前方案的容量上限，這筆問卷不會被存進「客戶資料」清單，但報告仍然可以正常查看與列印／存成PDF。想繼續保留更多客戶紀錄，需要升級方案。');
+    }
   }
   window.print();
 }
@@ -2617,7 +2621,11 @@ function renderReport(){
     advisorPages.map(html=>`<div class="report-page">${html}</div>`).join('');
   fillCashflowBreakdown('a'); fillBalanceBreakdown('a');
 
-  checkClientLimitBeforeSave().then(canSave=>{ if(canSave) saveClientRecord(); });
+  reportSavePromise = checkClientLimitBeforeSave().then(async canSave=>{
+    if(!canSave) return false;
+    await saveClientRecord();
+    return true;
+  });
 }
 
 document.querySelectorAll('.report-toggle button').forEach(btn=>{

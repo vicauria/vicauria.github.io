@@ -236,7 +236,7 @@
 
 <main class="wrap">
 
-  <div class="print-only">試算日期：<span id="printDate"></span>　｜　客戶：＿＿＿＿＿＿＿＿＿＿　｜　顧問：Jess</div>
+  <div class="print-only">試算日期：<span id="printDate"></span>　｜　客戶：＿＿＿＿＿＿＿＿＿＿　｜　顧問：<span class="vcAdvisorName"></span></div>
 
   <div class="two-col">
     <!-- ================= 資產 ================= -->
@@ -470,6 +470,15 @@ const liabilityMount = document.getElementById("liabilityGroups");
 assetGroups.forEach(g=> assetMount.appendChild(renderGroupTable(g,false)) );
 liabilityGroups.forEach(g=> liabilityMount.appendChild(renderGroupTable(g,true)) );
 document.getElementById("printDate").textContent = new Date().toLocaleDateString("zh-TW");
+// 列印抬頭的顧問名稱：從工作台右下角的使用者名稱帶入（沒有的話留空白線讓顧問手寫）
+function vcFillAdvisorName(){
+  var name='';
+  try{ var el = window.parent && window.parent !== window ? window.parent.document.getElementById('userName') : null; name = el ? el.textContent.trim() : ''; }catch(e){}
+  document.querySelectorAll('.vcAdvisorName').forEach(function(s){ s.textContent = name || '＿＿＿＿＿＿'; });
+}
+vcFillAdvisorName();
+window.addEventListener('beforeprint', vcFillAdvisorName);
+
 
 /* ---------------- 產生結果 按鈕 ---------------- */
 const generateBtn = document.getElementById("generateBtn");
