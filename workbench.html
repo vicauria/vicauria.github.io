@@ -527,17 +527,7 @@
 <body>
 <div class="jk-toast" id="jkToast"></div>
 
-<div class="float-chat-bubble" id="floatChatBubble" title="訊息">
-  <span class="fcb-logo-badge"><img src="icons/vicauria-mark.png" alt="訊息" draggable="false"></span>
-  <span class="fcb-badge" id="fcbBadge">0</span>
-</div>
-<div class="float-chat-panel" id="floatChatPanel">
-  <div class="fcp-head">
-    <span>訊息</span>
-    <button class="fcp-close" id="fcpClose" title="關閉">✕</button>
-  </div>
-  <iframe id="floatChatFrame" src="modules/messages.html" title="訊息"></iframe>
-</div>
+<!-- 浮動聊天泡泡（私訊）目前關閉；要重新開啟：把 setupFloatChat 裡的 CHAT_ENABLED 改成 true，並把泡泡的 HTML 放回來（見 git 紀錄 v3.4.0） -->
 
 <div class="mobile-topbar">
   <button class="mobile-menu-btn" id="btnMobileMenu" aria-label="開啟選單">☰</button>
@@ -709,7 +699,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.4.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.4.1</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -730,13 +720,6 @@
             <button class="font-size-pill" data-size="small">小</button>
             <button class="font-size-pill" data-size="medium">中</button>
             <button class="font-size-pill" data-size="large">大</button>
-          </div>
-        </div>
-        <div class="user-menu-fontsize">
-          <div class="user-menu-label">聊天泡泡</div>
-          <div class="chat-pills" id="chatBubblePills">
-            <button class="chat-pill" data-bubble="show">顯示</button>
-            <button class="chat-pill" data-bubble="hide">隱藏</button>
           </div>
         </div>
         <div class="user-menu-fontsize">
@@ -1418,6 +1401,8 @@
 
   // ---- 浮動聊天泡泡：可拖曳移動、點一下（沒有拖曳的話）打開/關閉小聊天視窗 ----
   (function setupFloatChat(){
+    const CHAT_ENABLED = false; // 聊天功能目前關閉，不載入私訊、不連線抓未讀數
+    if(!CHAT_ENABLED || !document.getElementById('floatChatBubble')) return;
     const bubble = document.getElementById('floatChatBubble');
     const panel = document.getElementById('floatChatPanel');
     const frame = document.getElementById('floatChatFrame');

@@ -14,7 +14,7 @@
 
   /* ---------------- 樣式 ---------------- */
   const css = `
-  .xv-bubble{position:fixed; right:24px; bottom:96px; width:54px; height:54px; border-radius:50%;
+  .xv-bubble{position:fixed; right:20px; bottom:24px; width:54px; height:54px; border-radius:50%;
     background:radial-gradient(circle at 30% 25%, #2E7391 0%, #16323F 75%); color:#fff;
     display:flex; align-items:center; justify-content:center; flex-direction:column;
     box-shadow:0 8px 24px rgba(20,50,60,0.35); cursor:grab; z-index:501; user-select:none; touch-action:none;
@@ -23,7 +23,7 @@
   .xv-bubble .xv-v{font-family:"Noto Serif TC",Georgia,serif; font-weight:700; font-size:22px; line-height:1; pointer-events:none;}
   .xv-bubble .xv-lab{font-size:9px; letter-spacing:1px; opacity:.85; margin-top:1px; pointer-events:none; font-family:"Noto Sans TC",sans-serif;}
   .xv-bubble .xv-dot{position:absolute; top:2px; right:2px; width:11px; height:11px; border-radius:50%; background:#C97B3D; border:2px solid #fff; pointer-events:none;}
-  .xv-panel{position:fixed; right:24px; bottom:160px; width:360px; height:520px; max-height:calc(100vh - 32px);
+  .xv-panel{position:fixed; right:20px; bottom:90px; width:360px; height:520px; max-height:calc(100vh - 32px);
     background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(20,50,60,0.3); z-index:501;
     display:flex; flex-direction:column; overflow:hidden; font-family:"Noto Sans TC",sans-serif;
     opacity:0; pointer-events:none; visibility:hidden; transform:translateY(8px); transition:opacity .15s ease, transform .15s ease;}
@@ -60,8 +60,8 @@
   .xv-foot button{border:none; background:var(--navy,#16323F); color:#fff; border-radius:10px; padding:0 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
   .xv-note{font-size:10.5px; color:var(--ink-soft,#5B6B70); text-align:center; padding:0 10px 8px; background:#fff; flex-shrink:0;}
   @media (max-width:480px){
-    .xv-panel{width:calc(100vw - 24px); height:72vh; right:12px !important; left:12px !important; top:auto !important; bottom:84px !important;}
-    .xv-bubble{right:16px; bottom:88px;}
+    .xv-panel{width:calc(100vw - 24px); height:72vh; right:12px !important; left:12px !important; top:auto !important; bottom:80px !important;}
+    .xv-bubble{bottom:16px;}
   }
   @media print{ .xv-bubble, .xv-panel{display:none !important;} }
   `;
@@ -249,7 +249,7 @@
     if(window.innerWidth <= 480) return; // 手機版用 CSS 固定在畫面下方
     const r = bubble.getBoundingClientRect();
     const w = panel.offsetWidth || 360, h = panel.offsetHeight || 520;
-    let left = r.right - w, top = r.top - h - 12;
+    let left = side === 'left' ? r.left : r.right - w, top = r.top - h - 12;
     if(top < 8) top = Math.min(r.bottom + 12, window.innerHeight - h - 8);
     left = Math.max(8, Math.min(window.innerWidth - w - 8, left));
     top = Math.max(8, top);
@@ -273,15 +273,24 @@
   });
   window.xiaovAsk = (q)=>{ openPanel(); ask(q); }; // 之後其他頁面也可以直接呼叫小V
 
-  // 記住泡泡位置
+  // ---- 泡泡位置：只會貼在畫面左邊或右邊，拖曳放開後自動靠向比較近的那一邊（上下位置保留） ----
+  const EDGE = window.innerWidth <= 480 ? 12 : 20;
+  const SIZE = 54;
+  let side = 'right', topPos = null; // topPos = null → 用預設的右下角
+  function clampTop(t){ return Math.max(8, Math.min(window.innerHeight - SIZE - 8, t)); }
+  function placeBubble(animate){
+    bubble.style.transition = animate ? 'left .22s ease, right .22s ease, top .22s ease' : 'none';
+    bubble.style.bottom = topPos === null ? '' : 'auto';
+    bubble.style.top = topPos === null ? '' : clampTop(topPos) + 'px';
+    if(side === 'left'){ bubble.style.left = EDGE + 'px'; bubble.style.right = 'auto'; }
+    else { bubble.style.right = EDGE + 'px'; bubble.style.left = 'auto'; }
+  }
   try{
     const p = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
-    if(p && typeof p.left === 'number' && typeof p.top === 'number'){
-      bubble.style.right = 'auto'; bubble.style.bottom = 'auto';
-      bubble.style.left = Math.min(p.left, window.innerWidth - 60) + 'px';
-      bubble.style.top = Math.min(p.top, window.innerHeight - 60) + 'px';
-    }
+    if(p && (p.side === 'left' || p.side === 'right')){ side = p.side; topPos = typeof p.top === 'number' ? p.top : null; }
   }catch(e){}
+  placeBubble(false);
+  window.addEventListener('resize', ()=>{ placeBubble(false); if(panel.classList.contains('open')) positionPanel(); });
 
   // 拖曳：移動超過一點點才算拖曳，否則當作點擊
   let dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
@@ -295,17 +304,22 @@
     const dx = e.clientX - sx, dy = e.clientY - sy;
     if(Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
     if(!moved) return;
-    const nl = Math.max(4, Math.min(window.innerWidth - 60, ox + dx));
-    const nt = Math.max(4, Math.min(window.innerHeight - 60, oy + dy));
+    const nl = Math.max(4, Math.min(window.innerWidth - SIZE - 4, ox + dx));
+    const nt = clampTop(oy + dy);
+    bubble.style.transition = 'none';
     bubble.style.right = 'auto'; bubble.style.bottom = 'auto';
     bubble.style.left = nl + 'px'; bubble.style.top = nt + 'px';
-    if(panel.classList.contains('open')) positionPanel();
   });
   bubble.addEventListener('pointerup', ()=>{
     if(!dragging) return; dragging = false;
     if(moved){
       const r = bubble.getBoundingClientRect();
-      try{ localStorage.setItem(POS_KEY, JSON.stringify({ left: r.left, top: r.top })); }catch(e){}
+      side = (r.left + SIZE / 2) < window.innerWidth / 2 ? 'left' : 'right';
+      topPos = r.top;
+      // 先用目前的 left 當起點，下一個畫格再換成貼邊，才會有滑過去的動畫
+      if(side === 'right'){ bubble.style.left = 'auto'; bubble.style.right = (window.innerWidth - r.right) + 'px'; }
+      requestAnimationFrame(()=>{ placeBubble(true); if(panel.classList.contains('open')) setTimeout(positionPanel, 230); });
+      try{ localStorage.setItem(POS_KEY, JSON.stringify({ side, top: topPos })); }catch(e){}
       return;
     }
     panel.classList.contains('open') ? closePanel() : openPanel();
