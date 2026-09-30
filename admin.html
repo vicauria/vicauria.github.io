@@ -167,6 +167,40 @@
   .gate p{font-size:13.5px; color:var(--ink-soft); line-height:1.9; margin:0 0 8px;}
   .gate code{background:var(--paper); padding:2px 6px; border-radius:4px; font-size:12px;}
   .privacy-note{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+
+  /* ---- 功能使用 ---- */
+  .usage-toolbar{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px;}
+  .usage-toolbar label{font-size:12.5px; color:var(--ink-soft); display:inline-flex; align-items:center; gap:6px; cursor:pointer;}
+  .rank{display:flex; flex-direction:column; gap:2px;}
+  .rank-row{display:grid; grid-template-columns:150px 1fr 70px 70px 96px 92px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .rank-row:last-child{border-bottom:none;}
+  .rank-row.head{font-size:11.5px; color:var(--ink-soft); font-weight:700; padding-top:0;}
+  .rank-row .nm{font-weight:700; color:var(--navy);}
+  .rank-row .num{text-align:right; font-family:"Roboto Mono",monospace; font-variant-numeric:tabular-nums;}
+  .rank-row.cold .nm{color:var(--ink-soft);}
+  .hbar{height:10px; background:var(--paper); border-radius:5px; overflow:hidden;}
+  .hbar > i{display:block; height:100%; background:linear-gradient(90deg,var(--teal) 0%,var(--teal-deep) 100%); border-radius:5px;}
+  .rank-row.cold .hbar > i{background:var(--line);}
+  .delta{font-size:11.5px; font-weight:700;}
+  .delta.up{color:var(--positive);} .delta.down{color:var(--negative);} .delta.flat{color:var(--ink-soft);}
+  @media (max-width:760px){
+    .rank-row{grid-template-columns:96px 1fr 44px 58px; gap:8px;}
+    .rank-row > :nth-child(4), .rank-row > :nth-child(6){display:none;}
+  }
+  .funnel{display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+  @media (max-width:760px){.funnel{grid-template-columns:repeat(2,1fr);}}
+  .fstep{background:var(--paper); border-radius:12px; padding:14px 16px;}
+  .fstep .lbl{font-size:12px; color:var(--ink-soft);}
+  .fstep .val{font-family:"Roboto Mono",monospace; font-size:24px; font-weight:700; color:var(--navy);}
+  .fstep .conv{font-size:11.5px; color:var(--teal-deep); font-weight:700;}
+  .kv{list-style:none; margin:0; padding:0;}
+  .kv li{display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .kv li:last-child{border-bottom:none;}
+  .kv .num{font-family:"Roboto Mono",monospace; white-space:nowrap;}
+  .kv .num small{color:var(--ink-soft); font-size:11px; margin-left:4px;}
+  .sub-h{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:16px 0 4px;}
+  .sub-h:first-child{margin-top:0;}
+  .tip-box{background:var(--warm-tint); color:var(--warm-deep); border-radius:10px; padding:12px 16px; font-size:12.5px; line-height:1.8; margin-bottom:16px;}
 </style>
 </head>
 <body>
@@ -194,6 +228,7 @@
       <button data-tab="users">👤 使用者 <span class="count mono" id="tabCountUsers" style="background:var(--teal-deep);"></span></button>
       <button data-tab="feedback">💬 意見箱 <span class="count mono" id="tabCountFeedback"></span></button>
       <button data-tab="teams">👥 團隊</button>
+      <button data-tab="usage">📈 功能使用</button>
     </nav>
 
     <!-- 總覽 -->
@@ -258,11 +293,25 @@
         </table>
       </div>
     </section>
+
+    <!-- 功能使用 -->
+    <section class="panel" id="panel-usage">
+      <div class="usage-toolbar">
+        <div class="pills" id="usageDays">
+          <button class="pill" data-d="7">近 7 天</button>
+          <button class="pill active" data-d="30">近 30 天</button>
+          <button class="pill" data-d="90">近 90 天</button>
+        </div>
+        <label><input type="checkbox" id="usageIncludeAdmin"> 包含管理者自己的使用</label>
+      </div>
+      <div id="usageBody"><div class="card empty">載入中…</div></div>
+    </section>
   </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="xiaov-kb.js"></script>
 <script>
 /* ============================================================
    Vicauria 管理後台
@@ -346,6 +395,7 @@ async function loadAll(){
   state.feedback = fb.data || [];
   state.teams = tm.data || [];
   renderOverview(); renderUsers(); renderFeedback(); renderTeams();
+  loadUsage(); // 功能使用另外載入：還沒跑 SQL 也不會影響其他分頁
 }
 
 /* ---------------- 總覽 ---------------- */
@@ -512,6 +562,187 @@ function renderTeams(){
     <td>${fmtDate(t.created_at)}</td>
   </tr>`).join('');
 }
+
+/* ---------------- 功能使用 ---------------- */
+const MODULE_LABEL = {
+  home:'首頁', guide:'使用導覽', blueprint:'財富地圖', clientrecords:'客戶資料', namelist:'名單管理',
+  calendar:'行事曆', team:'團隊', contracts:'簽約管理', simulation:'沙盤推演必勝', cashflow:'收支現金流',
+  balance:'資產負債表', loan:'貸款試算室', efficiency:'資金效率健檢', marketnews:'市場快訊',
+  marketoverview:'市場概況', feedback:'意見箱', xiaov:'小V 小幫手'
+};
+const DETAIL_LABEL = {
+  retirement:'退休基金', house:'購屋基金', education:'教育基金', legacy:'遺贈方案', invest:'投資理財',
+  'retirement-forward':'退休・正算', 'retirement-reverse':'退休・反算', 'house-tax':'房地合一稅',
+  'car-personal':'車貸／信貸', mortgage:'房貸', grace:'寬限期試算', compare:'利率比較', spread:'貸款利差試算', pledge:'抵押資金運用',
+  new:'新客戶', update:'追蹤更新', client:'客戶版', advisor:'顧問版'
+};
+const KB_TITLE = {}; (window.XIAOV_KB || []).forEach(e=> KB_TITLE[e.id] = e.t);
+const usageState = { days:30, includeAdmin:false, data:null };
+
+async function loadUsage(){
+  const body = document.getElementById('usageBody');
+  body.innerHTML = '<div class="card empty">載入中…</div>';
+  const { data, error } = await supabaseClient.rpc('vc_admin_usage', { p_days: usageState.days, p_include_admins: usageState.includeAdmin });
+  if(error){
+    body.innerHTML = `<div class="card empty">功能使用統計還沒設定。<br>請到 Supabase 的 SQL Editor 執行 <code>vicauria-usage-tracking.sql</code>，再回來按「重新整理」。<br><span style="font-size:11.5px;">（系統訊息：${esc(error.message)}）</span></div>`;
+    return;
+  }
+  usageState.data = data || {};
+  renderUsage();
+}
+
+function deltaHTML(cur, prev){
+  if(!prev && !cur) return '<span class="delta flat">—</span>';
+  if(!prev) return '<span class="delta up">新</span>';
+  const pct = Math.round((cur - prev) / prev * 100);
+  if(pct === 0) return '<span class="delta flat">持平</span>';
+  return `<span class="delta ${pct>0?'up':'down'}">${pct>0?'▲':'▼'} ${Math.abs(pct)}%</span>`;
+}
+function pct(a, b){ return b ? Math.min(100, Math.round(a / b * 100)) + '%' : '—'; }
+
+function renderUsage(){
+  const u = usageState.data;
+  const body = document.getElementById('usageBody');
+  const mods = u.modules || [];
+  const acts = u.actions || [];
+  const byMod = {}; mods.forEach(m=> byMod[m.module] = m);
+  // 沒被用過的功能也列出來（人數 0），冷門功能才看得出來
+  const all = Object.keys(MODULE_LABEL).map(k=> byMod[k] || { module:k, users:0, events:0, repeat_users:0, users_prev:0 });
+  mods.forEach(m=>{ if(!MODULE_LABEL[m.module]) all.push(m); });
+  all.sort((a,b)=> b.users - a.users || b.events - a.events);
+  const maxUsers = Math.max(1, ...all.map(m=> m.users));
+  const used = all.filter(m=> m.users > 0);
+  const act = (module, action) => acts.filter(a=> a.module === module && a.action === action);
+  // 同一個動作的「不重複人數」（不同細項加總會重複算到同一個人，所以另外由資料庫算好）
+  const tot = (module, action) => (u.action_totals || []).find(t=> t.module === module && t.action === action) || { users:0, events:0 };
+
+  const since = u.tracked_since ? fmtDate(u.tracked_since) : null;
+  const trackedDays = u.tracked_since ? Math.floor(daysSince(u.tracked_since)) : 0;
+  const tip = !since
+    ? '<div class="tip-box">還沒有任何使用紀錄。更新上線後，顧問打開工作台就會開始累積；下方「產出量」是從現有資料算的，現在就看得到。</div>'
+    : (trackedDays < 28 || (u.active_users||0) < 20
+        ? `<div class="tip-box">從 ${since} 開始記錄（${trackedDays} 天、${fmtNum(u.active_users)} 位活躍使用者）。建議累積 4～6 週、20 位以上活躍使用者後再判斷功能冷熱，人太少時數字容易被一兩個人左右。</div>` : '');
+
+  const kpis = [
+    { lbl:`近 ${u.days} 天活躍使用者`, val:fmtNum(u.active_users), note:`前一期 ${fmtNum(u.active_users_prev)} 位　${deltaHTML(u.active_users, u.active_users_prev)}` },
+    { lbl:'最常用', val:used[0] ? (MODULE_LABEL[used[0].module]||used[0].module) : '—', note:used[0] ? `${fmtNum(used[0].users)} 人使用` : '還沒有資料', small:true },
+    { lbl:'回頭率最高', val:(()=>{ const r = used.filter(m=>m.users>=3).sort((a,b)=> b.repeat_users/b.users - a.repeat_users/a.users)[0]; return r ? (MODULE_LABEL[r.module]||r.module) : '—'; })(), note:'在不同天用過 2 次以上的比例', small:true },
+    { lbl:'沒人用過的功能', val:fmtNum(all.filter(m=> m.users === 0).length), note:'見下方灰色列', attention: since && all.some(m=> m.users === 0) },
+  ];
+
+  // 財富地圖漏斗
+  const bpOpen = (byMod.blueprint||{}).users || 0;
+  const bpStart = tot('blueprint','start').users;
+  const bpReport = tot('blueprint','report').users;
+  const bpPrint = tot('blueprint','print').users;
+  const funnel = [
+    { lbl:'打開財富地圖', v:bpOpen },
+    { lbl:'開始填寫', v:bpStart, conv:pct(bpStart, bpOpen) },
+    { lbl:'產出報告', v:bpReport, conv:pct(bpReport, bpStart) },
+    { lbl:'列印／存 PDF', v:bpPrint, conv:pct(bpPrint, bpReport) },
+  ];
+
+  const kvList = (list, emptyText) => list.length ? '<ul class="kv">' + list
+      .sort((a,b)=> b.users - a.users || b.events - a.events)
+      .map(a=> `<li><span>${esc(DETAIL_LABEL[a.detail] || KB_TITLE[a.detail] || a.detail || '—')}</span><span class="num">${fmtNum(a.users)} 人<small>${fmtNum(a.events)} 次</small></span></li>`).join('') + '</ul>'
+    : `<div class="muted" style="font-size:12.5px;">${emptyText}</div>`;
+
+  const xvAsk = act('xiaov','ask').concat(act('xiaov','chip'));
+  const xvMiss = act('xiaov','unanswered');
+  const askEvents = tot('xiaov','ask').events + tot('xiaov','chip').events, missEvents = tot('xiaov','unanswered').events;
+  const topQ = {}; xvAsk.forEach(a=>{ topQ[a.detail] = topQ[a.detail] || { detail:a.detail, users:0, events:0 }; topQ[a.detail].users += a.users; topQ[a.detail].events += a.events; });
+
+  const content = u.content || [];
+  const daily = u.daily || [];
+  const maxDaily = Math.max(1, ...daily.map(d=> d.users));
+  const showEvery = daily.length > 31 ? 7 : (daily.length > 10 ? 3 : 1);
+
+  body.innerHTML = `
+    ${tip}
+    <div class="kpi-grid">${kpis.map(k=>`
+      <div class="kpi${k.attention?' attention':''}">
+        <div class="lbl">${k.lbl}</div>
+        <div class="val" style="${k.small?'font-size:19px; font-family:\'Noto Serif TC\',serif;':''}">${k.val}</div>
+        <div class="note">${k.note}</div>
+      </div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>功能使用排行</h2><span class="sub">依使用人數排序・同一人 5 分鐘內重複打開只算 1 次</span></div>
+      <div class="rank">
+        <div class="rank-row head"><span>功能</span><span>使用人數</span><span class="num">人數</span><span class="num">次數</span><span class="num">回頭使用</span><span class="num">比前一期</span></div>
+        ${all.map(m=>`
+        <div class="rank-row${m.users?'':' cold'}">
+          <span class="nm">${esc(MODULE_LABEL[m.module] || m.module)}</span>
+          <div class="hbar"><i style="width:${m.users ? Math.max(3, m.users/maxUsers*100) : 0}%"></i></div>
+          <span class="num">${fmtNum(m.users)}</span>
+          <span class="num">${fmtNum(m.events)}</span>
+          <span class="num">${m.users ? `${fmtNum(m.repeat_users)}（${pct(m.repeat_users, m.users)}）` : '—'}</span>
+          <span class="num">${deltaHTML(m.users, m.users_prev)}</span>
+        </div>`).join('')}
+      </div>
+      <div class="privacy-note">回頭使用＝在不同的兩天以上都用過這個功能的人數。只記錄「打開哪個功能、什麼時間」，不記錄任何客戶內容。</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>財富地圖：大家走到哪一步</h2><span class="sub">人數・百分比是相對於前一步</span></div>
+      <div class="funnel">${funnel.map(f=>`
+        <div class="fstep"><div class="lbl">${f.lbl}</div><div class="val">${fmtNum(f.v)}</div><div class="conv">${f.conv ? '前一步的 ' + f.conv : '&nbsp;'}</div></div>`).join('')}
+      </div>
+      <div class="sub-h" style="margin-top:16px;">產出報告的類型</div>
+      ${kvList(act('blueprint','report'), '還沒有產出報告的紀錄')}
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head"><h2>沙盤推演必勝</h2></div>
+        <div class="sub-h">點過哪些分頁</div>
+        ${kvList(act('simulation','tab'), '還沒有紀錄（打開時預設停在退休基金，不會記錄）')}
+        <div class="sub-h">按過哪些計算</div>
+        ${kvList(act('simulation','calc'), '還沒有紀錄')}
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>貸款試算室</h2></div>
+        <div class="sub-h">點過哪些分頁</div>
+        ${kvList(act('loan','tab'), '還沒有紀錄（打開時預設停在車貸／信貸，不會記錄）')}
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head"><h2>小V 小幫手</h2><span class="sub">共被問 ${fmtNum(askEvents + missEvents)} 次</span></div>
+        <div class="funnel" style="grid-template-columns:repeat(2,1fr); margin-bottom:12px;">
+          <div class="fstep"><div class="lbl">答得出來</div><div class="val">${fmtNum(askEvents)}</div><div class="conv">${pct(askEvents, askEvents + missEvents)}</div></div>
+          <div class="fstep"><div class="lbl">資料庫建置中</div><div class="val" style="color:var(--negative);">${fmtNum(missEvents)}</div><div class="conv">${pct(missEvents, askEvents + missEvents)}・題目在意見箱</div></div>
+        </div>
+        <div class="sub-h">最常被問的問題</div>
+        ${kvList(Object.values(topQ).slice(0, 50), '還沒有人問過')}
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>產出量</h2><span class="sub">近 ${u.days} 天・從現有資料計算</span></div>
+        <ul class="kv">${content.map(c=>`<li><span>${esc(c.label)}</span><span class="num">${fmtNum(c.items)} 筆<small>${fmtNum(c.users)} 人</small></span></li>`).join('') || '<li class="muted">沒有資料</li>'}</ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>每日活躍使用者</h2><span class="sub">台灣時間</span></div>
+      <div class="bars" style="gap:${daily.length > 31 ? 2 : 6}px;">${daily.map(d=>`
+        <div class="bar-col" title="${d.day}：${d.users} 人、${d.events} 次">
+          ${daily.length <= 31 ? `<div class="bar-num">${d.users || ''}</div>` : ''}
+          <div class="bar${d.users?'':' zero'}" style="height:${d.users ? Math.max(4, d.users/maxDaily*100) : 2}%;"></div>
+        </div>`).join('')}
+      </div>
+      <div class="bar-labels" style="gap:${daily.length > 31 ? 2 : 6}px;">${daily.map((d,i)=>{
+        const dt = new Date(d.day + 'T00:00:00');
+        return `<span>${(daily.length - 1 - i) % showEvery === 0 ? (dt.getMonth()+1) + '/' + dt.getDate() : ''}</span>`;
+      }).join('')}</div>
+    </div>`;
+}
+document.querySelectorAll('#usageDays .pill').forEach(p=> p.addEventListener('click', ()=>{
+  document.querySelectorAll('#usageDays .pill').forEach(x=> x.classList.toggle('active', x===p));
+  usageState.days = parseInt(p.dataset.d, 10); loadUsage();
+}));
+document.getElementById('usageIncludeAdmin').addEventListener('change', e=>{ usageState.includeAdmin = e.target.checked; loadUsage(); });
 
 /* ---------------- 分頁切換 ---------------- */
 document.querySelectorAll('#tabs button').forEach(btn=> btn.addEventListener('click', ()=>{

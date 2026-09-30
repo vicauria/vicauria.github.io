@@ -98,6 +98,7 @@
     const f = document.querySelector('.content iframe.active, main iframe.active, iframe.active');
     return f ? f.id : 'frame-home';
   }
+  function track(action, detail){ try{ if(window.vcTrack) window.vcTrack('xiaov', action, detail); }catch(e){} }
   function scrollDown(){ body.scrollTop = body.scrollHeight; }
 
   function bigrams(s){ const out = new Set(); for(let i=0;i<s.length-1;i++) out.add(s.slice(i,i+2)); return out; }
@@ -220,16 +221,18 @@
     t.innerHTML = '<div class="xv-say">•••</div>'; body.appendChild(t); scrollDown();
     setTimeout(()=>{
       t.remove(); busy = false;
-      if(forceId){ const e = byId(forceId); if(e){ renderAnswer(e); return; } }
+      if(forceId){ const e = byId(forceId); if(e){ track('chip', e.id); renderAnswer(e); return; } }
       const talk = smallTalk(norm(text));
       if(talk){ addBot(talk); return; }
       const res = search(text);
       const best = res[0];
       if(best && best.s >= 3){
+        track('ask', best.e.id);
         renderAnswer(best.e);
         const more = res.slice(1, 4).filter(x=> x.s >= 3 && x.s >= best.s * 0.5).map(x=>x.e.id);
         if(more.length) addChips(more, '相關問題：');
       } else {
+        track('unanswered');
         renderNotFound(text, res.slice(0, 3).filter(x=>x.s >= 1.5).map(x=>x.e.id));
       }
     }, 420);
@@ -257,6 +260,7 @@
     panel.style.left = left + 'px'; panel.style.top = top + 'px';
   }
   function openPanel(){
+    track('open');
     if(!started){ welcome(); started = true; }
     positionPanel(); panel.classList.add('open');
     const dot = bubble.querySelector('.xv-dot'); if(dot) dot.style.display = 'none';

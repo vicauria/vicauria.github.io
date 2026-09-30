@@ -699,7 +699,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.5.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.6.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -913,6 +913,12 @@
       return;
     }
     const user = session.user;
+    // 功能使用統計：一進工作台先記目前這一頁（通常是首頁），之後切換功能時會自動記
+    (function(){
+      const af = document.querySelector('iframe.active');
+      window.vcTrack(af && af.id ? af.id.replace('frame-','') : 'home');
+      window.vcTrackReady();
+    })();
     const name = user.user_metadata?.display_name || user.email || '顧問';
     document.getElementById('userName').textContent = name;
     document.getElementById('settingsCurrentEmail').textContent = '目前登入：' + user.email;
@@ -1283,6 +1289,30 @@
   // 保險：就算真的卡住，最多 8 秒後還是強制讓畫面出現，不讓使用者被永遠卡住
   setTimeout(hideLoading, 8000);
 
+  // ---- 功能使用統計：只記「打開哪個功能／做了哪個動作、什麼時間」，不記任何客戶內容 ----
+  // 同一個功能 5 分鐘內重複打開只算一次；其他動作 5 秒內重複只算一次。寫入失敗就算了，不影響使用。
+  (function(){
+    const last = {};
+    let ready = false, queue = [];
+    // 登入狀態確認之後才真的寫入（在那之前的先排隊）
+    window.vcTrackReady = function(){ ready = true; queue.forEach(r=> send(r)); queue = []; };
+    function send(r){ supabaseClient.from('usage_events').insert(r).then(()=>{}, ()=>{}); }
+    const clean = v => String(v == null ? '' : v).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+    window.vcTrack = function(module, action, detail){
+      try{
+        module = clean(module); action = clean(action || 'open') || 'open';
+        if(!module || typeof supabaseClient === 'undefined') return;
+        const d = detail == null ? null : String(detail).slice(0, 60);
+        const key = module + '|' + action + '|' + (d || '');
+        const now = Date.now();
+        if(last[key] && now - last[key] < (action === 'open' ? 5 * 60 * 1000 : 5000)) return;
+        last[key] = now;
+        const row = { module, action, detail: d };
+        if(ready) send(row); else if(queue.length < 20) queue.push(row);
+      }catch(e){}
+    };
+  })();
+
   function activateFrame(targetId, opts){
     opts = opts || {};
     // 依方案鎖定的模組（例如市場情報）：Free 方案不管從哪裡進來（選單、goToModule、瀏覽器上一頁）
@@ -1321,6 +1351,7 @@
       nameEl.textContent = activeBtn ? activeBtn.querySelector('.name').textContent : '首頁';
     }
     closeMobileDrawer();
+    window.vcTrack(targetId.replace('frame-',''));
     // 記錄瀏覽器歷史，這樣使用者按「上一頁」會退回工作台內部的上一步，
     // 而不是直接跳出工作台、回到登入畫面
     if(!opts.skipHistory){
