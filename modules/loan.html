@@ -697,6 +697,11 @@ function calcPledge(){
 
 calcLoan('c'); calcLoan('m'); calcGrace(); calcCompare(); calcSpread(); calcPledge();
 
+// 功能使用統計：交給工作台記錄（只記動作名稱，不記任何輸入內容）；單獨打開這一頁時不會記
+function vcTrack(module, action, detail){
+  try{ if(window.parent && window.parent !== window && window.parent.vcTrack) window.parent.vcTrack(module, action, detail); }catch(e){}
+}
+const LOAN_TAB_NAMES = {m1:'car-personal', m2:'mortgage', m3:'grace', m4:'compare', m5:'spread', m6:'pledge'};
 const navLinks = document.querySelectorAll('#tabnav button');
 const sections = Array.from(navLinks).map(a => document.getElementById(a.dataset.target));
 
@@ -707,7 +712,7 @@ function switchTab(targetId){
 }
 
 navLinks.forEach(a => {
-  a.addEventListener('click', () => switchTab(a.dataset.target));
+  a.addEventListener('click', () => { switchTab(a.dataset.target); vcTrack('loan', 'tab', LOAN_TAB_NAMES[a.dataset.target] || a.dataset.target); });
 });
 </script>
 

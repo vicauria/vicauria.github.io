@@ -1082,6 +1082,10 @@ window.isBlueprintOnReportScreen = function(){
 };
 
 /* ---------------- 同意書 ---------------- */
+// 功能使用統計：交給工作台記錄（只記動作名稱，不記任何輸入內容）；單獨打開這一頁時不會記
+function vcTrack(module, action, detail){
+  try{ if(window.parent && window.parent !== window && window.parent.vcTrack) window.parent.vcTrack(module, action, detail); }catch(e){}
+}
 const consentCheckbox = document.getElementById('consentCheckbox');
 const consentBtn = document.getElementById('consentBtn');
 consentCheckbox.addEventListener('change', ()=>{
@@ -1090,6 +1094,7 @@ consentCheckbox.addEventListener('change', ()=>{
 });
 consentBtn.addEventListener('click', ()=>{
   if(consentBtn.disabled) return;
+  vcTrack('blueprint', 'start', trackingClientId ? 'update' : 'new');
   enterPage(0);
 });
 
@@ -2080,6 +2085,7 @@ async function checkClientLimitBeforeSave(){
 let reportSavePromise = null;
 
 async function handleGenerateReport(){
+  vcTrack('blueprint', 'print', document.getElementById('reportAdvisor') && document.getElementById('reportAdvisor').classList.contains('active') ? 'advisor' : 'client');
   if(reportSavePromise){
     const saved = await reportSavePromise.catch(()=>false);
     if(saved === false && !isViewingSavedRecord){
@@ -2621,6 +2627,7 @@ function renderReport(){
     advisorPages.map(html=>`<div class="report-page">${html}</div>`).join('');
   fillCashflowBreakdown('a'); fillBalanceBreakdown('a');
 
+  if(!isViewingSavedRecord) vcTrack('blueprint', 'report', trackingClientId ? 'update' : 'new');
   reportSavePromise = checkClientLimitBeforeSave().then(async canSave=>{
     if(!canSave) return false;
     await saveClientRecord();

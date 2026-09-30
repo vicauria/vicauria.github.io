@@ -1523,6 +1523,10 @@ function money(n){
   return (v<0?"-$":"$") + Math.abs(v).toLocaleString("zh-TW");
 }
 
+// 功能使用統計：交給工作台記錄（只記動作名稱，不記任何輸入內容）；單獨打開這一頁時不會記
+function vcTrack(module, action, detail){
+  try{ if(window.parent && window.parent !== window && window.parent.vcTrack) window.parent.vcTrack(module, action, detail); }catch(e){}
+}
 /* ---------------- 主分頁切換 ---------------- */
 const tabButtons = document.querySelectorAll('#tabnav > button');
 const panels = document.querySelectorAll('main > .tab-panel');
@@ -1530,7 +1534,7 @@ function activateTab(key){
   tabButtons.forEach(b=> b.classList.toggle('active', b.dataset.tab===key));
   panels.forEach(p=> p.classList.toggle('active', p.id === 'panel-'+key));
 }
-tabButtons.forEach(btn=> btn.addEventListener('click', ()=> activateTab(btn.dataset.tab)));
+tabButtons.forEach(btn=> btn.addEventListener('click', ()=>{ activateTab(btn.dataset.tab); vcTrack('simulation', 'tab', btn.dataset.tab); }));
 
 /* ---------------- 退休基金 ---------------- */
 const LABOR_INSURANCE_CAP = 45800; // 2026(115年) 勞保投保薪資上限
@@ -1965,6 +1969,7 @@ document.querySelectorAll('#rtModeTabs button').forEach(btn=>{
 });
 rtCalcBtn.addEventListener('click', ()=>{
   rtHasCalculated = true;
+  vcTrack('simulation', 'calc', 'retirement-' + rtMode);
   if(rtMode === 'reverse') calcRetirementReverse(); else calcRetirement();
 });
 updateTimelineVisual();
@@ -2059,6 +2064,7 @@ function calcInvest(){
   document.getElementById('inv-resultSection').classList.add('show');
 }
 document.getElementById('btn-calcInvest').addEventListener('click', calcInvest);
+document.getElementById('btn-calcInvest').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'invest'));
 
 /* ---------------- 遺贈方案 ---------------- */
 document.querySelectorAll('#legacySubTabs button').forEach(btn=>{
@@ -2677,6 +2683,7 @@ function calcEducation(){
   document.getElementById('edu-resultSection').classList.add('show');
 }
 document.getElementById('btn-calcEducation').addEventListener('click', calcEducation);
+document.getElementById('btn-calcEducation').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'education'));
 
 /* ---------------- 購屋基金：子分頁切換 ---------------- */
 document.querySelectorAll('#houseSubTabs button').forEach(btn=>{
@@ -2814,6 +2821,7 @@ function lgFmtSigned(n){
   return (v<0?'-$':'$') + Math.abs(v).toLocaleString('zh-TW');
 }
 document.getElementById('btn-calcHouse').addEventListener('click', calcHouseAbility);
+document.getElementById('btn-calcHouse').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'house'));
 
 // 滑桿即時標籤顯示（不觸發完整試算）
 function bindSliderLabel(id, vid, suffix, decimals){
@@ -2924,6 +2932,7 @@ function calcTax(){
   document.getElementById('tax-resultSection').classList.add('show');
 }
 document.getElementById('btn-calcTax').addEventListener('click', calcTax);
+document.getElementById('btn-calcTax').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'house-tax'));
 
 /* ---------------- 初始化（不自動顯示結果，等按鈕觸發） ---------------- */
 updateTimelineVisual();
