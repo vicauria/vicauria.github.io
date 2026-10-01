@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>首頁</title>
@@ -12,364 +13,315 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73;
-    --warm:#C97B3D; --warm-deep:#A85F27;
-    --paper:#F5F7F6;
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --paper:#F5F7F6; --card:#FFFFFF; --ink:#182226; --ink-soft:#4F5F64; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{
-    font-family:"Noto Sans TC",sans-serif;
-    background:var(--paper);
-    color:var(--ink); -webkit-font-smoothing:antialiased;
-  }
+  body{font-family:"Noto Sans TC",sans-serif; background:var(--paper); color:var(--ink); -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+  button{font-family:inherit;}
 
-  .hero{
-    background:radial-gradient(circle at 20% 15%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 45%),
-               radial-gradient(circle at 85% 80%, rgba(201,123,61,0.14) 0%, rgba(201,123,61,0) 50%),
-               linear-gradient(150deg, var(--navy) 0%, var(--teal-deep) 55%, var(--teal) 100%);
-    min-height:38vh; display:flex; align-items:center; justify-content:center;
-    color:#fff; position:relative; overflow:hidden; padding:40px 20px;
+  /* ---------- 問候列 ---------- */
+  .greet{
+    background:linear-gradient(135deg, var(--navy) 0%, var(--teal-deep) 70%, var(--teal) 100%);
+    color:#fff; padding:26px 0 64px; position:relative; overflow:hidden;
   }
-  .hero::before{
-    content:""; position:absolute; inset:0; opacity:.5; pointer-events:none;
-    background-image:
-      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-    background-size:64px 64px;
-  }
+  .greet::after{content:""; position:absolute; right:-80px; top:-120px; width:360px; height:360px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%); pointer-events:none;}
+  .greet-row{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; position:relative; z-index:1;}
+  .greet .date{font-family:"Roboto Mono",monospace; font-size:12px; letter-spacing:.12em; color:#BFE0EA; margin-bottom:6px;}
+  .greet h1{font-family:"Noto Serif TC",serif; font-size:clamp(22px,3vw,28px); margin:0 0 6px; font-weight:700;}
+  .greet .motto{font-size:13.5px; color:#DCEAEE; margin:0;}
+  .greet-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .btn-primary{display:inline-flex; align-items:center; gap:8px; background:var(--warm); color:#fff; border:none; border-radius:28px;
+    padding:13px 22px; font-size:14.5px; font-weight:700; cursor:pointer; box-shadow:0 10px 24px rgba(201,123,61,0.35); transition:transform .15s, background .15s;}
+  .btn-primary:hover{background:var(--warm-deep); transform:translateY(-1px);}
+  .btn-ghost{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.35);
+    border-radius:28px; padding:12px 18px; font-size:14px; font-weight:700; cursor:pointer;}
+  .btn-ghost:hover{background:rgba(255,255,255,0.2);}
 
-  .content{ position:relative; z-index:2; max-width:680px; padding:40px; text-align:center; }
-  .hero-mark{
-    width:88px; height:88px; border-radius:50%; background:#fff; margin:0 auto 22px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 12px 30px rgba(0,0,0,0.22);
-  }
-  .hero-mark img{width:52px; height:auto; display:block;}
+  main{margin-top:-40px; position:relative; z-index:2; padding-bottom:60px;}
 
-  .bg-icons{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
-  .bg-icons svg{ position:absolute; stroke:rgba(255,255,255,0.10); fill:none; stroke-width:1.4; }
-  .bg-icons svg.accent{ stroke:rgba(243,201,138,0.14); }
-  .bg-icons svg.i1{ top:8%; left:6%; width:120px; height:120px; }
-  .bg-icons svg.i2{ bottom:12%; left:10%; width:90px; height:90px; }
-  .bg-icons svg.i3{ top:14%; right:8%; width:140px; height:140px; }
-  .bg-icons svg.i4{ bottom:8%; right:12%; width:100px; height:100px; }
-  .bg-icons svg.i5{ top:46%; left:3%; width:70px; height:70px; }
-  .bg-icons svg.i6{ top:42%; right:4%; width:80px; height:80px; }
+  /* ---------- 今日重點數字 ---------- */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; cursor:pointer; text-align:left;
+    box-shadow:0 8px 22px rgba(20,50,60,0.06); transition:transform .15s, border-color .15s; display:block; width:100%;}
+  .kpi:hover{transform:translateY(-2px); border-color:var(--teal);}
+  .kpi .lbl{font-size:13px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
+  .kpi .val{font-family:"Roboto Mono",monospace; font-size:28px; font-weight:700; color:var(--navy); line-height:1.25; margin-top:4px;}
+  .kpi .hint{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .kpi.alert .val{color:var(--negative);}
+  .kpi.alert{border-color:rgba(179,73,47,0.35);}
 
-  .eyebrow{
-    font-family:"Roboto Mono", monospace; font-size:12px; letter-spacing:.32em;
-    text-transform:uppercase; color:#BFE0EA; margin-bottom:28px; opacity:.9;
-  }
+  /* ---------- 卡片 ---------- */
+  .grid2{display:grid; grid-template-columns:1.25fr 1fr; gap:18px; align-items:start;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; margin-bottom:18px;}
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px;}
+  .card-head h2{font-family:"Noto Serif TC",serif; font-size:17px; color:var(--navy); margin:0;}
+  .card-head .more{font-size:13px; color:var(--teal-deep); font-weight:700; background:none; border:none; cursor:pointer; padding:4px 0;}
+  .card-head .more:hover{text-decoration:underline;}
 
-  .greeting{
-    font-size:15px; color:#DCEAEE; margin-bottom:14px; letter-spacing:.02em;
-  }
-  .greeting b{ color:#fff; font-weight:700; }
+  .row{display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .row:last-child{border-bottom:none;}
+  .row:hover{background:var(--paper); border-radius:8px;}
+  .row .when{font-family:"Roboto Mono",monospace; font-size:12.5px; color:var(--teal-deep); font-weight:700; width:84px; flex-shrink:0;}
+  .row .when.red{color:var(--negative);}
+  .row .what{font-size:14px; font-weight:600; color:var(--ink); line-height:1.5;}
+  .row .sub{font-size:12.5px; color:var(--ink-soft); margin-top:1px;}
+  .empty{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 4px; color:var(--ink-soft); font-size:13.5px;}
+  .empty .go{border:1.5px solid var(--teal); color:var(--teal-deep); background:#fff; border-radius:20px; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer;}
+  .empty .go:hover{background:var(--teal); color:#fff;}
 
-  .headline{
-    font-family:"Noto Serif TC", serif; font-weight:700;
-    font-size:clamp(28px, 4.4vw, 44px); line-height:1.5; margin:0 0 22px;
-    color:#fff;
-  }
-  .headline .accent{ color:#F3C98A; }
+  /* ---------- 進度 ---------- */
+  .stats{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
+  .stat{background:var(--paper); border-radius:12px; padding:12px 14px;}
+  .stat .lbl{font-size:12.5px; color:var(--ink-soft);}
+  .stat .val{font-family:"Roboto Mono",monospace; font-size:22px; font-weight:700; color:var(--navy);}
 
-  .tagline{
-    font-size:14.5px; color:#DCEAEE; line-height:2; max-width:480px; margin:0 auto 40px;
-  }
+  /* ---------- 新手清單 ---------- */
+  .onboard{background:linear-gradient(135deg, var(--warm-tint), #fff); border:1px solid rgba(201,123,61,0.3);}
+  .ob-bar{height:8px; border-radius:4px; background:rgba(201,123,61,0.15); overflow:hidden; margin:4px 0 14px;}
+  .ob-bar i{display:block; height:100%; background:linear-gradient(90deg,var(--warm),var(--warm-deep)); border-radius:4px; transition:width .4s ease;}
+  .ob-step{display:flex; align-items:center; gap:12px; padding:9px 0; cursor:pointer;}
+  .ob-step .ck{width:24px; height:24px; border-radius:50%; border:2px solid rgba(201,123,61,0.5); display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; flex-shrink:0;}
+  .ob-step.done .ck{background:var(--positive); border-color:var(--positive);}
+  .ob-step .tx{font-size:14px; color:var(--ink); font-weight:600;}
+  .ob-step.done .tx{color:var(--ink-soft); text-decoration:line-through; font-weight:500;}
+  .ob-step .arrow{margin-left:auto; color:var(--warm-deep); font-size:13px; font-weight:700;}
+  .ob-step.done .arrow{display:none;}
+  .ob-close{background:none; border:none; color:var(--ink-soft); font-size:12.5px; cursor:pointer; text-decoration:underline;}
 
-  .brand-marks{
-    display:flex; align-items:center; justify-content:center; gap:16px;
-    font-family:"Roboto Mono", monospace; font-size:12px; letter-spacing:.14em;
-    color:rgba(255,255,255,0.55); margin-bottom:8px;
-  }
-  .brand-marks .dot{ width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.35); }
+  /* ---------- 所有功能 ---------- */
+  .tools{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:10px;}
+  .tool{display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; cursor:pointer; text-align:left; width:100%;}
+  .tool:hover{border-color:var(--teal);}
+  .tool .ic{font-size:20px; line-height:1;}
+  .tool .t{font-size:14px; font-weight:700; color:var(--navy);}
 
-  .datetime{
-    font-family:"Roboto Mono", monospace; font-size:11.5px; color:rgba(255,255,255,0.4);
-    margin-top:36px; letter-spacing:.04em;
-  }
+  /* ---------- 骨架（資料讀取中） ---------- */
+  .sk{display:block; height:14px; border-radius:7px; background:linear-gradient(90deg,#EDF1F0 25%,#F7F9F8 50%,#EDF1F0 75%); background-size:200% 100%; animation:sk 1.2s infinite; margin:12px 4px;}
+  .sk.w60{width:60%;} .sk.w80{width:80%;} .sk.w40{width:40%;}
+  @keyframes sk{0%{background-position:200% 0;} 100%{background-position:-200% 0;}}
+  @media (prefers-reduced-motion: reduce){ .sk{animation:none;} }
 
-  /* ---------- 下方：工具捷徑卡片 ---------- */
-  .tools-section{max-width:1000px; margin:0 auto; padding:36px 24px 36px;}
-  .dual-section-row{
-    max-width:1000px; margin:0 auto; padding:0 24px;
-    display:grid; grid-template-columns:1fr 1fr; gap:24px;
+  @media (max-width:900px){ .grid2{grid-template-columns:1fr;} }
+  @media (max-width:700px){
+    .wrap{padding:0 16px;}
+    .kpis{grid-template-columns:repeat(2,1fr); gap:10px;}
+    .kpi{padding:14px;}
+    .kpi .val{font-size:24px;}
+    .greet{padding:22px 0 56px;}
+    .greet-actions{width:100%;}
+    .btn-primary{flex:1; justify-content:center;}
   }
-  .dual-section-row .tools-section{max-width:none; margin:0; padding:36px 0;}
-  @media (max-width:760px){ .dual-section-row{grid-template-columns:1fr;} }
-  .tools-title{
-    font-family:"Roboto Mono", monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
-    color:var(--teal-deep); font-weight:700; margin-bottom:10px; text-align:center;
-  }
-  .tools-sub{text-align:center; font-size:13px; color:#5B6B70; margin-bottom:32px;}
-  .tools-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
-  @media (max-width:820px){ .tools-grid{grid-template-columns:repeat(2,1fr);} }
-  @media (max-width:520px){ .tools-grid{grid-template-columns:1fr;} }
-  .tool-card{
-    background:#fff; border:1px solid #E1E7E7; border-radius:14px; padding:20px 18px;
-    cursor:pointer; text-align:left; transition:transform .15s ease, box-shadow .15s ease;
-    box-shadow:0 4px 14px rgba(20,50,60,0.04);
-  }
-  .tool-card:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(20,50,60,0.1);}
-  .tool-card .badge{
-    display:block; font-size:26px; margin-bottom:12px; line-height:1;
-  }
-  .tool-card .t{font-family:"Noto Serif TC",serif; font-weight:700; font-size:14.5px; color:var(--navy); margin-bottom:6px;}
-  .tool-card .d{font-size:12px; color:#5B6B70; line-height:1.7;}
-
-  .agenda-row{
-    display:flex; align-items:center; gap:12px; background:#fff; border:1px solid #E1E7E7;
-    border-radius:12px; padding:12px 16px; margin-bottom:8px; cursor:pointer;
-  }
-  .agenda-row:hover{border-color:#2E7391;}
-  .agenda-row .a-time{
-    font-family:"Roboto Mono",monospace; font-size:12px; color:#2E7391; font-weight:700;
-    width:76px; flex-shrink:0;
-  }
-  .agenda-row .a-title{font-size:13px; color:#182226; font-weight:600;}
-  .agenda-row .a-meta{font-size:11px; color:#5B6B70; margin-top:2px;}
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="bg-icons">
-    <!-- 成長曲線 -->
-    <svg class="i1" viewBox="0 0 100 100"><polyline points="8,80 30,55 48,65 70,30 92,15"/><circle cx="92" cy="15" r="3"/></svg>
-    <!-- 羅盤 -->
-    <svg class="i2 accent" viewBox="0 0 100 100"><circle cx="50" cy="50" r="38"/><polygon points="50,22 58,50 50,78 42,50"/><circle cx="50" cy="50" r="3"/></svg>
-    <!-- 硬幣堆疊 -->
-    <svg class="i3" viewBox="0 0 100 100"><ellipse cx="50" cy="30" rx="34" ry="10"/><ellipse cx="50" cy="50" rx="34" ry="10"/><ellipse cx="50" cy="70" rx="34" ry="10"/></svg>
-    <!-- 天平 -->
-    <svg class="i4 accent" viewBox="0 0 100 100"><line x1="50" y1="12" x2="50" y2="82"/><line x1="18" y1="30" x2="82" y2="30"/><circle cx="18" cy="46" r="12"/><circle cx="82" cy="46" r="12"/><line x1="30" y1="88" x2="70" y2="88"/></svg>
-    <!-- 上升箭頭 -->
-    <svg class="i5" viewBox="0 0 100 100"><polyline points="10,85 40,55 58,68 90,20"/><polyline points="66,20 90,20 90,44"/></svg>
-    <!-- 錢幣符號圈 -->
-    <svg class="i6 accent" viewBox="0 0 100 100"><circle cx="50" cy="50" r="36"/><line x1="50" y1="28" x2="50" y2="72"/><path d="M62,38 C62,30 38,30 38,42 C38,54 62,46 62,58 C62,70 38,70 38,62"/></svg>
-  </div>
-
-  <div class="content">
-    <div class="hero-mark"><img src="../icons/vicauria-mark.png" alt="Vicauria"></div>
-    <div class="eyebrow">Vicauria · Financial Advisor Workspace</div>
-    <div class="greeting" id="greeting">Hi，歡迎回來。</div>
-    <h1 class="headline">覺醒，是看懂金錢的<span class="accent">第一步</span>；<br>陪你走到底的，是故事。</h1>
-    <p class="tagline">每一次規劃，都是為了讓我們更靠近真正想要的人生。<br>從覺醒開始，用金錢說故事，陪每位到我們面前的人穩穩走向財務自由。</p>
-    <div class="brand-marks">
-      <span>Victory</span><span class="dot"></span><span>Aura</span><span class="dot"></span><span>Via</span>
+<header class="greet">
+  <div class="wrap greet-row">
+    <div>
+      <div class="date" id="today"></div>
+      <h1 id="hello">歡迎回來</h1>
+      <p class="motto">覺醒，是看懂金錢的第一步；陪你走到底的，是故事。</p>
     </div>
-    <div class="datetime" id="datetime"></div>
+    <div class="greet-actions">
+      <button class="btn-primary" data-go="frame-blueprint">＋ 開始新的財富地圖</button>
+      <button class="btn-ghost" data-go="frame-namelist">📋 列名單</button>
+    </div>
   </div>
-</div>
+</header>
 
-<div class="dual-section-row">
-  <div class="tools-section" id="agendaSection" style="display:none;">
-    <div class="tools-title">今日行程</div>
-    <div class="tools-sub" id="agendaSub"></div>
-    <div id="agendaList" style="margin-top:14px;"></div>
+<main class="wrap">
+  <div class="kpis">
+    <button class="kpi" data-go="frame-calendar"><div class="lbl">📅 今日行程</div><div class="val" id="kAgenda">–</div><div class="hint" id="kAgendaHint">筆安排</div></button>
+    <button class="kpi" id="kFollowCard" data-go="frame-clientrecords"><div class="lbl">🔔 該追蹤的客戶</div><div class="val" id="kFollow">–</div><div class="hint">今天到期或已逾期</div></button>
+    <button class="kpi" id="kPayCard" data-go="frame-contracts"><div class="lbl">💳 待繳款</div><div class="val" id="kPay">–</div><div class="hint" id="kPayHint">14 天內到期</div></button>
+    <button class="kpi" data-go="frame-calendar"><div class="lbl">🎂 今天生日</div><div class="val" id="kBday">–</div><div class="hint">位客戶</div></button>
   </div>
 
-  <div class="tools-section" id="paymentReminderSection" style="display:none;">
-    <div class="tools-title">待繳提醒</div>
-    <div class="tools-sub" id="paymentReminderSub"></div>
-    <div id="paymentReminderList" style="margin-top:14px;"></div>
+  <div class="card onboard" id="onboard" hidden>
+    <div class="card-head"><h2>🚀 新手上路：完成這 4 步就上手了</h2><button class="ob-close" id="obClose">先不用，隱藏</button></div>
+    <div class="ob-bar"><i id="obBar" style="width:0%"></i></div>
+    <div id="obSteps"></div>
   </div>
-</div>
 
-<div class="tools-section">
-  <div class="tools-title">Quick Access</div>
-  <div class="tools-sub">點一下直接跳過去，不用再回頭找側邊欄</div>
-  <div class="tools-grid" id="toolsGrid"></div>
-</div>
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>今天的行程</h2><button class="more" data-go="frame-calendar">行事曆 →</button></div>
+        <div id="agendaList"><span class="sk w80"></span><span class="sk w60"></span></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>該聯絡的客戶</h2><button class="more" data-go="frame-clientrecords">客戶資料 →</button></div>
+        <div id="followList"><span class="sk w80"></span><span class="sk w40"></span></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>我的進度</h2><button class="more" data-go="frame-clientrecords">看全部 →</button></div>
+        <div class="stats">
+          <div class="stat"><div class="lbl">本月產出報告</div><div class="val" id="sReports">–</div></div>
+          <div class="stat"><div class="lbl">客戶總數</div><div class="val" id="sClients">–</div></div>
+          <div class="stat"><div class="lbl">提案中</div><div class="val" id="sProposal">–</div></div>
+          <div class="stat"><div class="lbl">已成交</div><div class="val" id="sClosed">–</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>待繳提醒</h2><button class="more" data-go="frame-contracts">簽約管理 →</button></div>
+        <div id="payList"><span class="sk w80"></span><span class="sk w60"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>所有功能</h2></div>
+    <div class="tools" id="toolsGrid"></div>
+  </div>
+</main>
 
 <script src="../vendor/supabase-js-2.117.2.js"></script>
 <script src="../supabase-config.js"></script>
 <script>
 // 資安：把使用者／外部資料放進畫面前先轉義，避免被塞入惡意程式碼（XSS）
 function vcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; }catch(e){ return '#'; } }
-  const TOOLS = [
-    {target:'frame-guide', badge:'🧭', title:'使用導覽', desc:'第一次用？從這裡看各功能怎麼用、怎麼走到成交'},
-    {target:'frame-calendar', badge:'📅', title:'行事曆', desc:'約訪行程／團隊公告'},
-    {target:'frame-contracts', badge:'📝', title:'簽約管理', desc:'合約紀錄／繳費提醒'},
-    {target:'frame-blueprint', badge:'🗺️', title:'財富地圖', desc:'顧問式引導問卷／財富畫像報告'},
-    {target:'frame-clientrecords', badge:'🗂️', title:'客戶資料', desc:'已填答的財富地圖紀錄'},
-    {target:'frame-marketnews', badge:'📰', title:'市場快訊', desc:'即時財經新聞／自動分類'},
-    {target:'frame-marketoverview', badge:'📊', title:'市場概況', desc:'即時匯率／全球指數／大盤走勢'},
-    {target:'frame-simulation', badge:'🎯', title:'沙盤推演必勝', desc:'退休／購屋／教育／遺贈／投資試算機'},
-    {target:'frame-cashflow', badge:'💧', title:'收支現金流', desc:'收入／支出／年度結餘／儲蓄率'},
-    {target:'frame-balance', badge:'⚖️', title:'資產負債表', desc:'資產／負債／淨值／負債比'},
-    {target:'frame-loan', badge:'🏦', title:'貸款試算室', desc:'車貸信貸／房貸／寬限期／利差'},
-    {target:'frame-efficiency', badge:'📈', title:'資金效率健檢', desc:'通膨與資金效率快篩'},
-    {target:'frame-team', badge:'👥', title:'團隊', desc:'工作量監控／加入其他顧問的團隊'},
-    {target:'frame-feedback', badge:'📮', title:'意見箱', desc:'功能異常回報／改進建議'}
+
+function go(target){
+  if(window.parent && typeof window.parent.goToModule === 'function') window.parent.goToModule(target);
+}
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-go]');
+  if(el) go(el.dataset.go);
+});
+
+const TOOLS = [
+  ['frame-namelist','📋','名單管理'], ['frame-blueprint','🗺️','財富地圖'], ['frame-clientrecords','🗂️','客戶資料'],
+  ['frame-contracts','📝','簽約管理'], ['frame-calendar','📅','行事曆'], ['frame-team','👥','團隊'],
+  ['frame-simulation','🎯','沙盤推演必勝'], ['frame-cashflow','💧','收支現金流'], ['frame-balance','⚖️','資產負債表'],
+  ['frame-loan','🏦','貸款試算室'], ['frame-efficiency','🔥','資金效率健檢'], ['frame-marketnews','📰','市場快訊'],
+  ['frame-marketoverview','📊','市場概況'], ['frame-guide','🧭','使用導覽'], ['frame-feedback','📮','意見箱']
+];
+document.getElementById('toolsGrid').innerHTML = TOOLS.map(t=>`<button class="tool" data-go="${t[0]}"><span class="ic">${t[1]}</span><span class="t">${t[2]}</span></button>`).join('');
+
+const pad = n => String(n).padStart(2,'0');
+const now = new Date();
+const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+const todayMD = `${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+const monthStart = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+document.getElementById('today').textContent = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())}（${['日','一','二','三','四','五','六'][now.getDay()]}）`;
+
+function greetWord(){
+  const h = now.getHours();
+  return h < 5 ? '夜深了' : h < 11 ? '早安' : h < 18 ? '午安' : '晚安';
+}
+function emptyRow(text, btnText, target){
+  return `<div class="empty"><span>${text}</span>${btnText ? `<button class="go" data-go="${target}">${btnText}</button>` : ''}</div>`;
+}
+const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
+
+(async function init(){
+  let session = null;
+  try{ ({ data: { session } } = await supabaseClient.auth.getSession()); }catch(e){}
+  if(!session){ document.getElementById('hello').textContent = greetWord(); return; }
+  const user = session.user, myId = user.id;
+  const name = user.user_metadata?.display_name || (user.email || '').split('@')[0] || '';
+  document.getElementById('hello').textContent = greetWord() + (name ? '，' + name : '');
+
+  const q = {
+    events: supabaseClient.from('calendar_events')
+      .select('id, title, start_time, end_time, advisor_id, visibility')
+      .lte('event_date', todayStr)
+      .or(`end_date.gte.${todayStr},and(end_date.is.null,event_date.eq.${todayStr})`)
+      .order('start_time', { ascending:true, nullsFirst:false }),
+    clients: supabaseClient.from('client_records')
+      .select('id, client_name, birthday, status, follow_up_date').eq('advisor_id', myId).is('deleted_at', null),
+    reports: supabaseClient.from('client_reports')
+      .select('id, saved_at').eq('advisor_id', myId).is('deleted_at', null),
+    pays: (()=>{ const soon = new Date(); soon.setDate(soon.getDate() + 14);
+      const soonStr = `${soon.getFullYear()}-${pad(soon.getMonth()+1)}-${pad(soon.getDate())}`;
+      return supabaseClient.from('contract_payments')
+        .select('id, due_date, installment_no, contracts(product_name, client_records(client_name))')
+        .eq('advisor_id', myId).eq('paid', false).lte('due_date', soonStr).order('due_date', { ascending:true }); })(),
+    names: supabaseClient.from('name_list_entries').select('name').eq('advisor_id', myId)
+  };
+  const [ev, cl, rp, py, nm] = await Promise.all(Object.values(q).map(p => Promise.resolve(p).catch(e=>({ error:e }))));
+
+  const events = (ev && ev.data) || [];
+  const clients = (cl && cl.data) || [];
+  const reports = (rp && rp.data) || [];
+  const pays = (py && py.data) || [];
+  const names = ((nm && nm.data) || []).filter(n => (n.name || '').trim());
+
+  // ---- 今日行程（含客戶生日） ----
+  const bdays = clients.filter(c => c.birthday && c.birthday.slice(5) === todayMD);
+  document.getElementById('kAgenda').textContent = events.length;
+  document.getElementById('kBday').textContent = bdays.length;
+  const agendaHTML = bdays.map(c => `<div class="row" data-go="frame-calendar"><span class="when red">🎂 生日</span><div><div class="what">${vcEsc((c.client_name||'').trim() || '（未命名客戶）')} 生日快樂</div><div class="sub">傳個祝福，是最不刻意的關係經營</div></div></div>`).join('')
+    + events.map(e => {
+      const cut = s => s ? s.slice(0,5) : '';
+      const time = e.start_time ? cut(e.start_time) + (e.end_time ? '–' + cut(e.end_time) : '') : '全天';
+      const tag = e.advisor_id === myId ? '' : (e.visibility === 'team' ? '團隊公告' : '夥伴行程');
+      return `<div class="row" data-go="frame-calendar"><span class="when">${time}</span><div><div class="what">${vcEsc(e.title)}</div>${tag ? `<div class="sub">${tag}</div>` : ''}</div></div>`;
+    }).join('');
+  document.getElementById('agendaList').innerHTML = agendaHTML || emptyRow('今天沒有安排行程。', '＋ 新增約訪', 'frame-calendar');
+
+  // ---- 該聯絡的客戶 ----
+  const due = clients.filter(c => c.follow_up_date && c.follow_up_date <= todayStr && !['closed','lost'].includes(c.status))
+    .sort((a,b) => a.follow_up_date.localeCompare(b.follow_up_date));
+  document.getElementById('kFollow').textContent = due.length;
+  if(due.length) document.getElementById('kFollowCard').classList.add('alert');
+  document.getElementById('followList').innerHTML = due.length
+    ? due.slice(0, 5).map(c => `<div class="row" data-go="frame-clientrecords"><span class="when ${c.follow_up_date < todayStr ? 'red' : ''}">${c.follow_up_date === todayStr ? '今天' : fmtMD(c.follow_up_date)}</span><div><div class="what">${vcEsc((c.client_name||'').trim() || '（未命名客戶）')}</div><div class="sub">${c.follow_up_date < todayStr ? '已過追蹤日，記得聯絡' : '今天該聯絡'}</div></div></div>`).join('')
+      + (due.length > 5 ? `<div class="empty"><span>還有 ${due.length - 5} 位</span><button class="go" data-go="frame-clientrecords">查看全部</button></div>` : '')
+    : (clients.length ? emptyRow('目前沒有到期要追蹤的客戶。', null) : emptyRow('還沒有客戶，從第一份財富地圖開始吧。', '開始財富地圖 →', 'frame-blueprint'));
+
+  // ---- 待繳 ----
+  const overdue = pays.filter(x => x.due_date < todayStr).length;
+  document.getElementById('kPay').textContent = pays.length;
+  document.getElementById('kPayHint').textContent = overdue ? `其中 ${overdue} 筆已逾期` : '14 天內到期';
+  if(overdue) document.getElementById('kPayCard').classList.add('alert');
+  document.getElementById('payList').innerHTML = pays.length
+    ? pays.slice(0, 5).map(x => {
+        const od = x.due_date < todayStr;
+        const product = x.contracts ? x.contracts.product_name : '';
+        const client = x.contracts && x.contracts.client_records ? (x.contracts.client_records.client_name || '（未命名客戶）') : '';
+        return `<div class="row" data-go="frame-contracts"><span class="when ${od ? 'red' : ''}">${fmtMD(x.due_date)}</span><div><div class="what">${vcEsc(product)}${od ? '（已逾期）' : ''}</div><div class="sub">${client ? vcEsc(client) + '・' : ''}第 ${x.installment_no} 期</div></div></div>`;
+      }).join('')
+    : emptyRow('沒有即將到期的款項。', null);
+
+  // ---- 進度 ----
+  document.getElementById('sReports').textContent = reports.filter(r => (r.saved_at || '') >= monthStart).length;
+  document.getElementById('sClients').textContent = clients.length;
+  document.getElementById('sProposal').textContent = clients.filter(c => c.status === 'proposal').length;
+  document.getElementById('sClosed').textContent = clients.filter(c => c.status === 'closed').length;
+
+  // ---- 新手上路清單（全部完成或按隱藏後就不再出現） ----
+  let dismissed = false;
+  try{ dismissed = localStorage.getItem('vc_onboard_hidden') === '1'; }catch(e){}
+  const steps = [
+    { done: !!(user.user_metadata && user.user_metadata.display_name), text: '設定你的顯示名稱（報告封面會印出來）', go: null, hint: '左下角頭像 → 帳號設定' },
+    { done: names.length >= 3, text: '在名單管理列出 3 位想約的朋友', go: 'frame-namelist' },
+    { done: reports.length >= 1, text: '完成第一份財富地圖報告', go: 'frame-blueprint' },
+    { done: clients.some(c => c.follow_up_date), text: '幫一位客戶設定下次追蹤日期', go: 'frame-clientrecords' }
   ];
-
-  const grid = document.getElementById('toolsGrid');
-  grid.innerHTML = TOOLS.map(t=>`
-    <div class="tool-card" data-target="${t.target}">
-      <div class="badge">${t.badge}</div>
-      <div class="t">${t.title}</div>
-      <div class="d">${t.desc}</div>
-    </div>
-  `).join('');
-  grid.querySelectorAll('.tool-card').forEach(card=>{
-    card.addEventListener('click', ()=>{
-      if(window.parent && typeof window.parent.goToModule === 'function'){
-        window.parent.goToModule(card.dataset.target);
-      }
-    });
+  const doneCount = steps.filter(s => s.done).length;
+  if(!dismissed && doneCount < steps.length){
+    document.getElementById('onboard').hidden = false;
+    document.getElementById('obBar').style.width = (doneCount / steps.length * 100) + '%';
+    document.getElementById('obSteps').innerHTML = steps.map(s => `
+      <div class="ob-step${s.done ? ' done' : ''}" ${s.go && !s.done ? `data-go="${s.go}"` : ''}>
+        <span class="ck">${s.done ? '✓' : ''}</span><span class="tx">${s.text}</span>
+        <span class="arrow">${s.go ? '前往 →' : (s.hint || '')}</span>
+      </div>`).join('');
+  }
+  document.getElementById('obClose').addEventListener('click', ()=>{
+    document.getElementById('onboard').hidden = true;
+    try{ localStorage.setItem('vc_onboard_hidden', '1'); }catch(e){}
   });
-
-  (async function(){
-    try{
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if(session){
-        const user = session.user;
-        const name = user.user_metadata?.display_name || user.email || '';
-        if(name){
-          document.getElementById('greeting').innerHTML = 'Hi，歡迎回來，<b>'+vcEsc(name)+'</b> 顧問。';
-        }
-        await loadTodayAgenda(user.id);
-        await loadPaymentReminders(user.id);
-      }
-    }catch(e){}
-
-    const now = new Date();
-    const weekday = ['週日','週一','週二','週三','週四','週五','週六'][now.getDay()];
-    const p = n => String(n).padStart(2,'0');
-    document.getElementById('datetime').textContent =
-      now.getFullYear()+'/'+p(now.getMonth()+1)+'/'+p(now.getDate())+'（'+weekday+'）　'+p(now.getHours())+':'+p(now.getMinutes());
-  })();
-
-  async function loadTodayAgenda(myId){
-    const p = n => String(n).padStart(2,'0');
-    const t = new Date();
-    const todayStr = `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;
-    const todayMonthDay = `${p(t.getMonth()+1)}-${p(t.getDate())}`;
-    const section = document.getElementById('agendaSection');
-    const sub = document.getElementById('agendaSub');
-    const list = document.getElementById('agendaList');
-    try{
-      const { data, error } = await supabaseClient
-        .from('calendar_events')
-        .select('id, title, start_time, end_time, advisor_id, visibility')
-        .lte('event_date', todayStr)
-        .or(`end_date.gte.${todayStr},and(end_date.is.null,event_date.eq.${todayStr})`)
-        .order('start_time', { ascending:true, nullsFirst:false });
-      if(error) throw error;
-
-      const { data: clients } = await supabaseClient
-        .from('client_records')
-        .select('client_name, birthday')
-        .eq('advisor_id', myId)
-        .is('deleted_at', null)
-        .not('birthday', 'is', null);
-      const birthdayNames = (clients||[])
-        .filter(c => c.birthday && c.birthday.slice(5) === todayMonthDay)
-        .map(c => (c.client_name || '').trim() || '（未命名客戶）');
-
-      const birthdayRowsHTML = birthdayNames.map(name => `
-        <div class="agenda-row"><span class="a-time" style="color:#B3492F;">🎂</span><div><div class="a-title">${vcEsc(name)} 生日快樂</div></div></div>`).join('');
-
-      if((!data || data.length===0) && birthdayNames.length===0){
-        sub.textContent = '今天沒有安排行程，點一下前往行事曆新增';
-        list.innerHTML = `<div class="agenda-row" style="justify-content:center; cursor:pointer;"><div class="a-title" style="color:#5B6B70; font-weight:500;">今日無安排</div></div>`;
-        list.querySelectorAll('.agenda-row').forEach(row=>{
-          row.addEventListener('click', ()=>{
-            if(window.parent && typeof window.parent.goToModule === 'function'){
-              window.parent.goToModule('frame-calendar');
-            }
-          });
-        });
-        section.style.display = 'block';
-        return;
-      }
-
-      const eventCount = data ? data.length : 0;
-      const subParts = [];
-      if(eventCount>0) subParts.push(`${eventCount} 筆安排`);
-      if(birthdayNames.length>0) subParts.push(`${birthdayNames.length} 位客戶生日`);
-      sub.textContent = subParts.join('、') + '，點一下直接前往行事曆查看';
-
-      list.innerHTML = birthdayRowsHTML + (data||[]).map(e=>{
-        const cut = s => s ? s.slice(0,5) : '';
-        const time = e.start_time ? (e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time)) : '全天';
-        const tag = e.advisor_id===myId ? '' : (e.visibility==='team' ? '（團隊公告）' : '（夥伴行程）');
-        return `<div class="agenda-row"><span class="a-time">${time}</span><div><div class="a-title">${vcEsc(e.title)}${tag}</div></div></div>`;
-      }).join('');
-      list.querySelectorAll('.agenda-row').forEach(row=>{
-        row.addEventListener('click', ()=>{
-          if(window.parent && typeof window.parent.goToModule === 'function'){
-            window.parent.goToModule('frame-calendar');
-          }
-        });
-      });
-      section.style.display = 'block';
-    }catch(e){ console.error('讀取今日行程失敗', e); }
-  }
-
-  async function loadPaymentReminders(myId){
-    const section = document.getElementById('paymentReminderSection');
-    const sub = document.getElementById('paymentReminderSub');
-    const list = document.getElementById('paymentReminderList');
-    try{
-      const p = n => String(n).padStart(2,'0');
-      const t = new Date();
-      const todayStr = `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;
-      const soon = new Date(); soon.setDate(soon.getDate() + 14);
-      const soonStr = `${soon.getFullYear()}-${p(soon.getMonth()+1)}-${p(soon.getDate())}`;
-
-      const { data, error } = await supabaseClient
-        .from('contract_payments')
-        .select('id, due_date, installment_no, contract_id, contracts(product_name, client_id, client_records(client_name))')
-        .eq('advisor_id', myId)
-        .eq('paid', false)
-        .lte('due_date', soonStr)
-        .order('due_date', { ascending:true });
-      if(error) throw error;
-
-      if(!data || data.length===0){
-        sub.textContent = '目前沒有逾期或即將到期的匯款';
-        list.innerHTML = `<div class="agenda-row" style="justify-content:center; cursor:pointer;"><div class="a-title" style="color:#5B6B70; font-weight:500;">目前沒有待繳款項</div></div>`;
-        list.querySelectorAll('.agenda-row').forEach(row=>{
-          row.addEventListener('click', ()=>{
-            if(window.parent && typeof window.parent.goToModule === 'function'){
-              window.parent.goToModule('frame-contracts');
-            }
-          });
-        });
-        section.style.display = 'block';
-        return;
-      }
-
-      const overdueCount = data.filter(x=>x.due_date < todayStr).length;
-      sub.textContent = overdueCount>0
-        ? `${overdueCount} 筆已逾期，共 ${data.length} 筆需要在近期匯款`
-        : `${data.length} 筆將在 14 天內到期`;
-
-      list.innerHTML = data.map(x=>{
-        const overdue = x.due_date < todayStr;
-        const clientName = x.contracts && x.contracts.client_records ? (x.contracts.client_records.client_name || '（未命名客戶）') : '';
-        const productName = x.contracts ? x.contracts.product_name : '';
-        return `<div class="agenda-row" style="border-color:${overdue?'#B3492F':'#E1E7E7'};">
-          <span class="a-time" style="color:${overdue?'#B3492F':'#2E7391'};">${vcEsc(x.due_date)}</span>
-          <div>
-            <div class="a-title">${vcEsc(productName)}${overdue?'（已逾期）':''}</div>
-            <div class="a-meta">${clientName ? '👤 '+vcEsc(clientName)+'　' : ''}第 ${x.installment_no} 期</div>
-          </div>
-        </div>`;
-      }).join('');
-      list.querySelectorAll('.agenda-row').forEach(row=>{
-        row.addEventListener('click', ()=>{
-          if(window.parent && typeof window.parent.goToModule === 'function'){
-            window.parent.goToModule('frame-contracts');
-          }
-        });
-      });
-      section.style.display = 'block';
-    }catch(e){ console.error('讀取待繳提醒失敗', e); }
-  }
+})();
 </script>
 
 </body>

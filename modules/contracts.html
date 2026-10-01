@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>簽約管理</title>
@@ -130,6 +131,8 @@
   }
   .btn-save:hover{background:var(--teal-deep);}
   .btn-cancel{background:none; border:none; color:var(--ink-soft); font-size:12.5px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;}
+  .vc-empty-cta{background:var(--navy,#16323F); color:#fff; border:none; border-radius:22px; padding:11px 22px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .vc-empty-cta:hover{background:var(--teal-deep,#1F5C73);}
 </style>
 </head>
 <body>
@@ -150,7 +153,7 @@
     <button class="btn-add" id="btnAddContract">＋ 新增簽約</button>
   </div>
 
-  <div id="contractList"></div>
+  <div id="contractList"><div class="vc-sk-card"><span class="vc-sk w30"></span><span class="vc-sk w90"></span><span class="vc-sk w50"></span></div><div class="vc-sk-card"><span class="vc-sk w30"></span><span class="vc-sk w90"></span><span class="vc-sk w50"></span></div></div>
 </div>
 
 <div class="modal-overlay" id="contractOverlay">
@@ -287,7 +290,7 @@ function renderSummary(payments){
 function renderContractList(contracts, paymentsByContract){
   const list = document.getElementById('contractList');
   if(contracts.length===0){
-    list.innerHTML = '<div class="empty-state">還沒有任何簽約紀錄，點右上角「＋ 新增簽約」開始記錄。</div>';
+    list.innerHTML = '<div class="empty-state">還沒有任何簽約紀錄。成交之後在這裡登錄，系統會自動排好每期繳費提醒。<div style="margin-top:16px;"><button type="button" class="vc-empty-cta" onclick="document.getElementById(\'btnAddContract\').click()">＋ 新增第一筆簽約</button></div></div>';
     return;
   }
 
@@ -355,7 +358,7 @@ function renderContractList(contracts, paymentsByContract){
   });
   list.querySelectorAll('.btn-delete-contract').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
-      if(!confirm('確定要刪除這筆簽約紀錄嗎？裡面所有的繳費紀錄也會一併刪除，沒辦法復原。')) return;
+      if(!(await vcConfirm('確定要刪除這筆簽約紀錄嗎？裡面所有的繳費紀錄也會一併刪除，沒辦法復原。'))) return;
       const { error } = await supabaseClient.from('contracts').delete().eq('id', btn.dataset.id);
       if(error){ alert('刪除失敗，請檢查網路連線後再試一次。'); return; }
       loadContracts();
@@ -461,7 +464,7 @@ document.getElementById('btnSaveContract').addEventListener('click', async ()=>{
     );
 
     if(scheduleChanged){
-      if(!confirm('你改動了年期、繳費方式、簽約時間或匯款日期，繳費排程需要重新產生，目前已標記的「已繳」記錄會被清除，確定要繼續嗎？')) return;
+      if(!(await vcConfirm('你改動了年期、繳費方式、簽約時間或匯款日期，繳費排程需要重新產生，目前已標記的「已繳」記錄會被清除，確定要繼續嗎？'))) return;
     }
 
     const { error } = await supabaseClient.from('contracts').update(payload).eq('id', editingContractId);
