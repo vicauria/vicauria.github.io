@@ -46,7 +46,7 @@
   .nav-cta{font-size:13.5px; font-weight:700; color:#fff; background:var(--navy); text-decoration:none; padding:9px 18px; border-radius:24px;}
   .nav-cta:hover{background:var(--teal-deep);}
 
-  /* ---------- 主按鈕（全頁只有這一種行動：免費開始使用） ---------- */
+  /* ---------- 主按鈕（全頁只有這一種行動：開始免費體驗） ---------- */
   .cta{display:inline-flex; align-items:center; gap:10px; background:var(--warm); color:#fff; padding:16px 34px; border-radius:32px; font-size:16px; font-weight:700; text-decoration:none; box-shadow:0 12px 28px rgba(201,123,61,0.35); transition:transform .15s ease, background .15s ease;}
   .cta:hover{transform:translateY(-2px); background:var(--warm-deep);}
   .cta-note{font-size:12.5px; color:var(--ink-soft); margin-top:14px;}
@@ -208,7 +208,7 @@
       <div class="eyebrow">For Financial Advisors</div>
       <h1>40 分鐘，帶客戶<br><span class="hl">看清自己的財務全貌</span></h1>
       <p class="lead">一套問卷引導你把面談聊深，結束時產出一份客戶看得懂的財務健檢報告——<b>他會想約你下一次</b>。從列名單到簽約追蹤，你的整套工作流程都在 Vicauria。</p>
-      <a href="register.html" class="cta js-cta">免費開始使用 →</a>
+      <a href="register.html" class="cta js-cta">開始免費體驗 →</a>
       <div class="cta-note"><span>全部功能免費</span><span>不用綁信用卡</span><span>手機、電腦都能用</span></div>
     </div>
     <div class="hero-visual">
@@ -315,7 +315,7 @@
   <div class="final">
     <h2>下一位客戶，就用 Vicauria 談</h2>
     <p>註冊只要一分鐘，今天就能做出第一份報告。</p>
-    <a href="register.html" class="cta js-cta">免費開始使用 →</a>
+    <a href="register.html" class="cta js-cta">開始免費體驗 →</a>
     <div class="cta-note"><span>全部功能免費</span><span>不用綁信用卡</span><span>手機、電腦都能用</span></div>
   </div>
   <a href="brand-story.html" class="story-link">Vicauria 這個名字是怎麼來的？閱讀品牌故事 →</a>
@@ -383,7 +383,7 @@
       if(!session) return;
       document.querySelectorAll('.js-cta').forEach(a=>{
         a.href = 'workbench.html';
-        a.textContent = a.classList.contains('nav-cta') ? '進入工作台' : '進入工作台 →';
+        a.textContent = a.classList.contains('nav-cta') ? '進入工作台' : '開始免費體驗 →';
       });
       const login = document.querySelector('.nav-login'); if(login) login.style.display = 'none';
       document.querySelectorAll('.cta-note').forEach(n=> n.style.display = 'none');
