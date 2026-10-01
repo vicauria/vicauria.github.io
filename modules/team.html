@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>團隊</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -235,11 +239,14 @@
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../vendor/supabase-js-2.117.2.js"></script>
 <script src="../supabase-config.js"></script>
 <script src="../plan-utils.js"></script>
 <script src="../theme-config.js"></script>
 <script>
+// 資安：把使用者／外部資料放進畫面前先轉義，避免被塞入惡意程式碼（XSS）
+function vcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; }catch(e){ return '#'; } }
 jkApplySavedTheme();
 
 let myUserId = null;
@@ -345,7 +352,7 @@ async function loadWorkload(teamId){
         ${rows.map(r=>`
           <tr data-advisor="${r.advisor_id}">
             <td class="member-row-name">
-              <div class="mrn-line"><span class="mrn-dot" title="狀態">${r._health.dot}</span>${r.display_name}</div>
+              <div class="mrn-line"><span class="mrn-dot" title="狀態">${r._health.dot}</span>${vcEsc(r.display_name)}</div>
               ${r._health.suggestion ? `<div class="mrn-suggestion">${r._health.suggestion}</div>` : ''}
             </td>
             <td class="num" style="color:${r.today_count>0?'var(--teal-deep)':'var(--ink-soft)'};font-weight:700;">${r.today_count}</td>
@@ -457,7 +464,7 @@ async function loadMyTeams(){
   if(!data || data.length===0){ area.innerHTML = ''; return; }
   area.innerHTML = '<div class="sub" style="margin-bottom:8px;">你目前加入的團隊：</div>' + data.map(r=>`
     <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--paper); border-radius:8px; margin-bottom:8px;">
-      <span style="font-size:13px; font-weight:700;">${r.teams?.name || '團隊'}</span>
+      <span style="font-size:13px; font-weight:700;">${vcEsc(r.teams?.name || '團隊')}</span>
       <button class="btn-remove" data-team="${r.team_id}">退出</button>
     </div>
   `).join('');
@@ -473,13 +480,29 @@ async function loadMyTeams(){
 document.getElementById('btnJoinTeam').addEventListener('click', async ()=>{
   const code = document.getElementById('joinCodeInput').value.trim().toLowerCase();
   if(!code){ showJoinError('請輸入邀請碼'); return; }
-  const { data: team, error: findErr } = await supabaseClient.from('teams').select('id, owner_id').eq('invite_code', code).maybeSingle();
-  if(findErr || !team){ showJoinError('找不到這個邀請碼，請確認輸入正確。'); return; }
-  if(team.owner_id === myUserId){ showJoinError('不能加入自己的團隊喔。'); return; }
-  const { error: joinErr } = await supabaseClient.from('team_members').insert({ team_id: team.id, advisor_id: myUserId });
-  if(joinErr){
-    if(joinErr.message.includes('duplicate')) showJoinError('你已經加入過這個團隊了。');
-    else showJoinError('加入失敗，請稍後再試。');
+  // 資安：一律透過資料庫的 vc_join_team 驗證邀請碼（一小時最多試 10 次），前台查不到別人的團隊
+  const { data: res, error: rpcErr } = await supabaseClient.rpc('vc_join_team', { p_code: code });
+  if(rpcErr && (rpcErr.code === 'PGRST202' || /could not find the function/i.test(rpcErr.message||''))){
+    // 資料庫還沒更新到新版（還沒跑資安加固 SQL）時，暫時用舊方式加入
+    const { data: team, error: findErr } = await supabaseClient.from('teams').select('id, owner_id').eq('invite_code', code).maybeSingle();
+    if(findErr || !team){ showJoinError('找不到這個邀請碼，請確認輸入正確。'); return; }
+    if(team.owner_id === myUserId){ showJoinError('不能加入自己的團隊喔。'); return; }
+    const { error: joinErr } = await supabaseClient.from('team_members').insert({ team_id: team.id, advisor_id: myUserId });
+    if(joinErr){
+      if(joinErr.message.includes('duplicate')) showJoinError('你已經加入過這個團隊了。');
+      else showJoinError('加入失敗，請稍後再試。');
+      return;
+    }
+  } else if(rpcErr || !res || !res.ok){
+    const reason = res && res.reason;
+    const msg = {
+      not_found: '找不到這個邀請碼，請確認輸入正確。',
+      own_team: '不能加入自己的團隊喔。',
+      already: '你已經加入過這個團隊了。',
+      too_many: '嘗試次數太多了，請一小時後再試。',
+      not_logged_in: '登入狀態已失效，請重新登入。'
+    }[reason] || '加入失敗，請稍後再試。';
+    showJoinError(msg);
     return;
   }
   document.getElementById('joinCodeInput').value = '';
@@ -518,19 +541,19 @@ function renderPost(p, nameMap, comments){
   return `
     <div class="post-item" data-post-id="${p.id}">
       <div class="post-head">
-        <span class="post-author">${authorName}</span>
+        <span class="post-author">${vcEsc(authorName)}</span>
         <span class="post-time">${fmtDiscussTime(p.created_at)}</span>
         ${isMyPost ? `<button class="post-delete-btn" data-delete-post="${p.id}">刪除</button>` : ''}
       </div>
-      ${p.content ? `<div class="post-content">${p.content.replace(/</g,'&lt;')}</div>` : ''}
+      ${p.content ? `<div class="post-content">${vcEsc(p.content)}</div>` : ''}
       ${p.image_url ? `<img class="post-image" data-post-img="${p.id}" alt="照片">` : ''}
       <div class="comments-list">
         ${comments.map(c=>`
           <div class="comment-item" data-comment-id="${c.id}">
-            <span class="comment-author">${nameMap[c.author_id] || '（未命名顧問）'}</span>
+            <span class="comment-author">${vcEsc(nameMap[c.author_id] || '（未命名顧問）')}</span>
             <span class="comment-time">${fmtDiscussTime(c.created_at)}</span>
             ${c.author_id === myUserId ? `<button class="comment-delete-btn" data-delete-comment="${c.id}">刪除</button>` : ''}
-            <div class="comment-content">${(c.content||'').replace(/</g,'&lt;')}</div>
+            <div class="comment-content">${vcEsc(c.content||'')}</div>
           </div>
         `).join('')}
       </div>
@@ -663,7 +686,7 @@ async function initDiscussSection(){
     const wrap = document.getElementById('discussTeamSwitchWrap');
     wrap.style.display = 'block';
     const sel = document.getElementById('discussTeamSelect');
-    sel.innerHTML = discussTeams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    sel.innerHTML = discussTeams.map(t=>`<option value="${vcEsc(t.id)}">${vcEsc(t.name)}</option>`).join('');
     sel.addEventListener('change', ()=>{ currentDiscussTeamId = sel.value; loadPosts(); });
   }
   currentDiscussTeamId = discussTeams[0].id;

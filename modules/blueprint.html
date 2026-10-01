@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>財富地圖</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -541,11 +545,14 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../vendor/supabase-js-2.117.2.js"></script>
 <script src="../supabase-config.js"></script>
 <script src="../theme-config.js"></script>
 <script src="../plan-utils.js"></script>
 <script>
+// 資安：把使用者／外部資料放進畫面前先轉義，避免被塞入惡意程式碼（XSS）
+function vcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; }catch(e){ return '#'; } }
 jkApplySavedTheme();
 
 /* =========================================================
@@ -661,7 +668,7 @@ function renderDualGroups(groups, mountId, totalId, opts){
     function addRow(row){
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td><input type="text" value="${row.name}" placeholder="項目名稱"></td>
+        <td><input type="text" value="${vcEsc(row.name)}" placeholder="項目名稱"></td>
         <td><input type="text" inputmode="numeric" value="${row.monthly?formatThousands(row.monthly):''}" placeholder="0"></td>
         <td><input type="text" inputmode="numeric" value="${row.once?formatThousands(row.once):''}" placeholder="0"></td>
         <td><button class="row-del" type="button">✕</button></td>
@@ -717,7 +724,7 @@ function renderSingleGroups(groups, mountId, totalId, opts){
     function addRow(row){
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td><input type="text" value="${row.name}" placeholder="項目名稱"></td>
+        <td><input type="text" value="${vcEsc(row.name)}" placeholder="項目名稱"></td>
         <td><input type="text" inputmode="numeric" value="${row.amount?formatThousands(row.amount):''}" placeholder="0"></td>
         <td><button class="row-del" type="button">✕</button></td>
       `;
@@ -916,7 +923,7 @@ const PAGES = [
          <div class="choice-pill">台灣</div><div class="choice-pill">其他</div>
        </div>
        <div id="locationOtherWrap" style="display:${basicA.location==="其他"?"block":"none"};margin-top:14px;">
-         <input type="text" data-bind="locationOther" placeholder="請輸入你的居住地" value="${basicA.locationOther||''}">
+         <input type="text" data-bind="locationOther" placeholder="請輸入你的居住地" value="${vcEsc(basicA.locationOther||'')}">
        </div>
      </div>
    `},
@@ -929,7 +936,7 @@ const PAGES = [
          <div class="choice-pill">以上都不是</div>
        </div>
        <div id="jobOtherWrap" style="display:${basicA.job==="以上都不是"?"block":"none"};margin-top:14px;">
-         <input type="text" data-bind="jobOther" placeholder="請輸入你的職業" value="${basicA.jobOther}">
+         <input type="text" data-bind="jobOther" placeholder="請輸入你的職業" value="${vcEsc(basicA.jobOther)}">
        </div>
      </div>
    `},
@@ -1040,7 +1047,7 @@ const PAGES = [
          <div class="choice-pill">自行輸入</div>
        </div>
        <div id="customGoalWrap" style="display:${visionA.goals.includes("自行輸入")?"block":"none"};margin-top:14px;">
-         <input type="text" id="customGoalInput" placeholder="輸入你的目標" value="${visionA.customGoalName}">
+         <input type="text" id="customGoalInput" placeholder="輸入你的目標" value="${vcEsc(visionA.customGoalName)}">
        </div>
      </div>
      <div id="goalCalcMount"></div>
@@ -1451,7 +1458,7 @@ function renderGoalCalcCards(){
       const tabMap = {"購屋計劃":"house", "子女教育":"education", "第一桶金":"invest", "緊急預備金":"invest"};
       const targetTab = tabMap[goalName] || "invest";
       card.innerHTML = `
-        <div class="goal-calc-title"><span class="t">🎯 ${label}</span><button type="button" class="goal-del-btn" title="移除">✕</button></div>
+        <div class="goal-calc-title"><span class="t">🎯 ${vcEsc(label)}</span><button type="button" class="goal-del-btn" title="移除">✕</button></div>
         <div class="field-row">
           <div class="field"><label>預計幾歲要達成？</label><input type="number" class="ga" placeholder="例如 40"></div>
           <div class="field"><label>大概需要準備多少錢？</label><input type="text" inputmode="numeric" class="gt" placeholder="例如 2,000,000"></div>
@@ -1585,7 +1592,7 @@ function buildVisionGoalListHTML(uid){
       <div class="vg-acc-item${i===0?' open':''}" id="${accId}">
         <div class="vg-acc-head" onclick="toggleVgAcc('${accId}')">
           <span class="vg-tier-dot ${tier}"></span>
-          <span class="vg-acc-name">${label}（${ageText}）</span>
+          <span class="vg-acc-name">${vcEsc(label)}（${ageText}）</span>
           <span class="vg-status-badge ${tier}">${badgeText}</span>
           <span class="vg-acc-pct">${pctText}</span>
           <span class="vg-acc-chev">▾</span>
@@ -1949,7 +1956,7 @@ function buildFullAnswerSummaryHTML(){
     if(c.monthly) parts.push('月被動收入'+money(parseNum(c.monthly)));
     if(c.yearly) parts.push('年花費'+money(parseNum(c.yearly)));
     if(c.target) parts.push('目標'+money(parseNum(c.target)));
-    return `${label}${parts.length?'（'+parts.join('・')+'）':''}`;
+    return `${vcEsc(label)}${parts.length?'（'+parts.join('・')+'）':''}`;
   }).join('、') || '—';
 
   return `
@@ -1961,8 +1968,8 @@ function buildFullAnswerSummaryHTML(){
           <div class="summary-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
           <div class="summary-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD?basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD:'—'}</span></div>
           <div class="summary-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
-          <div class="summary-row"><span class="k">居住地</span><span class="v">${basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—')}</span></div>
-          <div class="summary-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
+          <div class="summary-row"><span class="k">居住地</span><span class="v">${vcEsc(basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—'))}</span></div>
+          <div class="summary-row"><span class="k">職業</span><span class="v">${vcEsc(basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—'))}</span></div>
           <div class="summary-row"><span class="k">婚姻狀況</span><span class="v">${backerA.marital||'—'}</span></div>
           <div class="summary-row"><span class="k">子女</span><span class="v">${childrenText}</span></div>
           <div class="summary-row"><span class="k">需撫養父母</span><span class="v">${backerA.supportParents||'—'}</span></div>
@@ -2002,8 +2009,8 @@ function renderSummaryProfileHTML(){
       <div class="report-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
       <div class="report-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
       <div class="report-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
-      <div class="report-row"><span class="k">居住地</span><span class="v">${basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—')}</span></div>
-      <div class="report-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
+      <div class="report-row"><span class="k">居住地</span><span class="v">${vcEsc(basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—'))}</span></div>
+      <div class="report-row"><span class="k">職業</span><span class="v">${vcEsc(basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—'))}</span></div>
     </div>
     <div class="report-section">
       <h3>你的後盾</h3>
@@ -2025,8 +2032,8 @@ function renderSummaryHTML(){
       <div class="summary-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
       <div class="summary-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
       <div class="summary-row"><span class="k">性別</span><span class="v">${basicA.gender||'—'}</span></div>
-      <div class="summary-row"><span class="k">居住地</span><span class="v">${basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—')}</span></div>
-      <div class="summary-row"><span class="k">職業</span><span class="v">${basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—')}</span></div>
+      <div class="summary-row"><span class="k">居住地</span><span class="v">${vcEsc(basicA.location==='其他'?(basicA.locationOther||'—'):(basicA.location||'—'))}</span></div>
+      <div class="summary-row"><span class="k">職業</span><span class="v">${vcEsc(basicA.job==='以上都不是'?(basicA.jobOther||'—'):(basicA.job||'—'))}</span></div>
     </div>
     <div class="summary-block">
       <h3>你的後盾</h3>
@@ -2044,7 +2051,7 @@ function renderSummaryHTML(){
     </div>
     <div class="summary-block">
       <h3>財富願景</h3>
-      <div class="summary-row"><span class="k">選擇的目標</span><span class="v">${visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g).join('、')||'—'}</span></div>
+      <div class="summary-row"><span class="k">選擇的目標</span><span class="v">${vcEsc(visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g).join('、')||'—')}</span></div>
     </div>
   `;
 }
@@ -2545,8 +2552,8 @@ function formatTimestamp(d){
 function buildReportCoverHTML(){
   const today = new Date();
   const dateStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
-  const namePart = loadedClientName ? loadedClientName+' ' : '';
-  const advisorLine = currentAdvisorName ? `顧問：${currentAdvisorName}` : '';
+  const namePart = loadedClientName ? vcEsc(loadedClientName)+' ' : '';
+  const advisorLine = currentAdvisorName ? `顧問：${vcEsc(currentAdvisorName)}` : '';
   return `
     <div class="report-cover">
       <svg class="cover-bg-lines" viewBox="0 0 420 700" preserveAspectRatio="none">

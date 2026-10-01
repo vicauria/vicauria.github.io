@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>收支現金流試算室</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -697,6 +701,9 @@
 <footer>收支現金流試算室 · 僅供財務規劃討論使用，所有比率計算依「總收入」為分母</footer>
 
 <script>
+// 資安：把使用者／外部資料放進畫面前先轉義，避免被塞入惡意程式碼（XSS）
+function vcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; }catch(e){ return '#'; } }
 /* ---------------------------------------------------------
    資料結構：income / expense 都是「分組 -> 多列」
    每一列 row = { name, monthly, once }
@@ -836,7 +843,7 @@ function renderGroupTable(group, isExpense){
 function renderRow(group, row, idx){
   const tr = document.createElement("tr");
   tr.innerHTML = `
-    <td data-label="項目名稱"><input type="text" value="${row.name}" placeholder="輸入項目名稱"></td>
+    <td data-label="項目名稱"><input type="text" value="${vcEsc(row.name)}" placeholder="輸入項目名稱"></td>
     <td data-label="每月金額"><input type="number" min="0" step="100" value="${row.monthly||0}"></td>
     <td data-label="年度一次性"><input type="number" min="0" step="100" value="${row.once||0}"></td>
     <td class="row-subtotal" data-label="年度小計">${money(rowAnnual(row))}</td>

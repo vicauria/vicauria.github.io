@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>使用導覽 — Vicauria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -385,7 +389,7 @@
         <div class="mod-body">
           <h4>選單裡有什麼</h4>
           <ul>
-            <li><span class="ui">⚙️ 帳號設定</span>：上傳大頭貼（JPG／PNG，2MB 以內）、改顯示名稱、改密碼（至少 6 個字元）、改 Email（要到新信箱點確認連結才會生效）。</li>
+            <li><span class="ui">⚙️ 帳號設定</span>：上傳大頭貼（JPG／PNG，2MB 以內）、改顯示名稱、改密碼（至少 8 個字元，含英文與數字）、改 Email（要到新信箱點確認連結才會生效）。</li>
             <li><b>字體大小</b>：小／中／大，看不清楚時調大。</li>
             <li><b>小V 小幫手</b>：顯示／隱藏畫面角落的「V」小幫手泡泡（泡泡可以拖到左邊或右邊）。</li>
             <li><b>主題色系</b>：6 套配色可以選，會套用到所有功能。</li>

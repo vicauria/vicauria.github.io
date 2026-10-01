@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>首頁</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -178,9 +182,12 @@
   <div class="tools-grid" id="toolsGrid"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../vendor/supabase-js-2.117.2.js"></script>
 <script src="../supabase-config.js"></script>
 <script>
+// 資安：把使用者／外部資料放進畫面前先轉義，避免被塞入惡意程式碼（XSS）
+function vcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '#'; }catch(e){ return '#'; } }
   const TOOLS = [
     {target:'frame-guide', badge:'🧭', title:'使用導覽', desc:'第一次用？從這裡看各功能怎麼用、怎麼走到成交'},
     {target:'frame-calendar', badge:'📅', title:'行事曆', desc:'約訪行程／團隊公告'},
@@ -221,7 +228,7 @@
         const user = session.user;
         const name = user.user_metadata?.display_name || user.email || '';
         if(name){
-          document.getElementById('greeting').innerHTML = 'Hi，歡迎回來，<b>'+name+'</b> 顧問。';
+          document.getElementById('greeting').innerHTML = 'Hi，歡迎回來，<b>'+vcEsc(name)+'</b> 顧問。';
         }
         await loadTodayAgenda(user.id);
         await loadPaymentReminders(user.id);
@@ -263,7 +270,7 @@
         .map(c => (c.client_name || '').trim() || '（未命名客戶）');
 
       const birthdayRowsHTML = birthdayNames.map(name => `
-        <div class="agenda-row"><span class="a-time" style="color:#B3492F;">🎂</span><div><div class="a-title">${name} 生日快樂</div></div></div>`).join('');
+        <div class="agenda-row"><span class="a-time" style="color:#B3492F;">🎂</span><div><div class="a-title">${vcEsc(name)} 生日快樂</div></div></div>`).join('');
 
       if((!data || data.length===0) && birthdayNames.length===0){
         sub.textContent = '今天沒有安排行程，點一下前往行事曆新增';
@@ -289,7 +296,7 @@
         const cut = s => s ? s.slice(0,5) : '';
         const time = e.start_time ? (e.end_time ? `${cut(e.start_time)}–${cut(e.end_time)}` : cut(e.start_time)) : '全天';
         const tag = e.advisor_id===myId ? '' : (e.visibility==='team' ? '（團隊公告）' : '（夥伴行程）');
-        return `<div class="agenda-row"><span class="a-time">${time}</span><div><div class="a-title">${e.title}${tag}</div></div></div>`;
+        return `<div class="agenda-row"><span class="a-time">${time}</span><div><div class="a-title">${vcEsc(e.title)}${tag}</div></div></div>`;
       }).join('');
       list.querySelectorAll('.agenda-row').forEach(row=>{
         row.addEventListener('click', ()=>{
@@ -346,10 +353,10 @@
         const clientName = x.contracts && x.contracts.client_records ? (x.contracts.client_records.client_name || '（未命名客戶）') : '';
         const productName = x.contracts ? x.contracts.product_name : '';
         return `<div class="agenda-row" style="border-color:${overdue?'#B3492F':'#E1E7E7'};">
-          <span class="a-time" style="color:${overdue?'#B3492F':'#2E7391'};">${x.due_date}</span>
+          <span class="a-time" style="color:${overdue?'#B3492F':'#2E7391'};">${vcEsc(x.due_date)}</span>
           <div>
-            <div class="a-title">${productName}${overdue?'（已逾期）':''}</div>
-            <div class="a-meta">${clientName ? '👤 '+clientName+'　' : ''}第 ${x.installment_no} 期</div>
+            <div class="a-title">${vcEsc(productName)}${overdue?'（已逾期）':''}</div>
+            <div class="a-meta">${clientName ? '👤 '+vcEsc(clientName)+'　' : ''}第 ${x.installment_no} 期</div>
           </div>
         </div>`;
       }).join('');
