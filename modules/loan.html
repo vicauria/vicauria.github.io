@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,7 +56,7 @@
   }
   header.hero .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
   header.hero .eyebrow{
-    font-family:'Roboto Mono', monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    font-family:'Roboto Mono', monospace; font-size:12px; letter-spacing:.24em; text-transform:uppercase;
     color:#BFE0EA; font-weight:700; margin-bottom:8px;
   }
   header.hero h1{
@@ -94,18 +95,18 @@
   .field:last-child{margin-bottom:0;}
   .field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
   label{display:block; font-size:12.5px; font-weight:500; margin-bottom:6px;}
-  label .hint{color:var(--text-soft); font-weight:400; font-size:11.5px;}
+  label .hint{color:var(--text-soft); font-weight:400; font-size:12px;}
   .input-wrap{position:relative;}
   input[type=number]{width:100%; font-family:'Roboto Mono'; font-size:14.5px; padding:10px 46px 10px 12px; border:1px solid var(--paper-line); border-radius:var(--radius); background:var(--paper); color:var(--ink);}
   input[type=number]:focus{outline:none;border-color:var(--brass); box-shadow:0 0 0 3px rgba(46,115,145,0.18);}
-  .unit{position:absolute; right:12px; top:50%; transform:translateY(-50%); font-family:'Roboto Mono'; font-size:11.5px; color:var(--text-soft);}
+  .unit{position:absolute; right:12px; top:50%; transform:translateY(-50%); font-family:'Roboto Mono'; font-size:12px; color:var(--text-soft);}
   .checkline{display:flex;align-items:flex-start;gap:9px;margin-top:4px;}
   .checkline input{width:16px;height:16px;margin-top:3px;accent-color:var(--brass);}
   .checkline label{margin:0;font-size:13px;}
-  .stepper-note{font-size:11.5px; color:var(--text-soft); margin-top:10px;}
+  .stepper-note{font-size:12px; color:var(--text-soft); margin-top:10px;}
 
   .results{padding:28px 30px; background:#E6F0F2; color:var(--text); display:flex; flex-direction:column; border-left:1px solid var(--paper-line);}
-  .result-label{font-family:'Roboto Mono'; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-soft); margin-bottom:8px;}
+  .result-label{font-family:'Roboto Mono'; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-soft); margin-bottom:8px;}
 
   .dim-line{position:relative; padding:22px 0 18px; margin-bottom:20px;}
   .dim-line::before{content:""; position:absolute; left:0; right:0; top:12px; height:1px; background:var(--paper-line);}
@@ -130,7 +131,7 @@
   .bd-row .neg{color:var(--brick);}
   .bd-row .pos{color:var(--teal);}
 
-  .flag{display:inline-block; font-family:'Roboto Mono'; font-size:11px; padding:4px 10px; border-radius:20px; margin-bottom:12px; border:1px solid;}
+  .flag{display:inline-block; font-family:'Roboto Mono'; font-size:12px; padding:4px 10px; border-radius:20px; margin-bottom:12px; border:1px solid;}
   .flag.ok{color:var(--teal); border-color:var(--teal); background:rgba(46,125,91,0.1);}
   .flag.warn{color:var(--brick); border-color:var(--brick); background:rgba(179,73,47,0.1);}
 
@@ -150,7 +151,7 @@
   .spread-track{position:relative; height:34px; margin:18px 0 8px;}
   .spread-base{position:absolute; left:0; right:0; top:16px; height:1px; background:var(--paper-line);}
   .spread-pt{position:absolute; top:0; width:2px; height:34px; background:var(--ink);}
-  .spread-pt .lbl{position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-family:'Roboto Mono'; font-size:10.5px; white-space:nowrap; color:var(--text);}
+  .spread-pt .lbl{position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-family:'Roboto Mono'; font-size:11.5px; white-space:nowrap; color:var(--text);}
   .spread-fill{position:absolute; top:15px; height:3px; background:var(--brass);}
   .spread-fill.tier-pos{background:var(--teal);}
   .spread-fill.tier-warn{background:#B8791E;}
@@ -164,7 +165,7 @@
   .btn-brass{background:var(--brass); color:var(--ink);}
   .btn-brass:hover{background:#3F8AA8;}
 
-  footer{padding:22px 6vw 36px; background:var(--ink); color:rgba(245,247,246,0.4); font-size:11px; font-family:'Roboto Mono'; border-top:1px solid rgba(245,247,246,0.14); line-height:1.9;}
+  footer{padding:22px 6vw 36px; background:var(--ink); color:rgba(245,247,246,0.4); font-size:12px; font-family:'Roboto Mono'; border-top:1px solid rgba(245,247,246,0.14); line-height:1.9;}
 
   @media (max-width:640px){ .field-row{grid-template-columns:1fr;} }
 </style>

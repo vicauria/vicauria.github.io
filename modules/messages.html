@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +33,7 @@
     background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%);
     color:#fff; padding:20px 28px; flex-shrink:0;
   }
-  header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:6px;}
+  header.hero .eyebrow{font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:6px;}
   header.hero h1{color:#fff; font-size:19px; font-weight:700;}
 
   .team-switch{padding:10px 28px; background:var(--card); border-bottom:1px solid var(--line); flex-shrink:0;}
@@ -48,7 +49,7 @@
     display:flex; flex-direction:column; overflow-y:auto;
   }
   .contacts-head{
-    font-family:"Roboto Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+    font-family:"Roboto Mono",monospace; font-size:11.5px; letter-spacing:.12em; text-transform:uppercase;
     color:var(--ink-soft); padding:14px 18px 8px;
   }
   .contact-item{
@@ -64,9 +65,9 @@
   }
   .contact-info{flex:1; min-width:0;}
   .contact-name{font-size:13.5px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:6px;}
-  .contact-preview{font-size:11.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px;}
+  .contact-preview{font-size:12px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px;}
   .unread-dot{
-    background:var(--negative); color:#fff; font-size:10px; font-weight:700; border-radius:10px;
+    background:var(--negative); color:#fff; font-size:11.5px; font-weight:700; border-radius:10px;
     min-width:17px; height:17px; display:flex; align-items:center; justify-content:center; padding:0 4px; flex-shrink:0;
   }
   .contacts-empty{padding:20px 18px; font-size:12.5px; color:var(--ink-soft); line-height:1.8;}
@@ -92,9 +93,9 @@
   }
   .msg-row.me .msg-bubble{background:var(--teal); color:#fff;}
   .msg-bubble img{max-width:220px; border-radius:10px; display:block; cursor:pointer;}
-  .msg-time{font-size:10px; color:var(--ink-soft); margin-top:3px; text-align:right; display:flex; align-items:center; justify-content:flex-end; gap:6px;}
+  .msg-time{font-size:11.5px; color:var(--ink-soft); margin-top:3px; text-align:right; display:flex; align-items:center; justify-content:flex-end; gap:6px;}
   .msg-row.me .msg-time{color:rgba(255,255,255,0.7);}
-  .msg-recall-btn{background:none; border:none; padding:0; font-size:10px; color:inherit; opacity:.75; cursor:pointer; font-family:"Noto Sans TC",sans-serif; text-decoration:underline;}
+  .msg-recall-btn{background:none; border:none; padding:0; font-size:11.5px; color:inherit; opacity:.75; cursor:pointer; font-family:"Noto Sans TC",sans-serif; text-decoration:underline;}
   .msg-recall-btn:hover{opacity:1;}
   .msg-bubble.recalled{font-style:italic; opacity:.7;}
 

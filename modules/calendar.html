@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,13 +35,13 @@
   }
   header.hero .wrap{padding:0 20px;}
   header.hero .eyebrow{
-    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    font-size:12px; letter-spacing:.24em; text-transform:uppercase;
     color:#BFE0EA; font-weight:700; margin-bottom:8px;
   }
   header.hero h1{color:#fff; font-size:clamp(19px,2.4vw,24px); font-weight:700; margin-bottom:0;}
   header.hero p{max-width:660px; color:#DCEAEE; font-size:13px; line-height:1.8; margin-top:8px;}
 
-  .legend{display:flex; gap:16px; flex-wrap:wrap; margin:22px 0 4px; font-size:11.5px; color:var(--ink-soft);}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; margin:22px 0 4px; font-size:12px; color:var(--ink-soft);}
   .legend span{display:inline-flex; align-items:center; gap:5px;}
   .legend .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
   .dot.mine{background:var(--teal);}
@@ -62,14 +63,14 @@
   .cal-nav-btns button:hover{background:var(--paper);}
   .btn-today{
     appearance:none; border:1px solid var(--teal); background:none; color:var(--teal-deep);
-    padding:5px 12px; border-radius:14px; font-size:11.5px; font-weight:700; cursor:pointer;
+    padding:5px 12px; border-radius:14px; font-size:12px; font-weight:700; cursor:pointer;
     font-family:"Noto Sans TC",sans-serif; margin-left:8px;
   }
   .btn-today:hover{background:var(--teal-tint);}
   .cal-nav-btns .btn-today{width:auto; height:30px; white-space:nowrap; font-size:12.5px; padding:0 14px;}
 
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
-  .cal-dow{font-size:11px; color:var(--ink-soft); text-align:center; font-family:"Roboto Mono",monospace; padding-bottom:6px;}
+  .cal-dow{font-size:12px; color:var(--ink-soft); text-align:center; font-family:"Roboto Mono",monospace; padding-bottom:6px;}
   .cal-cell{
     min-height:74px; border-radius:10px; border:1px solid var(--line); padding:6px 6px;
     cursor:pointer; background:#fff; transition:border-color .12s ease, background .12s ease;
@@ -80,13 +81,13 @@
   .cal-cell.selected{background:var(--teal-tint); border-color:var(--teal);}
   .cal-cell .d-num{font-family:"Roboto Mono",monospace; font-size:12px; font-weight:700; margin-bottom:5px;}
   .cal-cell .d-num.holiday{color:var(--negative);}
-  .cal-cell .d-holiday-label{font-size:9px; color:var(--negative); line-height:1.3; margin-bottom:3px;}
+  .cal-cell .d-holiday-label{font-size:11.5px; color:var(--negative); line-height:1.3; margin-bottom:3px;}
   .cal-cell .d-dots{display:flex; flex-wrap:wrap; gap:3px;}
   .cal-cell .d-dots .dot{width:6px; height:6px; border-radius:50%;}
 
   @media (max-width:640px){
     .cal-cell{min-height:52px;}
-    .cal-dow{font-size:9.5px;}
+    .cal-dow{font-size:11.5px;}
   }
 
   .day-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
@@ -108,8 +109,8 @@
   .event-row .e-badge.birthday{background:var(--negative);}
   .event-row .e-body{flex:1; min-width:0;}
   .event-row .e-title{font-size:13.5px; font-weight:700; color:var(--ink);}
-  .event-row .e-meta{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
-  .event-row .e-owner{font-size:10.5px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; margin-top:3px;}
+  .event-row .e-meta{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .event-row .e-owner{font-size:11.5px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; margin-top:3px;}
   .event-row .e-actions{flex-shrink:0; display:flex; gap:6px;}
   .event-row .e-actions button{
     appearance:none; border:none; background:none; color:var(--ink-soft); cursor:pointer;
@@ -142,7 +143,7 @@
   }
   .visibility-toggle input{width:auto;}
   .visibility-toggle .vt-text{font-size:12px; color:var(--ink);}
-  .visibility-toggle .vt-sub{font-size:10.5px; color:var(--ink-soft); margin-top:2px;}
+  .visibility-toggle .vt-sub{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
   .modal-actions{display:flex; justify-content:space-between; align-items:center; margin-top:20px;}
   .btn-save{
     background:var(--navy); color:#fff; border:none; padding:10px 22px; border-radius:18px;

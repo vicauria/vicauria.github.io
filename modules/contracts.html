@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +35,7 @@
   }
   header.hero .wrap{padding:0 20px;}
   header.hero .eyebrow{
-    font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    font-size:12px; letter-spacing:.24em; text-transform:uppercase;
     color:#BFE0EA; font-weight:700; margin-bottom:8px;
   }
   header.hero h1{color:#fff; font-size:clamp(19px,2.4vw,24px); font-weight:700; margin-bottom:0;}
@@ -62,13 +63,13 @@
   .contract-actions{display:flex; gap:8px; flex-shrink:0;}
   .contract-actions button{
     appearance:none; border:1px solid var(--line); background:#fff; color:var(--ink-soft);
-    padding:6px 12px; border-radius:14px; font-size:11.5px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+    padding:6px 12px; border-radius:14px; font-size:12px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
   }
   .contract-actions button:hover{border-color:var(--teal); color:var(--teal-deep);}
   .contract-actions button.danger:hover{border-color:var(--negative); color:var(--negative);}
 
   .progress-badge{
-    display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700;
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700;
     padding:4px 10px; border-radius:14px; margin-top:10px;
   }
   .progress-badge.done{background:rgba(46,125,91,0.12); color:var(--positive);}
@@ -77,19 +78,19 @@
 
   .payment-table{width:100%; border-collapse:collapse; margin-top:14px; font-size:12.5px;}
   .payment-table th{
-    text-align:left; font-family:"Roboto Mono",monospace; font-size:10.5px; color:var(--ink-soft);
+    text-align:left; font-family:"Roboto Mono",monospace; font-size:11.5px; color:var(--ink-soft);
     font-weight:600; padding-bottom:8px; border-bottom:1px solid var(--line);
   }
   .payment-table td{padding:9px 6px; border-bottom:1px solid var(--line);}
   .payment-table tr:last-child td{border-bottom:none;}
-  .pay-status{font-weight:700; font-size:11.5px;}
+  .pay-status{font-weight:700; font-size:12px;}
   .pay-status.paid{color:var(--positive);}
   .pay-status.overdue{color:var(--negative);}
   .pay-status.upcoming{color:#B8791E;}
   .pay-status.future{color:var(--ink-soft);}
   .btn-mark{
     appearance:none; border:1px solid var(--teal); background:none; color:var(--teal-deep);
-    padding:4px 10px; border-radius:12px; font-size:11px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
+    padding:4px 10px; border-radius:12px; font-size:12px; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
   }
   .btn-mark:hover{background:var(--teal-tint);}
   .btn-mark.undo{border-color:var(--line); color:var(--ink-soft);}
@@ -196,7 +197,7 @@
       <input type="date" id="fieldSignedDate">
     </div>
     <div class="field" id="lumpSumDateField">
-      <label>匯款時間<span id="remittanceHint" style="font-weight:400; color:var(--ink-soft); font-size:11.5px;"></span></label>
+      <label>匯款時間<span id="remittanceHint" style="font-weight:400; color:var(--ink-soft); font-size:12px;"></span></label>
       <input type="date" id="fieldRemittanceDate">
     </div>
     <div class="modal-actions">

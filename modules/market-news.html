@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +37,7 @@
     content:""; position:absolute; right:-70px; top:-70px; width:200px; height:200px;
     border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0) 70%);
   }
-  header.hero .eyebrow{font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#BFE0EA; font-weight:700; margin-bottom:8px;}
+  header.hero .eyebrow{font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:#BFE0EA; font-weight:700; margin-bottom:8px;}
   header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
   header.hero p{max-width:640px; color:#DCEAEE; font-size:13px; line-height:1.8;}
 
@@ -65,7 +66,7 @@
     border:1px solid var(--line); background:var(--card); font-size:12.5px; font-weight:700;
     color:var(--ink-soft); cursor:pointer; font-family:"Noto Sans TC",sans-serif;
   }
-  .filter-pill .n{font-family:"Roboto Mono",monospace; font-size:11px;}
+  .filter-pill .n{font-family:"Roboto Mono",monospace; font-size:12px;}
   .filter-pill:hover{border-color:var(--teal);}
   .filter-pill.active{background:var(--navy); border-color:var(--navy); color:#fff;}
 
@@ -77,11 +78,11 @@
   .news-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; flex-wrap:wrap;}
   .news-tags{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
   .cat-tag{
-    font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px;
+    font-size:12px; font-weight:700; padding:4px 10px; border-radius:12px;
     background:var(--teal-tint); color:var(--teal-deep);
   }
-  .src-tag{font-size:11px; color:var(--ink-soft); font-family:"Roboto Mono",monospace;}
-  .news-time{font-size:11px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; white-space:nowrap;}
+  .src-tag{font-size:12px; color:var(--ink-soft); font-family:"Roboto Mono",monospace;}
+  .news-time{font-size:12px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; white-space:nowrap;}
   .news-title{font-size:15.5px; font-weight:700; color:var(--navy); margin-bottom:8px; line-height:1.6;}
   .news-summary{font-size:13px; color:var(--ink-soft); line-height:1.8; margin-bottom:14px;}
   .news-bottom{display:flex; justify-content:flex-end;}
@@ -99,7 +100,7 @@
   .state-box .icon{font-size:28px; margin-bottom:12px;}
 
   .note-box{
-    background:var(--teal-tint); border-radius:8px; padding:14px 16px; font-size:11.5px;
+    background:var(--teal-tint); border-radius:8px; padding:14px 16px; font-size:12px;
     color:var(--teal-deep); line-height:1.8; margin-top:22px;
   }
 </style>
@@ -388,7 +389,7 @@ async function loadAllFeeds(forceAll){
     document.getElementById('updateMeta').innerHTML = metaHtml;
   } catch(err){
     stateBox.style.display = 'block';
-    stateBox.innerHTML = '<div class="icon">⚠️</div>這次抓取失敗了，以下是詳細原因：<br><div style="text-align:left;max-width:480px;margin:14px auto 0;font-family:\'Roboto Mono\',monospace;font-size:11.5px;color:var(--negative);background:var(--paper);padding:12px 16px;border-radius:8px;">'+vcEsc(err.message)+'</div><br>按上方「重新整理」再試一次看看。若持續失敗，請把這個畫面截圖，到「意見箱」回報給我們。';
+    stateBox.innerHTML = '<div class="icon">⚠️</div>這次抓取失敗了，以下是詳細原因：<br><div style="text-align:left;max-width:480px;margin:14px auto 0;font-family:\'Roboto Mono\',monospace;font-size:12px;color:var(--negative);background:var(--paper);padding:12px 16px;border-radius:8px;">'+vcEsc(err.message)+'</div><br>按上方「重新整理」再試一次看看。若持續失敗，請把這個畫面截圖，到「意見箱」回報給我們。';
     list.style.display = 'none';
     document.getElementById('updateMeta').textContent = '抓取失敗';
   } finally {
