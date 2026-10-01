@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>管理後台 — Vicauria</title>
@@ -309,7 +313,7 @@
   </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
 <script src="xiaov-kb.js"></script>
 <script>
@@ -625,8 +629,8 @@ function renderUsage(){
 
   const kpis = [
     { lbl:`近 ${u.days} 天活躍使用者`, val:fmtNum(u.active_users), note:`前一期 ${fmtNum(u.active_users_prev)} 位　${deltaHTML(u.active_users, u.active_users_prev)}` },
-    { lbl:'最常用', val:used[0] ? (MODULE_LABEL[used[0].module]||used[0].module) : '—', note:used[0] ? `${fmtNum(used[0].users)} 人使用` : '還沒有資料', small:true },
-    { lbl:'回頭率最高', val:(()=>{ const r = used.filter(m=>m.users>=3).sort((a,b)=> b.repeat_users/b.users - a.repeat_users/a.users)[0]; return r ? (MODULE_LABEL[r.module]||r.module) : '—'; })(), note:'在不同天用過 2 次以上的比例', small:true },
+    { lbl:'最常用', val:used[0] ? esc(MODULE_LABEL[used[0].module]||used[0].module) : '—', note:used[0] ? `${fmtNum(used[0].users)} 人使用` : '還沒有資料', small:true },
+    { lbl:'回頭率最高', val:(()=>{ const r = used.filter(m=>m.users>=3).sort((a,b)=> b.repeat_users/b.users - a.repeat_users/a.users)[0]; return r ? esc(MODULE_LABEL[r.module]||r.module) : '—'; })(), note:'在不同天用過 2 次以上的比例', small:true },
     { lbl:'沒人用過的功能', val:fmtNum(all.filter(m=> m.users === 0).length), note:'見下方灰色列', attention: since && all.some(m=> m.users === 0) },
   ];
 

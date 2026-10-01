@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vicauria｜資產配置工作台</title>
 <link rel="manifest" href="manifest.json">
@@ -699,7 +703,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.6.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.7.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -865,13 +869,13 @@
 
     <div class="settings-field">
       <label>顯示名稱</label>
-      <input type="text" id="newDisplayNameInput" placeholder="顧問顯示名稱">
+      <input type="text" id="newDisplayNameInput" placeholder="顧問顯示名稱" maxlength="40">
       <button class="settings-btn" id="btnUpdateDisplayName">更新名稱</button>
     </div>
 
     <div class="settings-field">
       <label>更新密碼</label>
-      <input type="password" id="newPasswordInput" placeholder="新密碼（至少6個字元）">
+      <input type="password" id="newPasswordInput" placeholder="新密碼（至少 8 字元，含英文與數字）" minlength="8">
       <input type="password" id="confirmPasswordInput" placeholder="再輸入一次新密碼" style="margin-top:8px;">
       <button class="settings-btn" id="btnUpdatePassword">更新密碼</button>
     </div>
@@ -886,7 +890,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
 <script src="theme-config.js"></script>
 <script src="plan-utils.js"></script>
@@ -1092,6 +1096,7 @@
     const newName = document.getElementById('newDisplayNameInput').value.trim();
     const btn = document.getElementById('btnUpdateDisplayName');
     if(!newName){ showSettingsError('請輸入顯示名稱'); return; }
+    if(newName.length > 40){ showSettingsError('顯示名稱最多 40 個字'); return; }
     const oldName = document.getElementById('userName').textContent.trim();
     btn.disabled = true; btn.textContent = '更新中…';
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1119,7 +1124,7 @@
     const confirmPw = document.getElementById('confirmPasswordInput').value;
     const btn = document.getElementById('btnUpdatePassword');
     if(!newPw || !confirmPw){ showSettingsError('請完整填寫兩個密碼欄位'); return; }
-    if(newPw.length < 6){ showSettingsError('密碼至少要 6 個字元'); return; }
+    if(newPw.length < 8 || !/[A-Za-z]/.test(newPw) || !/[0-9]/.test(newPw)){ showSettingsError('密碼至少 8 個字元，而且要同時包含英文字母和數字'); return; }
     if(newPw !== confirmPw){ showSettingsError('兩次輸入的密碼不一致'); return; }
     btn.disabled = true; btn.textContent = '更新中…';
     const { error } = await supabaseClient.auth.updateUser({ password: newPw });

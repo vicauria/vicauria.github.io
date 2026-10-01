@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>註冊｜資產配置工作台</title>
 <link rel="manifest" href="manifest.json">
@@ -107,7 +111,7 @@
   <form id="registerForm">
     <div class="field">
       <label for="displayName">顧問名稱</label>
-      <input type="text" id="displayName" placeholder="顯示在工作台上的名稱" autocomplete="name">
+      <input type="text" id="displayName" placeholder="顯示在工作台上的名稱" autocomplete="name" maxlength="40">
     </div>
     <div class="field">
       <label for="email">Email</label>
@@ -115,7 +119,7 @@
     </div>
     <div class="field">
       <label for="password">密碼</label>
-      <input type="password" id="password" placeholder="至少 6 個字元" autocomplete="new-password">
+      <input type="password" id="password" placeholder="至少 8 個字元，含英文與數字" autocomplete="new-password" minlength="8">
     </div>
     <div class="field">
       <label for="confirmPassword">確認密碼</label>
@@ -135,7 +139,7 @@
   <a href="index.html" class="back-home">← 回首頁</a>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
 <script>
   const errorMsg = document.getElementById('errorMsg');
@@ -158,8 +162,8 @@
       showError('請完整填寫所有欄位');
       return;
     }
-    if(password.length < 6){
-      showError('密碼至少要 6 個字元');
+    if(password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)){
+      showError('密碼至少 8 個字元，而且要同時包含英文字母和數字');
       return;
     }
     if(password !== confirmPassword){

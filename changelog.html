@@ -2,6 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>更新紀錄 — Vicauria 顧問工作台</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,6 +69,17 @@
   </div>
 
   <main>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v3.7.0</span><span class="v-date">2026-10-01</span></div>
+      <ul>
+        <li>資安強化：所有顯示其他使用者或外部新聞內容的地方（團隊討論、團隊名稱、行事曆公告、首頁行程、市場快訊等）都會先過濾，防止被塞入惡意程式碼</li>
+        <li>網站程式庫改為放在自己的網站上，不再從外部 CDN 即時載入；並限制網頁只能連到 Vicauria 自己的資料庫與指定的資料來源</li>
+        <li>防止工作台被其他網站偷偷嵌入（點擊劫持）</li>
+        <li>加入團隊改為由資料庫驗證邀請碼，一小時內最多嘗試 10 次；只有團隊主管與成員看得到團隊資訊</li>
+        <li>密碼規則提高為至少 8 個字元，並需同時包含英文字母和數字（既有密碼不受影響）；顯示名稱上限 40 字</li>
+      </ul>
+    </div>
 
     <div class="entry">
       <div class="entry-head"><span class="v-num">v3.6.0</span><span class="v-date">2026-10-01</span></div>
