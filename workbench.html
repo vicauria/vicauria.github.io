@@ -730,7 +730,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.8.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.8.1</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -1392,7 +1392,29 @@
   }
 
   let homeReady = false;
-  initialFrame.addEventListener('load', ()=>{ homeReady = true; hideLoading(); setTimeout(startPreload, 1500); }, {once:true});
+  // 剛按下登入進來：歡迎畫面固定至少播 3 秒（從登入頁跳過來的那一次才會；之後重新整理不會）
+  let splashUntil = 0;
+  try{
+    const t = parseInt(sessionStorage.getItem('vc_just_logged_in') || '0', 10);
+    if(t && Date.now() - t < 60000) splashUntil = Date.now() + 3000;
+    sessionStorage.removeItem('vc_just_logged_in');
+  }catch(e){}
+  function finishSplash(){
+    const wait = Math.max(0, splashUntil - Date.now());
+    setTimeout(()=>{ homeReady = true; hideLoading(); }, wait);
+  }
+  let homeHandled = false;
+  function onHomeLoaded(){
+    if(homeHandled) return; homeHandled = true;
+    finishSplash(); setTimeout(startPreload, 1500);
+  }
+  initialFrame.addEventListener('load', onHomeLoaded, {once:true});
+  // 首頁有可能在這段程式執行前就已經載好（例如瀏覽器有快取），那樣 load 事件不會再觸發，
+  // 之前就是因為這樣有時要等 8 秒保險時間到才進得去——這裡直接檢查一次
+  try{
+    const d = initialFrame.contentDocument;
+    if(d && d.readyState === 'complete' && initialFrame.contentWindow.location.href !== 'about:blank') onHomeLoaded();
+  }catch(e){}
   // 保險：就算真的卡住，最多 8 秒後還是強制讓畫面出現，不讓使用者被永遠卡住
   setTimeout(()=>{ homeReady = true; hideLoading(); }, 8000);
 

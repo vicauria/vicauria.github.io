@@ -215,6 +215,8 @@
       localStorage.removeItem(REMEMBERED_EMAIL_KEY);
     }
 
+    // 告訴工作台「剛登入」，進去時會固定先播 3 秒歡迎載入畫面
+    try{ sessionStorage.setItem('vc_just_logged_in', String(Date.now())); }catch(e){}
     window.location.href = 'workbench.html';
   });
 </script>
