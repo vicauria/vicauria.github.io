@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="ui-kit.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vicauria｜資產配置工作台</title>
@@ -123,7 +124,9 @@
     color:rgba(245,247,246,0.5); text-transform:uppercase;
     padding:10px 10px 8px;
   }
-  .nav-group-header:hover{color:rgba(245,247,246,0.8);}
+  nav.modules .nav-group-header{flex-direction:row; justify-content:space-between; align-items:center; text-align:left; border-left:none; border-radius:6px; margin-bottom:2px; font-size:11px; color:rgba(245,247,246,0.62); padding:12px 12px 6px;}
+  .nav-group-header:hover{color:rgba(245,247,246,0.85);}
+  .nav-solo{margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid var(--line);}
   .nav-group-header .chevron{font-size:10px; transition:transform .18s ease; color:rgba(245,247,246,0.4);}
   .nav-group.collapsed .nav-group-header .chevron{transform:rotate(-90deg);}
   .nav-group-body{overflow:hidden; max-height:600px; transition:max-height .22s ease;}
@@ -577,26 +580,24 @@
     </div>
 
     <nav class="modules" id="nav">
-      <div class="nav-group" data-group="guide">
-        <button class="nav-group-header">
-          <span>新手上路</span>
-          <span class="chevron">▾</span>
-        </button>
-        <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-guide">
-            <span class="collapsed-icon">🧭</span>
-            <span class="name"><span class="num">◆</span>使用導覽</span>
-            <span class="desc">功能說明／從名單到成交的流程</span>
+      <div class="nav-solo">
+          <button class="mod-btn active" data-target="frame-home">
+            <span class="collapsed-icon">🏠</span>
+            <span class="name"><span class="num">◆</span>首頁</span>
+            <span class="desc">今天要做的事／我的進度</span>
           </button>
-        </div>
       </div>
-
-      <div class="nav-group" data-group="explore">
-        <button class="nav-group-header">
-          <span>客戶探索</span>
+      <div class="nav-group" data-group="clients">
+        <button class="nav-group-header" type="button">
+          <span>客戶經營</span>
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-namelist">
+            <span class="collapsed-icon">📋</span>
+            <span class="name"><span class="num">◆</span>名單管理</span>
+            <span class="desc">列名單：A／B／C 三區名單</span>
+          </button>
           <button class="mod-btn" data-target="frame-blueprint">
             <span class="collapsed-icon">🗺️</span>
             <span class="name"><span class="num">◆</span>財富地圖</span>
@@ -607,17 +608,16 @@
             <span class="name"><span class="num">◆</span>客戶資料</span>
             <span class="desc">已填答的財富地圖紀錄</span>
           </button>
-          <button class="mod-btn" data-target="frame-namelist">
-            <span class="collapsed-icon">📋</span>
-            <span class="name"><span class="num">◆</span>名單管理</span>
-            <span class="desc">列名單：A／B／C 三區名單</span>
+          <button class="mod-btn" data-target="frame-contracts" data-min-plan="pro">
+            <span class="collapsed-icon">📝</span>
+            <span class="name"><span class="num">◆</span>簽約管理<span class="mod-lock-icon">🔒</span></span>
+            <span class="desc">合約紀錄／繳費提醒</span>
           </button>
         </div>
       </div>
-
-      <div class="nav-group" data-group="calendar">
-        <button class="nav-group-header">
-          <span>行事曆</span>
+      <div class="nav-group" data-group="schedule">
+        <button class="nav-group-header" type="button">
+          <span>行程與團隊</span>
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
@@ -626,15 +626,6 @@
             <span class="name"><span class="num">◆</span>行事曆</span>
             <span class="desc">約訪行程／團隊公告</span>
           </button>
-        </div>
-      </div>
-
-      <div class="nav-group" data-group="team">
-        <button class="nav-group-header">
-          <span>團隊</span>
-          <span class="chevron">▾</span>
-        </button>
-        <div class="nav-group-body">
           <button class="mod-btn" data-target="frame-team">
             <span class="collapsed-icon">👥</span>
             <span class="name"><span class="num">◆</span>團隊</span>
@@ -642,23 +633,8 @@
           </button>
         </div>
       </div>
-
-      <div class="nav-group" data-group="contracts">
-        <button class="nav-group-header">
-          <span>簽約管理</span>
-          <span class="chevron">▾</span>
-        </button>
-        <div class="nav-group-body">
-          <button class="mod-btn" data-target="frame-contracts" data-min-plan="pro">
-            <span class="collapsed-icon">📝</span>
-            <span class="name"><span class="num">◆</span>簽約管理<span class="mod-lock-icon">🔒</span></span>
-            <span class="desc">合約紀錄／繳費提醒</span>
-          </button>
-        </div>
-      </div>
-
       <div class="nav-group" data-group="tools">
-        <button class="nav-group-header">
+        <button class="nav-group-header" type="button">
           <span>試算工具箱</span>
           <span class="chevron">▾</span>
         </button>
@@ -690,9 +666,8 @@
           </button>
         </div>
       </div>
-
       <div class="nav-group" data-group="market">
-        <button class="nav-group-header">
+        <button class="nav-group-header" type="button">
           <span>市場情報</span>
           <span class="chevron">▾</span>
         </button>
@@ -709,13 +684,17 @@
           </button>
         </div>
       </div>
-
-      <div class="nav-group" data-group="feedback">
-        <button class="nav-group-header">
-          <span>意見回饋</span>
+      <div class="nav-group" data-group="help">
+        <button class="nav-group-header" type="button">
+          <span>說明與回饋</span>
           <span class="chevron">▾</span>
         </button>
         <div class="nav-group-body">
+          <button class="mod-btn" data-target="frame-guide">
+            <span class="collapsed-icon">🧭</span>
+            <span class="name"><span class="num">◆</span>使用導覽</span>
+            <span class="desc">功能說明／從名單到成交的流程</span>
+          </button>
           <button class="mod-btn" data-target="frame-feedback">
             <span class="collapsed-icon">📮</span>
             <span class="name"><span class="num">◆</span>意見箱</span>
@@ -730,7 +709,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.8.2</span>
+        <span class="user-version-tag" id="userVersionTag">v3.9.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -1011,6 +990,7 @@
   });
 
   document.getElementById('menuLogout').addEventListener('click', async ()=>{
+    try{ localStorage.removeItem('vc_bp_draft_v1'); }catch(e){} // 登出時清掉財富地圖的填寫暫存（含客戶資料）
     await supabaseClient.auth.signOut();
     window.location.href = 'login.html';
   });
@@ -1485,7 +1465,7 @@
     const activeBtn = Array.from(buttons).find(b=> b.dataset.target === targetId);
     const nameEl = document.getElementById('mobileCurrentName');
     if(nameEl){
-      nameEl.textContent = activeBtn ? activeBtn.querySelector('.name').textContent : '首頁';
+      nameEl.textContent = (targetFrame && targetFrame.title) || '首頁';
     }
     closeMobileDrawer();
     window.vcTrack(targetId.replace('frame-',''));
@@ -1553,10 +1533,16 @@
 
 
   // ---- 側邊欄分類：展開／收起，每次進工作台一律預設全部收合（不記憶跨次狀態） ----
+  // 預設全部展開；使用者自己收起來的分組會記住（存在這台裝置）
+  const NAV_COLLAPSE_KEY = 'vc_nav_collapsed';
+  let navCollapsed = [];
+  try{ navCollapsed = JSON.parse(localStorage.getItem(NAV_COLLAPSE_KEY) || '[]') || []; }catch(e){}
   document.querySelectorAll('.nav-group').forEach(group=>{
-    group.classList.add('collapsed');
+    if(navCollapsed.includes(group.dataset.group)) group.classList.add('collapsed');
     group.querySelector('.nav-group-header').addEventListener('click', ()=>{
       group.classList.toggle('collapsed');
+      const keys = Array.from(document.querySelectorAll('.nav-group.collapsed')).map(g=> g.dataset.group);
+      try{ localStorage.setItem(NAV_COLLAPSE_KEY, JSON.stringify(keys)); }catch(e){}
     });
   });
 
