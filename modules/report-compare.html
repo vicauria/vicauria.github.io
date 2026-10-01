@@ -149,6 +149,13 @@
     .panel, .metric-card, .verdict-card{box-shadow:none; break-inside:avoid;}
     .panel::before, .metric-card::before, .verdict-card::before{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
+  /* ---- 報告最後的 Vicauria 署名（讓拿到報告的人知道出處、找得到網站） ---- */
+  .vc-sign{display:flex; align-items:center; justify-content:center; gap:12px; margin:34px auto 6px; padding-top:18px; border-top:1px solid var(--line); max-width:520px; text-align:left;}
+  .vc-sign img{width:30px; height:30px; object-fit:contain; flex-shrink:0;}
+  .vc-sign .t1{font-size:12.5px; font-weight:700; color:var(--navy); letter-spacing:.02em;}
+  .vc-sign .t2{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .vc-sign .t2 b{color:var(--teal-deep); font-family:"Roboto Mono",monospace; font-weight:600;}
+  @media print{ .vc-sign{-webkit-print-color-adjust:exact; print-color-adjust:exact; page-break-inside:avoid; break-inside:avoid;} }
 </style>
 </head>
 <body>
@@ -169,6 +176,7 @@
 
 <main class="wrap">
   <div id="content"></div>
+  <div class="vc-sign"><img src="../icons/vicauria-mark.png" alt=""><div><div class="t1">本報告由 Vicauria 財務顧問工作台產出</div><div class="t2"><b>vicauria.github.io</b>　｜　專為財務顧問打造的財務健檢與規劃工具</div></div></div>
 </main>
 
 <script src="../vendor/supabase-js-2.117.2.js"></script>
