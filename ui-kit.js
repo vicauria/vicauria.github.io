@@ -17,6 +17,15 @@
   body:not(.vc-no-compact) header.hero .eyebrow{margin-bottom:6px !important;}
   body:not(.vc-no-compact) header.hero p:not(.vc-help-text){margin:6px 0 0 !important;}
   body:not(.vc-no-compact) header.hero ~ main, header.greet ~ main{margin-top:20px !important;}
+  /* ---- 統一內容寬度：標題與內容同一條左邊線、同樣最大寬度 ---- */
+  @media screen{
+    body:not(.vc-no-compact) .wrap, body:not(.vc-no-compact) main.vc-wrap{
+      max-width:1080px !important; margin-left:auto !important; margin-right:auto !important;
+      padding-left:24px !important; padding-right:24px !important; box-sizing:border-box !important;}
+  }
+  @media screen and (max-width:640px){
+    body:not(.vc-no-compact) .wrap, body:not(.vc-no-compact) main.vc-wrap{padding-left:16px !important; padding-right:16px !important;}
+  }
   header.hero .vc-help-text{display:none !important;}
   header.hero.vc-help-open .vc-help-text{display:block !important; margin-top:10px !important;}
   .vc-help-btn{width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.08);
@@ -60,6 +69,14 @@
   .vc-sk.w30{width:30%; height:16px;} .vc-sk.w50{width:50%;} .vc-sk.w70{width:70%;} .vc-sk.w90{width:90%;}
   @keyframes vcSk{0%{background-position:200% 0;} 100%{background-position:-200% 0;}}
   @media (prefers-reduced-motion: reduce){ .vc-sk{animation:none;} }
+  /* ---- 好懂的錯誤訊息 ---- */
+  .vc-err-title{font-size:15px; font-weight:700; color:#16323F; margin:4px 0 6px;}
+  .vc-err-msg{font-size:13.5px; color:#4F5F64; line-height:1.8;}
+  .vc-err-details{margin:14px auto 0; max-width:480px; text-align:left; font-size:12px; color:#7A8A8F;}
+  .vc-err-details summary{cursor:pointer; text-align:center; list-style:none; text-decoration:underline; text-underline-offset:3px;}
+  .vc-err-details summary::-webkit-details-marker{display:none;}
+  .vc-err-details pre{white-space:pre-wrap; word-break:break-word; font-family:"Roboto Mono",monospace; font-size:11.5px; color:#B3492F;
+    background:#F5F7F6; padding:10px 14px; border-radius:8px; margin:8px 0 0;}
   @media print{ .vc-modal-mask, .vc-toast-wrap, .vc-help-btn{display:none !important;} }
   `;
   const style = document.createElement('style'); style.textContent = css;
@@ -124,6 +141,26 @@
     let h = '';
     for(let i = 0; i < (n || 3); i++) h += '<div class="vc-sk-card"><span class="vc-sk w30"></span><span class="vc-sk w90"></span><span class="vc-sk w50"></span></div>';
     return h;
+  };
+
+  /* ---------------- 好懂的錯誤訊息 ----------------
+     把「Failed to fetch」這類技術訊息換成一般人看得懂的說明，技術細節收在可展開的區塊（回報問題時用） */
+  window.vcFriendlyError = function(err, what){
+    const raw = String((err && (err.message || err)) || '');
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    let title, msg;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false){
+      title = '網路好像斷線了';
+      msg = '請確認 Wi-Fi 或行動網路有連上，再按上方「重新整理」。';
+    }else if(/timeout|timed out|abort|逾時/i.test(raw)){
+      title = '資料來源回應太慢';
+      msg = '對方網站這次比較慢，等幾秒後按上方「重新整理」再試一次。';
+    }else{
+      title = (what || '資料') + '暫時抓不到';
+      msg = '可能是網路不穩，或資料來源暫時沒有回應，通常過一下就會恢復。<br>請按上方「重新整理」再試一次；若一直失敗，可以展開下面的技術細節截圖，到「意見箱」告訴我們。';
+    }
+    return '<div class="icon">⚠️</div><div class="vc-err-title">' + title + '</div><div class="vc-err-msg">' + msg + '</div>'
+      + (raw ? '<details class="vc-err-details"><summary>技術細節（回報問題時用）</summary><pre>' + esc(raw) + '</pre></details>' : '');
   };
 
   /* ---------------- 小提示 ---------------- */

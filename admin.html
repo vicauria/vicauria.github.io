@@ -157,6 +157,8 @@
     padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; font-family:inherit; font-size:12.5px; background:var(--card); color:var(--ink);
   }
   .fb-actions input{flex:1; min-width:180px;}
+  .fb-actions textarea.fb-reply{flex:1 1 100%; order:5; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-family:inherit; font-size:13px; line-height:1.6; resize:vertical; background:var(--card); color:var(--ink);}
+  .fb-actions .fb-save{order:6;} .fb-actions .saved-hint{order:7;}
   .btn{
     padding:8px 16px; border:none; border-radius:18px; background:var(--navy); color:#fff;
     font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer;
@@ -523,6 +525,7 @@ function renderFeedback(){
           ${Object.entries(STATUS_LABEL).map(([k,v])=>`<option value="${k}"${f.status===k?' selected':''}>${v}</option>`).join('')}
         </select>
         <input class="fb-note" type="text" placeholder="處理備註（只有後台看得到）" value="${esc(f.admin_note)}">
+        <textarea class="fb-reply" rows="2" placeholder="回覆給顧問（對方會在意見箱看到）">${esc(f.reply || '')}</textarea>
         <button class="btn fb-save" type="button">儲存</button>
         <span class="saved-hint" hidden>已儲存</span>
       </div>
@@ -534,13 +537,19 @@ function renderFeedback(){
       const btn = card.querySelector('.fb-save');
       const status = card.querySelector('.fb-status').value;
       const note = card.querySelector('.fb-note').value;
+      const reply = card.querySelector('.fb-reply').value.trim();
       btn.disabled = true; btn.textContent = '儲存中…';
-      const { error } = await supabaseClient.rpc('vc_admin_set_feedback', { p_id: card.dataset.id, p_status: status, p_note: note });
+      let { error } = await supabaseClient.rpc('vc_admin_set_feedback', { p_id: card.dataset.id, p_status: status, p_note: note, p_reply: reply });
+      // 還沒跑 vicauria-feedback-reply.sql 時：沒有回覆就用舊版存，有回覆就提醒
+      if(error && /p_reply|function|schema cache/i.test(error.message || '')){
+        if(reply){ btn.disabled = false; btn.textContent = '儲存'; alert('要先在 Supabase 執行 vicauria-feedback-reply.sql，才能回覆給顧問。'); return; }
+        ({ error } = await supabaseClient.rpc('vc_admin_set_feedback', { p_id: card.dataset.id, p_status: status, p_note: note }));
+      }
       btn.disabled = false; btn.textContent = '儲存';
       if(error){ alert('儲存失敗：' + error.message); return; }
       const f = state.feedback.find(x=> x.id === card.dataset.id);
       if(f){
-        f.status = status; f.admin_note = note;
+        f.status = status; f.admin_note = note; f.reply = reply;
         f.handled_at = status === 'done' ? (f.handled_at || new Date().toISOString()) : null;
       }
       state.overview.feedback_open = state.feedback.filter(x=> x.status !== 'done').length;

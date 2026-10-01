@@ -574,6 +574,9 @@
     .mobile-tabbar .tab-btn:active{background:var(--paper);}
   }
   @media (min-width:821px){ .mobile-tabbar{display:none;} }
+  /* ---------- 面談模式：只留下目前的功能畫面 ---------- */
+  body.vc-focus aside.sidebar, body.vc-focus .mobile-topbar, body.vc-focus .mobile-tabbar,
+  body.vc-focus .xv-bubble, body.vc-focus .xv-panel, body.vc-focus .drawer-overlay{display:none !important;}
 </style>
 </head>
 <body>
@@ -727,7 +730,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.10.1</span>
+        <span class="user-version-tag" id="userVersionTag">v3.11.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -1472,6 +1475,7 @@
       }catch(e){ /* 存取不到就略過，不影響切換分頁 */ }
     }
 
+    if(targetId !== 'frame-blueprint' && window.vcIsFocusMode && window.vcIsFocusMode()) window.vcSetFocusMode(false);
     buttons.forEach(b=> b.classList.toggle('active', b.dataset.target === targetId));
     document.querySelectorAll('#mobileTabbar .tab-btn[data-target]').forEach(b=> b.classList.toggle('active', b.dataset.target === targetId));
     frames.forEach(f=> f.classList.toggle('active', f.id === targetId));
@@ -1544,6 +1548,20 @@
     else openMobileDrawer();
   });
   drawerOverlayEl.addEventListener('click', closeMobileDrawer);
+  // ---- 面談模式（財富地圖用）：隱藏側邊欄、導覽列、小V；同時嘗試切換成瀏覽器全螢幕 ----
+  window.vcIsFocusMode = ()=> document.body.classList.contains('vc-focus');
+  window.vcSetFocusMode = function(on){
+    document.body.classList.toggle('vc-focus', !!on);
+    try{
+      if(on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+      if(!on && document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    }catch(e){}
+    try{ const f = document.getElementById('frame-blueprint'); f && f.contentWindow && f.contentWindow.vcFocusModeChanged && f.contentWindow.vcFocusModeChanged(!!on); }catch(e){}
+    return !!on;
+  };
+  // 按 Esc 離開瀏覽器全螢幕時，一起結束面談模式
+  document.addEventListener('fullscreenchange', ()=>{ if(!document.fullscreenElement && window.vcIsFocusMode()) window.vcSetFocusMode(false); });
+
   // 底部導覽列
   document.querySelectorAll('#mobileTabbar .tab-btn[data-target]').forEach(b=>{
     b.addEventListener('click', ()=>{ if(!b.classList.contains('active')) activateFrame(b.dataset.target); });
