@@ -8,10 +8,15 @@
   if(window.__vcUiKit) return; window.__vcUiKit = true;
 
   const css = `
-  /* ---- 精簡頁首 ---- */
-  body:not(.vc-no-compact) header.hero{padding-top:22px !important; padding-bottom:40px !important; min-height:0 !important;}
+  /* ---- 統一頁首：每個功能的標題背景一樣高，內容與標題背景之間留固定空隙 ---- */
+  body:not(.vc-no-compact) header.hero, header.greet{
+    min-height:128px !important; padding:20px 0 !important; box-sizing:border-box !important;
+    display:flex !important; align-items:center !important;}
+  body:not(.vc-no-compact) header.hero > .wrap, header.greet > .wrap{width:100%;}
   body:not(.vc-no-compact) header.hero h1{font-size:clamp(20px,2.6vw,24px) !important; line-height:1.4 !important; margin-bottom:0 !important;}
   body:not(.vc-no-compact) header.hero .eyebrow{margin-bottom:6px !important;}
+  body:not(.vc-no-compact) header.hero p:not(.vc-help-text){margin:6px 0 0 !important;}
+  body:not(.vc-no-compact) header.hero ~ main, header.greet ~ main{margin-top:20px !important;}
   header.hero .vc-help-text{display:none !important;}
   header.hero.vc-help-open .vc-help-text{display:block !important; margin-top:10px !important;}
   .vc-help-btn{width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.08);
