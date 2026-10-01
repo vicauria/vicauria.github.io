@@ -116,9 +116,9 @@
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">Live Exchange Rate · 即時匯率</div>
-    <h1>台幣兌各幣別，一頁看完</h1>
-    <p>台灣人常用的美金、港幣、日圓、韓元、泰銖，市場參考匯率一次看完，不用自己開分頁查。</p>
+    <div class="eyebrow">Exchange Rate · 即時匯率</div>
+    <h1>即時匯率</h1>
+    <p><b>台幣兌各幣別，一頁看完</b>。台灣人常用的美金、港幣、日圓、韓元、泰銖，市場參考匯率一次看完，不用自己開分頁查。</p>
   </div>
 </header>
 
@@ -299,7 +299,7 @@ async function loadRates(){
     document.getElementById('updateMeta').innerHTML = '更新於 <b>'+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})+'</b>　資料來源：ExchangeRate-API';
   } catch(err){
     stateBox.style.display = 'block';
-    stateBox.innerHTML = '<div class="icon">⚠️</div>這次抓取失敗了，原因：<br><div style="text-align:left;max-width:480px;margin:14px auto 0;font-family:\'Roboto Mono\',monospace;font-size:12px;color:var(--negative);background:var(--paper);padding:12px 16px;border-radius:8px;">'+vcEsc(err.message)+'</div><br>按上方「重新整理」再試一次看看。若持續失敗，請把這個畫面截圖，到「意見箱」回報給我們。';
+    stateBox.innerHTML = vcFriendlyError(err, '匯率');
     grid.style.display = 'none';
     converter.style.display = 'none';
     document.getElementById('updateMeta').textContent = '抓取失敗';

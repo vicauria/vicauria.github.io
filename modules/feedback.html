@@ -79,6 +79,31 @@
     color:var(--negative); font-size:12.5px; padding:10px 12px; border-radius:8px; margin-bottom:16px;
   }
   .error-msg.show{display:block;}
+  .again-btn{margin-top:14px; background:#fff; color:var(--navy); border:1.5px solid var(--line); border-radius:22px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .again-btn:hover{border-color:var(--navy);}
+
+  /* 兩欄：左邊寫意見、右邊看自己送過的回饋 */
+  .fb-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start;}
+  .fb-grid.solo{grid-template-columns:minmax(0,640px); justify-content:center;}
+  @media (max-width:860px){ .fb-grid, .fb-grid.solo{grid-template-columns:1fr;} }
+  .mine-card h2{font-size:16px; margin-bottom:4px;}
+  .mine-sub{font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;}
+  .mine-empty{font-size:13px; color:var(--ink-soft); text-align:center; padding:22px 0 8px;}
+  .mine-item{border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#fff;}
+  .mine-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;}
+  .mine-cat{font-size:11.5px; color:var(--ink-soft); background:var(--paper); border-radius:10px; padding:2px 9px; font-weight:700;}
+  .mine-date{font-size:11.5px; color:var(--ink-soft); font-family:"Roboto Mono",monospace; margin-left:auto;}
+  .mine-status{font-size:11.5px; font-weight:700; border-radius:10px; padding:2px 10px;}
+  .mine-status.new{background:#FBEFE2; color:#A85F27;}
+  .mine-status.doing{background:var(--teal-tint,#E6F0F2); color:var(--teal-deep,#1F5C73);}
+  .mine-status.done{background:rgba(46,125,91,0.12); color:var(--positive,#2E7D5B);}
+  .mine-msg{font-size:13.5px; color:var(--ink); line-height:1.75; white-space:pre-wrap; word-break:break-word;
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;}
+  .mine-item.open .mine-msg{display:block; -webkit-line-clamp:unset;}
+  .mine-more{background:none; border:none; padding:0; color:var(--teal-deep,#1F5C73); font-size:12px; cursor:pointer; font-family:inherit; margin-top:2px;}
+  .mine-reply{margin-top:10px; background:var(--paper); border-left:3px solid var(--navy); border-radius:0 10px 10px 0; padding:10px 12px;
+    font-size:13px; color:var(--ink); line-height:1.75; white-space:pre-wrap; word-break:break-word;}
+  .mine-reply b{display:block; font-size:11.5px; color:var(--navy); margin-bottom:2px;}
 </style>
 </head>
 <body>
@@ -86,12 +111,13 @@
 <header class="hero">
   <div class="wrap">
     <div class="eyebrow">Feedback · 意見箱</div>
-    <h1>遇到問題，或有想改進的地方？</h1>
-    <p>不管是功能上卡卡的、算錯的地方，還是你希望這個工作台能多做什麼，都歡迎寫下來。</p>
+    <h1>意見箱</h1>
+    <p><b>遇到問題，或有想改進的地方？</b>不管是功能上卡卡的、算錯的地方，還是你希望這個工作台能多做什麼，都歡迎寫下來。</p>
   </div>
 </header>
 
 <main class="wrap">
+ <div class="fb-grid solo" id="fbGrid">
   <div class="card">
     <div class="error-msg" id="errorMsg"></div>
     <form id="feedbackForm">
@@ -113,9 +139,17 @@
     <div class="success-box" id="successBox">
       <div class="icon">✅</div>
       <p>謝謝你的意見，已經收到了！</p>
-      <p>預計 1 到 2 個工作天會回覆，請耐心稍等。</p>
+      <p>預計 1 到 2 個工作天會回覆，回覆會出現在「我的回饋」。</p>
+      <button type="button" class="again-btn" id="againBtn">再寫一則</button>
     </div>
   </div>
+
+  <div class="card mine-card" id="mineCard" hidden>
+    <h2>我的回饋</h2>
+    <div class="mine-sub">你送出的意見、處理進度和我們的回覆都在這裡。</div>
+    <div id="mineList"></div>
+  </div>
+ </div>
 </main>
 
 <script src="../vendor/supabase-js-2.117.2.js"></script>
@@ -167,7 +201,7 @@
 
     if(error){
       console.error('意見送出失敗', error);
-      showError('送出失敗，請檢查網路連線後再試一次。（詳細原因：' + error.message + '）');
+      showError('沒有送出成功，可能是網路不穩，請確認連線後再按一次「送出意見」。你寫的內容還在，不用重打。');
       submitBtn.disabled = false;
       submitBtn.textContent = '送出意見';
       return;
@@ -175,7 +209,53 @@
 
     document.getElementById('feedbackForm').style.display = 'none';
     document.getElementById('successBox').classList.add('show');
+    document.getElementById('messageInput').value = '';
+    submitBtn.disabled = false;
+    submitBtn.textContent = '送出意見';
+    loadMine();
   });
+
+  document.getElementById('againBtn').addEventListener('click', ()=>{
+    document.getElementById('successBox').classList.remove('show');
+    document.getElementById('feedbackForm').style.display = '';
+    document.getElementById('messageInput').focus();
+  });
+
+  /* ---------- 我的回饋 ---------- */
+  const MINE_CAT = { bug:'功能異常', idea:'功能建議', feature:'功能建議', other:'其他' };
+  const MINE_STATUS = { new:'已收到，尚未處理', doing:'處理中', done:'已完成' };
+  function escH(t){ return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function fmtD(iso){ if(!iso) return ''; const d = new Date(iso); return d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate(); }
+  async function loadMine(){
+    const card = document.getElementById('mineCard');
+    const grid = document.getElementById('fbGrid');
+    try{
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if(!session) return;
+      const { data, error } = await supabaseClient.rpc('vc_my_feedback');
+      if(error || !Array.isArray(data)) return;   // 資料庫還沒更新時，安靜地不顯示這一區
+      card.hidden = false; grid.classList.remove('solo');
+      const box = document.getElementById('mineList');
+      if(!data.length){ box.innerHTML = '<div class="mine-empty">還沒有送出過意見。</div>'; return; }
+      box.innerHTML = data.map(f=>{
+        const st = ['new','doing','done'].includes(f.status) ? f.status : 'new';
+        const long = String(f.message || '').length > 120;
+        return '<div class="mine-item">'
+          + '<div class="mine-top"><span class="mine-status ' + st + '">' + MINE_STATUS[st] + '</span>'
+          + '<span class="mine-cat">' + escH(MINE_CAT[f.category] || '其他') + '</span>'
+          + '<span class="mine-date">' + fmtD(f.created_at) + '</span></div>'
+          + '<div class="mine-msg">' + escH(f.message) + '</div>'
+          + (long ? '<button type="button" class="mine-more">展開全文</button>' : '')
+          + (f.reply ? '<div class="mine-reply"><b>Vicauria 回覆' + (f.replied_at ? '・' + fmtD(f.replied_at) : '') + '</b>' + escH(f.reply) + '</div>' : '')
+          + '</div>';
+      }).join('');
+      box.querySelectorAll('.mine-more').forEach(b=> b.addEventListener('click', ()=>{
+        const it = b.closest('.mine-item'); it.classList.toggle('open');
+        b.textContent = it.classList.contains('open') ? '收合' : '展開全文';
+      }));
+    }catch(e){ /* 讀不到就不顯示 */ }
+  }
+  loadMine();
 </script>
 
 </body>

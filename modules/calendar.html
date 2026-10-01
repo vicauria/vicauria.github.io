@@ -85,15 +85,28 @@
   .cal-cell .d-dots{display:flex; flex-wrap:wrap; gap:3px;}
   .cal-cell .d-dots .dot{width:6px; height:6px; border-radius:50%;}
 
+  .cal-cell .d-dots .dot.holiday, .legend .dot.holiday{background:#fff; box-shadow:inset 0 0 0 1.5px var(--negative);}
+  .cal-cell .d-dots .dot.holiday, .legend .hol-legend, .month-holidays{display:none;}
+  .month-holidays{margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--ink-soft); line-height:1.9;}
+  .month-holidays b{color:var(--negative); font-family:"Roboto Mono",monospace; margin-right:4px;}
   @media (max-width:640px){
     .cal-cell{min-height:52px;}
     .cal-dow{font-size:11.5px;}
+  }
+  @media (max-width:520px){
+    .cal-grid{gap:4px;}
+    .cal-cell{min-height:46px; padding:5px 4px;}
+    .cal-cell .d-holiday-label{display:none;}
+    .cal-cell .d-dots .dot.holiday{display:inline-block;}
+    .legend .hol-legend{display:inline-flex;}
+    .month-holidays{display:block;}
+    .month-holidays:empty{display:none;}
   }
 
   .day-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
   .day-panel-head h3{font-size:15px;}
   .btn-add-event{
-    background:var(--teal); color:#fff; border:none; padding:9px 18px; border-radius:18px;
+    background:var(--navy); color:#fff; border:none; padding:9px 18px; border-radius:18px;
     font-size:12.5px; font-weight:700; cursor:pointer; font-family:"Noto Sans TC",sans-serif;
   }
   .btn-add-event:hover{background:var(--teal-deep);}
@@ -166,8 +179,8 @@
 <header class="hero">
   <div class="wrap">
     <div class="eyebrow">Calendar · 行事曆</div>
-    <h1>約訪行程</h1>
-    <p>記錄自己的約訪；如果你是團隊主管，可以把重要公告開放給整個團隊看到。每位夥伴的個人行程只有自己看得到，不會出現在其他人的行事曆上。</p>
+    <h1>行事曆</h1>
+    <p><b>約訪行程</b>。記錄自己的約訪；如果你是團隊主管，可以把重要公告開放給整個團隊看到。每位夥伴的個人行程只有自己看得到，不會出現在其他人的行事曆上。</p>
   </div>
 </header>
 
@@ -176,6 +189,7 @@
     <span><span class="dot mine"></span>我的行程</span>
     <span><span class="dot teamshared"></span>團隊公告</span>
     <span><span class="dot birthday"></span>客戶生日</span>
+    <span class="hol-legend"><span class="dot holiday"></span>國定假日</span>
   </div>
 
   <div class="cal-panel">
@@ -188,6 +202,7 @@
       </div>
     </div>
     <div class="cal-grid" id="calGrid"></div>
+    <div class="month-holidays" id="monthHolidays"></div>
   </div>
 
   <div class="cal-panel">
@@ -477,11 +492,16 @@ function renderGrid(){
     html += `<div class="${cls.join(' ')}" data-date="${c.dateStr}">
       <div class="d-num${holidayName?' holiday':''}">${c.day}</div>
       ${holidayName ? `<div class="d-holiday-label">${holidayName}</div>` : ''}
-      <div class="d-dots">${dots}${birthdayDot}</div>
+      <div class="d-dots">${holidayName ? '<span class="dot holiday"></span>' : ''}${dots}${birthdayDot}</div>
     </div>`;
   });
 
   grid.innerHTML = html;
+  // 手機版格子太窄放不下假日名稱，改在月曆下方列出本月假日
+  const hol = cells.filter(c=>!c.outside && TW_HOLIDAYS[c.dateStr])
+    .map(c=>`<span style="display:inline-block;margin-right:14px;"><b>${m+1}/${c.day}</b>${TW_HOLIDAYS[c.dateStr]}</span>`).join('');
+  const mh = document.getElementById('monthHolidays');
+  if(mh) mh.innerHTML = hol;
   grid.querySelectorAll('.cal-cell[data-date]').forEach(cell=>{
     cell.addEventListener('click', ()=>{
       selectedDate = cell.dataset.date;

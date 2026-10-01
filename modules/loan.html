@@ -73,13 +73,14 @@
   .eyebrow{font-family:'Roboto Mono'; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--brass); margin-bottom:16px; display:flex; gap:10px; align-items:center;}
   .eyebrow::before{content:"";width:22px;height:1px;background:var(--brass);display:inline-block;}
 
-  nav.tabs{position:sticky; top:0; z-index:50; background:rgba(245,247,246,0.94); backdrop-filter:blur(6px); border-bottom:1px solid var(--paper-line); display:flex; overflow-x:auto; padding:0 6vw;}
+  nav.tabs{position:sticky; top:0; z-index:50; background:rgba(245,247,246,0.94); backdrop-filter:blur(6px); border-bottom:1px solid var(--paper-line); display:flex; overflow-x:auto; padding:0 max(12px, calc(50% - 532px));}
   nav.tabs button{font-family:'Roboto Mono'; font-size:12.5px; white-space:nowrap; padding:15px 16px; text-decoration:none; color:var(--text-soft); border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; cursor:pointer;}
   nav.tabs button span{color:var(--brass); margin-right:6px;}
   nav.tabs button.active, nav.tabs button:hover{color:var(--ink); border-bottom-color:var(--brass);}
 
-  main{max-width:1120px;margin:0 auto;padding-bottom:140px;}
-  section.sheet{padding:64px 6vw 26px; border-bottom:none; scroll-margin-top:56px; display:none;}
+  main{max-width:1080px;margin:0 auto;padding-bottom:140px;}
+  @media (max-width:640px){ section.sheet{padding:28px 16px 20px;} }
+  section.sheet{padding:40px 24px 26px; border-bottom:none; scroll-margin-top:56px; display:none;}
   section.sheet.active{display:block;}
   .sheet-head{display:flex; align-items:baseline; gap:14px; margin-bottom:8px;}
   .sheet-num{font-family:'Roboto Mono'; font-size:13px; color:var(--brass-deep); border:1px solid var(--brass); padding:2px 8px; border-radius:20px;}
@@ -174,9 +175,9 @@
 
 <header class="hero">
   <div class="wrap">
-    <div class="eyebrow">貸款試算室 · Module A</div>
-    <h1>先把<span class="accent">借錢的成本</span>算清楚，才知道怎麼配置。</h1>
-    <p>車貸、信貸、房貸、寬限期、跨方案比較，加上貸款資金投入配置工具後的利差試算——把每一筆借款的月付金、總利息、跟資金運用效率，一次算給你看。</p>
+    <div class="eyebrow">Loan Lab · 貸款試算室</div>
+    <h1>貸款試算室</h1>
+    <p><b>先把借錢的成本算清楚，才知道怎麼配置。</b>車貸、信貸、房貸、寬限期、跨方案比較，加上貸款資金投入配置工具後的利差試算——把每一筆借款的月付金、總利息、跟資金運用效率，一次算給你看。</p>
   </div>
 </header>
 

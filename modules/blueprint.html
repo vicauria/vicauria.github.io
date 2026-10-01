@@ -80,10 +80,13 @@
   .dob-row{display:flex;gap:10px;}
   .dob-row select{flex:1;}
 
-  .choice-group{display:flex;flex-wrap:wrap;gap:10px;}
-  .choice-pill{padding:10px 18px;border-radius:24px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;color:var(--ink);cursor:pointer;user-select:none;transition:all .15s ease;}
-  .choice-pill:hover{border-color:var(--teal);}
-  .choice-pill.selected{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700;}
+  /* 選項做成大顆卡片：面談時把平板／手機給客戶點，手指也不會點錯 */
+  .choice-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .choice-pill{min-height:52px;padding:12px 16px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-size:15px;color:var(--ink);cursor:pointer;user-select:none;transition:all .15s ease;
+    display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.45;font-weight:500;}
+  .choice-pill:hover{border-color:var(--teal);background:#F7FBFC;}
+  .choice-pill.selected{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:700;box-shadow:0 6px 16px rgba(22,50,63,0.18);}
+  @media (max-width:520px){ .choice-group{grid-template-columns:repeat(2,1fr);} .choice-pill{min-height:56px;font-size:15.5px;} }
 
   .scale-row{display:flex;align-items:center;gap:14px;}
   .scale-row input[type=range]{flex:1;accent-color:var(--teal);}
@@ -91,20 +94,21 @@
 
   .likert-q{padding:16px 0;border-bottom:1px dashed var(--line);}
   .likert-q:last-child{border-bottom:none;}
-  .likert-q-text{font-size:13.5px;color:var(--ink);margin-bottom:12px;line-height:1.7;}
-  .likert-scale{display:flex;gap:8px;justify-content:space-between;max-width:320px;}
+  .likert-q-text{font-size:15px;color:var(--ink);margin-bottom:12px;line-height:1.7;}
+  .likert-scale{display:flex;gap:8px;justify-content:space-between;max-width:340px;}
   .likert-btn{
-    width:44px;height:44px;border-radius:50%;border:1.5px solid var(--line);background:#fff;
+    width:48px;height:48px;border-radius:50%;border:1.5px solid var(--line);background:#fff;
     font-family:"Roboto Mono",monospace;font-weight:700;font-size:15px;color:var(--ink-soft);cursor:pointer;
     transition:all .15s ease;
   }
   .likert-btn:hover{border-color:var(--teal);}
-  .likert-btn.selected{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .likert-btn.selected{background:var(--navy);border-color:var(--navy);color:#fff;}
 
-  .rank-group .choice-pill{position:relative;padding-left:34px;}
+  .rank-group .choice-pill{position:relative;padding-left:40px;justify-content:flex-start;text-align:left;}
+  .rank-group{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}
   .rank-badge{
     position:absolute;left:8px;top:50%;transform:translateY(-50%);
-    width:18px;height:18px;border-radius:50%;background:var(--warm);color:#fff;
+    width:22px;height:22px;border-radius:50%;background:var(--warm);color:#fff;
     font-family:"Roboto Mono",monospace;font-size:10.5px;font-weight:700;
     display:flex;align-items:center;justify-content:center;
   }
@@ -213,6 +217,15 @@
   .vc-sign .t2{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
   .vc-sign .t2 b{color:var(--teal-deep); font-family:"Roboto Mono",monospace; font-weight:600;}
   @media print{ .vc-sign{-webkit-print-color-adjust:exact; print-color-adjust:exact; page-break-inside:avoid; break-inside:avoid;} }
+  #stageHeroSub:empty{display:none;}
+  /* ---- 面談模式按鈕 ---- */
+  .focus-btn{position:fixed; top:14px; right:16px; z-index:60; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(22,50,63,0.82); color:#fff; border:1px solid rgba(255,255,255,0.45); border-radius:20px; box-shadow:0 4px 14px rgba(15,30,38,0.18);
+    padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);}
+  .focus-btn:hover{background:#1F5C73;}
+  .focus-btn.on{background:#fff; color:#16323F; border-color:#D5DDDC;}
+  .focus-btn.on:hover{background:#F5F7F6;}
+  @media print{ .focus-btn{display:none !important;} }
   /* ---- 未完成問卷的提示 ---- */
   .draft-banner{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
     background:#FBEFE2; border:1px solid rgba(201,123,61,0.4); border-radius:14px; padding:16px 20px; margin-bottom:16px;}
@@ -467,12 +480,13 @@
 </head>
 <body>
 
+<button type="button" class="focus-btn" id="focusBtn" title="隱藏側邊欄與其他按鈕，只留下問卷，適合拿給客戶操作">⛶ 面談模式</button>
 <div class="screen active" id="screen-consent">
   <header class="hero">
     <div class="wrap">
       <div class="eyebrow">Wealth Map · 財富地圖</div>
-      <h1>在開始之前，先說明資料怎麼用</h1>
-      <p>請把這頁出示給客戶閱讀，確認無誤後由客戶勾選同意，才能開始建立財富地圖。</p>
+      <h1>財富地圖</h1>
+      <p><b>在開始之前，先說明資料怎麼用。</b>請把這頁出示給客戶閱讀，確認無誤後由客戶勾選同意，才能開始建立財富地圖。</p>
     </div>
   </header>
   <main class="wrap">
@@ -1136,7 +1150,8 @@ function enterPage(idx){
   currentIndex = idx;
   const p = PAGES[idx];
   document.getElementById('stageHeroTitle').textContent = p.icon + '  ' + p.stage;
-  document.getElementById('stageHeroSub').textContent = p.isSummary ? '再檢查一次，就能生成完整報告。' : ('第 '+p.n+' 題，共 '+TOTAL_QUESTIONS+' 題');
+  // 題數與進度條統一放在下方卡片裡，標題區只顯示關卡名稱，避免資訊重複
+  document.getElementById('stageHeroSub').textContent = p.isSummary ? '再檢查一次，就能生成完整報告。' : '';
   document.getElementById('progressLabel').innerHTML = p.isSummary
     ? '<span class="stage-tag">全部完成</span>'
     : `<span class="stage-tag">${p.stage}</span> ・ 第 ${p.n} 題／共 ${TOTAL_QUESTIONS} 題`;
@@ -2701,6 +2716,24 @@ let currentAdvisorName = '';
   } else {
     offerDraftResume();
   }
+})();
+
+/* ---------------- 面談模式：隱藏工作台的側邊欄、導覽列、小V，只留問卷（並嘗試切換成瀏覽器全螢幕） ---------------- */
+(function(){
+  const btn = document.getElementById('focusBtn');
+  if(!btn) return;
+  const inWorkbench = window.parent && window.parent !== window && typeof window.parent.vcSetFocusMode === 'function';
+  function paint(on){ btn.classList.toggle('on', on); btn.textContent = on ? '✕ 結束面談模式' : '⛶ 面談模式'; }
+  btn.addEventListener('click', ()=>{
+    if(inWorkbench){
+      const on = window.parent.vcSetFocusMode(!window.parent.vcIsFocusMode());
+      paint(on);
+    } else {
+      // 單獨開啟這一頁時，只切換瀏覽器全螢幕
+      try{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }catch(e){}
+    }
+  });
+  window.vcFocusModeChanged = paint; // 工作台那邊結束面談模式時（例如按 Esc 離開全螢幕）同步按鈕文字
 })();
 
 /* ---------------- 填寫中自動暫存：不小心重新整理或關掉，下次打開可以接著填 ----------------
