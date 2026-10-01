@@ -32,7 +32,7 @@
   .xv-head .xv-ava{width:32px; height:32px; border-radius:50%; background:#fff; color:var(--navy,#16323F); display:flex; align-items:center; justify-content:center; font-family:"Noto Serif TC",Georgia,serif; font-weight:700; font-size:17px; flex-shrink:0;}
   .xv-head .xv-ttl{flex:1; min-width:0;}
   .xv-head .xv-ttl b{display:block; font-size:14px;}
-  .xv-head .xv-ttl span{display:block; font-size:11px; opacity:.7;}
+  .xv-head .xv-ttl span{display:block; font-size:12px; opacity:.7;}
   .xv-head button{background:none; border:none; color:#fff; font-size:15px; cursor:pointer; opacity:.8; padding:4px 6px;}
   .xv-head button:hover{opacity:1;}
   .xv-body{flex:1; overflow-y:auto; padding:14px 12px; background:var(--paper,#F5F7F6);}
@@ -44,7 +44,7 @@
   .xv-say ul{margin:6px 0 2px; padding-left:18px;}
   .xv-say li{margin:3px 0;}
   .xv-say .xv-q{font-weight:700; color:var(--navy,#16323F); margin-bottom:4px;}
-  .xv-say .xv-tag{display:inline-block; font-size:10.5px; font-weight:700; color:var(--warm-deep,#A85F27); background:var(--warm-tint,#FBEFE2); border-radius:6px; padding:1px 7px; margin-bottom:6px;}
+  .xv-say .xv-tag{display:inline-block; font-size:11.5px; font-weight:700; color:var(--warm-deep,#A85F27); background:var(--warm-tint,#FBEFE2); border-radius:6px; padding:1px 7px; margin-bottom:6px;}
   .xv-go, .xv-send-fb{display:block; width:fit-content; margin-top:8px; padding:6px 12px; border-radius:999px; border:1.5px solid var(--teal,#2E7391); background:#fff; color:var(--teal,#2E7391); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;}
   .xv-go:hover, .xv-send-fb:hover{background:var(--teal,#2E7391); color:#fff;}
   .xv-send-fb[disabled]{opacity:.5; cursor:default; background:#fff; color:var(--teal,#2E7391);}
@@ -52,16 +52,17 @@
   .xv-chip{border:1px solid var(--line-card,rgba(22,50,63,0.15)); background:#fff; color:var(--navy,#16323F); border-radius:999px; padding:6px 11px; font-size:12px; cursor:pointer; text-align:left; line-height:1.5; font-family:inherit;}
   .xv-chip:hover{border-color:var(--teal,#2E7391); color:var(--teal,#2E7391);}
   .xv-chip.cat{background:var(--teal-tint,#E6F0F2); border-color:transparent; font-weight:700;}
-  .xv-sub{font-size:11px; color:var(--ink-soft,#5B6B70); margin:2px 2px 6px; font-weight:700;}
+  .xv-sub{font-size:12px; color:var(--ink-soft,#5B6B70); margin:2px 2px 6px; font-weight:700;}
   .xv-typing .xv-say{color:var(--ink-soft,#5B6B70); letter-spacing:3px;}
   .xv-foot{display:flex; gap:8px; padding:10px; border-top:1px solid var(--line-card,rgba(22,50,63,0.12)); background:#fff; flex-shrink:0;}
   .xv-foot input{flex:1; min-width:0; border:1px solid var(--line-card,rgba(22,50,63,0.2)); border-radius:10px; padding:9px 12px; font-size:13.5px; font-family:inherit; outline:none;}
   .xv-foot input:focus{border-color:var(--teal,#2E7391);}
   .xv-foot button{border:none; background:var(--navy,#16323F); color:#fff; border-radius:10px; padding:0 14px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
-  .xv-note{font-size:10.5px; color:var(--ink-soft,#5B6B70); text-align:center; padding:0 10px 8px; background:#fff; flex-shrink:0;}
+  .xv-note{font-size:12px; color:var(--ink-soft,#5B6B70); text-align:center; padding:0 10px 8px; background:#fff; flex-shrink:0;}
+  /* 手機有底部導覽列，泡泡與視窗往上移，避免擋住 */
+  @media (max-width:820px){ .xv-bubble{bottom:calc(84px + env(safe-area-inset-bottom));} }
   @media (max-width:480px){
-    .xv-panel{width:calc(100vw - 24px); height:72vh; right:12px !important; left:12px !important; top:auto !important; bottom:80px !important;}
-    .xv-bubble{bottom:16px;}
+    .xv-panel{width:calc(100vw - 24px); height:66vh; right:12px !important; left:12px !important; top:auto !important; bottom:calc(150px + env(safe-area-inset-bottom)) !important;}
   }
   @media print{ .xv-bubble, .xv-panel{display:none !important;} }
   `;
@@ -281,7 +282,7 @@
   const EDGE = window.innerWidth <= 480 ? 12 : 20;
   const SIZE = 54;
   let side = 'right', topPos = null; // topPos = null → 用預設的右下角
-  function clampTop(t){ return Math.max(8, Math.min(window.innerHeight - SIZE - 8, t)); }
+  function clampTop(t){ const bar = window.innerWidth <= 820 ? 76 : 0; return Math.max(8, Math.min(window.innerHeight - SIZE - 8 - bar, t)); } // 手機版不要拖到底部導覽列上
   function placeBubble(animate){
     bubble.style.transition = animate ? 'left .22s ease, right .22s ease, top .22s ease' : 'none';
     bubble.style.bottom = topPos === null ? '' : 'auto';

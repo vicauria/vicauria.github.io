@@ -5,6 +5,7 @@
 <!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="vc-icons.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>更新紀錄 — Vicauria 顧問工作台</title>
@@ -69,6 +70,15 @@
   </div>
 
   <main>
+
+    <div class="entry">
+      <div class="entry-head"><span class="v-num">v3.10.0</span><span class="v-date">2026-10-01</span></div>
+      <ul>
+        <li>全站圖示改為統一風格的線條圖示，取代各裝置長得不一樣的 emoji；列印、存 PDF 也會是同一套圖示</li>
+        <li>手機版新增底部導覽列：首頁、財富地圖、客戶、行事曆、更多，拇指就點得到；小V 泡泡自動移到導覽列上方</li>
+        <li>放大全站過小的文字（最小 11.5～12px），側邊欄說明文字加深，閱讀更清楚</li>
+      </ul>
+    </div>
 
     <div class="entry">
       <div class="entry-head"><span class="v-num">v3.9.2</span><span class="v-date">2026-10-01</span></div>
