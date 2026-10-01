@@ -27,10 +27,11 @@
   /* ---------- 問候列 ---------- */
   .greet{
     background:linear-gradient(135deg, var(--navy) 0%, var(--teal-deep) 70%, var(--teal) 100%);
-    color:#fff; padding:26px 0 64px; position:relative; overflow:hidden;
+    color:#fff; padding:20px 0; min-height:128px; display:flex; align-items:center; position:relative; overflow:hidden;
   }
   .greet::after{content:""; position:absolute; right:-80px; top:-120px; width:360px; height:360px; border-radius:50%;
     background:radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%); pointer-events:none;}
+  .greet > .wrap{width:100%;}
   .greet-row{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; position:relative; z-index:1;}
   .greet .date{font-family:"Roboto Mono",monospace; font-size:12px; letter-spacing:.12em; color:#BFE0EA; margin-bottom:6px;}
   .greet h1{font-family:"Noto Serif TC",serif; font-size:clamp(22px,3vw,28px); margin:0 0 6px; font-weight:700;}
@@ -43,7 +44,7 @@
     border-radius:28px; padding:12px 18px; font-size:14px; font-weight:700; cursor:pointer;}
   .btn-ghost:hover{background:rgba(255,255,255,0.2);}
 
-  main{margin-top:-40px; position:relative; z-index:2; padding-bottom:60px;}
+  main.wrap{margin-top:20px; position:relative; z-index:2; padding-bottom:60px;} /* 數字卡與上方藍色標題背景之間留空隙，不黏在一起 */
 
   /* ---------- 今日重點數字 ---------- */
   .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px;}
@@ -113,7 +114,7 @@
     .kpis{grid-template-columns:repeat(2,1fr); gap:10px;}
     .kpi{padding:14px;}
     .kpi .val{font-size:24px;}
-    .greet{padding:22px 0 56px;}
+    .greet{padding:20px 0;}
     .greet-actions{width:100%;}
     .btn-primary{flex:1; justify-content:center;}
   }
