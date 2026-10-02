@@ -9,6 +9,8 @@
 
   const css = `
   /* ---- 統一頁首：每個功能的標題背景一樣高，內容與標題背景之間留固定空隙 ---- */
+  /* 只套用在螢幕上：列印／存 PDF 時交給各頁自己的列印設定（例如報告要隱藏頁首） */
+  @media screen{
   body:not(.vc-no-compact) header.hero, header.greet{
     min-height:128px !important; padding:20px 0 !important; box-sizing:border-box !important;
     display:flex !important; align-items:center !important;}
@@ -17,6 +19,7 @@
   body:not(.vc-no-compact) header.hero .eyebrow{margin-bottom:6px !important;}
   body:not(.vc-no-compact) header.hero p:not(.vc-help-text){margin:6px 0 0 !important;}
   body:not(.vc-no-compact) header.hero ~ main, header.greet ~ main{margin-top:20px !important;}
+  }
   /* ---- 統一內容寬度：標題與內容同一條左邊線、同樣最大寬度 ---- */
   @media screen{
     body:not(.vc-no-compact) .wrap, body:not(.vc-no-compact) main.vc-wrap{
