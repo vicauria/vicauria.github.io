@@ -133,13 +133,15 @@ function relTime(iso){
   return Math.floor(d/365) + ' 年前';
 }
 let org = null, logoPath = '';
+// 平台管理者從管理後台進來時，網址帶 ?org=企業代碼；企業主管自己進來則不需要
+const ORG_PARAM = (new URLSearchParams(location.search).get('org') || '').match(/^[0-9a-f-]{36}$/i) ? new URLSearchParams(location.search).get('org') : null;
 
 function gate(html){ const g = document.getElementById('gate'); g.innerHTML = '<div class="card">' + html + '</div>'; g.hidden = false; document.getElementById('app').hidden = true; }
 
 async function init(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session){ location.href = 'login.html'; return; }
-  const ov = await supabaseClient.rpc('vc_org_overview');
+  const ov = await supabaseClient.rpc('vc_org_overview', { p_org: ORG_PARAM });
   if(ov.error || !ov.data){
     // 不透露「有沒有這個功能」：一律顯示一般的沒有權限
     gate('<h2>沒有權限</h2><p>這個帳號沒有可以使用的頁面。</p><p><a href="workbench.html">回工作台</a></p>');
@@ -147,7 +149,7 @@ async function init(){
   }
   org = ov.data;
   document.getElementById('app').hidden = false;
-  document.getElementById('orgTitle').textContent = org.name + '・企業管理';
+  document.getElementById('orgTitle').textContent = org.name + '・企業管理' + (ORG_PARAM ? '（平台管理者檢視）' : '');
   renderKpis();
   fillBrand();
   await loadMembers();
@@ -165,7 +167,7 @@ function renderKpis(){
 }
 
 async function loadMembers(){
-  const { data, error } = await supabaseClient.rpc('vc_org_members_list');
+  const { data, error } = await supabaseClient.rpc('vc_org_members_list', { p_org: ORG_PARAM });
   const body = document.getElementById('memberRows');
   if(error){ body.innerHTML = '<tr><td colspan="7" class="muted">讀取失敗，請重新整理再試一次。</td></tr>'; return; }
   const me = (await supabaseClient.auth.getSession()).data.session.user.id;
@@ -183,9 +185,9 @@ async function loadMembers(){
     const turnOn = b.dataset.on === '1';
     if(!turnOn && !confirm('確定要停用這位成員嗎？他下次進入工作台會被登出。資料不會被刪除，之後可以恢復。')) return;
     b.disabled = true;
-    const { error } = await supabaseClient.rpc('vc_org_set_member_active', { p_user: b.dataset.uid, p_active: turnOn });
+    const { error } = await supabaseClient.rpc('vc_org_set_member_active', { p_user: b.dataset.uid, p_active: turnOn, p_org: ORG_PARAM });
     if(error){ alert('操作失敗，請稍後再試一次。'); b.disabled = false; return; }
-    const ov = await supabaseClient.rpc('vc_org_overview'); if(ov.data){ org = ov.data; renderKpis(); }
+    const ov = await supabaseClient.rpc('vc_org_overview', { p_org: ORG_PARAM }); if(ov.data){ org = ov.data; renderKpis(); }
     loadMembers();
   }));
 }
@@ -211,7 +213,7 @@ document.getElementById('brandForm').addEventListener('submit', async e => {
   const btn = document.getElementById('btnSave'), msg = document.getElementById('saveMsg');
   btn.disabled = true; msg.textContent = ''; msg.className = 'msg';
   const brand = { display_name: document.getElementById('fName').value, sign_title: document.getElementById('fTitle').value, sign_line: document.getElementById('fLine').value };
-  const { error } = await supabaseClient.rpc('vc_org_update_brand', { p_brand: brand });
+  const { error } = await supabaseClient.rpc('vc_org_update_brand', { p_brand: brand, p_org: ORG_PARAM });
   btn.disabled = false;
   if(error){ msg.textContent = '儲存失敗：' + error.message; msg.className = 'msg err'; return; }
   msg.textContent = '已儲存。成員重新登入後會看到新的設定。'; msg.className = 'msg ok';

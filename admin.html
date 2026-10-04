@@ -601,7 +601,7 @@ function renderOrgs(){
         <td>${m.role === 'admin' ? '企業主管' : '顧問'}${m.active ? '' : '（已停用）'}</td>
         <td><button class="btn org-rm" type="button" data-org="${esc(o.id)}" data-user="${esc(m.user_id)}" style="background:#fff;color:var(--negative);border:1.5px solid var(--line);padding:4px 12px;">移除</button></td></tr>`).join('');
     return `<div class="card org" data-org="${esc(o.id)}" style="margin-bottom:16px;">
-      <div class="card-head"><h2>${esc(o.name)} ${o.active ? '' : '<span class="privacy-note">（已停用）</span>'}</h2><span class="sub">${fmtNum(o.member_count)} 位成員・建立於 ${fmtDate(o.created_at)}</span></div>
+      <div class="card-head"><h2>${esc(o.name)} ${o.active ? '' : '<span class="privacy-note">（已停用）</span>'}</h2><span class="sub">${fmtNum(o.member_count)} 位成員・建立於 ${fmtDate(o.created_at)}　<a href="enterprise.html?org=${encodeURIComponent(o.id)}" target="_blank" rel="noopener" style="font-weight:700;">進入企業管理頁 →</a></span></div>
       <div class="table-wrap" style="margin-bottom:12px;"><table class="data" style="min-width:420px;"><tbody>${members || '<tr><td class="muted">還沒有成員</td></tr>'}</tbody></table></div>
       <form class="org-add" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
         <input type="email" class="org-email" required placeholder="成員註冊用的 Email" style="flex:1; min-width:200px; padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; font-family:inherit;">
