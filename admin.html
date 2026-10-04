@@ -236,6 +236,7 @@
       <button data-tab="feedback">💬 意見箱 <span class="count mono" id="tabCountFeedback"></span></button>
       <button data-tab="teams">👥 團隊</button>
       <button data-tab="usage">📈 功能使用</button>
+      <button data-tab="orgs">🏢 企業</button>
     </nav>
 
     <!-- 總覽 -->
@@ -313,6 +314,19 @@
       </div>
       <div id="usageBody"><div class="card empty">載入中…</div></div>
     </section>
+
+    <!-- 企業（尚未對外開放：只有你在這裡建立企業、指定主管，一般使用者不會看到任何企業功能） -->
+    <section class="panel" id="panel-orgs">
+      <div class="tip-box">企業版還沒對外開放。這裡建立的企業，只有被你加進去的成員才會在工作台看到「企業管理」入口；其他人完全不受影響。</div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-head"><h2>新增企業</h2></div>
+        <form id="orgCreateForm" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input id="orgNewName" maxlength="60" placeholder="企業名稱，例如：○○保險經紀人公司" style="flex:1; min-width:220px; padding:9px 12px; border:1.5px solid var(--line); border-radius:9px; font-family:inherit; font-size:13.5px;">
+          <button class="btn" type="submit">建立</button>
+        </form>
+      </div>
+      <div id="orgList"><div class="card empty">載入中…</div></div>
+    </section>
   </div>
 </main>
 
@@ -350,7 +364,7 @@ function relTime(iso){
 }
 const daysSince = iso => iso ? (Date.now() - new Date(iso).getTime()) / 86400000 : Infinity;
 
-const state = { overview:null, users:[], feedback:[], teams:[], userFilter:'all', userQuery:'', fbFilter:'open' };
+const state = { orgs:[], overview:null, users:[], feedback:[], teams:[], userFilter:'all', userQuery:'', fbFilter:'open' };
 
 /* ---------------- 進入檢查 ---------------- */
 function showGate(title, html){
@@ -403,6 +417,7 @@ async function loadAll(){
   state.teams = tm.data || [];
   renderOverview(); renderUsers(); renderFeedback(); renderTeams();
   loadUsage(); // 功能使用另外載入：還沒跑 SQL 也不會影響其他分頁
+  loadOrgs();  // 企業也是另外載入：還沒跑 vicauria-enterprise.sql 時只有這個分頁會提示
 }
 
 /* ---------------- 總覽 ---------------- */
@@ -563,6 +578,85 @@ document.querySelectorAll('#fbFilter .pill').forEach(p=> p.addEventListener('cli
   document.querySelectorAll('#fbFilter .pill').forEach(x=> x.classList.toggle('active', x===p));
   state.fbFilter = p.dataset.f; renderFeedback();
 }));
+
+
+/* ---------------- 企業（尚未對外開放） ---------------- */
+async function loadOrgs(){
+  const box = document.getElementById('orgList');
+  const { data, error } = await supabaseClient.rpc('vc_admin_orgs');
+  if(error){
+    box.innerHTML = '<div class="card empty">還沒啟用企業功能。要用的時候，到 Supabase 執行 <code>supabase-fixes/vicauria-enterprise.sql</code>，再回來重新整理。</div>';
+    return;
+  }
+  state.orgs = data || [];
+  renderOrgs();
+}
+function renderOrgs(){
+  const box = document.getElementById('orgList');
+  if(!state.orgs.length){ box.innerHTML = '<div class="card empty">還沒有企業。上面輸入名稱就能建立第一個。</div>'; return; }
+  box.innerHTML = state.orgs.map(o=>{
+    const b = o.brand || {};
+    const members = (o.members || []).map(m=>`
+      <tr><td>${esc(m.display_name || '（未命名）')}<div class="privacy-note" style="margin:0;">${esc(m.email)}</div></td>
+        <td>${m.role === 'admin' ? '企業主管' : '顧問'}${m.active ? '' : '（已停用）'}</td>
+        <td><button class="btn org-rm" type="button" data-org="${esc(o.id)}" data-user="${esc(m.user_id)}" style="background:#fff;color:var(--negative);border:1.5px solid var(--line);padding:4px 12px;">移除</button></td></tr>`).join('');
+    return `<div class="card org" data-org="${esc(o.id)}" style="margin-bottom:16px;">
+      <div class="card-head"><h2>${esc(o.name)} ${o.active ? '' : '<span class="privacy-note">（已停用）</span>'}</h2><span class="sub">${fmtNum(o.member_count)} 位成員・建立於 ${fmtDate(o.created_at)}</span></div>
+      <div class="table-wrap" style="margin-bottom:12px;"><table class="data" style="min-width:420px;"><tbody>${members || '<tr><td class="muted">還沒有成員</td></tr>'}</tbody></table></div>
+      <form class="org-add" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+        <input type="email" class="org-email" required placeholder="成員註冊用的 Email" style="flex:1; min-width:200px; padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; font-family:inherit;">
+        <select class="org-role" style="padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; font-family:inherit;"><option value="member">顧問</option><option value="admin">企業主管</option></select>
+        <button class="btn" type="submit">加入</button><span class="saved-hint org-msg" hidden></span>
+      </form>
+      <div class="sub-h">顯示設定（Logo 檔案先放到網站的 images/orgs/，再填路徑）</div>
+      <div class="fb-actions" style="margin-top:6px;">
+        <input class="org-logo" placeholder="Logo 路徑，例如 images/orgs/abc.png" value="${esc(b.logo_path || '')}">
+        <input class="org-bname" placeholder="工作台標題" value="${esc(b.display_name || '')}" maxlength="20">
+        <input class="org-t1" placeholder="報告署名第一行" value="${esc(b.sign_title || '')}" maxlength="50">
+        <input class="org-t2" placeholder="報告署名第二行" value="${esc(b.sign_line || '')}" maxlength="80">
+      </div>
+      <div class="fb-actions">
+        <label style="font-size:12.5px;display:inline-flex;align-items:center;gap:6px;"><input type="checkbox" class="org-active" ${o.active ? 'checked' : ''} style="flex:none;min-width:0;"> 啟用中</label>
+        <button class="btn org-save" type="button">儲存</button><span class="saved-hint org-save-msg" hidden></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('.org').forEach(card=>{
+    const oid = card.dataset.org;
+    const flash = (el, text, bad)=>{ el.textContent = text; el.style.color = bad ? 'var(--negative)' : ''; el.hidden = false; setTimeout(()=> el.hidden = true, 3500); };
+    card.querySelector('.org-add').addEventListener('submit', async e=>{
+      e.preventDefault();
+      const msg = card.querySelector('.org-msg');
+      const { data, error } = await supabaseClient.rpc('vc_admin_org_add_member', { p_org: oid, p_email: card.querySelector('.org-email').value, p_role: card.querySelector('.org-role').value });
+      if(error){ flash(msg, '失敗：' + error.message, true); return; }
+      if(!data.ok){ flash(msg, data.reason === 'no_such_user' ? '找不到這個 Email（對方要先註冊 Vicauria）' : '這個人已經屬於另一個企業', true); return; }
+      await loadOrgs();
+    });
+    card.querySelectorAll('.org-rm').forEach(b=> b.addEventListener('click', async ()=>{
+      if(!confirm('確定把這位成員移出企業？（帳號與資料不會被刪除）')) return;
+      const { error } = await supabaseClient.rpc('vc_admin_org_remove_member', { p_org: oid, p_user: b.dataset.user });
+      if(error){ alert('移除失敗：' + error.message); return; }
+      await loadOrgs();
+    }));
+    card.querySelector('.org-save').addEventListener('click', async ()=>{
+      const msg = card.querySelector('.org-save-msg');
+      const { error } = await supabaseClient.rpc('vc_admin_org_update', {
+        p_org: oid, p_active: card.querySelector('.org-active').checked,
+        p_brand: { logo_path: card.querySelector('.org-logo').value, display_name: card.querySelector('.org-bname').value, sign_title: card.querySelector('.org-t1').value, sign_line: card.querySelector('.org-t2').value }
+      });
+      if(error){ flash(msg, '失敗：' + error.message, true); return; }
+      flash(msg, '已儲存'); await loadOrgs();
+    });
+  });
+}
+document.getElementById('orgCreateForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const input = document.getElementById('orgNewName');
+  const { error } = await supabaseClient.rpc('vc_admin_create_org', { p_name: input.value });
+  if(error){ alert('建立失敗：' + error.message); return; }
+  input.value = ''; await loadOrgs();
+});
 
 /* ---------------- 團隊 ---------------- */
 function renderTeams(){

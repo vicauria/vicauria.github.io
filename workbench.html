@@ -730,7 +730,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.11.1</span>
+        <span class="user-version-tag" id="userVersionTag">v3.12.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -741,6 +741,9 @@
         </button>
         <a class="user-menu-item" id="menuAdmin" href="admin.html" target="_blank" rel="noopener" style="display:none; text-decoration:none;">
           <span class="icon">🛠</span> 管理後台
+        </a>
+        <a class="user-menu-item" id="menuEnterprise" href="enterprise.html" target="_blank" rel="noopener" style="display:none; text-decoration:none;">
+          <span class="icon">🏢</span> 企業管理
         </a>
         <button class="user-menu-item" id="menuUpgrade" style="display:none;">
           <span class="icon">⬆</span> 升級方案
@@ -979,6 +982,29 @@
       if(!error && data === true) document.getElementById('menuAdmin').style.display = '';
     });
 
+    // 企業版（尚未對外開放）：不是企業成員的人，這個呼叫只會得到「沒有」，畫面完全不變。
+    // 企業成員：套用企業的顯示設定；被企業主管停用的成員，會被登出。
+    supabaseClient.rpc('vc_my_org').then(async ({ data, error })=>{
+      try{
+        if(error || !data){ sessionStorage.removeItem('vc_org_brand'); return; }
+        if(!data.active){
+          sessionStorage.removeItem('vc_org_brand');
+          try{ localStorage.removeItem('vc_bp_draft_v1'); }catch(e){}
+          await window.vcAlert('這個帳號目前已被企業管理者停用，無法使用工作台。如有疑問，請聯絡你的企業管理者。', { title:'帳號已停用' });
+          await supabaseClient.auth.signOut();
+          window.location.href = 'login.html';
+          return;
+        }
+        const brand = data.brand || {};
+        sessionStorage.setItem('vc_org_brand', JSON.stringify(brand));
+        if(brand.display_name){
+          const h = document.getElementById('brandHomeBtn'); if(h) h.textContent = brand.display_name;
+          document.title = brand.display_name;
+        }
+        if(data.role === 'admin') document.getElementById('menuEnterprise').style.display = '';
+      }catch(e){}
+    });
+
     const initial = name.charAt(0).toUpperCase();
     applyAvatarDisplay(null, initial);
     const { data: profile } = await supabaseClient.from('profiles').select('avatar_url').eq('id', user.id).single();
@@ -1020,7 +1046,7 @@
   });
 
   document.getElementById('menuLogout').addEventListener('click', async ()=>{
-    try{ localStorage.removeItem('vc_bp_draft_v1'); }catch(e){} // 登出時清掉財富地圖的填寫暫存（含客戶資料）
+    try{ localStorage.removeItem('vc_bp_draft_v1'); sessionStorage.removeItem('vc_org_brand'); }catch(e){} // 登出時清掉財富地圖的填寫暫存（含客戶資料）與企業顯示設定
     await supabaseClient.auth.signOut();
     window.location.href = 'login.html';
   });

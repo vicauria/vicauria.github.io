@@ -166,6 +166,24 @@
       + (raw ? '<details class="vc-err-details"><summary>技術細節（回報問題時用）</summary><pre>' + esc(raw) + '</pre></details>' : '');
   };
 
+  /* ---------------- 企業顯示設定（沒有加入企業的人完全不受影響，永遠是 Vicauria 預設） ---------------- */
+  window.vcOrgBrand = function(){
+    try{
+      const b = JSON.parse(sessionStorage.getItem('vc_org_brand') || 'null');
+      return (b && typeof b === 'object') ? b : null;
+    }catch(e){ return null; }
+  };
+  // 報告最後的署名：預設是 Vicauria；企業有設定時換成企業的名稱與 Logo（logo 路徑只接受網站內 images/orgs/）
+  window.vcSignHTML = function(prefix){
+    prefix = prefix || '../';
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const b = window.vcOrgBrand() || {};
+    const logo = /^images\/orgs\/[a-z0-9_-]{1,40}\.(png|jpg|jpeg|svg|webp)$/.test(b.logo_path || '') ? prefix + b.logo_path : prefix + 'icons/vicauria-mark.png';
+    const t1 = b.sign_title ? esc(b.sign_title) : '本報告由 Vicauria 財務顧問工作台產出';
+    const t2 = b.sign_line ? esc(b.sign_line) : '<b>vicauria.github.io</b>　｜　專為財務顧問打造的財務健檢與規劃工具';
+    return '<div class="vc-sign"><img src="' + logo + '" alt=""><div><div class="t1">' + t1 + '</div><div class="t2">' + t2 + '</div></div></div>';
+  };
+
   /* ---------------- 小提示 ---------------- */
   let wrap = null;
   window.vcToast = function(message, type){

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://s3.tradingview.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co https://api.rss2json.com https://open.er-api.com; frame-src 'self' https://*.tradingview.com https://*.tradingview-widget.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>企業管理 — Vicauria</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --ink:#182226; --ink-soft:#5B6B70; --paper:#F5F7F6; --card:#FFFFFF; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:"Noto Sans TC",sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+  .mono{font-family:"Roboto Mono",monospace; font-variant-numeric:tabular-nums;}
+  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%); color:#fff; min-height:128px; padding:20px 0; display:flex; align-items:center;}
+  header.hero .wrap{width:100%;}
+  .hero-row{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .eyebrow{font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:#BFE0EA; font-weight:700; margin-bottom:6px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,24px); line-height:1.4;}
+  header.hero p{color:#DCEAEE; font-size:13px; margin:6px 0 0; max-width:620px;}
+  .hero-btn{display:inline-flex; align-items:center; padding:8px 16px; border-radius:20px; border:1px solid rgba(255,255,255,.35); color:#fff; text-decoration:none; font-size:12.5px; font-weight:700; background:rgba(255,255,255,.08); cursor:pointer; font-family:inherit;}
+  .hero-btn:hover{background:rgba(255,255,255,.18);}
+  main{margin-top:20px; padding-bottom:80px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 10px 30px rgba(20,50,60,0.06); padding:22px 24px; margin-bottom:18px;}
+  .card h2{font-size:16px; margin-bottom:4px;}
+  .card .sub{font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;}
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;}
+  @media (max-width:860px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px;}
+  .kpi .lbl{font-size:12px; color:var(--ink-soft); margin-bottom:6px;}
+  .kpi .val{font-family:"Roboto Mono",monospace; font-weight:700; font-size:26px; color:var(--navy); line-height:1.1;}
+  .kpi .note{font-size:11.5px; color:var(--ink-soft); margin-top:6px;}
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:12px;}
+  table.data{width:100%; border-collapse:collapse; font-size:13px; min-width:760px;}
+  table.data th{text-align:left; font-size:12px; color:var(--ink-soft); font-weight:700; padding:10px 14px; background:var(--paper); border-bottom:1px solid var(--line);}
+  table.data td{padding:12px 14px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  table.data tr:last-child td{border-bottom:none;}
+  table.data .num{text-align:right; font-family:"Roboto Mono",monospace;}
+  table.data tr.off td{opacity:.55;}
+  .badge{display:inline-block; font-size:11.5px; font-weight:700; border-radius:10px; padding:2px 10px; background:var(--teal-tint); color:var(--teal-deep);}
+  .badge.off{background:#EEE; color:#777;} .badge.admin{background:var(--warm-tint); color:var(--warm-deep);}
+  .muted{color:var(--ink-soft);}
+  .btn{padding:8px 16px; border:none; border-radius:18px; background:var(--navy); color:#fff; font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .btn:hover{background:var(--teal-deep);} .btn:disabled{opacity:.6; cursor:default;}
+  .btn.ghost{background:#fff; color:var(--navy); border:1.5px solid var(--line);} .btn.ghost:hover{border-color:var(--navy); background:#fff;}
+  .btn.sm{padding:5px 12px; font-size:12px;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 18px;}
+  @media (max-width:700px){.form-grid{grid-template-columns:1fr;}}
+  .field label{display:block; font-size:12.5px; font-weight:700; margin-bottom:6px;}
+  .field input{width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:9px; font-family:inherit; font-size:14px;}
+  .field input:focus{outline:none; border-color:var(--teal);}
+  .field .hint{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+  .field.wide{grid-column:1/-1;}
+  .preview{border-top:1px solid var(--line); margin-top:18px; padding-top:16px; display:flex; align-items:center; gap:12px;}
+  .preview img{width:30px; height:30px; object-fit:contain;}
+  .preview .t1{font-size:12.5px; font-weight:700; color:var(--navy);} .preview .t2{font-size:11.5px; color:var(--ink-soft);}
+  .msg{font-size:12.5px; margin-left:10px;} .msg.ok{color:var(--positive);} .msg.err{color:var(--negative);}
+  .gate{max-width:520px; margin:60px auto; text-align:center;} .gate p{font-size:13.5px; color:var(--ink-soft); line-height:1.9;}
+  .privacy-note{font-size:11.5px; color:var(--ink-soft); margin-top:10px;}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap hero-row">
+    <div>
+      <div class="eyebrow">Enterprise · 企業管理</div>
+      <h1 id="orgTitle">企業管理</h1>
+      <p>看團隊的使用情形、停用離職成員、設定報告署名。這裡只看帳號與數字，看不到任何客戶的姓名或財務內容。</p>
+    </div>
+    <a class="hero-btn" href="workbench.html">← 回工作台</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="gate" class="gate" hidden></div>
+  <div id="app" hidden>
+    <div class="kpi-grid" id="kpis"></div>
+
+    <div class="card">
+      <h2>成員</h2>
+      <div class="sub">停用後，該成員下次進入工作台會被登出，看不到任何畫面；恢復後即可再使用。資料不會被刪除。</div>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th>成員</th><th>角色</th><th>最近登入</th><th class="num">客戶數</th><th class="num">報告數</th><th>最近產出報告</th><th></th></tr></thead>
+          <tbody id="memberRows"></tbody>
+        </table>
+      </div>
+      <div class="privacy-note">客戶數、報告數只是數量；客戶姓名、問卷內容與財務數字，企業主管也看不到。要新增或移除成員，請聯絡 Vicauria。</div>
+    </div>
+
+    <div class="card">
+      <h2>顯示設定</h2>
+      <div class="sub">設定後，企業成員看到的工作台標題與報告最後的署名會換成你們公司的名稱。</div>
+      <form id="brandForm">
+        <div class="form-grid">
+          <div class="field"><label for="fName">工作台標題（最多 20 字）</label><input id="fName" maxlength="20" placeholder="例如：○○保經 顧問工作台"></div>
+          <div class="field"><label for="fTitle">報告署名・第一行（最多 50 字）</label><input id="fTitle" maxlength="50" placeholder="例如：本報告由 ○○保經 顧問團隊產出"></div>
+          <div class="field wide"><label for="fLine">報告署名・第二行（最多 80 字）</label><input id="fLine" maxlength="80" placeholder="例如：www.example.com　｜　專業財務規劃服務"></div>
+        </div>
+        <div class="preview" id="preview"></div>
+        <div style="margin-top:16px;"><button class="btn" type="submit" id="btnSave">儲存設定</button><span class="msg" id="saveMsg"></span></div>
+        <div class="privacy-note">公司 Logo 由 Vicauria 協助上傳與設定。</div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="vendor/supabase-js-2.117.2.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtNum = n => Number(n||0).toLocaleString('zh-TW');
+function relTime(iso){
+  if(!iso) return '從未登入';
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if(diff < 3600) return '1 小時內';
+  if(diff < 86400) return Math.floor(diff/3600) + ' 小時前';
+  const d = Math.floor(diff/86400);
+  if(d < 30) return d + ' 天前';
+  if(d < 365) return Math.floor(d/30) + ' 個月前';
+  return Math.floor(d/365) + ' 年前';
+}
+let org = null, logoPath = '';
+
+function gate(html){ const g = document.getElementById('gate'); g.innerHTML = '<div class="card">' + html + '</div>'; g.hidden = false; document.getElementById('app').hidden = true; }
+
+async function init(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session){ location.href = 'login.html'; return; }
+  const ov = await supabaseClient.rpc('vc_org_overview');
+  if(ov.error || !ov.data){
+    // 不透露「有沒有這個功能」：一律顯示一般的沒有權限
+    gate('<h2>沒有權限</h2><p>這個帳號沒有可以使用的頁面。</p><p><a href="workbench.html">回工作台</a></p>');
+    return;
+  }
+  org = ov.data;
+  document.getElementById('app').hidden = false;
+  document.getElementById('orgTitle').textContent = org.name + '・企業管理';
+  renderKpis();
+  fillBrand();
+  await loadMembers();
+}
+
+function renderKpis(){
+  const k = [
+    ['成員', org.members_total, `啟用中 ${fmtNum(org.members_active)} 位`],
+    ['近 7 天有登入', org.logged_in_7d, org.members_active ? `佔啟用成員 ${Math.round(org.logged_in_7d / org.members_active * 100)}%` : ''],
+    ['還沒登入過', org.never_logged_in, '可以提醒他們開始使用'],
+    ['客戶紀錄總數', org.clients_total, '所有成員加總（只算數量）'],
+    ['近 30 天產出報告', org.reports_30d, '財富健檢報告份數'],
+  ];
+  document.getElementById('kpis').innerHTML = k.map(x => `<div class="kpi"><div class="lbl">${esc(x[0])}</div><div class="val">${fmtNum(x[1])}</div><div class="note">${esc(x[2])}</div></div>`).join('');
+}
+
+async function loadMembers(){
+  const { data, error } = await supabaseClient.rpc('vc_org_members_list');
+  const body = document.getElementById('memberRows');
+  if(error){ body.innerHTML = '<tr><td colspan="7" class="muted">讀取失敗，請重新整理再試一次。</td></tr>'; return; }
+  const me = (await supabaseClient.auth.getSession()).data.session.user.id;
+  body.innerHTML = (data || []).map(m => `
+    <tr class="${m.active ? '' : 'off'}">
+      <td><b>${esc(m.display_name || '（未命名）')}</b><div class="muted" style="font-size:12px;">${esc(m.email)}</div></td>
+      <td>${m.role === 'admin' ? '<span class="badge admin">企業主管</span>' : '<span class="badge">顧問</span>'}${m.active ? '' : ' <span class="badge off">已停用</span>'}</td>
+      <td>${esc(relTime(m.last_sign_in_at))}</td>
+      <td class="num">${fmtNum(m.client_count)}</td>
+      <td class="num">${fmtNum(m.report_count)}</td>
+      <td>${m.last_report_at ? esc(relTime(m.last_report_at)) : '<span class="muted">還沒有</span>'}</td>
+      <td>${m.user_id === me ? '' : `<button class="btn ghost sm" data-uid="${esc(m.user_id)}" data-on="${m.active ? '0' : '1'}">${m.active ? '停用' : '恢復'}</button>`}</td>
+    </tr>`).join('') || '<tr><td colspan="7" class="muted">還沒有成員。</td></tr>';
+  body.querySelectorAll('button[data-uid]').forEach(b => b.addEventListener('click', async () => {
+    const turnOn = b.dataset.on === '1';
+    if(!turnOn && !confirm('確定要停用這位成員嗎？他下次進入工作台會被登出。資料不會被刪除，之後可以恢復。')) return;
+    b.disabled = true;
+    const { error } = await supabaseClient.rpc('vc_org_set_member_active', { p_user: b.dataset.uid, p_active: turnOn });
+    if(error){ alert('操作失敗，請稍後再試一次。'); b.disabled = false; return; }
+    const ov = await supabaseClient.rpc('vc_org_overview'); if(ov.data){ org = ov.data; renderKpis(); }
+    loadMembers();
+  }));
+}
+
+function fillBrand(){
+  const b = org.brand || {};
+  logoPath = b.logo_path || '';
+  document.getElementById('fName').value = b.display_name || '';
+  document.getElementById('fTitle').value = b.sign_title || '';
+  document.getElementById('fLine').value = b.sign_line || '';
+  renderPreview();
+}
+function renderPreview(){
+  const t1 = document.getElementById('fTitle').value.trim() || '本報告由 Vicauria 財務顧問工作台產出';
+  const t2 = document.getElementById('fLine').value.trim() || 'vicauria.github.io　｜　專為財務顧問打造的財務健檢與規劃工具';
+  const img = logoPath ? `<img src="${esc(logoPath)}" alt="">` : '<img src="icons/vicauria-mark.png" alt="">';
+  document.getElementById('preview').innerHTML = img + `<div><div class="t1">${esc(t1)}</div><div class="t2">${esc(t2)}</div></div>`;
+}
+['fTitle','fLine'].forEach(id => document.getElementById(id).addEventListener('input', renderPreview));
+
+document.getElementById('brandForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('btnSave'), msg = document.getElementById('saveMsg');
+  btn.disabled = true; msg.textContent = ''; msg.className = 'msg';
+  const brand = { display_name: document.getElementById('fName').value, sign_title: document.getElementById('fTitle').value, sign_line: document.getElementById('fLine').value };
+  const { error } = await supabaseClient.rpc('vc_org_update_brand', { p_brand: brand });
+  btn.disabled = false;
+  if(error){ msg.textContent = '儲存失敗：' + error.message; msg.className = 'msg err'; return; }
+  msg.textContent = '已儲存。成員重新登入後會看到新的設定。'; msg.className = 'msg ok';
+});
+
+init();
+</script>
+</body>
+</html>
