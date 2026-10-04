@@ -147,6 +147,24 @@
 <script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
 <script>
+  /* 企業專屬登入網址（?org=公司代號）：顯示該企業的名稱與 Logo；登入本身與一般登入完全相同。
+     查不到、企業停用、或資料庫還沒更新時，什麼都不改，維持一般的 Vicauria 樣式。 */
+  (function(){
+    var m = (location.search.match(/[?&]org=([a-z0-9-]{2,30})(?:&|$)/) || [])[1];
+    if(!m) return;
+    document.querySelectorAll('a[href="register.html"], a[href="login.html"]').forEach(function(a){ a.setAttribute('href', a.getAttribute('href') + '?org=' + m); });
+    try{
+      supabaseClient.rpc('vc_org_public', { p_slug: m }).then(function(r){
+        var o = r && r.data; if(!o || r.error) return;
+        var mark = document.querySelector('.logo-mark'), nm = document.querySelector('.logo'), sub = document.querySelector('.sub');
+        if(/^images\/orgs\/[a-z0-9_-]{1,40}\.(png|jpg|jpeg|svg|webp)$/.test(o.logo_path || '') && mark){ mark.setAttribute('src', o.logo_path); mark.setAttribute('alt', o.name || ''); }
+        if(nm) nm.textContent = o.display_name || o.name;
+        if(sub && o.name){ var p = document.createElement('p'); p.className = 'sub'; p.style.marginTop = '-6px'; p.textContent = '歡迎 ' + o.name + ' 的顧問'; sub.parentNode.insertBefore(p, sub); }
+      }, function(){});
+    }catch(e){}
+  })();
+</script>
+<script>
   const errorMsg = document.getElementById('errorMsg');
   const infoMsg = document.getElementById('infoMsg');
 
@@ -218,7 +236,13 @@
 
     // 告訴工作台「剛登入」，進去時會固定先播 3 秒歡迎載入畫面
     try{ sessionStorage.setItem('vc_just_logged_in', String(Date.now())); }catch(e){}
-    window.location.href = 'workbench.html';
+    // 如果是從企業邀請連結過來的（24 小時內），登入後回到加入企業的頁面
+    let dest = 'workbench.html';
+    try{
+      const j = JSON.parse(localStorage.getItem('vc_join_code') || 'null');
+      if(j && j.c && Date.now() - j.t < 86400000) dest = 'join.html';
+    }catch(e){}
+    window.location.href = dest;
   });
 </script>
 

@@ -88,6 +88,16 @@
   <div id="app" hidden>
     <div class="kpi-grid" id="kpis"></div>
 
+    <div class="card" id="inviteCard" hidden>
+      <h2>邀請同事加入</h2>
+      <div class="sub">產生邀請連結傳給同事，他們註冊並登入後送出申請，你按「通過」才會真的加入企業。</div>
+      <div id="inviteBody"></div>
+      <div id="reqWrap" hidden>
+        <h3 style="font-size:14px; margin:20px 0 8px;">待審核的申請 <span class="badge" id="reqCount">0</span></h3>
+        <div class="table-wrap"><table class="data" style="min-width:420px;"><tbody id="reqRows"></tbody></table></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>成員</h2>
       <div class="sub">停用後，該成員下次進入工作台會被登出，看不到任何畫面；恢復後即可再使用。資料不會被刪除。</div>
@@ -97,7 +107,7 @@
           <tbody id="memberRows"></tbody>
         </table>
       </div>
-      <div class="privacy-note">客戶數、報告數只是數量；客戶姓名、問卷內容與財務數字，企業主管也看不到。要新增或移除成員，請聯絡 Vicauria。</div>
+      <div class="privacy-note">客戶數、報告數只是數量；客戶姓名、問卷內容與財務數字，企業主管也看不到。要邀請新成員，請用上方的邀請連結；要移除成員，請先停用，或聯絡 Vicauria。</div>
     </div>
 
     <div class="card">
@@ -153,6 +163,7 @@ async function init(){
   renderKpis();
   fillBrand();
   await loadMembers();
+  loadInvite();
 }
 
 function renderKpis(){
@@ -189,6 +200,88 @@ async function loadMembers(){
     if(error){ alert('操作失敗，請稍後再試一次。'); b.disabled = false; return; }
     const ov = await supabaseClient.rpc('vc_org_overview', { p_org: ORG_PARAM }); if(ov.data){ org = ov.data; renderKpis(); }
     loadMembers();
+  }));
+}
+
+
+/* ---------------- 邀請與審核 ---------------- */
+let invite = null;
+const fmtDT = iso => iso ? new Date(iso).toLocaleDateString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit' }) : '';
+async function loadInvite(){
+  const card = document.getElementById('inviteCard');
+  const inv = await supabaseClient.rpc('vc_org_invite_get', { p_org: ORG_PARAM });
+  if(inv.error || !inv.data){ card.hidden = true; return; }   // 還沒執行邀請碼的 SQL：整塊先不顯示
+  invite = inv.data; card.hidden = false;
+  renderInvite(); loadRequests();
+}
+function renderInvite(){
+  const body = document.getElementById('inviteBody');
+  if(invite.enabled && invite.code){
+    const link = new URL('join.html?code=' + invite.code, location.href).href;
+    body.innerHTML = `
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:10px;">
+        <div class="mono" style="font-size:26px; font-weight:700; letter-spacing:.25em; color:var(--navy);">${esc(invite.code)}</div>
+        <span class="muted" style="font-size:12.5px;">有效到 ${esc(fmtDT(invite.expires_at))}</span>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input id="invLink" readonly value="${esc(link)}" style="flex:1; min-width:220px; padding:9px 12px; border:1.5px solid var(--line); border-radius:9px; font-size:12.5px;">
+        <button class="btn" type="button" id="invCopy">複製連結</button>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn ghost sm" type="button" id="invRegen">重新產生（舊的立刻失效）</button>
+        <button class="btn ghost sm" type="button" id="invOff">停用邀請碼</button>
+      </div>`;
+    document.getElementById('invCopy').addEventListener('click', async ()=>{
+      const el = document.getElementById('invLink');
+      try{ await navigator.clipboard.writeText(el.value); }catch(e){ el.select(); document.execCommand('copy'); }
+      const b = document.getElementById('invCopy'); b.textContent = '已複製'; setTimeout(()=> b.textContent = '複製連結', 1800);
+    });
+    document.getElementById('invRegen').addEventListener('click', ()=> genInvite(7, true));
+    document.getElementById('invOff').addEventListener('click', async ()=>{
+      if(!confirm('停用後，這組邀請碼就不能再用了。確定嗎？')) return;
+      const { error } = await supabaseClient.rpc('vc_org_invite_disable', { p_org: ORG_PARAM });
+      if(error){ alert('操作失敗，請稍後再試一次。'); return; }
+      invite = { code: null, enabled: false, expires_at: null }; renderInvite();
+    });
+  }else{
+    body.innerHTML = `
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span class="muted" style="font-size:13px;">目前沒有有效的邀請碼。</span>
+        <select id="invDays" style="padding:8px 10px; border:1.5px solid var(--line); border-radius:8px; font-family:inherit;">
+          <option value="7">有效 7 天</option><option value="14">有效 14 天</option><option value="30">有效 30 天</option>
+        </select>
+        <button class="btn" type="button" id="invGen">產生邀請連結</button>
+      </div>`;
+    document.getElementById('invGen').addEventListener('click', ()=> genInvite(Number(document.getElementById('invDays').value), false));
+  }
+}
+async function genInvite(days, confirmFirst){
+  if(confirmFirst && !confirm('重新產生後，舊的邀請碼和連結會立刻失效。確定嗎？')) return;
+  const { data, error } = await supabaseClient.rpc('vc_org_invite_generate', { p_days: days, p_org: ORG_PARAM });
+  if(error || !data){ alert('產生失敗，請稍後再試一次。'); return; }
+  invite = data; renderInvite();
+}
+async function loadRequests(){
+  const { data, error } = await supabaseClient.rpc('vc_org_requests_list', { p_org: ORG_PARAM });
+  const wrap = document.getElementById('reqWrap'), rows = document.getElementById('reqRows');
+  if(error){ wrap.hidden = true; return; }
+  document.getElementById('reqCount').textContent = (data || []).length;
+  wrap.hidden = !(data || []).length;
+  rows.innerHTML = (data || []).map(q => `
+    <tr><td><b>${esc(q.display_name || '（未命名）')}</b><div class="muted" style="font-size:12px;">${esc(q.email)}</div></td>
+      <td class="muted" style="font-size:12.5px;">${esc(relTime(q.created_at))}申請</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button class="btn sm" type="button" data-id="${esc(q.id)}" data-ok="1">通過</button>
+        <button class="btn ghost sm" type="button" data-id="${esc(q.id)}" data-ok="0">拒絕</button></td></tr>`).join('');
+  rows.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', async ()=>{
+    const approve = b.dataset.ok === '1';
+    if(!approve && !confirm('確定拒絕這筆申請嗎？')) return;
+    rows.querySelectorAll('button').forEach(x => x.disabled = true);
+    const { data: r, error: e } = await supabaseClient.rpc('vc_org_request_decide', { p_request: b.dataset.id, p_approve: approve, p_org: ORG_PARAM });
+    if(e){ alert('操作失敗，請稍後再試一次。'); }
+    else if(r && !r.ok){ alert(r.reason === 'in_other_org' ? '這位使用者已經加入其他企業，無法通過。' : '這筆申請已經處理過了。'); }
+    const ov = await supabaseClient.rpc('vc_org_overview', { p_org: ORG_PARAM }); if(ov.data){ org = ov.data; renderKpis(); }
+    loadMembers(); loadRequests();
   }));
 }
 

@@ -730,7 +730,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.12.1</span>
+        <span class="user-version-tag" id="userVersionTag">v3.13.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -984,8 +984,15 @@
 
     // 企業版（尚未對外開放）：不是企業成員的人，這個呼叫只會得到「沒有」，畫面完全不變。
     // 企業成員：套用企業的顯示設定；被企業主管停用的成員，會被登出。
-    supabaseClient.rpc('vc_my_org').then(async ({ data, error })=>{
+    (async function(){
       try{
+        let { data, error } = await supabaseClient.rpc('vc_my_org');
+        // 還不是任何企業成員：用已驗證的公司 Email 網域嘗試自動加入（每個瀏覽階段只試一次）
+        if(!error && !data && !sessionStorage.getItem('vc_aj_done')){
+          sessionStorage.setItem('vc_aj_done', '1');
+          const j = await supabaseClient.rpc('vc_auto_join_org');
+          if(!j.error && j.data && j.data.joined){ ({ data, error } = await supabaseClient.rpc('vc_my_org')); }
+        }
         if(error || !data){ sessionStorage.removeItem('vc_org_brand'); return; }
         if(!data.active){
           sessionStorage.removeItem('vc_org_brand');
@@ -1003,7 +1010,7 @@
         }
         if(data.role === 'admin') document.getElementById('menuEnterprise').style.display = '';
       }catch(e){}
-    });
+    })();
 
     const initial = name.charAt(0).toUpperCase();
     applyAvatarDisplay(null, initial);
@@ -1046,7 +1053,7 @@
   });
 
   document.getElementById('menuLogout').addEventListener('click', async ()=>{
-    try{ localStorage.removeItem('vc_bp_draft_v1'); sessionStorage.removeItem('vc_org_brand'); }catch(e){} // 登出時清掉財富地圖的填寫暫存（含客戶資料）與企業顯示設定
+    try{ localStorage.removeItem('vc_bp_draft_v1'); sessionStorage.removeItem('vc_org_brand'); sessionStorage.removeItem('vc_aj_done'); }catch(e){} // 登出時清掉財富地圖的填寫暫存（含客戶資料）與企業顯示設定
     await supabaseClient.auth.signOut();
     window.location.href = 'login.html';
   });
