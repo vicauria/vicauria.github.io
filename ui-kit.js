@@ -173,16 +173,45 @@
       return (b && typeof b === 'object') ? b : null;
     }catch(e){ return null; }
   };
-  // 報告最後的署名：預設是 Vicauria；企業有設定時換成企業的名稱與 Logo（logo 路徑只接受網站內 images/orgs/）
+  // 報告最後的署名：固定是 Vicauria（企業版也一樣，不隨企業設定改變）
   window.vcSignHTML = function(prefix){
     prefix = prefix || '../';
-    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const b = window.vcOrgBrand() || {};
-    const logo = /^images\/orgs\/[a-z0-9_-]{1,40}\.(png|jpg|jpeg|svg|webp)$/.test(b.logo_path || '') ? prefix + b.logo_path : prefix + 'icons/vicauria-mark.png';
-    const t1 = b.sign_title ? esc(b.sign_title) : '本報告由 Vicauria 財務顧問工作台產出';
-    const t2 = b.sign_line ? esc(b.sign_line) : '<b>vicauria.github.io</b>　｜　專為財務顧問打造的財務健檢與規劃工具';
-    return '<div class="vc-sign"><img src="' + logo + '" alt=""><div><div class="t1">' + t1 + '</div><div class="t2">' + t2 + '</div></div></div>';
+    return '<div class="vc-sign"><img src="' + prefix + 'icons/vicauria-mark.png" alt=""><div><div class="t1">本報告由 Vicauria 財務顧問工作台產出</div><div class="t2"><b>vicauria.github.io</b>　｜　專為財務顧問打造的財務健檢與規劃工具</div></div></div>';
   };
+  // 企業 Logo 網址（路徑只接受網站內 images/orgs/；沒有設定就回傳空字串）
+  window.vcOrgLogoURL = function(prefix){
+    const b = window.vcOrgBrand() || {};
+    return /^images\/orgs\/[a-z0-9_-]{1,40}\.(png|jpg|jpeg|svg|webp)$/.test(b.logo_path || '') ? (prefix || '../') + b.logo_path : '';
+  };
+  // 企業品牌色與浮水印：只套用在工作台裡的各功能頁（iframe）；沒有設定就完全維持 Vicauria 預設
+  (function applyOrgTheme(){
+    try{
+      if(window.self === window.top) return;
+      const b = window.vcOrgBrand();
+      if(!b) return;
+      const root = document.documentElement;
+      const hex = /^#[0-9a-fA-F]{6}$/.test(b.color || '') ? b.color : '';
+      if(hex){
+        const n = parseInt(hex.slice(1), 16), c = [n >> 16 & 255, n >> 8 & 255, n & 255];
+        const lum = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+        if(lum <= 0.6){   // 太淺的顏色在白底與白字上會看不清楚，直接忽略
+          const mix = (t, k) => '#' + c.map(v => Math.round(v * k + t * (1 - k)).toString(16).padStart(2, '0')).join('');
+          root.style.setProperty('--teal', hex);
+          root.style.setProperty('--teal-deep', mix(0, 0.78));
+          root.style.setProperty('--navy', mix(0, 0.42));
+          root.style.setProperty('--teal-tint', mix(255, 0.1));
+          root.style.setProperty('--teal-light-text', mix(255, 0.35));
+        }
+      }
+      const wm = String(b.watermark_text || '').trim().slice(0, 12);
+      if(wm){
+        const w = Array.from(wm).reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 26 : 15), 40);
+        const x = wm.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + w + "' height='83'><text x='0' y='53' font-size='25' font-family='sans-serif' fill='rgba(22,50,63,0.055)' transform='rotate(-28 " + (w / 2) + " 41)'>" + x + "</text></svg>";
+        root.style.setProperty('--vc-wm', 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")');
+      }
+    }catch(e){}
+  })();
 
   /* ---------------- 小提示 ---------------- */
   let wrap = null;

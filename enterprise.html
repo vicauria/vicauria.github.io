@@ -77,7 +77,7 @@
     <div>
       <div class="eyebrow">Enterprise · 企業管理</div>
       <h1 id="orgTitle">企業管理</h1>
-      <p>看團隊的使用情形、停用離職成員、設定報告署名。這裡只看帳號與數字，看不到任何客戶的姓名或財務內容。</p>
+      <p>看團隊的使用情形、停用離職成員、設定公司的顯示樣式。這裡只看帳號與數字，看不到任何客戶的姓名或財務內容。</p>
     </div>
     <a class="hero-btn" href="workbench.html">← 回工作台</a>
   </div>
@@ -112,16 +112,22 @@
 
     <div class="card">
       <h2>顯示設定</h2>
-      <div class="sub">設定後，企業成員看到的工作台標題與報告最後的署名會換成你們公司的名稱。</div>
+      <div class="sub">設定後，企業成員的工作台標題、報告封面 Logo、報告浮水印與顏色會換成你們公司的。報告最後的「由 Vicauria 產出」署名維持不變。</div>
       <form id="brandForm">
         <div class="form-grid">
           <div class="field"><label for="fName">工作台標題（最多 20 字）</label><input id="fName" maxlength="20" placeholder="例如：○○保經 顧問工作台"></div>
-          <div class="field"><label for="fTitle">報告署名・第一行（最多 50 字）</label><input id="fTitle" maxlength="50" placeholder="例如：本報告由 ○○保經 顧問團隊產出"></div>
-          <div class="field wide"><label for="fLine">報告署名・第二行（最多 80 字）</label><input id="fLine" maxlength="80" placeholder="例如：www.example.com　｜　專業財務規劃服務"></div>
+          <div class="field"><label for="fWm">報告浮水印文字（最多 12 字）</label><input id="fWm" maxlength="12" placeholder="例如：○○保經"></div>
+          <div class="field"><label for="fColor">品牌色</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="fColor" type="color" value="#2e7391" style="width:52px; height:38px; padding:2px; flex:none;">
+              <input id="fColorHex" maxlength="7" placeholder="#2E7391" style="flex:1; min-width:0;">
+              <button class="btn" type="button" id="btnColorReset" style="background:#fff; color:var(--ink-soft); border:1.5px solid var(--line);">還原預設</button>
+            </div>
+          </div>
         </div>
-        <div class="preview" id="preview"></div>
+        <div class="preview" id="preview" style="padding:0; overflow:hidden; display:block; border:1px solid var(--line); border-radius:12px;"></div>
         <div style="margin-top:16px;"><button class="btn" type="submit" id="btnSave">儲存設定</button><span class="msg" id="saveMsg"></span></div>
-        <div class="privacy-note">公司 Logo 由 Vicauria 協助上傳與設定。</div>
+        <div class="privacy-note">公司 Logo 由 Vicauria 協助上傳與設定。太淺的顏色在白底上會看不清楚，系統會自動不採用。</div>
       </form>
     </div>
   </div>
@@ -285,27 +291,58 @@ async function loadRequests(){
   }));
 }
 
+let colorSet = false;
+function colorOK(h){
+  if(!/^#[0-9a-fA-F]{6}$/.test(h)) return false;
+  const n = parseInt(h.slice(1), 16);
+  return (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255 <= 0.6;
+}
 function fillBrand(){
   const b = org.brand || {};
   logoPath = b.logo_path || '';
   document.getElementById('fName').value = b.display_name || '';
-  document.getElementById('fTitle').value = b.sign_title || '';
-  document.getElementById('fLine').value = b.sign_line || '';
+  document.getElementById('fWm').value = b.watermark_text || '';
+  colorSet = /^#[0-9a-fA-F]{6}$/.test(b.color || '');
+  document.getElementById('fColorHex').value = colorSet ? b.color : '';
+  if(colorSet) document.getElementById('fColor').value = b.color;
   renderPreview();
 }
-function renderPreview(){
-  const t1 = document.getElementById('fTitle').value.trim() || '本報告由 Vicauria 財務顧問工作台產出';
-  const t2 = document.getElementById('fLine').value.trim() || 'vicauria.github.io　｜　專為財務顧問打造的財務健檢與規劃工具';
-  const img = logoPath ? `<img src="${esc(logoPath)}" alt="">` : '<img src="icons/vicauria-mark.png" alt="">';
-  document.getElementById('preview').innerHTML = img + `<div><div class="t1">${esc(t1)}</div><div class="t2">${esc(t2)}</div></div>`;
+function curColor(){
+  const h = document.getElementById('fColorHex').value.trim();
+  return h && colorOK(h) ? h : '';
 }
-['fTitle','fLine'].forEach(id => document.getElementById(id).addEventListener('input', renderPreview));
+function renderPreview(){
+  const c = curColor() || '#2e7391';
+  const n = parseInt(c.slice(1), 16), v = [n >> 16 & 255, n >> 8 & 255, n & 255];
+  const mix = (t, k) => '#' + v.map(x => Math.round(x * k + t * (1 - k)).toString(16).padStart(2, '0')).join('');
+  const navy = mix(0, 0.42), deep = mix(0, 0.78);
+  const wm = (document.getElementById('fWm').value.trim() || 'Vicauria').slice(0, 12);
+  const w = Array.from(wm).reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 26 : 15), 40);
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + w + "' height='83'><text x='0' y='53' font-size='25' font-family='sans-serif' fill='rgba(22,50,63,0.07)' transform='rotate(-28 " + (w / 2) + " 41)'>" + esc(wm) + "</text></svg>";
+  const logo = logoPath ? esc(logoPath) : 'icons/vicauria-mark.png';
+  document.getElementById('preview').innerHTML =
+    `<div style="background:linear-gradient(135deg,${navy},${deep} 60%,${c}); color:#fff; padding:16px 20px; display:flex; align-items:center; gap:12px;">
+       <span style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;"><img src="${logo}" alt="" style="max-width:28px;max-height:30px;"></span>
+       <div><div style="font-size:11px;letter-spacing:.2em;opacity:.8;">PREVIEW</div><div style="font-weight:700;">${esc(document.getElementById('fName').value.trim() || '資產配置工作台')}</div></div></div>
+     <div id="pvWm" style="height:84px; background-color:#fff;"></div>`;
+  document.getElementById('pvWm').style.backgroundImage = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+}
+['fName','fWm'].forEach(id => document.getElementById(id).addEventListener('input', renderPreview));
+document.getElementById('fColor').addEventListener('input', e => { document.getElementById('fColorHex').value = e.target.value; renderPreview(); });
+document.getElementById('fColorHex').addEventListener('input', e => {
+  const h = e.target.value.trim(); if(/^#[0-9a-fA-F]{6}$/.test(h)) document.getElementById('fColor').value = h; renderPreview();
+});
+document.getElementById('btnColorReset').addEventListener('click', () => { document.getElementById('fColorHex').value = ''; renderPreview(); });
 
 document.getElementById('brandForm').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('btnSave'), msg = document.getElementById('saveMsg');
+  const hex = document.getElementById('fColorHex').value.trim();
+  msg.className = 'msg err';
+  if(hex && !/^#[0-9a-fA-F]{6}$/.test(hex)){ msg.textContent = '品牌色格式要像 #1F5C73'; return; }
+  if(hex && !colorOK(hex)){ msg.textContent = '這個顏色太淺，白底上會看不清楚，請選深一點的顏色'; return; }
   btn.disabled = true; msg.textContent = ''; msg.className = 'msg';
-  const brand = { display_name: document.getElementById('fName').value, sign_title: document.getElementById('fTitle').value, sign_line: document.getElementById('fLine').value };
+  const brand = { display_name: document.getElementById('fName').value, watermark_text: document.getElementById('fWm').value, color: hex };
   const { error } = await supabaseClient.rpc('vc_org_update_brand', { p_brand: brand, p_org: ORG_PARAM });
   btn.disabled = false;
   if(error){ msg.textContent = '儲存失敗：' + error.message; msg.className = 'msg err'; return; }

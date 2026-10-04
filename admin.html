@@ -612,8 +612,8 @@ function renderOrgs(){
       <div class="fb-actions" style="margin-top:6px;">
         <input class="org-logo" placeholder="Logo 路徑，例如 images/orgs/abc.png" value="${esc(b.logo_path || '')}">
         <input class="org-bname" placeholder="工作台標題" value="${esc(b.display_name || '')}" maxlength="20">
-        <input class="org-t1" placeholder="報告署名第一行" value="${esc(b.sign_title || '')}" maxlength="50">
-        <input class="org-t2" placeholder="報告署名第二行" value="${esc(b.sign_line || '')}" maxlength="80">
+        <input class="org-wm" placeholder="浮水印文字（最多 12 字）" value="${esc(b.watermark_text || '')}" maxlength="12">
+        <input class="org-color" placeholder="品牌色，例如 #1F5C73" value="${esc(b.color || '')}" maxlength="7">
       </div>
       <div class="fb-actions">
         <label style="font-size:12.5px;display:inline-flex;align-items:center;gap:6px;"><input type="checkbox" class="org-active" ${o.active ? 'checked' : ''} style="flex:none;min-width:0;"> 啟用中</label>
@@ -643,7 +643,7 @@ function renderOrgs(){
       const msg = card.querySelector('.org-save-msg');
       const { error } = await supabaseClient.rpc('vc_admin_org_update', {
         p_org: oid, p_active: card.querySelector('.org-active').checked,
-        p_brand: { logo_path: card.querySelector('.org-logo').value, display_name: card.querySelector('.org-bname').value, sign_title: card.querySelector('.org-t1').value, sign_line: card.querySelector('.org-t2').value }
+        p_brand: { logo_path: card.querySelector('.org-logo').value, display_name: card.querySelector('.org-bname').value, watermark_text: card.querySelector('.org-wm').value, color: card.querySelector('.org-color').value }
       });
       if(error){ flash(msg, '失敗：' + error.message, true); return; }
       flash(msg, '已儲存'); await loadOrgs();
