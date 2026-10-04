@@ -90,7 +90,7 @@
   .panel, .metric-card, .verdict-card{ position:relative; overflow:hidden; }
   .panel::before, .metric-card::before, .verdict-card::before{
     content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='83'%3E%3Ctext x='0' y='53' font-size='27' font-family='sans-serif' fill='rgba(22,50,63,0.055)' transform='rotate(-28 64 41)'%3EVicauria%3C/text%3E%3C/svg%3E");
+    background-image:var(--vc-wm, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='83'%3E%3Ctext x='0' y='53' font-size='27' font-family='sans-serif' fill='rgba(22,50,63,0.055)' transform='rotate(-28 64 41)'%3EVicauria%3C/text%3E%3C/svg%3E"));
     background-repeat:repeat;
   }
   .panel > *, .metric-card > *, .verdict-card > *{ position:relative; z-index:1; }
