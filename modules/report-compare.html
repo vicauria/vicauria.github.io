@@ -178,7 +178,8 @@
 
 <main class="wrap">
   <div id="content"></div>
-  <div class="vc-sign"><img src="../icons/vicauria-mark.png" alt=""><div><div class="t1">本報告由 Vicauria 財務顧問工作台產出</div><div class="t2"><b>vicauria.github.io</b>　｜　專為財務顧問打造的財務健檢與規劃工具</div></div></div>
+  <div class="vc-sign" id="vcSignDefault"><img src="../icons/vicauria-mark.png" alt=""><div><div class="t1">本報告由 Vicauria 財務顧問工作台產出</div><div class="t2"><b>vicauria.github.io</b>　｜　專為財務顧問打造的財務健檢與規劃工具</div></div></div>
+  <script>if(window.vcSignHTML){var d=document.getElementById("vcSignDefault"); if(d) d.outerHTML = window.vcSignHTML("../");}</script>
 </main>
 
 <script src="../vendor/supabase-js-2.117.2.js"></script>
