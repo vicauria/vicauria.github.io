@@ -34,6 +34,7 @@
   .vc-help-btn{width:24px; height:24px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.55); background:rgba(255,255,255,0.08);
     color:#fff; font-size:13px; font-weight:700; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
     font-family:"Noto Sans TC",sans-serif; flex-shrink:0; padding:0; transition:background .15s; vertical-align:middle; margin-left:10px; position:relative; top:-2px;}
+  .vc-help-btn::after{content:""; position:absolute; inset:-8px;}
   .vc-help-btn:hover, header.hero.vc-help-open .vc-help-btn{background:rgba(255,255,255,0.25);}
 
   /* ---- 對話框 ---- */
