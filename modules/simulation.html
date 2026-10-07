@@ -64,6 +64,9 @@
   nav.tabs button:hover{background:var(--teal-tint); color:var(--teal-deep);}
   nav.tabs button.active{background:var(--navy); color:#fff;}
 
+  .tab-banner{height:2cm; border-radius:12px; overflow:hidden; margin-bottom:14px; border:1px solid var(--line); background:var(--teal-tint);}
+  .tab-banner img{display:block; width:100%; height:100%; object-fit:cover;}
+  @media print{.tab-banner{display:none;}}
   .tab-panel{display:none;}
   .tab-panel.active{display:block; animation:fade .2s ease;}
   @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
@@ -494,6 +497,7 @@
 
   <!-- ============ 退休基金 ============ -->
   <section class="tab-panel active" id="panel-retirement">
+    <div class="tab-banner"><img src="../images/sim/retirement.svg" alt="" ></div>
     <div class="sub-tabs mode-tabs" id="rtModeTabs">
       <button class="active" data-mode="forward"><span class="mode-ic">➡️</span>正算：看達成率<div class="stat-note">我現在有多少、每月投多少 → 能達成目標幾 %</div></button>
       <button data-mode="reverse"><span class="mode-ic">🎯</span>反算：以終為始<div class="stat-note">先定好目標 → 回推現在每月該投入多少</div></button>
@@ -775,6 +779,7 @@
 
   <!-- ============ 購屋基金 ============ -->
   <section class="tab-panel" id="panel-house">
+    <div class="tab-banner"><img src="../images/sim/house.svg" alt="" loading="lazy" ></div>
     <div class="sub-tabs" id="houseSubTabs">
       <button class="active" data-sub="ability">購屋能力試算</button>
       <button data-sub="tax">房地合一稅（售屋）</button>
@@ -993,6 +998,7 @@
 
   <!-- ============ 教育基金 ============ -->
   <section class="tab-panel" id="panel-education">
+    <div class="tab-banner"><img src="../images/sim/education.svg" alt="" loading="lazy" ></div>
     <div class="grid1200">
       <div class="card">
         <h3>目標設定</h3>
@@ -1093,6 +1099,7 @@
 
   <!-- ============ 遺贈方案 ============ -->
   <section class="tab-panel" id="panel-legacy">
+    <div class="tab-banner"><img src="../images/sim/legacy.svg" alt="" loading="lazy" ></div>
     <div class="sub-tabs narrow3" id="legacySubTabs">
       <button class="active" data-sub="tax">租稅規劃</button>
       <button data-sub="alloc">資產分配</button>
@@ -1411,6 +1418,7 @@
 
   <!-- ============ 投資理財 ============ -->
   <section class="tab-panel" id="panel-invest">
+    <div class="tab-banner"><img src="../images/sim/invest.svg" alt="" loading="lazy" ></div>
     <div class="grid1200">
       <div class="card">
         <h3>目標設定</h3>

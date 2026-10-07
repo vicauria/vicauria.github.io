@@ -69,35 +69,49 @@
   .btn-today:hover{background:var(--teal-tint);}
   .cal-nav-btns .btn-today{width:auto; height:30px; white-space:nowrap; font-size:12.5px; padding:0 14px;}
 
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px;}
   .cal-dow{font-size:12px; color:var(--ink-soft); text-align:center; font-family:"Roboto Mono",monospace; padding-bottom:6px;}
+  .cal-grid{gap:6px;}
   .cal-cell{
-    min-height:74px; border-radius:10px; border:1px solid var(--line); padding:6px 6px;
+    min-height:132px; border-radius:10px; border:1px solid var(--line); padding:6px 6px 5px;
     cursor:pointer; background:#fff; transition:border-color .12s ease, background .12s ease;
+    display:flex; flex-direction:column; overflow:hidden; min-width:0;
   }
   .cal-cell:hover{border-color:var(--teal);}
-  .cal-cell.outside{background:var(--paper); color:rgba(91,107,112,0.4);}
+  .cal-cell.outside{background:var(--paper); color:rgba(91,107,112,0.4); cursor:default;}
   .cal-cell.today{border-color:var(--teal); box-shadow:inset 0 0 0 1px var(--teal);}
   .cal-cell.selected{background:var(--teal-tint); border-color:var(--teal);}
-  .cal-cell .d-num{font-family:"Roboto Mono",monospace; font-size:12px; font-weight:700; margin-bottom:5px;}
+  .cal-cell .d-num{font-family:"Roboto Mono",monospace; font-size:12px; font-weight:700; margin-bottom:4px;}
   .cal-cell .d-num.holiday{color:var(--negative);}
   .cal-cell .d-holiday-label{font-size:11.5px; color:var(--negative); line-height:1.3; margin-bottom:3px;}
-  .cal-cell .d-dots{display:flex; flex-wrap:wrap; gap:3px;}
-  .cal-cell .d-dots .dot{width:6px; height:6px; border-radius:50%;}
+  .cal-cell .d-chips{display:flex; flex-direction:column; gap:3px; min-width:0;}
+  .d-chip{
+    display:block; min-width:0; border-radius:5px; padding:2px 6px; font-size:11.5px; line-height:1.4; font-weight:600;
+    color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .d-chip.mine{background:var(--teal);}
+  .d-chip.teamshared{background:var(--warm);}
+  .d-chip.monitor{background:var(--plum);}
+  .d-chip.birthday{background:var(--negative);}
+  .d-chip .t{opacity:.8; font-family:"Roboto Mono",monospace; font-size:10.5px; margin-right:4px; font-weight:500;}
+  .cal-cell .d-more{font-size:11px; color:var(--ink-soft); padding-left:2px; font-weight:600;}
 
-  .cal-cell .d-dots .dot.holiday, .legend .dot.holiday{background:#fff; box-shadow:inset 0 0 0 1.5px var(--negative);}
-  .cal-cell .d-dots .dot.holiday, .legend .hol-legend, .month-holidays{display:none;}
+  .legend .dot.holiday{background:#fff; box-shadow:inset 0 0 0 1.5px var(--negative);}
+  .legend .hol-legend, .month-holidays{display:none;}
   .month-holidays{margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--ink-soft); line-height:1.9;}
   .month-holidays b{color:var(--negative); font-family:"Roboto Mono",monospace; margin-right:4px;}
   @media (max-width:640px){
-    .cal-cell{min-height:52px;}
+    .cal-cell{min-height:92px;}
     .cal-dow{font-size:11.5px;}
+    .d-chip{padding:1px 4px; font-size:10.5px;}
+    .d-chip .t{display:none;}
   }
   @media (max-width:520px){
     .cal-grid{gap:4px;}
-    .cal-cell{min-height:46px; padding:5px 4px;}
+    .cal-cell{min-height:88px; padding:4px 3px;}
     .cal-cell .d-holiday-label{display:none;}
-    .cal-cell .d-dots .dot.holiday{display:inline-block;}
+    .d-chip{height:7px; padding:0; font-size:0; border-radius:3px;}
+    .cal-cell .d-more{font-size:10px;}
     .legend .hol-legend{display:inline-flex;}
     .month-holidays{display:block;}
     .month-holidays:empty{display:none;}
@@ -482,9 +496,15 @@ function renderGrid(){
       return;
     }
     const dayEvents = monthEvents.filter(e=>eventCoversDate(e, c.dateStr));
-    const dots = dayEvents.slice(0,6).map(e=>`<span class="dot ${eventKind(e)}"></span>`).join('');
     const birthdayNames = birthdaysOnDate(c.dateStr);
-    const birthdayDot = birthdayNames.length ? `<span class="dot birthday" title="生日"></span>` : '';
+    const sorted = dayEvents.slice().sort((a,b)=> (a.start_time||'99').localeCompare(b.start_time||'99'));
+    const items = birthdayNames.map(n=>({ kind:'birthday', text:'🎂 '+n })).concat(sorted.map(e=>({
+      kind: eventKind(e), text: e.title || '（未命名）',
+      time: (e.start_time && e.event_date === c.dateStr) ? e.start_time.slice(0,5) : ''
+    })));
+    const MAXC = 3, shown = items.slice(0, items.length > MAXC ? MAXC - 1 : MAXC), rest = items.length - shown.length;
+    const chips = shown.map(it=>`<span class="d-chip ${it.kind}" title="${escapeHtml(it.text)}">${it.time ? `<span class="t">${it.time}</span>` : ''}${escapeHtml(it.text)}</span>`).join('')
+      + (rest > 0 ? `<span class="d-more">還有 ${rest} 項</span>` : '');
     const holidayName = TW_HOLIDAYS[c.dateStr];
     const cls = ['cal-cell'];
     if(c.dateStr === t) cls.push('today');
@@ -492,7 +512,7 @@ function renderGrid(){
     html += `<div class="${cls.join(' ')}" data-date="${c.dateStr}">
       <div class="d-num${holidayName?' holiday':''}">${c.day}</div>
       ${holidayName ? `<div class="d-holiday-label">${holidayName}</div>` : ''}
-      <div class="d-dots">${holidayName ? '<span class="dot holiday"></span>' : ''}${dots}${birthdayDot}</div>
+      <div class="d-chips">${chips}</div>
     </div>`;
   });
 

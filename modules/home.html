@@ -140,7 +140,7 @@
 <main class="wrap">
   <div class="kpis">
     <button class="kpi" data-go="frame-calendar"><div class="lbl">📅 今日行程</div><div class="val" id="kAgenda">–</div><div class="hint" id="kAgendaHint">筆安排</div></button>
-    <button class="kpi" id="kFollowCard" data-go="frame-clientrecords"><div class="lbl">🔔 該追蹤的客戶</div><div class="val" id="kFollow">–</div><div class="hint">今天到期或已逾期</div></button>
+    <button class="kpi" id="kFollowCard" data-go="frame-clientrecords"><div class="lbl">🔔 該追蹤的客戶</div><div class="val" id="kFollow">–</div><div class="hint">到期、逾期與 7 天內的安排</div></button>
     <button class="kpi" id="kPayCard" data-go="frame-contracts"><div class="lbl">💳 待繳款</div><div class="val" id="kPay">–</div><div class="hint" id="kPayHint">14 天內到期</div></button>
     <button class="kpi" data-go="frame-calendar"><div class="lbl">🎂 今天生日</div><div class="val" id="kBday">–</div><div class="hint">位客戶</div></button>
   </div>
@@ -158,7 +158,7 @@
         <div id="agendaList"><span class="sk w80"></span><span class="sk w60"></span></div>
       </div>
       <div class="card">
-        <div class="card-head"><h2>該聯絡的客戶</h2><button class="more" data-go="frame-clientrecords">客戶資料 →</button></div>
+        <div class="card-head"><h2>該聯絡的客戶（未來 7 天）</h2><button class="more" data-go="frame-calendar">行事曆 →</button></div>
         <div id="followList"><span class="sk w80"></span><span class="sk w40"></span></div>
       </div>
     </div>
@@ -238,6 +238,11 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
       .lte('event_date', todayStr)
       .or(`end_date.gte.${todayStr},and(end_date.is.null,event_date.eq.${todayStr})`)
       .order('start_time', { ascending:true, nullsFirst:false }),
+    week: (()=>{ const w = new Date(); w.setDate(w.getDate() + 1); const a = `${w.getFullYear()}-${pad(w.getMonth()+1)}-${pad(w.getDate())}`;
+      w.setDate(w.getDate() + 6); const b = `${w.getFullYear()}-${pad(w.getMonth()+1)}-${pad(w.getDate())}`;
+      return supabaseClient.from('calendar_events').select('id, title, event_date, start_time, client_records(client_name)')
+        .eq('advisor_id', myId).gte('event_date', a).lte('event_date', b)
+        .order('event_date', { ascending:true }).order('start_time', { ascending:true, nullsFirst:false }); })(),
     clients: supabaseClient.from('client_records')
       .select('id, client_name, birthday, status, follow_up_date').eq('advisor_id', myId).is('deleted_at', null),
     reports: supabaseClient.from('client_reports')
@@ -249,9 +254,10 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
         .eq('advisor_id', myId).eq('paid', false).lte('due_date', soonStr).order('due_date', { ascending:true }); })(),
     names: supabaseClient.from('name_list_entries').select('name').eq('advisor_id', myId)
   };
-  const [ev, cl, rp, py, nm] = await Promise.all(Object.values(q).map(p => Promise.resolve(p).catch(e=>({ error:e }))));
+  const [ev, wk, cl, rp, py, nm] = await Promise.all(Object.values(q).map(p => Promise.resolve(p).catch(e=>({ error:e }))));
 
   const events = (ev && ev.data) || [];
+  const weekEvents = (wk && wk.data) || [];
   const clients = (cl && cl.data) || [];
   const reports = (rp && rp.data) || [];
   const pays = (py && py.data) || [];
@@ -270,15 +276,30 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
     }).join('');
   document.getElementById('agendaList').innerHTML = agendaHTML || emptyRow('今天沒有安排行程。', '＋ 新增約訪', 'frame-calendar');
 
-  // ---- 該聯絡的客戶 ----
-  const due = clients.filter(c => c.follow_up_date && c.follow_up_date <= todayStr && !['closed','lost'].includes(c.status))
-    .sort((a,b) => a.follow_up_date.localeCompare(b.follow_up_date));
-  document.getElementById('kFollow').textContent = due.length;
-  if(due.length) document.getElementById('kFollowCard').classList.add('alert');
-  document.getElementById('followList').innerHTML = due.length
-    ? due.slice(0, 5).map(c => `<div class="row" data-go="frame-clientrecords"><span class="when ${c.follow_up_date < todayStr ? 'red' : ''}">${c.follow_up_date === todayStr ? '今天' : fmtMD(c.follow_up_date)}</span><div><div class="what">${vcEsc((c.client_name||'').trim() || '（未命名客戶）')}</div><div class="sub">${c.follow_up_date < todayStr ? '已過追蹤日，記得聯絡' : '今天該聯絡'}</div></div></div>`).join('')
-      + (due.length > 5 ? `<div class="empty"><span>還有 ${due.length - 5} 位</span><button class="go" data-go="frame-clientrecords">查看全部</button></div>` : '')
-    : (clients.length ? emptyRow('目前沒有到期要追蹤的客戶。', null) : emptyRow('還沒有客戶，從第一份財富地圖開始吧。', '開始財富地圖 →', 'frame-blueprint'));
+  // ---- 該聯絡的客戶：已到期的追蹤 ＋ 未來 7 天的追蹤日與行事曆安排（可以提早提醒客戶） ----
+  const addDays = (ds, n) => { const d = new Date(ds + 'T00:00:00'); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+  const weekEnd = addDays(todayStr, 7);
+  const dayDiff = ds => Math.round((new Date(ds + 'T00:00:00') - new Date(todayStr + 'T00:00:00')) / 86400000);
+  const WD = ['日','一','二','三','四','五','六'];
+  const dateLabel = ds => ds === todayStr ? '今天' : fmtMD(ds) + '（' + WD[new Date(ds + 'T00:00:00').getDay()] + '）';
+  const activeClients = clients.filter(c => c.follow_up_date && !['closed','lost'].includes(c.status));
+  const dueNow = activeClients.filter(c => c.follow_up_date <= todayStr);
+  const items = activeClients.filter(c => c.follow_up_date <= weekEnd).map(c => ({
+      date: c.follow_up_date < todayStr ? todayStr : c.follow_up_date, over: c.follow_up_date < todayStr, due: c.follow_up_date <= todayStr, go: 'frame-clientrecords',
+      what: (c.client_name || '').trim() || '（未命名客戶）',
+      sub: c.follow_up_date < todayStr ? '已過追蹤日，記得聯絡' : (c.follow_up_date === todayStr ? '今天該聯絡' : `追蹤日・${dayDiff(c.follow_up_date)} 天後，可以先提醒客戶`) }))
+    .concat(weekEvents.map(e => {
+      const cn = e.client_records && e.client_records.client_name ? e.client_records.client_name.trim() : '';
+      const t = e.start_time ? e.start_time.slice(0,5) + '　' : '';
+      return { date: e.event_date, over: false, due: false, go: 'frame-calendar', what: (cn ? cn + '：' : '') + (e.title || '（未命名）'), sub: `${t}行事曆・${dayDiff(e.event_date)} 天後，可以先提醒客戶` };
+    }))
+    .sort((a,b) => a.date.localeCompare(b.date) || (b.over - a.over));
+  document.getElementById('kFollow').textContent = items.length;
+  if(dueNow.length) document.getElementById('kFollowCard').classList.add('alert');
+  document.getElementById('followList').innerHTML = items.length
+    ? items.slice(0, 6).map(it => `<div class="row" data-go="${it.go}"><span class="when ${it.over ? 'red' : ''}">${dateLabel(it.date)}</span><div><div class="what">${vcEsc(it.what)}</div><div class="sub">${vcEsc(it.sub)}</div></div></div>`).join('')
+      + (items.length > 6 ? `<div class="empty"><span>還有 ${items.length - 6} 項</span><button class="go" data-go="frame-calendar">查看行事曆</button></div>` : '')
+    : (clients.length ? emptyRow('未來 7 天沒有要聯絡的客戶或行程。', '＋ 新增約訪', 'frame-calendar') : emptyRow('還沒有客戶，從第一份財富地圖開始吧。', '開始財富地圖 →', 'frame-blueprint'));
 
   // ---- 待繳 ----
   const overdue = pays.filter(x => x.due_date < todayStr).length;
