@@ -743,29 +743,49 @@ async function openEditModal(id){
   document.getElementById('modalNotes').value = rec.notes || '';
   document.getElementById('editModal').classList.add('show');
 }
-function closeEditModal(){
+/* 彈窗裡每個欄位都是「改完離開欄位就自動存」。按「完成」的瞬間，最後一個欄位的儲存可能還沒完成，
+   所以先記下所有進行中的儲存，等它們都完成後才重新抓清單，避免畫面還是舊資料、要重新整理才會更新。 */
+const pendingSaves = new Set();
+function trackSave(promise){
+  pendingSaves.add(promise);
+  const done = ()=> pendingSaves.delete(promise);
+  promise.then(done, done);
+  return promise;
+}
+async function closeEditModal(){
+  // 先讓目前正在編輯的欄位失焦，觸發它的自動儲存
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   editingId = null;
   document.getElementById('editModal').classList.remove('show');
+  while(pendingSaves.size) await Promise.allSettled([...pendingSaves]);
   render();
 }
 async function saveEditField(field, value){
   if(!editingId) return;
-  await updateRecordField(editingId, field, value);
+  const id = editingId;
+  const ok = await trackSave(updateRecordField(id, field, value));
+  if(ok){
+    // 先在畫面上即時更新這一筆，不用等重新抓資料
+    const rec = lastFetchedRecords.find(x=>x.id===id);
+    if(rec){ rec[field] = value; renderRecordList(); }
+  }
 }
-document.getElementById('modalClientNameInput').addEventListener('change', async (e)=>{
+document.getElementById('modalClientNameInput').addEventListener('change', (e)=> trackSave((async ()=>{
   const value = e.target.value;
+  const id = editingId;
   await saveEditField('clientName', value);
   const followUpDate = document.getElementById('modalFollowUp').value;
-  if(followUpDate) await syncFollowUpToCalendar(editingId, value, followUpDate);
-});
-document.getElementById('modalStatus').addEventListener('change', e=> saveEditField('status', e.target.value));
-document.getElementById('modalFollowUp').addEventListener('change', async (e)=>{
+  if(followUpDate && id) await syncFollowUpToCalendar(id, value, followUpDate);
+})()));
+document.getElementById('modalStatus').addEventListener('change', e=> trackSave(saveEditField('status', e.target.value)));
+document.getElementById('modalFollowUp').addEventListener('change', (e)=> trackSave((async ()=>{
   const value = e.target.value || null;
+  const id = editingId;
   await saveEditField('followUpDate', value);
   const clientName = document.getElementById('modalClientNameInput').value;
-  await syncFollowUpToCalendar(editingId, clientName, value);
-});
-document.getElementById('modalNotes').addEventListener('change', e=> saveEditField('notes', e.target.value));
+  if(id) await syncFollowUpToCalendar(id, clientName, value);
+})()));
+document.getElementById('modalNotes').addEventListener('change', e=> trackSave(saveEditField('notes', e.target.value)));
 document.getElementById('btnCloseModal').addEventListener('click', closeEditModal);
 document.getElementById('editModal').addEventListener('click', (e)=>{
   if(e.target.id==='editModal') closeEditModal();
