@@ -72,6 +72,13 @@
   <main>
 
     <div class="entry">
+      <div class="entry-head"><span class="v-num">v3.18.0</span><span class="v-date">2026-10-07</span></div>
+      <ul>
+        <li>後台使用者列表新增「最後活躍」：取登入、切換功能、儲存報告三者中最新的時間，分頁一直開著沒重新登入也能看出還有在用；「7 天內有活動」篩選改依此計算（需執行 vicauria-admin-last-active.sql，未執行前會先退回顯示最後登入）</li>
+      </ul>
+    </div>
+
+    <div class="entry">
       <div class="entry-head"><span class="v-num">v3.17.3</span><span class="v-date">2026-10-07</span></div>
       <ul>
         <li>客戶資料：編輯後按「完成」，清單立刻更新，不用重新整理（原本最後一個欄位的儲存還沒完成就重抓資料，會看到舊內容）；欄位儲存成功後，清單也會即時更新</li>

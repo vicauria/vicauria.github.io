@@ -261,7 +261,7 @@
         <input class="search" id="userSearch" type="search" placeholder="搜尋名稱或 Email">
         <div class="pills" id="userFilter">
           <button class="pill active" data-f="all">全部</button>
-          <button class="pill" data-f="active">7 天內有登入</button>
+          <button class="pill" data-f="active">7 天內有活動</button>
           <button class="pill" data-f="unconfirmed">尚未驗證信箱</button>
           <button class="pill" data-f="idle">註冊後還沒用過</button>
         </div>
@@ -269,13 +269,13 @@
       <div class="table-wrap">
         <table class="data">
           <thead><tr>
-            <th>使用者</th><th>註冊</th><th>最後登入</th>
+            <th>使用者</th><th>註冊</th><th>最後登入</th><th>最後活躍</th>
             <th class="num">客戶數</th><th class="num">報告數</th><th>最近產出報告</th><th>團隊</th>
           </tr></thead>
           <tbody id="userRows"></tbody>
         </table>
       </div>
-      <div class="privacy-note">客戶數、報告數只統計數量，後台看不到任何客戶的內容。</div>
+      <div class="privacy-note">客戶數、報告數只統計數量，後台看不到任何客戶的內容。「最後登入」是真正輸入帳密／重新登入的時間；「最後活躍」取登入、切換功能、儲存報告三者中最新的時間，分頁一直開著也會更新。</div>
     </section>
 
     <!-- 意見箱 -->
@@ -468,12 +468,13 @@ function userMatches(u){
   const q = state.userQuery.trim().toLowerCase();
   if(q && !(`${u.display_name} ${u.email}`.toLowerCase().includes(q))) return false;
   switch(state.userFilter){
-    case 'active': return daysSince(u.last_sign_in_at) <= 7;
+    case 'active': return daysSince(activeAt(u)) <= 7;
     case 'unconfirmed': return !u.email_confirmed;
     case 'idle': return u.client_count == 0 && u.report_count == 0;
     default: return true;
   }
 }
+function activeAt(u){ return u.last_active_at || u.last_sign_in_at; }
 function activityDot(iso){
   const d = daysSince(iso);
   return `<span class="dot ${d<=7?'on':(d<=30?'mid':'off')}"></span>`;
@@ -481,7 +482,7 @@ function activityDot(iso){
 function renderUsers(){
   const rows = state.users.filter(userMatches);
   const tbody = document.getElementById('userRows');
-  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="7" class="empty">沒有符合條件的使用者</td></tr>`; return; }
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="8" class="empty">沒有符合條件的使用者</td></tr>`; return; }
   tbody.innerHTML = rows.map(u=>{
     const tags = [];
     if(u.is_admin) tags.push('<span class="tag admin">管理者</span>');
@@ -492,7 +493,8 @@ function renderUsers(){
     return `<tr>
       <td><div class="user-name">${esc(u.display_name || '（未命名）')}</div><div class="user-email">${esc(u.email)}</div>${tags.join('')}</td>
       <td>${fmtDate(u.created_at)}<div class="when-abs">${relTime(u.created_at)}</div></td>
-      <td>${activityDot(u.last_sign_in_at)}${relTime(u.last_sign_in_at)}<div class="when-abs">${fmtDateTime(u.last_sign_in_at)}</div></td>
+      <td>${relTime(u.last_sign_in_at)}<div class="when-abs">${fmtDateTime(u.last_sign_in_at)}</div></td>
+      <td>${activityDot(activeAt(u))}${relTime(activeAt(u))}<div class="when-abs">${fmtDateTime(activeAt(u))}</div></td>
       <td class="num">${fmtNum(u.client_count)}</td>
       <td class="num">${fmtNum(u.report_count)}</td>
       <td>${u.last_report_at ? relTime(u.last_report_at) : '<span class="muted">還沒有</span>'}</td>
