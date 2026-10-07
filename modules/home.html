@@ -284,14 +284,15 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
   const dateLabel = ds => ds === todayStr ? '今天' : fmtMD(ds) + '（' + WD[new Date(ds + 'T00:00:00').getDay()] + '）';
   const activeClients = clients.filter(c => c.follow_up_date && !['closed','lost'].includes(c.status));
   const dueNow = activeClients.filter(c => c.follow_up_date <= todayStr);
-  const items = activeClients.filter(c => c.follow_up_date <= weekEnd).map(c => ({
+  const autoFollow = new Set(weekEvents.filter(e => (e.title || '').startsWith('追蹤')).map(e => e.event_date + '|' + ((e.client_records && e.client_records.client_name) || '').trim()));
+  const items = activeClients.filter(c => c.follow_up_date <= weekEnd && !autoFollow.has(c.follow_up_date + '|' + (c.client_name || '').trim())).map(c => ({
       date: c.follow_up_date < todayStr ? todayStr : c.follow_up_date, over: c.follow_up_date < todayStr, due: c.follow_up_date <= todayStr, go: 'frame-clientrecords',
       what: (c.client_name || '').trim() || '（未命名客戶）',
-      sub: c.follow_up_date < todayStr ? '已過追蹤日，記得聯絡' : (c.follow_up_date === todayStr ? '今天該聯絡' : `追蹤日・${dayDiff(c.follow_up_date)} 天後，可以先提醒客戶`) }))
+      sub: c.follow_up_date < todayStr ? '已過追蹤日，記得聯絡' : (c.follow_up_date === todayStr ? '今天該聯絡' : `追蹤日・${dayDiff(c.follow_up_date)} 天後`) }))
     .concat(weekEvents.map(e => {
       const cn = e.client_records && e.client_records.client_name ? e.client_records.client_name.trim() : '';
       const t = e.start_time ? e.start_time.slice(0,5) + '　' : '';
-      return { date: e.event_date, over: false, due: false, go: 'frame-calendar', what: (cn ? cn + '：' : '') + (e.title || '（未命名）'), sub: `${t}行事曆・${dayDiff(e.event_date)} 天後，可以先提醒客戶` };
+      return { date: e.event_date, over: false, due: false, go: 'frame-calendar', what: (cn && !(e.title || '').includes(cn) ? cn + '：' : '') + (e.title || '（未命名）'), sub: `${t}行事曆・${dayDiff(e.event_date)} 天後` };
     }))
     .sort((a,b) => a.date.localeCompare(b.date) || (b.over - a.over));
   document.getElementById('kFollow').textContent = items.length;
