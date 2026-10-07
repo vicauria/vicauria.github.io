@@ -63,7 +63,7 @@
   .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; margin-bottom:18px;}
   .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px;}
   .card-head h2{font-family:"Noto Serif TC",serif; font-size:17px; color:var(--navy); margin:0;}
-  .card-head .more{font-size:13px; color:var(--teal-deep); font-weight:700; background:none; border:none; cursor:pointer; padding:4px 0;}
+  .card-head .more{font-size:13px; color:var(--teal-deep); font-weight:700; background:none; border:none; cursor:pointer; padding:8px 4px; margin:-4px -4px; white-space:nowrap;}
   .card-head .more:hover{text-decoration:underline;}
 
   .row{display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer;}
@@ -94,7 +94,7 @@
   .ob-step.done .tx{color:var(--ink-soft); text-decoration:line-through; font-weight:500;}
   .ob-step .arrow{margin-left:auto; color:var(--warm-deep); font-size:13px; font-weight:700;}
   .ob-step.done .arrow{display:none;}
-  .ob-close{background:none; border:none; color:var(--ink-soft); font-size:12.5px; cursor:pointer; text-decoration:underline;}
+  .ob-close{background:none; border:none; color:var(--ink-soft); font-size:12.5px; cursor:pointer; text-decoration:underline; white-space:nowrap; padding:8px 4px; flex-shrink:0;}
 
   /* ---------- 所有功能 ---------- */
   .tools{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:10px;}
@@ -140,7 +140,7 @@
 <main class="wrap">
   <div class="kpis">
     <button class="kpi" data-go="frame-calendar"><div class="lbl">📅 今日行程</div><div class="val" id="kAgenda">–</div><div class="hint" id="kAgendaHint">筆安排</div></button>
-    <button class="kpi" id="kFollowCard" data-go="frame-clientrecords"><div class="lbl">🔔 該追蹤的客戶</div><div class="val" id="kFollow">–</div><div class="hint">到期、逾期與 7 天內的安排</div></button>
+    <button class="kpi" id="kFollowCard" data-go="frame-clientrecords"><div class="lbl">🔔 近期待辦事項</div><div class="val" id="kFollow">–</div><div class="hint">逾期、到期與 7 天內</div></button>
     <button class="kpi" id="kPayCard" data-go="frame-contracts"><div class="lbl">💳 待繳款</div><div class="val" id="kPay">–</div><div class="hint" id="kPayHint">14 天內到期</div></button>
     <button class="kpi" data-go="frame-calendar"><div class="lbl">🎂 今天生日</div><div class="val" id="kBday">–</div><div class="hint">位客戶</div></button>
   </div>
@@ -158,7 +158,7 @@
         <div id="agendaList"><span class="sk w80"></span><span class="sk w60"></span></div>
       </div>
       <div class="card">
-        <div class="card-head"><h2>該聯絡的客戶（未來 7 天）</h2><button class="more" data-go="frame-calendar">行事曆 →</button></div>
+        <div class="card-head"><h2>近期待辦事項（未來 7 天）</h2><button class="more" data-go="frame-calendar">行事曆 →</button></div>
         <div id="followList"><span class="sk w80"></span><span class="sk w40"></span></div>
       </div>
     </div>
@@ -276,7 +276,7 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
     }).join('');
   document.getElementById('agendaList').innerHTML = agendaHTML || emptyRow('今天沒有安排行程。', '＋ 新增約訪', 'frame-calendar');
 
-  // ---- 該聯絡的客戶：已到期的追蹤 ＋ 未來 7 天的追蹤日與行事曆安排（可以提早提醒客戶） ----
+  // ---- 近期待辦事項：已到期的追蹤 ＋ 未來 7 天的追蹤日與行事曆安排（可以提早提醒客戶） ----
   const addDays = (ds, n) => { const d = new Date(ds + 'T00:00:00'); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
   const weekEnd = addDays(todayStr, 7);
   const dayDiff = ds => Math.round((new Date(ds + 'T00:00:00') - new Date(todayStr + 'T00:00:00')) / 86400000);
@@ -299,7 +299,7 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
   document.getElementById('followList').innerHTML = items.length
     ? items.slice(0, 6).map(it => `<div class="row" data-go="${it.go}"><span class="when ${it.over ? 'red' : ''}">${dateLabel(it.date)}</span><div><div class="what">${vcEsc(it.what)}</div><div class="sub">${vcEsc(it.sub)}</div></div></div>`).join('')
       + (items.length > 6 ? `<div class="empty"><span>還有 ${items.length - 6} 項</span><button class="go" data-go="frame-calendar">查看行事曆</button></div>` : '')
-    : (clients.length ? emptyRow('未來 7 天沒有要聯絡的客戶或行程。', '＋ 新增約訪', 'frame-calendar') : emptyRow('還沒有客戶，從第一份財富地圖開始吧。', '開始財富地圖 →', 'frame-blueprint'));
+    : (clients.length ? emptyRow('未來 7 天沒有待辦事項。', '＋ 新增約訪', 'frame-calendar') : emptyRow('還沒有客戶，從第一份財富地圖開始吧。', '開始財富地圖 →', 'frame-blueprint'));
 
   // ---- 待繳 ----
   const overdue = pays.filter(x => x.due_date < todayStr).length;
