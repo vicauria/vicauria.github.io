@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /enterprise.html
+Disallow: /workbench.html
+Disallow: /modules/
+
+Sitemap: https://vicauria.github.io/sitemap.xml
