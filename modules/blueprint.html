@@ -476,9 +476,29 @@
     }
     @page{ size:A4; margin:14mm 12mm; }
   }
+  /* 從「客戶資料」開啟報告／追蹤更新時的載入畫面：資料載好之前不讓同意書閃出來 */
+  #bpLoading{display:none; position:fixed; inset:0; z-index:9999; background:var(--paper, #f6f4ef);
+    align-items:center; justify-content:center; flex-direction:column; gap:16px; text-align:center; padding:24px;}
+  html.bp-loading #bpLoading{display:flex;}
+  html.bp-loading .screen, html.bp-loading .focus-btn{visibility:hidden;}
+  #bpLoading .bp-spin{width:46px; height:46px; border-radius:50%; border:4px solid rgba(0,0,0,.1);
+    border-top-color:var(--teal, #2f7893); animation:bpspin .9s linear infinite;}
+  #bpLoading .bp-t1{font-size:17px; font-weight:700; color:var(--ink, #1f2a37);}
+  #bpLoading .bp-t2{font-size:13px; color:var(--ink-soft, #667085);}
+  @keyframes bpspin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion:reduce){ #bpLoading .bp-spin{animation-duration:2.4s;} }
 </style>
 </head>
 <body>
+<script>
+  // 網址帶 reportId / trackClientId 時，先蓋上載入畫面（在同意書畫出來之前就生效）
+  (function(){ try{ var q = new URLSearchParams(location.search); if(q.get('reportId') || q.get('trackClientId')) document.documentElement.classList.add('bp-loading'); }catch(e){} })();
+</script>
+<div id="bpLoading" role="status" aria-live="polite">
+  <div class="bp-spin"></div>
+  <div class="bp-t1" id="bpLoadingTitle">報告載入中…</div>
+  <div class="bp-t2">正在整理資料，請稍候</div>
+</div>
 
 <button type="button" class="focus-btn" id="focusBtn" title="隱藏側邊欄與其他按鈕，只留下問卷，適合拿給客戶操作">⛶ 面談模式</button>
 <div class="screen active" id="screen-consent">
@@ -2707,14 +2727,24 @@ let currentAdvisorName = '';
       currentAdvisorName = session.user.user_metadata?.display_name || session.user.email || '';
     }
   }catch(e){}
-  const loaded = await tryLoadRecordFromQuery();
-  if(loaded && loaded.mode === 'view'){
-    renderReport();
-    showScreen('screen-report');
-  } else if(loaded && loaded.mode === 'track'){
-    enterPage(0);
-  } else {
-    offerDraftResume();
+  try{
+    const qs = new URLSearchParams(window.location.search);
+    const tt = document.getElementById('bpLoadingTitle');
+    if(tt && qs.get('trackClientId') && !qs.get('reportId')) tt.textContent = '載入客戶資料中…';
+  }catch(e){}
+  let loaded = false;
+  try{ loaded = await tryLoadRecordFromQuery(); }catch(e){ console.error(e); }
+  try{
+    if(loaded && loaded.mode === 'view'){
+      renderReport();
+      showScreen('screen-report');
+    } else if(loaded && loaded.mode === 'track'){
+      enterPage(0);
+    } else {
+      offerDraftResume();
+    }
+  } finally {
+    document.documentElement.classList.remove('bp-loading');
   }
 })();
 
