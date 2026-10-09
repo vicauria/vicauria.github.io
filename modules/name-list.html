@@ -92,6 +92,40 @@
     outline:none; border-color:var(--teal); background:#fff;
   }
   table.tier-table textarea{min-height:34px;}
+  /* 備註欄：表格裡固定單行顯示（外觀不因文字多而撐高），點一下開啟完整內容 */
+  .note-cell{
+    display:block; width:100%; height:34px; text-align:left; cursor:pointer;
+    border:1.5px solid transparent; border-radius:8px; padding:7px 8px; background:transparent;
+    font-family:"Noto Sans TC",sans-serif; font-size:12.5px; line-height:1.5; color:var(--ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .note-cell:hover{background:var(--paper);}
+  .note-cell:focus-visible{outline:none; border-color:var(--teal); background:#fff;}
+  .note-cell.empty{color:#9aa6a9;}
+  .note-overlay{
+    position:fixed; inset:0; background:rgba(15,28,34,.55); display:none; align-items:center;
+    justify-content:center; padding:16px; z-index:100;
+  }
+  .note-overlay.show{display:flex;}
+  .note-dialog{
+    background:#fff; border-radius:16px; width:min(560px,100%); max-height:90vh; display:flex; flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,.3); overflow:hidden;
+  }
+  .note-dialog .nd-head{padding:16px 20px 8px; display:flex; align-items:center; gap:10px;}
+  .note-dialog .nd-tier{font-family:"Roboto Mono",monospace; font-size:11px; font-weight:700; color:#fff; background:var(--teal); border-radius:6px; padding:3px 8px;}
+  .note-dialog .nd-title{font-size:16px; font-weight:700; color:var(--ink); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .note-dialog textarea{
+    margin:6px 20px 0; min-height:200px; max-height:55vh; resize:vertical; border:1.5px solid var(--line); border-radius:10px;
+    padding:12px; font-family:"Noto Sans TC",sans-serif; font-size:14px; line-height:1.7; color:var(--ink);
+  }
+  .note-dialog textarea:focus{outline:none; border-color:var(--teal);}
+  .note-dialog .nd-foot{padding:12px 20px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .note-dialog .nd-hint{font-size:11.5px; color:var(--ink-soft);}
+  .note-dialog .nd-done{
+    background:var(--navy); color:#fff; border:none; border-radius:999px; padding:9px 22px; font-size:13.5px;
+    font-weight:700; cursor:pointer; min-height:38px; font-family:"Noto Sans TC",sans-serif;
+  }
+  .note-dialog .nd-done:hover{background:var(--teal-deep);}
   .row-del-btn{
     background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:14px;
     padding:4px; border-radius:6px; line-height:1;
@@ -170,6 +204,13 @@
     </div>
 </main>
 
+<div class="note-overlay" id="noteOverlay" role="dialog" aria-modal="true" aria-labelledby="ndTitle">
+  <div class="note-dialog">
+    <div class="nd-head"><span class="nd-tier" id="ndTier">A</span><div class="nd-title" id="ndTitle">備註</div></div>
+    <textarea id="ndText" placeholder="關係、備註…" aria-label="備註內容"></textarea>
+    <div class="nd-foot"><span class="nd-hint">關閉時自動儲存　·　Esc 或點外面也會儲存</span><button type="button" class="nd-done" id="ndDone">完成</button></div>
+  </div>
+</div>
 <div class="save-hint" id="saveHint">已儲存</div>
 
 <script src="../vendor/supabase-js-2.117.2.js"></script>
@@ -190,6 +231,13 @@ function rowsForTier(tier){
   return entries.filter(e=> e.tier === tier).sort((a,b)=> (a.sort_order||0) - (b.sort_order||0));
 }
 
+function paintNoteCell(btn, note){
+  const t = (note || '').trim();
+  btn.textContent = t || '關係、備註…';
+  btn.classList.toggle('empty', !t);
+  btn.title = t ? '點一下查看／編輯完整備註' : '點一下新增備註';
+}
+
 function renderRow(entry){
   const tr = document.createElement('tr');
   tr.dataset.id = entry.id;
@@ -201,10 +249,10 @@ function renderRow(entry){
   tdName.appendChild(inputName);
 
   const tdNote = document.createElement('td');
-  const inputNote = document.createElement('textarea');
-  inputNote.rows = 1; inputNote.placeholder = '關係、備註…'; inputNote.value = entry.note || '';
-  inputNote.dataset.field = 'note';
-  tdNote.appendChild(inputNote);
+  const noteBtn = document.createElement('button');
+  noteBtn.type = 'button'; noteBtn.className = 'note-cell'; noteBtn.dataset.noteId = entry.id;
+  paintNoteCell(noteBtn, entry.note);
+  tdNote.appendChild(noteBtn);
 
   const tdDel = document.createElement('td');
   const delBtn = document.createElement('button');
@@ -273,8 +321,10 @@ async function addRow(tier){
 
 async function deleteRow(id, tier){
   // 只有已經填了內容的列才需要確認；空白列直接刪
+  const ent = entries.find(e=> e.id === id);
   const row = document.querySelector(`tr[data-id="${id}"]`);
-  const filled = row && Array.from(row.querySelectorAll('input')).some(i=> (i.value || '').trim());
+  const filled = (ent && ((ent.note || '').trim() || (ent.name || '').trim())) ||
+                 (row && Array.from(row.querySelectorAll('input')).some(i=> (i.value || '').trim()));
   if(filled && window.vcConfirm && !(await vcConfirm('確定要刪除這一列名單嗎？刪除後沒辦法復原。'))) return;
   const { error } = await supabaseClient.from('name_list_entries').delete().eq('id', id).eq('advisor_id', myUserId);
   if(error){ console.error('刪除失敗', error); alert('刪除失敗，請稍後再試。'); return; }
@@ -299,6 +349,8 @@ document.getElementById('board').addEventListener('focusout', async (e)=>{
 });
 
 document.getElementById('board').addEventListener('click', (e)=>{
+  const noteBtn = e.target.closest('[data-note-id]');
+  if(noteBtn){ openNote(noteBtn.dataset.noteId, noteBtn); return; }
   const addBtn = e.target.closest('[data-add-tier]');
   if(addBtn){ addRow(addBtn.dataset.addTier); return; }
   const delBtn = e.target.closest('[data-del-id]');
@@ -306,6 +358,52 @@ document.getElementById('board').addEventListener('click', (e)=>{
     const tier = delBtn.closest('.tier-card').dataset.tier;
     deleteRow(delBtn.dataset.delId, tier);
   }
+});
+
+/* ---------------- 備註完整內容（點備註格開啟，關閉時自動儲存） ---------------- */
+const noteOverlay = document.getElementById('noteOverlay');
+const ndText = document.getElementById('ndText');
+let noteEditing = null, noteOpener = null;
+
+function openNote(id, opener){
+  const entry = entries.find(e=> e.id === id);
+  if(!entry) return;
+  noteEditing = entry; noteOpener = opener || null;
+  document.getElementById('ndTier').textContent = entry.tier + ' 名單';
+  document.getElementById('ndTitle').textContent = (entry.name || '').trim() ? entry.name + ' 的備註' : '備註（尚未填姓名）';
+  ndText.value = entry.note || '';
+  noteOverlay.classList.add('show');
+  setTimeout(()=>{ ndText.focus(); ndText.setSelectionRange(ndText.value.length, ndText.value.length); }, 30);
+}
+
+async function closeNote(){
+  if(!noteEditing) return;
+  const entry = noteEditing, opener = noteOpener, value = ndText.value;
+  noteEditing = null; noteOpener = null;
+  noteOverlay.classList.remove('show');
+  if(opener) opener.focus();
+  if((entry.note || '') === value) return;
+  const prev = entry.note;
+  entry.note = value;
+  const btn = document.querySelector(`.note-cell[data-note-id="${entry.id}"]`);
+  if(btn) paintNoteCell(btn, value);
+  const { error } = await supabaseClient.from('name_list_entries')
+    .update({ note: value }).eq('id', entry.id).eq('advisor_id', myUserId);
+  if(error){
+    console.error('儲存備註失敗', error);
+    entry.note = prev; if(btn) paintNoteCell(btn, prev);
+    if(window.vcAlert) vcAlert('備註儲存失敗，請檢查網路後再試一次。'); else alert('備註儲存失敗，請檢查網路後再試一次。');
+    return;
+  }
+  showSaveHint();
+}
+
+document.getElementById('ndDone').addEventListener('click', closeNote);
+noteOverlay.addEventListener('click', (e)=>{ if(e.target === noteOverlay) closeNote(); });
+document.addEventListener('keydown', (e)=>{
+  if(!noteEditing) return;
+  if(e.key === 'Escape'){ e.preventDefault(); closeNote(); }
+  else if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){ e.preventDefault(); closeNote(); }
 });
 
 (async function init(){
