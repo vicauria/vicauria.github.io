@@ -114,6 +114,35 @@
   .badge.show{opacity:1;}
   .badge.gain{border-color:var(--positive);color:var(--positive);background:rgba(46,125,91,0.08);}
 
+
+  /* ---------- 72 法則／631 法則 ---------- */
+  .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+  @media (max-width:900px){.tool-grid{grid-template-columns:1fr;}}
+  .big-num{font-family:"Roboto Mono",monospace;font-weight:700;font-size:clamp(30px,4vw,42px);color:var(--teal-deep);line-height:1.2;}
+  .big-num small{font-size:.4em;color:var(--ink-soft);margin-left:6px;font-family:"Noto Sans TC",sans-serif;font-weight:500;}
+  .res-line{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin-top:10px;}
+  .res-line b{color:var(--navy);}
+  .double-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13.5px;}
+  .double-table th{font-size:12px;color:var(--ink-soft);text-align:left;font-weight:700;padding:6px 8px;border-bottom:1.5px solid var(--line);}
+  .double-table td{padding:8px;border-bottom:1px solid var(--line);font-family:"Roboto Mono",monospace;}
+  .double-table td:first-child{font-family:"Noto Sans TC",sans-serif;color:var(--ink-soft);}
+  .double-table tr:last-child td{border-bottom:none;}
+  .warn-box{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--warm-tint);color:var(--warm-deep);font-size:13px;line-height:1.8;}
+  .split-bar{display:flex;height:34px;border-radius:10px;overflow:hidden;margin:6px 0 16px;border:1px solid var(--line);}
+  .split-bar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:700;white-space:nowrap;}
+  .split-bar .s-live{background:var(--teal-deep);width:60%;}
+  .split-bar .s-grow{background:var(--positive);width:30%;}
+  .split-bar .s-safe{background:var(--warm);width:10%;}
+  .split-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);}
+  .split-row:last-child{border-bottom:none;}
+  .split-row .dot{width:12px;height:12px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+  .split-row .sr-main{flex:1;min-width:0;}
+  .split-row .sr-name{font-weight:700;color:var(--navy);font-size:14px;}
+  .split-row .sr-desc{font-size:12.5px;color:var(--ink-soft);line-height:1.7;margin-top:2px;}
+  .split-row .sr-amt{font-family:"Roboto Mono",monospace;font-weight:700;color:var(--ink);text-align:right;white-space:nowrap;font-size:15px;}
+  .split-row .sr-amt small{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:500;}
+  .rule-foot{font-size:12px;color:var(--ink-soft);line-height:1.8;margin-top:16px;}
+
   /* ---------- Closing note ---------- */
   .note{
     background:var(--navy);color:#fff;border-radius:var(--radius);
@@ -130,7 +159,7 @@
   <div class="wrap">
     <div class="eyebrow">Capital Efficiency · 資金效率健檢</div>
     <h1>資金效率健檢</h1>
-    <p>你很會賺錢，但你的錢會不會幫你賺錢？算一次就知道，放著不動的錢，正在變薄，還是正在變多。</p>
+    <p>你很會賺錢，但你的錢會不會幫你賺錢？算一次就知道，放著不動的錢，正在變薄，還是正在變多。下方另有 72 法則與 631 法則，兩個常用的理財口訣。</p>
   </div>
 </header>
 
@@ -201,6 +230,56 @@
     </p>
   </div>
 
+
+  <div class="tool-grid">
+    <div class="panel" id="rule72">
+      <div class="panel-head"><span class="num">03</span><h2>72 法則：錢多久翻一倍</h2></div>
+      <p class="panel-sub">
+        用 <strong>72 ÷ 年化報酬率</strong>，快速估算本金翻倍要幾年。也能反過來看：通膨 3%，現在的錢<strong>大約 24 年購買力少一半</strong>。
+      </p>
+      <div class="field">
+        <label for="r72Rate">年化報酬率</label>
+        <div class="input-wrap"><input type="number" id="r72Rate" inputmode="decimal" step="0.1" value="6" min="0.1"><span class="unit">% / 年</span></div>
+      </div>
+      <div class="field">
+        <label for="r72Amt">目前本金</label>
+        <div class="input-wrap"><span class="unit">NT$</span><input type="number" id="r72Amt" inputmode="numeric" value="1000000" min="0"><span class="unit">元</span></div>
+      </div>
+      <div class="field">
+        <label for="r72Inf">通膨率（算購買力減半要幾年）</label>
+        <div class="input-wrap"><input type="number" id="r72Inf" inputmode="decimal" step="0.1" value="3" min="0"><span class="unit">% / 年</span></div>
+      </div>
+      <div class="result-label" style="margin-top:22px;">約 <span id="r72Years">12</span> 年，本金翻一倍</div>
+      <div class="big-num" id="r72Big">12.0<small>年</small></div>
+      <div class="res-line" id="r72Exact"></div>
+      <table class="double-table" aria-label="翻倍時間表">
+        <thead><tr><th>翻倍次數</th><th>約第幾年</th><th>本金變成</th></tr></thead>
+        <tbody id="r72Body"></tbody>
+      </table>
+      <div class="warn-box" id="r72Inflation"></div>
+      <div class="rule-foot">72 法則是簡化估算，報酬率落在約 6%～10% 時最接近真實值。報酬率是你假設的數字，不代表保證，實際投資有波動與虧損風險。</div>
+    </div>
+
+    <div class="panel" id="rule631">
+      <div class="panel-head"><span class="num">04</span><h2>631 法則：收入怎麼分配</h2></div>
+      <p class="panel-sub">
+        每月稅後收入，<strong>60% 過生活、30% 投資理財、10% 保險保障</strong>。先分好，再花，錢才不會被生活吃光。
+      </p>
+      <div class="field">
+        <label for="r631Income">每月稅後收入</label>
+        <div class="input-wrap"><span class="unit">NT$</span><input type="number" id="r631Income" inputmode="numeric" value="80000" min="0"><span class="unit">元 / 月</span></div>
+      </div>
+      <div class="field">
+        <label for="r631Spend">目前每月實際生活開銷（選填，用來對照）</label>
+        <div class="input-wrap"><span class="unit">NT$</span><input type="number" id="r631Spend" inputmode="numeric" placeholder="例如 55000（可留空）" min="0"><span class="unit">元 / 月</span></div>
+      </div>
+      <div class="split-bar" aria-hidden="true"><span class="s-live">60%</span><span class="s-grow">30%</span><span class="s-safe">10%</span></div>
+      <div id="r631Rows"></div>
+      <div class="warn-box" id="r631Check" style="display:none;"></div>
+      <div class="rule-foot">631 是常見的經驗法則，不是公式。實際比例要看家庭責任、房貸、年齡與目標調整。保險保障這 10% 指的是風險保障的保費，產品與額度需依個人需求評估。</div>
+    </div>
+  </div>
+
   <div class="note">
     這份試算只是起點，不是結論。每個人的資金結構、風險承受度、時間目標都不一樣，數字背後該怎麼配置，才是真正該討論的事。想知道自己的資金可以怎麼安排？歡迎與你的顧問討論。
     <span class="signature">— <span class="vcAdvisorName">Vicauria</span></span>
@@ -259,6 +338,82 @@ function calc(){
     setTimeout(() => badge.classList.add('show'), 220);
   });
 }
+
+/* ---------- 72 法則 ---------- */
+function fmtYears(y){ return (Math.round(y*10)/10).toFixed(1); }
+function calc72(){
+  const r = parseFloat(document.getElementById('r72Rate').value);
+  const amt = parseFloat(document.getElementById('r72Amt').value) || 0;
+  const inf = parseFloat(document.getElementById('r72Inf').value);
+  const big = document.getElementById('r72Big'), yEl = document.getElementById('r72Years');
+  const exactEl = document.getElementById('r72Exact'), body = document.getElementById('r72Body');
+  const infEl = document.getElementById('r72Inflation');
+  body.textContent = '';
+  if(!(r > 0)){
+    yEl.textContent = '—'; big.textContent = '—'; exactEl.textContent = '請輸入大於 0 的年化報酬率。'; infEl.style.display = 'none';
+    return;
+  }
+  const y = 72 / r;
+  const exact = Math.log(2) / Math.log(1 + r/100);
+  yEl.textContent = fmtYears(y);
+  big.textContent = fmtYears(y);
+  const sm = document.createElement('small'); sm.textContent = '年'; big.appendChild(sm);
+  exactEl.textContent = '用精確複利公式算約 ' + fmtYears(exact) + ' 年，72 法則的誤差約 ' + fmtYears(Math.abs(y - exact)) + ' 年。';
+  [1,2,3].forEach(n=>{
+    const tr = document.createElement('tr');
+    [ '翻 ' + n + ' 次（×' + Math.pow(2,n) + '）', '第 ' + fmtYears(y*n) + ' 年', formatNT(amt * Math.pow(2,n)) ].forEach(t=>{
+      const td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+  if(inf > 0){
+    infEl.style.display = 'block';
+    infEl.textContent = '通膨 ' + inf + '% 的話，約 ' + fmtYears(72/inf) + ' 年後，今天的 ' + formatNT(amt) + ' 購買力只剩一半，約等於今天的 ' + formatNT(amt/2) + '。錢放著不動，會慢慢變薄。';
+  } else { infEl.style.display = 'none'; }
+}
+['r72Rate','r72Amt','r72Inf'].forEach(id=> document.getElementById(id).addEventListener('input', calc72));
+calc72();
+
+/* ---------- 631 法則 ---------- */
+function calc631(){
+  const inc = Math.max(0, parseFloat(document.getElementById('r631Income').value) || 0);
+  const spendRaw = document.getElementById('r631Spend').value.trim();
+  const rows = document.getElementById('r631Rows');
+  const check = document.getElementById('r631Check');
+  const items = [
+    { name:'60% 生活開銷', color:'var(--teal-deep)', pct:0.6, desc:'房租房貸、吃飯交通、日常花費都在這裡' },
+    { name:'30% 投資理財', color:'var(--positive)', pct:0.3, desc:'每月固定投入，讓錢開始為你工作（含緊急預備金）' },
+    { name:'10% 保險保障', color:'var(--warm)', pct:0.1, desc:'醫療、意外、壽險等風險保障的保費' }
+  ];
+  rows.textContent = '';
+  items.forEach(it=>{
+    const row = document.createElement('div'); row.className = 'split-row';
+    const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = it.color;
+    const main = document.createElement('div'); main.className = 'sr-main';
+    const nm = document.createElement('div'); nm.className = 'sr-name'; nm.textContent = it.name;
+    const ds = document.createElement('div'); ds.className = 'sr-desc'; ds.textContent = it.desc;
+    main.appendChild(nm); main.appendChild(ds);
+    const amt = document.createElement('div'); amt.className = 'sr-amt'; amt.textContent = formatNT(inc*it.pct) + ' / 月';
+    const yr = document.createElement('small'); yr.textContent = '一年 ' + formatNT(inc*it.pct*12);
+    amt.appendChild(yr);
+    row.appendChild(dot); row.appendChild(main); row.appendChild(amt);
+    rows.appendChild(row);
+  });
+  if(spendRaw !== '' && inc > 0){
+    const spend = Math.max(0, parseFloat(spendRaw) || 0);
+    const pct = spend / inc * 100;
+    check.style.display = 'block';
+    if(pct > 60){
+      check.textContent = '你目前生活開銷約佔收入 ' + pct.toFixed(0) + '%，比 60% 多了 ' + formatNT(spend - inc*0.6) + ' / 月。這代表投資理財和保障的空間被壓縮，可以先檢視哪些支出能調整。';
+    } else if(pct < 60){
+      check.textContent = '你目前生活開銷約佔收入 ' + pct.toFixed(0) + '%，比 60% 少 ' + formatNT(inc*0.6 - spend) + ' / 月。這筆結餘如果沒有安排好用途，很容易不知不覺花掉，可以考慮多分配給投資理財或保障。';
+    } else {
+      check.textContent = '你目前的生活開銷剛好落在 60%，和 631 法則一致。';
+    }
+  } else { check.style.display = 'none'; }
+}
+['r631Income','r631Spend'].forEach(id=> document.getElementById(id).addEventListener('input', calc631));
+calc631();
 </script>
 
 <script>
