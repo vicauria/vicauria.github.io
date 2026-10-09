@@ -73,13 +73,15 @@
   }
 
   .tier-table-wrap{padding:10px 10px 14px;}
-  table.tier-table{width:100%; border-collapse:collapse;}
+  table.tier-table{width:100%; border-collapse:collapse; table-layout:fixed;}
   table.tier-table th{
     font-size:11.5px; color:var(--ink-soft); text-align:left; font-weight:700; padding:6px 8px;
     text-transform:uppercase; letter-spacing:.05em; border-bottom:1.5px solid var(--line);
   }
   table.tier-table th.col-name{width:32%;}
-  table.tier-table th.col-del{width:30px;}
+  table.tier-table th.col-del{width:34px;}
+  table.tier-table td{min-width:0;}
+  table.tier-table td:nth-child(3){text-align:center;}
   table.tier-table td{padding:4px 4px; border-bottom:1px solid var(--line); vertical-align:top;}
   table.tier-table tr:last-child td{border-bottom:none;}
   table.tier-table input, table.tier-table textarea{
