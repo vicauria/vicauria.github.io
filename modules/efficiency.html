@@ -148,6 +148,11 @@
   .seg-btn{appearance:none;border:none;background:transparent;padding:11px 16px;font-family:"Noto Sans TC",sans-serif;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;min-height:44px;}
   .seg-btn.active{background:var(--navy);color:#fff;}
   .seg-btn:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;}
+  .span-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+  .span-label{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap;}
+  .span-label b{font-family:"Roboto Mono",monospace;font-size:16px;color:var(--teal-deep);}
+  .span-row input[type=range]{flex:1;min-width:160px;accent-color:var(--teal-deep);height:32px;cursor:pointer;}
+  .seg-btn{padding:11px 14px;}
   .r72-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
   @media (max-width:900px){.r72-legend{grid-template-columns:repeat(2,1fr);}}
   .lg-card{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;border-top:4px solid var(--c,#999);background:#fff;min-width:0;}
@@ -283,13 +288,24 @@
       </div>
     </div>
 
+    <div class="span-row">
+      <label for="r72Span" class="span-label">圖表顯示年數：<b id="r72SpanVal">50</b> 年</label>
+      <input type="range" id="r72Span" min="10" max="100" step="5" value="50" aria-label="圖表顯示的年數（最長 100 年）">
+      <div class="seg" role="group" aria-label="常用年數">
+        <button type="button" class="seg-btn span-preset" data-span="30">30 年</button>
+        <button type="button" class="seg-btn span-preset" data-span="40">40 年</button>
+        <button type="button" class="seg-btn span-preset" data-span="50">50 年</button>
+        <button type="button" class="seg-btn span-preset" data-span="100">100 年</button>
+      </div>
+    </div>
+
     <div class="r72-legend" id="r72Legend"></div>
 
     <div class="chart-wrap" id="r72ChartWrap">
       <div id="r72Chart"></div>
       <div class="chart-tip" id="r72Tip" role="status" aria-live="polite"></div>
     </div>
-    <div class="chart-hint" id="r72Hint">滑過圖表（手機點一下）可看某一年的金額；鍵盤可按左右鍵。圓圈標示的是本金翻一倍的時間點。</div>
+    <div class="chart-hint" id="r72Hint">滑過圖表（手機點一下）可看某一年的金額；鍵盤可按左右鍵。圓圈標示的是本金翻一倍的時間點（超出顯示年數的不會出現）。</div>
 
     <div class="table-scroll">
       <table class="double-table" aria-label="各報酬率在不同年數的金額">
@@ -390,7 +406,7 @@ const R72 = {
     { name:'美金儲蓄險',   rate:3, color:'#C97B3D' },
     { name:'優利理財帳戶', rate:7, color:'#7B3FA0' }
   ],
-  years: 100, scale: 'linear', hover: null, amt: 1000000
+  years: 50, scale: 'linear', hover: null, amt: 1000000
 };
 const SVGNS = 'http://www.w3.org/2000/svg';
 function svgEl(tag, attrs, text){
@@ -443,8 +459,8 @@ function renderR72(){
     m.textContent = '';
     const l1 = document.createElement('div'); l1.appendChild(document.createTextNode('72 ÷ ' + trimNum(p.rate,1) + ' ≈ '));
     const b1 = document.createElement('b'); b1.textContent = trimNum(72/p.rate, 1); l1.appendChild(b1); l1.appendChild(document.createTextNode(' 年翻倍'));
-    const l2 = document.createElement('div'); l2.appendChild(document.createTextNode('100 年後 '));
-    const b2 = document.createElement('b'); b2.textContent = amt > 0 ? fmtShort(r72Value(p, 100)) : '—'; l2.appendChild(b2);
+    const l2 = document.createElement('div'); l2.appendChild(document.createTextNode(R72.years + ' 年後 '));
+    const b2 = document.createElement('b'); b2.textContent = amt > 0 ? fmtShort(r72Value(p, R72.years)) : '—'; l2.appendChild(b2);
     m.appendChild(l1); m.appendChild(l2);
   });
   renderR72Table();
@@ -466,7 +482,7 @@ function renderR72(){
   const Y = v => isLog ? mt + ph * (1 - Math.log2(Math.max(v, amt) / amt) / k) : mt + ph * (1 - v / yMax);
 
   const svg = svgEl('svg', { width:W, height:H, viewBox:'0 0 ' + W + ' ' + H, role:'img', tabindex:'0',
-    'aria-label':'四種年化報酬率的本金在 100 年內的成長比較圖：' + R72.products.map(p=> p.name + ' ' + p.rate + '%').join('、') });
+    'aria-label':'四種年化報酬率的本金在 ' + R72.years + ' 年內的成長比較圖：' + R72.products.map(p=> p.name + ' ' + p.rate + '%').join('、') });
   // 橫向格線與 Y 軸標示
   const gy = svgEl('g'); svg.appendChild(gy);
   if(isLog){
@@ -488,8 +504,9 @@ function renderR72(){
   // X 軸：每 10 年一個大刻度（含數字），每 5 年一個小刻度
   const gx = svgEl('g'); svg.appendChild(gx);
   gx.appendChild(svgEl('line', { x1:ml, x2:ml+pw, y1:mt+ph, y2:mt+ph, stroke:'#9aa6a9', 'stroke-width':1.2 }));
-  for(let t=0; t<=R72.years; t+=5){
-    const major = t % 10 === 0, x = X(t);
+  const majorStep = R72.years <= 20 ? 5 : 10, minorStep = R72.years <= 20 ? 1 : 5;
+  for(let t=0; t<=R72.years; t+=minorStep){
+    const major = t % majorStep === 0, x = X(t);
     if(major && t > 0) gx.appendChild(svgEl('line', { x1:x, x2:x, y1:mt, y2:mt+ph, stroke:'#EEF2F2', 'stroke-width':1 }));
     gx.appendChild(svgEl('line', { x1:x, x2:x, y1:mt+ph, y2:mt+ph+(major?8:4), stroke:'#9aa6a9', 'stroke-width':major?1.4:1 }));
     if(major) gx.appendChild(svgEl('text', { x:x, y:mt+ph+22, 'text-anchor':'middle', 'font-size':11, fill:'#5B6B70' }, t === 0 ? '0' : String(t)));
@@ -578,11 +595,25 @@ function setScale(sc){
   });
   renderR72();
 }
+
+
+function setSpan(n){
+  R72.years = Math.max(10, Math.min(100, n));
+  if(R72.hover != null) R72.hover = Math.min(R72.hover, R72.years);
+  document.getElementById('r72Span').value = R72.years;
+  document.getElementById('r72SpanVal').textContent = R72.years;
+  document.querySelectorAll('.span-preset').forEach(b=>{
+    const on = parseInt(b.dataset.span, 10) === R72.years; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  renderR72();
+}
+document.getElementById('r72Span').addEventListener('input', e=> setSpan(parseInt(e.target.value, 10) || 50));
+document.querySelectorAll('.span-preset').forEach(b=> b.addEventListener('click', ()=> setSpan(parseInt(b.dataset.span, 10))));
 document.getElementById('scLinear').addEventListener('click', ()=> setScale('linear'));
 document.getElementById('scLog').addEventListener('click', ()=> setScale('log'));
 document.getElementById('r72Amt').addEventListener('input', ()=>{ R72.amt = parseFloat(document.getElementById('r72Amt').value) || 0; renderR72(); });
 buildR72Legend();
-renderR72();
+setSpan(R72.years);
 (function(){ let last = 0; window.addEventListener('resize', ()=>{ clearTimeout(last); last = setTimeout(renderR72, 120); }); })();
 
 /* ---------- 631 法則 ---------- */
