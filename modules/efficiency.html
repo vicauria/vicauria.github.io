@@ -143,6 +143,41 @@
   .split-row .sr-amt small{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:500;}
   .rule-foot{font-size:12px;color:var(--ink-soft);line-height:1.8;margin-top:16px;}
 
+  .r72-controls{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px;}
+  .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper);}
+  .seg-btn{appearance:none;border:none;background:transparent;padding:11px 16px;font-family:"Noto Sans TC",sans-serif;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;min-height:44px;}
+  .seg-btn.active{background:var(--navy);color:#fff;}
+  .seg-btn:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;}
+  .r72-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+  @media (max-width:900px){.r72-legend{grid-template-columns:repeat(2,1fr);}}
+  .lg-card{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;border-top:4px solid var(--c,#999);background:#fff;min-width:0;}
+  .lg-card .lg-name{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:6px;}
+  .lg-card .lg-name i{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block;flex-shrink:0;}
+  .lg-card .lg-rate{display:flex;align-items:center;gap:6px;margin-top:8px;}
+  .lg-card .lg-rate input{width:68px;border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;font-family:"Roboto Mono",monospace;font-size:15px;background:var(--paper);min-height:36px;}
+  .lg-card .lg-rate input:focus{outline:none;border-color:var(--teal);}
+  .lg-card .lg-rate span{font-size:12px;color:var(--ink-soft);}
+  .lg-card .lg-meta{font-size:12px;color:var(--ink-soft);line-height:1.7;margin-top:8px;}
+  .lg-card .lg-meta b{color:var(--ink);font-family:"Roboto Mono",monospace;}
+  .chart-wrap{position:relative;width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 0 0;overflow:hidden;}
+  #r72Chart svg{display:block;touch-action:pan-y;outline:none;}
+  #r72Chart svg:focus-visible{box-shadow:inset 0 0 0 2px var(--teal);}
+  .chart-tip{position:absolute;pointer-events:none;background:rgba(22,50,63,.96);color:#fff;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7;min-width:150px;display:none;box-shadow:0 8px 22px rgba(0,0,0,.25);z-index:3;}
+  .chart-tip .tt-year{font-weight:700;margin-bottom:4px;color:#BFE0EA;}
+  .chart-tip .tt-row{display:flex;align-items:center;gap:7px;justify-content:space-between;}
+  .chart-tip .tt-row span.l{display:flex;align-items:center;gap:6px;}
+  .chart-tip .tt-row i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .chart-tip .tt-row b{font-family:"Roboto Mono",monospace;font-weight:700;}
+  .chart-hint{font-size:12px;color:var(--ink-soft);margin:8px 2px 4px;line-height:1.7;}
+  .table-scroll{overflow-x:auto;margin-top:6px;-webkit-overflow-scrolling:touch;}
+  .table-scroll .double-table{min-width:600px;}
+  .table-scroll .double-table th,.table-scroll .double-table td{white-space:nowrap;}
+  .double-table th i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;}
+  .double-table td.num{text-align:right;white-space:nowrap;}
+  .double-table th.num{text-align:right;}
+  .r631-grid{display:grid;grid-template-columns:minmax(260px,1fr) 1.3fr;gap:30px;align-items:start;}
+  @media (max-width:900px){.r631-grid{grid-template-columns:1fr;gap:6px;}}
+
   /* ---------- Closing note ---------- */
   .note{
     background:var(--navy);color:#fff;border-radius:var(--radius);
@@ -231,40 +266,47 @@
   </div>
 
 
-  <div class="tool-grid">
-    <div class="panel" id="rule72">
-      <div class="panel-head"><span class="num">03</span><h2>72 法則：錢多久翻一倍</h2></div>
-      <p class="panel-sub">
-        用 <strong>72 ÷ 年化報酬率</strong>，快速估算本金翻倍要幾年。也能反過來看：通膨 3%，現在的錢<strong>大約 24 年購買力少一半</strong>。
-      </p>
-      <div class="field">
-        <label for="r72Rate">年化報酬率</label>
-        <div class="input-wrap"><input type="number" id="r72Rate" inputmode="decimal" step="0.1" value="6" min="0.1"><span class="unit">% / 年</span></div>
-      </div>
-      <div class="field">
-        <label for="r72Amt">目前本金</label>
+  <div class="panel" id="rule72">
+    <div class="panel-head"><span class="num">03</span><h2>72 法則：錢多久翻一倍</h2></div>
+    <p class="panel-sub">
+      用 <strong>72 ÷ 年化報酬率</strong>，就能估算本金翻一倍要幾年。輸入你的金額，看四種不同報酬率的錢，在 100 年裡怎麼長大：報酬率差一點，時間拉長後差距非常大。
+    </p>
+
+    <div class="r72-controls">
+      <div class="field" style="margin-bottom:0;flex:1;min-width:240px;">
+        <label for="r72Amt">本金</label>
         <div class="input-wrap"><span class="unit">NT$</span><input type="number" id="r72Amt" inputmode="numeric" value="1000000" min="0"><span class="unit">元</span></div>
       </div>
-      <div class="field">
-        <label for="r72Inf">通膨率（算購買力減半要幾年）</label>
-        <div class="input-wrap"><input type="number" id="r72Inf" inputmode="decimal" step="0.1" value="3" min="0"><span class="unit">% / 年</span></div>
+      <div class="seg" role="group" aria-label="圖表刻度">
+        <button type="button" class="seg-btn active" id="scLinear" aria-pressed="true">一般刻度</button>
+        <button type="button" class="seg-btn" id="scLog" aria-pressed="false">倍數刻度（看翻倍）</button>
       </div>
-      <div class="result-label" style="margin-top:22px;">約 <span id="r72Years">12</span> 年，本金翻一倍</div>
-      <div class="big-num" id="r72Big">12.0<small>年</small></div>
-      <div class="res-line" id="r72Exact"></div>
-      <table class="double-table" aria-label="翻倍時間表">
-        <thead><tr><th>翻倍次數</th><th>約第幾年</th><th>本金變成</th></tr></thead>
-        <tbody id="r72Body"></tbody>
-      </table>
-      <div class="warn-box" id="r72Inflation"></div>
-      <div class="rule-foot">72 法則是簡化估算，報酬率落在約 6%～10% 時最接近真實值。報酬率是你假設的數字，不代表保證，實際投資有波動與虧損風險。</div>
     </div>
 
-    <div class="panel" id="rule631">
+    <div class="r72-legend" id="r72Legend"></div>
+
+    <div class="chart-wrap" id="r72ChartWrap">
+      <div id="r72Chart"></div>
+      <div class="chart-tip" id="r72Tip" role="status" aria-live="polite"></div>
+    </div>
+    <div class="chart-hint" id="r72Hint">滑過圖表（手機點一下）可看某一年的金額；鍵盤可按左右鍵。圓圈標示的是本金翻一倍的時間點。</div>
+
+    <div class="table-scroll">
+      <table class="double-table" aria-label="各報酬率在不同年數的金額">
+        <thead id="r72Head"></thead>
+        <tbody id="r72Body"></tbody>
+      </table>
+    </div>
+    <div class="warn-box">通膨 3% 的話，約 24 年（72 ÷ 3）後，今天的錢購買力就只剩一半。錢放著不動，不是安全，是慢慢變薄。</div>
+    <div class="rule-foot">以上為固定年化報酬率的複利示意，不是預測也不是保證；實際金融商品有費用、波動與虧損的可能，報酬率請以商品條款與實際情況為準。美金儲蓄險以台幣等值示意，未計匯率變動。72 法則是簡化估算，約 6%～10% 最接近精確值。各列報酬率可自行修改。</div>
+  </div>
+
+  <div class="panel" id="rule631">
       <div class="panel-head"><span class="num">04</span><h2>631 法則：收入怎麼分配</h2></div>
       <p class="panel-sub">
         每月稅後收入，<strong>60% 過生活、30% 投資理財、10% 保險保障</strong>。先分好，再花，錢才不會被生活吃光。
       </p>
+      <div class="r631-grid"><div class="r631-in">
       <div class="field">
         <label for="r631Income">每月稅後收入</label>
         <div class="input-wrap"><span class="unit">NT$</span><input type="number" id="r631Income" inputmode="numeric" value="80000" min="0"><span class="unit">元 / 月</span></div>
@@ -273,11 +315,12 @@
         <label for="r631Spend">目前每月實際生活開銷（選填，用來對照）</label>
         <div class="input-wrap"><span class="unit">NT$</span><input type="number" id="r631Spend" inputmode="numeric" placeholder="例如 55000（可留空）" min="0"><span class="unit">元 / 月</span></div>
       </div>
+      </div><div class="r631-out">
       <div class="split-bar" aria-hidden="true"><span class="s-live">60%</span><span class="s-grow">30%</span><span class="s-safe">10%</span></div>
       <div id="r631Rows"></div>
       <div class="warn-box" id="r631Check" style="display:none;"></div>
+      </div></div>
       <div class="rule-foot">631 是常見的經驗法則，不是公式。實際比例要看家庭責任、房貸、年齡與目標調整。保險保障這 10% 指的是風險保障的保費，產品與額度需依個人需求評估。</div>
-    </div>
   </div>
 
   <div class="note">
@@ -339,40 +382,208 @@ function calc(){
   });
 }
 
-/* ---------- 72 法則 ---------- */
-function fmtYears(y){ return (Math.round(y*10)/10).toFixed(1); }
-function calc72(){
-  const r = parseFloat(document.getElementById('r72Rate').value);
-  const amt = parseFloat(document.getElementById('r72Amt').value) || 0;
-  const inf = parseFloat(document.getElementById('r72Inf').value);
-  const big = document.getElementById('r72Big'), yEl = document.getElementById('r72Years');
-  const exactEl = document.getElementById('r72Exact'), body = document.getElementById('r72Body');
-  const infEl = document.getElementById('r72Inflation');
-  body.textContent = '';
-  if(!(r > 0)){
-    yEl.textContent = '—'; big.textContent = '—'; exactEl.textContent = '請輸入大於 0 的年化報酬率。'; infEl.style.display = 'none';
-    return;
+/* ---------- 72 法則：四種報酬率 100 年複利比較圖 ---------- */
+const R72 = {
+  products: [
+    { name:'銀行存款',     rate:1, color:'#7B8794' },
+    { name:'台幣儲蓄險',   rate:2, color:'#2E7391' },
+    { name:'美金儲蓄險',   rate:3, color:'#C97B3D' },
+    { name:'優利理財帳戶', rate:7, color:'#7B3FA0' }
+  ],
+  years: 100, scale: 'linear', hover: null, amt: 1000000
+};
+const SVGNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, text){
+  const e = document.createElementNS(SVGNS, tag);
+  for(const k in (attrs||{})) e.setAttribute(k, attrs[k]);
+  if(text != null) e.textContent = text;
+  return e;
+}
+function trimNum(n, d){ return parseFloat(n.toFixed(d)).toString(); }
+function fmtShort(v){
+  if(v >= 1e8){ const x = v/1e8; return trimNum(x, x>=100?0:(x>=10?1:2)) + '億'; }
+  if(v >= 1e4){ const x = v/1e4; return trimNum(x, x>=100?0:(x>=10?1:2)) + '萬'; }
+  return Math.round(v).toLocaleString('zh-Hant-TW');
+}
+function niceStep(raw){
+  const e = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / e;
+  return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10) * e;
+}
+function r72Value(p, t){ return R72.amt * Math.pow(1 + p.rate/100, t); }
+
+function buildR72Legend(){
+  const box = document.getElementById('r72Legend');
+  box.textContent = '';
+  R72.products.forEach((p, i)=>{
+    const card = document.createElement('div'); card.className = 'lg-card'; card.style.setProperty('--c', p.color);
+    const nm = document.createElement('div'); nm.className = 'lg-name';
+    const dot = document.createElement('i'); nm.appendChild(dot); nm.appendChild(document.createTextNode(p.name));
+    const rw = document.createElement('div'); rw.className = 'lg-rate';
+    const inp = document.createElement('input'); inp.type = 'number'; inp.step = '0.1'; inp.min = '0.1'; inp.max = '30';
+    inp.inputMode = 'decimal'; inp.value = p.rate; inp.setAttribute('aria-label', p.name + ' 年化報酬率');
+    const pct = document.createElement('span'); pct.textContent = '% / 年';
+    inp.addEventListener('input', ()=>{
+      const v = parseFloat(inp.value);
+      if(v > 0 && v <= 30){ p.rate = v; renderR72(); }
+    });
+    rw.appendChild(inp); rw.appendChild(pct);
+    const meta = document.createElement('div'); meta.className = 'lg-meta'; meta.id = 'lgMeta' + i;
+    card.appendChild(nm); card.appendChild(rw); card.appendChild(meta);
+    box.appendChild(card);
+  });
+}
+
+function renderR72(){
+  const amt = R72.amt;
+  const wrap = document.getElementById('r72Chart');
+  const tip = document.getElementById('r72Tip');
+  // 圖例下的說明
+  R72.products.forEach((p, i)=>{
+    const m = document.getElementById('lgMeta' + i); if(!m) return;
+    m.textContent = '';
+    const l1 = document.createElement('div'); l1.appendChild(document.createTextNode('72 ÷ ' + trimNum(p.rate,1) + ' ≈ '));
+    const b1 = document.createElement('b'); b1.textContent = trimNum(72/p.rate, 1); l1.appendChild(b1); l1.appendChild(document.createTextNode(' 年翻倍'));
+    const l2 = document.createElement('div'); l2.appendChild(document.createTextNode('100 年後 '));
+    const b2 = document.createElement('b'); b2.textContent = amt > 0 ? fmtShort(r72Value(p, 100)) : '—'; l2.appendChild(b2);
+    m.appendChild(l1); m.appendChild(l2);
+  });
+  renderR72Table();
+  wrap.textContent = ''; tip.style.display = 'none';
+  if(!(amt > 0)){
+    const msg = document.createElement('div'); msg.style.cssText = 'padding:60px 16px;text-align:center;color:#5B6B70;font-size:13.5px;';
+    msg.textContent = '請輸入大於 0 的本金'; wrap.appendChild(msg); return;
   }
-  const y = 72 / r;
-  const exact = Math.log(2) / Math.log(1 + r/100);
-  yEl.textContent = fmtYears(y);
-  big.textContent = fmtYears(y);
-  const sm = document.createElement('small'); sm.textContent = '年'; big.appendChild(sm);
-  exactEl.textContent = '用精確複利公式算約 ' + fmtYears(exact) + ' 年，72 法則的誤差約 ' + fmtYears(Math.abs(y - exact)) + ' 年。';
-  [1,2,3].forEach(n=>{
+  const W = Math.max(300, wrap.clientWidth || 600);
+  const H = W < 520 ? 320 : Math.min(460, Math.round(W * 0.48));
+  const ml = W < 520 ? 50 : 62, mr = 44, mt = 18, mb = 44;
+  const pw = W - ml - mr, ph = H - mt - mb;
+  const maxV = Math.max.apply(null, R72.products.map(p=> r72Value(p, R72.years)));
+  const isLog = R72.scale === 'log';
+  let yMax, k = 0;
+  if(isLog){ k = Math.max(1, Math.ceil(Math.log2(maxV / amt))); yMax = amt * Math.pow(2, k); }
+  else { const step = niceStep(maxV / 5); yMax = Math.ceil(maxV / step) * step; }
+  const X = t => ml + t / R72.years * pw;
+  const Y = v => isLog ? mt + ph * (1 - Math.log2(Math.max(v, amt) / amt) / k) : mt + ph * (1 - v / yMax);
+
+  const svg = svgEl('svg', { width:W, height:H, viewBox:'0 0 ' + W + ' ' + H, role:'img', tabindex:'0',
+    'aria-label':'四種年化報酬率的本金在 100 年內的成長比較圖：' + R72.products.map(p=> p.name + ' ' + p.rate + '%').join('、') });
+  // 橫向格線與 Y 軸標示
+  const gy = svgEl('g'); svg.appendChild(gy);
+  if(isLog){
+    const stride = Math.ceil(k / 8);
+    for(let i=0; i<=k; i+=stride){
+      const v = amt * Math.pow(2, i), y = Y(v);
+      gy.appendChild(svgEl('line', { x1:ml, x2:ml+pw, y1:y, y2:y, stroke:'#E1E7E7', 'stroke-width':1 }));
+      gy.appendChild(svgEl('text', { x:ml-8, y:y+4, 'text-anchor':'end', 'font-size':11, fill:'#5B6B70' }, fmtShort(v)));
+      if(i > 0) gy.appendChild(svgEl('text', { x:ml+4, y:y-4, 'font-size':10, fill:'#9aa6a9' }, '×' + Math.pow(2, i)));
+    }
+  } else {
+    const step = yMax / Math.round(yMax / niceStep(maxV / 5));
+    for(let v=0; v<=yMax+step/2; v+=step){
+      const y = Y(v);
+      gy.appendChild(svgEl('line', { x1:ml, x2:ml+pw, y1:y, y2:y, stroke:'#E1E7E7', 'stroke-width':1 }));
+      gy.appendChild(svgEl('text', { x:ml-8, y:y+4, 'text-anchor':'end', 'font-size':11, fill:'#5B6B70' }, v === 0 ? '0' : fmtShort(v)));
+    }
+  }
+  // X 軸：每 10 年一個大刻度（含數字），每 5 年一個小刻度
+  const gx = svgEl('g'); svg.appendChild(gx);
+  gx.appendChild(svgEl('line', { x1:ml, x2:ml+pw, y1:mt+ph, y2:mt+ph, stroke:'#9aa6a9', 'stroke-width':1.2 }));
+  for(let t=0; t<=R72.years; t+=5){
+    const major = t % 10 === 0, x = X(t);
+    if(major && t > 0) gx.appendChild(svgEl('line', { x1:x, x2:x, y1:mt, y2:mt+ph, stroke:'#EEF2F2', 'stroke-width':1 }));
+    gx.appendChild(svgEl('line', { x1:x, x2:x, y1:mt+ph, y2:mt+ph+(major?8:4), stroke:'#9aa6a9', 'stroke-width':major?1.4:1 }));
+    if(major) gx.appendChild(svgEl('text', { x:x, y:mt+ph+22, 'text-anchor':'middle', 'font-size':11, fill:'#5B6B70' }, t === 0 ? '0' : String(t)));
+  }
+  gx.appendChild(svgEl('text', { x:ml+pw/2, y:H-6, 'text-anchor':'middle', 'font-size':11, fill:'#5B6B70' }, '經過年數（年）'));
+  // 折線
+  R72.products.forEach(p=>{
+    let d = '';
+    for(let t=0; t<=R72.years; t++){ d += (t?'L':'M') + X(t).toFixed(1) + ' ' + Y(r72Value(p, t)).toFixed(1) + ' '; }
+    svg.appendChild(svgEl('path', { d:d, fill:'none', stroke:p.color, 'stroke-width':2.6, 'stroke-linejoin':'round', 'stroke-linecap':'round' }));
+  });
+  // 翻倍點（72 法則）
+  R72.products.forEach(p=>{
+    const td = Math.log(2) / Math.log(1 + p.rate/100);
+    if(td <= R72.years) svg.appendChild(svgEl('circle', { cx:X(td), cy:Y(amt*2), r:5, fill:'#fff', stroke:p.color, 'stroke-width':2.4 }));
+  });
+  // 線尾標籤（避免重疊）
+  const ends = R72.products.map(p=>({ p:p, y:Y(r72Value(p, R72.years)) })).sort((a,b)=> a.y - b.y);
+  for(let i=1; i<ends.length; i++){ if(ends[i].y - ends[i-1].y < 15) ends[i].y = ends[i-1].y + 15; }
+  ends.forEach(e=>{
+    svg.appendChild(svgEl('text', { x:ml+pw+6, y:e.y+4, 'font-size':12, 'font-weight':700, fill:e.p.color }, trimNum(e.p.rate,1) + '%'));
+  });
+  // 互動：十字線與提示
+  const cross = svgEl('line', { y1:mt, y2:mt+ph, stroke:'#16323F', 'stroke-width':1, 'stroke-dasharray':'4 3', visibility:'hidden' });
+  svg.appendChild(cross);
+  const dots = R72.products.map(p=>{ const c = svgEl('circle', { r:4.5, fill:p.color, stroke:'#fff', 'stroke-width':1.5, visibility:'hidden' }); svg.appendChild(c); return c; });
+  function showAt(t){
+    t = Math.max(0, Math.min(R72.years, Math.round(t))); R72.hover = t;
+    const x = X(t);
+    cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('visibility', 'visible');
+    R72.products.forEach((p, i)=>{ dots[i].setAttribute('cx', x); dots[i].setAttribute('cy', Y(r72Value(p, t))); dots[i].setAttribute('visibility', 'visible'); });
+    tip.textContent = '';
+    const yr = document.createElement('div'); yr.className = 'tt-year'; yr.textContent = '第 ' + t + ' 年'; tip.appendChild(yr);
+    R72.products.slice().sort((a,b)=> b.rate - a.rate).forEach(p=>{
+      const row = document.createElement('div'); row.className = 'tt-row';
+      const l = document.createElement('span'); l.className = 'l';
+      const i = document.createElement('i'); i.style.background = p.color; l.appendChild(i); l.appendChild(document.createTextNode(p.name + ' ' + trimNum(p.rate,1) + '%'));
+      const b = document.createElement('b'); b.textContent = fmtShort(r72Value(p, t));
+      row.appendChild(l); row.appendChild(b); tip.appendChild(row);
+    });
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth, wrapW = W;
+    let left = x + 14; if(left + tw > wrapW - 6) left = x - tw - 14; if(left < 6) left = 6;
+    tip.style.left = left + 'px'; tip.style.top = (mt + 8) + 'px';
+  }
+  function fromEvent(ev){ const r = svg.getBoundingClientRect(); return (ev.clientX - r.left - ml) / pw * R72.years; }
+  svg.addEventListener('pointermove', ev=> showAt(fromEvent(ev)));
+  svg.addEventListener('pointerdown', ev=> showAt(fromEvent(ev)));
+  svg.addEventListener('pointerleave', ev=>{ if(ev.pointerType === 'mouse'){ tip.style.display = 'none'; cross.setAttribute('visibility','hidden'); dots.forEach(c=> c.setAttribute('visibility','hidden')); R72.hover = null; } });
+  svg.addEventListener('keydown', ev=>{
+    const step = ev.shiftKey ? 10 : 1;
+    if(ev.key === 'ArrowRight'){ ev.preventDefault(); showAt((R72.hover == null ? 0 : R72.hover) + step); }
+    else if(ev.key === 'ArrowLeft'){ ev.preventDefault(); showAt((R72.hover == null ? R72.years : R72.hover) - step); }
+    else if(ev.key === 'Escape'){ tip.style.display = 'none'; cross.setAttribute('visibility','hidden'); dots.forEach(c=> c.setAttribute('visibility','hidden')); R72.hover = null; }
+  });
+  wrap.appendChild(svg);
+  if(R72.hover != null) showAt(R72.hover);
+}
+
+function renderR72Table(){
+  const head = document.getElementById('r72Head'), body = document.getElementById('r72Body');
+  head.textContent = ''; body.textContent = '';
+  const trh = document.createElement('tr');
+  const th0 = document.createElement('th'); th0.textContent = '經過年數'; trh.appendChild(th0);
+  R72.products.forEach(p=>{
+    const th = document.createElement('th'); th.className = 'num';
+    const i = document.createElement('i'); i.style.background = p.color; th.appendChild(i);
+    th.appendChild(document.createTextNode(p.name + ' ' + trimNum(p.rate,1) + '%')); trh.appendChild(th);
+  });
+  head.appendChild(trh);
+  if(!(R72.amt > 0)) return;
+  [10,20,30,50,70,100].forEach(t=>{
     const tr = document.createElement('tr');
-    [ '翻 ' + n + ' 次（×' + Math.pow(2,n) + '）', '第 ' + fmtYears(y*n) + ' 年', formatNT(amt * Math.pow(2,n)) ].forEach(t=>{
-      const td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+    const td0 = document.createElement('td'); td0.textContent = '第 ' + t + ' 年'; tr.appendChild(td0);
+    R72.products.forEach(p=>{
+      const td = document.createElement('td'); td.className = 'num'; td.textContent = formatNT(r72Value(p, t)); tr.appendChild(td);
     });
     body.appendChild(tr);
   });
-  if(inf > 0){
-    infEl.style.display = 'block';
-    infEl.textContent = '通膨 ' + inf + '% 的話，約 ' + fmtYears(72/inf) + ' 年後，今天的 ' + formatNT(amt) + ' 購買力只剩一半，約等於今天的 ' + formatNT(amt/2) + '。錢放著不動，會慢慢變薄。';
-  } else { infEl.style.display = 'none'; }
 }
-['r72Rate','r72Amt','r72Inf'].forEach(id=> document.getElementById(id).addEventListener('input', calc72));
-calc72();
+
+function setScale(sc){
+  R72.scale = sc;
+  [['scLinear','linear'],['scLog','log']].forEach(([id, v])=>{
+    const b = document.getElementById(id); b.classList.toggle('active', v === sc); b.setAttribute('aria-pressed', v === sc ? 'true' : 'false');
+  });
+  renderR72();
+}
+document.getElementById('scLinear').addEventListener('click', ()=> setScale('linear'));
+document.getElementById('scLog').addEventListener('click', ()=> setScale('log'));
+document.getElementById('r72Amt').addEventListener('input', ()=>{ R72.amt = parseFloat(document.getElementById('r72Amt').value) || 0; renderR72(); });
+buildR72Legend();
+renderR72();
+(function(){ let last = 0; window.addEventListener('resize', ()=>{ clearTimeout(last); last = setTimeout(renderR72, 120); }); })();
 
 /* ---------- 631 法則 ---------- */
 function calc631(){
