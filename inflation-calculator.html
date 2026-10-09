@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>通膨試算｜你的錢放 N 年後，購買力剩多少？ - Vicauria</title>
+<meta name="description" content="免費通膨試算：輸入金額、通膨率與年數，算出這筆錢未來的購買力剩多少、要多少錢才買得到今天的東西，並畫出購買力變化。附公式與常見問題。不用登入。">
+<link rel="canonical" href="https://vicauria.github.io/inflation-calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vicauria">
+<meta property="og:title" content="通膨試算｜你的錢放 N 年後，購買力剩多少？">
+<meta property="og:description" content="輸入金額、通膨率與年數，算出未來購買力與所需金額，免登入、免費。">
+<meta property="og:url" content="https://vicauria.github.io/inflation-calculator.html">
+<meta property="og:image" content="https://vicauria.github.io/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="/icons/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#16323F">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"通膨試算","url":"https://vicauria.github.io/inflation-calculator.html","description":"輸入金額、通膨率與年數，計算未來的購買力與維持同樣生活水準所需的金額。","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"zh-Hant","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"TWD"},"publisher":{"@type":"Organization","name":"Vicauria","url":"https://vicauria.github.io/"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"通膨是什麼？","acceptedAnswer":{"@type":"Answer","text":"通膨是物價長期上漲的現象。物價上漲後，同樣一筆錢能買到的東西變少，也就是購買力下降。"}},{"@type":"Question","name":"通膨怎麼影響存款？","acceptedAnswer":{"@type":"Answer","text":"如果存款的年報酬率低於通膨率，帳面金額雖然增加，實質購買力仍在下降。例如通膨 3% 時，約 24 年後現在的錢購買力約剩一半。"}},{"@type":"Question","name":"購買力怎麼算？","acceptedAnswer":{"@type":"Answer","text":"未來購買力（以今天的錢計）＝金額 ÷ (1＋通膨率)的年數次方。例如 100 萬、通膨 2%、20 年，約等於今天的 67 萬。"}},{"@type":"Question","name":"通膨率要填多少？","acceptedAnswer":{"@type":"Answer","text":"沒有固定答案，每年與每個人的生活支出都不同。建議到主計總處等官方統計查詢近年物價變動，並多試幾個數字比較。"}}]}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="public-pages.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <a href="index.html" class="logo"><img src="icons/vicauria-mark.png" alt=""> VICAURIA</a>
+  <a href="register.html" class="nav-cta">免費開始使用</a>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">FREE CALCULATOR</div>
+  <h1>通膨試算：你的錢，未來還剩多少購買力？</h1>
+  <p class="lead">輸入金額、通膨率和年數，看這筆錢未來還買得到多少東西，以及要多少錢才買得到今天的生活。不用登入，資料不會送出。</p>
+  <nav class="switch" aria-label="試算工具">
+    <a href="compound-interest-calculator.html">複利計算機</a>
+    <a href="inflation-calculator.html" aria-current="page">通膨試算</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section class="calc" aria-label="通膨試算">
+    <div class="card">
+      <h2>輸入你的條件</h2>
+      <div class="field">
+        <label for="a">今天的金額</label>
+        <div class="inp"><input id="a" inputmode="decimal" autocomplete="off" value="1,000,000"><span class="u">元</span></div>
+      </div>
+      <div class="field">
+        <label for="inf">預估年通膨率（假設值）</label>
+        <div class="inp"><input id="inf" inputmode="decimal" autocomplete="off" value="2"><span class="u">% ／年</span></div>
+        <div class="hint">這是假設，請自行調整；官方物價統計可到主計總處查詢</div>
+      </div>
+      <div class="field">
+        <label for="n">經過年數</label>
+        <div class="inp"><input id="n" inputmode="numeric" autocomplete="off" value="20"><span class="u">年（1～80）</span></div>
+      </div>
+      <div class="field">
+        <label for="r">這筆錢每年的報酬率（選填）</label>
+        <div class="inp"><input id="r" inputmode="decimal" autocomplete="off" value="0"><span class="u">% ／年</span></div>
+        <div class="hint">放著不動填 0；放銀行就填存款利率；可以拿來比較「有賺利息」之後還是否追得上通膨</div>
+      </div>
+      <div class="err" id="err" role="alert"></div>
+    </div>
+
+    <div class="card" aria-live="polite">
+      <h2>試算結果</h2>
+      <div class="stats">
+        <div class="stat big warm"><div class="k" id="kReal">未來的購買力（以今天的錢計）</div><div class="v" id="oReal">–</div><div class="sub" id="oRealS"></div></div>
+        <div class="stat"><div class="k">購買力變化</div><div class="v" id="oLoss">–</div></div>
+        <div class="stat"><div class="k">物價是今天的</div><div class="v" id="oMult">–</div></div>
+        <div class="stat big"><div class="k">未來要有多少錢，才買得到今天 <span id="kA"></span> 能買的東西</div><div class="v" id="oNeed">–</div></div>
+        <div class="stat"><div class="k">帳面金額（含報酬）</div><div class="v" id="oNom">–</div></div>
+        <div class="stat"><div class="k">購買力減半約需</div><div class="v" id="oHalf">–</div></div>
+      </div>
+      <div class="sub" id="oNote"></div>
+    </div>
+  </section>
+
+  <section class="card chart-card" aria-label="購買力變化圖">
+    <h2>購買力變化</h2>
+    <div class="chart-legend">
+      <span><i style="background:#C97B3D"></i>實質購買力（以今天的錢計）</span>
+      <span><i style="background:#7B8794"></i>帳面金額</span>
+    </div>
+    <div class="chart-wrap" id="chart"></div>
+    <div class="sub" style="margin-top:8px">滑過圖表（手機點一下）可看每一年。兩條線拉開的距離，就是通膨吃掉的部分。</div>
+  </section>
+
+  <section class="card" aria-label="不同通膨率比較">
+    <h2>不同通膨率下，今天這筆錢的購買力</h2>
+    <div class="tbl-scroll"><table class="tbl">
+      <thead><tr id="cmpHead"></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table></div>
+    <div class="sub" style="margin-top:8px">以上依你填的金額與報酬率計算，每列是不同的通膨率假設。</div>
+  </section>
+
+  <div class="notice">本頁為財商教育與試算參考，依你輸入的「固定通膨率與報酬率」計算，兩者實際上每年都會變動，也因人而異（生活型態不同，感受到的物價漲幅也不同）。結果不代表未來，也不構成任何投資、稅務或法律建議。實際規劃請洽合格的專業人員。</div>
+
+  <article class="article">
+    <h2>通膨是什麼？為什麼會讓錢變薄？</h2>
+    <p>通膨就是物價長期上漲。物價漲了，同樣一筆錢能買到的東西就變少，這叫做「購買力下降」。帳戶裡的數字沒有變，但它能換到的生活變少了。</p>
+    <h3>怎麼算？</h3>
+    <div class="formula">未來購買力（以今天的錢計）＝ 金額 ÷ (1 ＋ 通膨率) ^ 年數<br>維持同樣購買力所需的金額 ＝ 金額 × (1 ＋ 通膨率) ^ 年數</div>
+    <p>例如 100 萬、通膨 2%、20 年：1,000,000 ÷ 1.02<sup>20</sup> ≈ 673,000，約等於今天的 67 萬，也就是購買力少了約三分之一。反過來，20 年後要有約 148 萬，才買得到今天 100 萬能買的東西。</p>
+    <h3>購買力減半要多久？用 72 法則估</h3>
+    <div class="formula">購買力減半的年數 ≈ 72 ÷ 通膨率（%）</div>
+    <p>通膨 2% 約 36 年、3% 約 24 年、4% 約 18 年，今天的錢購買力就剩一半。</p>
+    <h3>那存錢到底該怎麼想？</h3>
+    <p>重點是比較「報酬率」和「通膨率」：報酬率高於通膨，購買力才會增加；低於通膨，帳面變多，實質反而變少。你可以在上方「每年報酬率」欄位填入存款利率，看看追不追得上。不同工具有不同的風險與限制，選擇前請先了解並尋求專業意見。</p>
+  </article>
+
+  <section class="article faq" aria-label="常見問題">
+    <h2>常見問題</h2>
+    <details><summary>通膨率要填多少？</summary><p>沒有固定答案，每年不同，每個人的支出結構也不同。可以到官方統計（例如主計總處的消費者物價指數）查近年變化，再用 2%、3%、4% 多試幾種情況比較。</p></details>
+    <details><summary>購買力和帳面金額差在哪？</summary><p>帳面金額是帳戶上的數字；購買力是這筆錢能買到多少東西。兩者在有通膨的情況下會越拉越開。</p></details>
+    <details><summary>報酬率填 0 代表什麼？</summary><p>代表這筆錢完全沒有成長（例如放在家裡）。這時帳面金額不變，購買力則隨通膨下降。</p></details>
+    <details><summary>我的輸入會被儲存嗎？</summary><p>不會。所有計算都在你的瀏覽器裡進行，沒有任何數字被送到伺服器。</p></details>
+    <details><summary>要怎麼把錢的成長跟通膨一起看？</summary><p>可以搭配本站的<a href="compound-interest-calculator.html">複利計算機</a>：先算出期末資產，再看換算成今天的購買力是多少。</p></details>
+  </section>
+
+  <section class="cta-box">
+    <h2>想幫客戶做完整的財務健檢？</h2>
+    <p>Vicauria 是為財務顧問打造的工作台：名單、約訪、財富地圖面談、報告到追蹤，一套搞定。目前全部功能免費。</p>
+    <a href="register.html" class="cta">免費開始使用 →</a>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  © 2026 Vicauria ・ <a href="index.html">首頁</a><a href="compound-interest-calculator.html">複利計算機</a><a href="legal.html">服務資訊與條款</a>
+</div></footer>
+
+<script src="public-pages.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var V = window.VPub, last = null;
+
+  function calc(){
+    var a = V.parseNum($('a').value), inf = V.parseNum($('inf').value), n = V.parseNum($('n').value), r = V.parseNum($('r').value);
+    var msg = '';
+    if(isNaN(a) || a <= 0 || a > 1e11) msg = '金額請填大於 0、不超過 1,000 億的數字';
+    else if(isNaN(inf) || inf < -20 || inf > 50) msg = '通膨率請填 -20 到 50 之間的數字';
+    else if(isNaN(n) || n < 1 || n > 80 || Math.floor(n) !== n) msg = '經過年數請填 1 到 80 的整數';
+    else if(isNaN(r) || r < -50 || r > 50) msg = '報酬率請填 -50 到 50 之間的數字';
+    $('err').textContent = msg;
+    if(msg) return;
+
+    var pi = inf / 100, ro = r / 100;
+    var nominal = [], real = [];
+    for(var y = 0; y <= n; y++){
+      nominal.push(a * Math.pow(1 + ro, y));
+      real.push(a * Math.pow((1 + ro) / (1 + pi), y));
+    }
+    var realN = real[n], mult = Math.pow(1 + pi, n);
+    $('oReal').textContent = V.fmtNT(realN);
+    $('oRealS').textContent = '約 ' + V.fmtShort(realN) + '；相當於今天的 ' + V.trimNum(realN / a * 100, 1) + '%';
+    var chg = (realN / a - 1) * 100;
+    $('oLoss').textContent = (chg >= 0 ? '+' : '') + V.trimNum(chg, 1) + '%';
+    $('oMult').textContent = V.trimNum(mult, 2) + ' 倍';
+    $('kA').textContent = V.fmtShort(a);
+    $('oNeed').textContent = V.fmtNT(a * mult);
+    $('oNom').textContent = V.fmtShort(nominal[n]);
+    $('oHalf').textContent = pi > 0 ? '約 ' + V.trimNum(Math.log(2) / Math.log(1 + pi), 1) + ' 年' : '–';
+    $('oNote').textContent = ro > pi
+      ? '你設定的報酬率（' + V.trimNum(r, 2) + '%）高於通膨率（' + V.trimNum(inf, 2) + '%），在這組假設下，購買力會增加。'
+      : (ro === pi
+        ? '報酬率與通膨率相同，購買力在這組假設下維持不變。'
+        : '你設定的報酬率（' + V.trimNum(r, 2) + '%）低於通膨率（' + V.trimNum(inf, 2) + '%），帳面金額可能變多，實質購買力仍在下降。');
+
+    var rates = [1, 2, 3, 4, 5], hd = $('cmpHead'), bd = $('cmpBody');
+    hd.textContent = ''; bd.textContent = '';
+    ['通膨率', n + ' 年後購買力', '相當今天的比例', '物價倍數'].forEach(function(t){
+      var th = document.createElement('th'); th.textContent = t; hd.appendChild(th);
+    });
+    rates.forEach(function(p){
+      var rv = a * Math.pow((1 + ro) / (1 + p / 100), n), tr = document.createElement('tr');
+      [p + '%', V.fmtShort(rv), V.trimNum(rv / a * 100, 1) + '%', V.trimNum(Math.pow(1 + p / 100, n), 2) + ' 倍'].forEach(function(t){
+        var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+      });
+      bd.appendChild(tr);
+    });
+    last = {years: n, nominal: nominal, real: real};
+    draw();
+  }
+  function draw(){
+    if(!last) return;
+    V.drawChart($('chart'), {
+      years: last.years,
+      label: '購買力變化圖：實質購買力與帳面金額，共 ' + last.years + ' 年',
+      series: [
+        {name: '帳面金額', color: '#7B8794', dash: '6 5', values: last.nominal},
+        {name: '實質購買力', color: '#C97B3D', fill: true, values: last.real}
+      ]
+    });
+  }
+  ['a','inf','n','r'].forEach(function(id){ $(id).addEventListener('input', calc); });
+  V.onResize(draw);
+  calc();
+})();
+</script>
+</body>
+</html>

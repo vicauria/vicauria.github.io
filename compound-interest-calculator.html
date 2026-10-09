@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>複利計算機｜輸入本金、每月投入、年報酬率，看資產怎麼長大 - Vicauria</title>
+<meta name="description" content="免費複利計算機：輸入本金、每月定期投入、年化報酬率與年數，立刻算出期末資產、累計投入與複利收益，並畫出成長曲線。附計算公式、72 法則與常見問題。不用登入。">
+<link rel="canonical" href="https://vicauria.github.io/compound-interest-calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vicauria">
+<meta property="og:title" content="複利計算機｜看資產怎麼長大">
+<meta property="og:description" content="輸入本金、每月投入、年報酬率與年數，算出期末資產與複利收益，免登入、免費。">
+<meta property="og:url" content="https://vicauria.github.io/compound-interest-calculator.html">
+<meta property="og:image" content="https://vicauria.github.io/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="/icons/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#16323F">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"複利計算機","url":"https://vicauria.github.io/compound-interest-calculator.html","description":"輸入本金、每月定期投入、年化報酬率與年數，計算期末資產、累計投入與複利收益。","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"zh-Hant","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"TWD"},"publisher":{"@type":"Organization","name":"Vicauria","url":"https://vicauria.github.io/"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"複利是什麼？","acceptedAnswer":{"@type":"Answer","text":"複利是「利息再生利息」：每一期賺到的報酬會加進本金，下一期連同這筆報酬一起計算。時間越長，與單利的差距越大。"}},{"@type":"Question","name":"複利怎麼算？","acceptedAnswer":{"@type":"Answer","text":"一次投入的複利公式是：期末金額＝本金×(1＋年報酬率)的年數次方。例如 100 萬、年報酬 6%、30 年，約為 574 萬。"}},{"@type":"Question","name":"72 法則是什麼？","acceptedAnswer":{"@type":"Answer","text":"72 法則是快速估算翻倍時間的口訣：72 ÷ 年報酬率（%）≈ 本金翻一倍所需年數。例如 6% 約 12 年翻倍。這是簡化估算，不是精確值。"}},{"@type":"Question","name":"這個計算機的結果準嗎？","acceptedAnswer":{"@type":"Answer","text":"它是依照你輸入的固定年報酬率算出的數學結果，用來理解複利概念。真實投資的報酬會波動，也可能虧損，沒有任何商品能保證固定報酬，結果不代表未來表現。"}}]}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="public-pages.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <a href="index.html" class="logo"><img src="icons/vicauria-mark.png" alt=""> VICAURIA</a>
+  <a href="register.html" class="nav-cta">免費開始使用</a>
+</div></div>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">FREE CALCULATOR</div>
+  <h1>複利計算機</h1>
+  <p class="lead">輸入本金、每月投入、年報酬率和年數，馬上看到資產怎麼隨時間長大。不用登入，資料不會送出，只在你的瀏覽器裡計算。</p>
+  <nav class="switch" aria-label="試算工具">
+    <a href="compound-interest-calculator.html" aria-current="page">複利計算機</a>
+    <a href="inflation-calculator.html">通膨試算</a>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section class="calc" aria-label="複利試算">
+    <div class="card">
+      <h2>輸入你的條件</h2>
+      <div class="field">
+        <label for="p">現有本金</label>
+        <div class="inp"><input id="p" inputmode="decimal" autocomplete="off" value="1,000,000"><span class="u">元</span></div>
+      </div>
+      <div class="field">
+        <label for="c">每月定期投入</label>
+        <div class="inp"><input id="c" inputmode="decimal" autocomplete="off" value="10,000"><span class="u">元／月</span></div>
+        <div class="hint">沒有定期投入就填 0</div>
+      </div>
+      <div class="field">
+        <label for="r">年化報酬率（假設值）</label>
+        <div class="inp"><input id="r" inputmode="decimal" autocomplete="off" value="6"><span class="u">% ／年</span></div>
+        <div class="hint">這是你的假設，不是預測，也不是保證</div>
+      </div>
+      <div class="field">
+        <label for="n">投資年數</label>
+        <div class="inp"><input id="n" inputmode="numeric" autocomplete="off" value="20"><span class="u">年（1～80）</span></div>
+      </div>
+      <div class="field">
+        <label for="inf">預估通膨率（用來換算今天的購買力）</label>
+        <div class="inp"><input id="inf" inputmode="decimal" autocomplete="off" value="2"><span class="u">% ／年</span></div>
+        <div class="hint">假設值，填 0 就不換算</div>
+      </div>
+      <div class="err" id="err" role="alert"></div>
+    </div>
+
+    <div class="card" aria-live="polite">
+      <h2>試算結果</h2>
+      <div class="stats">
+        <div class="stat big"><div class="k">期末總資產</div><div class="v" id="oFV">–</div><div class="sub" id="oFVs"></div></div>
+        <div class="stat"><div class="k">累計投入本金</div><div class="v" id="oInv">–</div></div>
+        <div class="stat"><div class="k">複利收益</div><div class="v" id="oGain">–</div></div>
+        <div class="stat warm"><div class="k">約等於今天的</div><div class="v" id="oReal">–</div><div class="sub" id="oRealS"></div></div>
+        <div class="stat"><div class="k">收益佔總資產</div><div class="v" id="oShare">–</div></div>
+      </div>
+      <div class="sub" id="oDouble"></div>
+    </div>
+  </section>
+
+  <section class="card chart-card" aria-label="成長曲線">
+    <h2>資產成長曲線</h2>
+    <div class="chart-legend">
+      <span><i style="background:#2E7391"></i>總資產</span>
+      <span><i style="background:#7B8794"></i>累計投入本金</span>
+    </div>
+    <div class="chart-wrap" id="chart"></div>
+    <div class="sub" style="margin-top:8px">滑過圖表（手機點一下）可以看每一年的金額。兩條線中間的距離，就是複利收益。</div>
+  </section>
+
+  <section class="card" aria-label="逐年表">
+    <h2>每 5 年的金額</h2>
+    <div class="tbl-scroll"><table class="tbl">
+      <thead><tr><th>年數</th><th>累計投入</th><th>總資產</th><th>複利收益</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </section>
+
+  <div class="notice">本頁為財商教育與試算參考，依你輸入的「固定年報酬率」計算。真實的投資報酬會波動、可能虧損，沒有任何商品能保證固定報酬；稅費、手續費與匯率也未計入。本頁不構成任何投資建議，也不推薦任何特定商品。實際規劃請洽合格的專業人員。</div>
+
+  <article class="article">
+    <h2>複利是什麼？</h2>
+    <p>複利就是「利息再生利息」。每一期賺到的報酬不領走，而是加回本金，下一期連同這筆一起計算。單利只有本金在賺錢，複利連賺到的錢也在賺錢，所以時間越長，兩者差距越大。</p>
+    <h3>怎麼算？</h3>
+    <p>一次投入、不再追加時：</p>
+    <div class="formula">期末金額 ＝ 本金 × (1 ＋ 年報酬率) ^ 年數</div>
+    <p>例如 100 萬、年報酬 6%、放 30 年：1,000,000 × 1.06<sup>30</sup> ≈ 5,743,000，約 574 萬，是本金的 5.7 倍。</p>
+    <p>每月定期投入時，本頁把年報酬率換算成等效的月報酬率，每月複利一次，並假設投入發生在每月月底：</p>
+    <div class="formula">月報酬率 i ＝ (1 ＋ 年報酬率)^(1/12) − 1<br>期末金額 ＝ 本金×(1＋i)^月數 ＋ 每月投入×[(1＋i)^月數 − 1] ÷ i</div>
+    <h3>72 法則：快速估算翻倍時間</h3>
+    <div class="formula">本金翻一倍的年數 ≈ 72 ÷ 年報酬率（%）</div>
+    <p>6% 約 12 年翻倍，3% 約 24 年，1% 約 72 年。這是簡化口訣，約 6%～10% 之間最接近真實值。</p>
+    <h3>三件事比報酬率更值得先想</h3>
+    <p><b>時間：</b>同樣的報酬率，多放 10 年，結果可能差一倍以上。<b>持續投入：</b>每月固定投入，通常比一開始的本金更有影響力。<b>成本與風險：</b>手續費、稅負與波動會讓實際結果和試算不同，所以報酬率要抱持保守、可承受的假設。</p>
+  </article>
+
+  <section class="article faq" aria-label="常見問題">
+    <h2>常見問題</h2>
+    <details><summary>複利和單利差在哪？</summary><p>單利只用本金算利息，每年賺的金額固定；複利把賺到的利息一起滾入下一期，每年賺的金額越來越多。</p></details>
+    <details><summary>年報酬率要填多少？</summary><p>沒有標準答案。要看你持有什麼、持有多久、承擔多少風險。建議用保守、你有把握能長期達到的數字，並且多試幾個不同的數字（例如 2%、4%、6%）看差異。</p></details>
+    <details><summary>為什麼要看「今天的購買力」？</summary><p>物價長期會上漲，30 年後的 1,000 萬不等於今天的 1,000 萬。本頁用你填的通膨率，把期末金額換算成「相當於今天多少錢」，幫你比較真實的分量。通膨率同樣只是假設。</p></details>
+    <details><summary>我的輸入會被儲存或上傳嗎？</summary><p>不會。計算全部在你的瀏覽器裡完成，本頁沒有把你輸入的數字送到任何伺服器。</p></details>
+    <details><summary>這個結果可以當成投資承諾嗎？</summary><p>不行。它只是數學試算，用來理解複利概念。真實報酬會波動，也可能虧損。</p></details>
+  </section>
+
+  <section class="cta-box">
+    <h2>想幫客戶做完整的財務健檢？</h2>
+    <p>Vicauria 是為財務顧問打造的工作台：名單、約訪、財富地圖面談、報告到追蹤，一套搞定。目前全部功能免費。</p>
+    <a href="register.html" class="cta">免費開始使用 →</a>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  © 2026 Vicauria ・ <a href="index.html">首頁</a><a href="inflation-calculator.html">通膨試算</a><a href="legal.html">服務資訊與條款</a>
+</div></footer>
+
+<script src="public-pages.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var V = window.VPub, last = null;
+
+  function calc(){
+    var p = V.parseNum($('p').value), c = V.parseNum($('c').value), r = V.parseNum($('r').value),
+        n = V.parseNum($('n').value), inf = V.parseNum($('inf').value);
+    var msg = '';
+    if(isNaN(p) || p < 0 || p > 1e10) msg = '現有本金請填 0 到 100 億之間的數字';
+    else if(isNaN(c) || c < 0 || c > 1e8) msg = '每月投入請填 0 到 1 億之間的數字';
+    else if(isNaN(r) || r < -50 || r > 50) msg = '年報酬率請填 -50 到 50 之間的數字';
+    else if(isNaN(n) || n < 1 || n > 80 || Math.floor(n) !== n) msg = '投資年數請填 1 到 80 的整數';
+    else if(isNaN(inf) || inf < 0 || inf > 50) msg = '通膨率請填 0 到 50 之間的數字';
+    $('err').textContent = msg;
+    if(msg) return;
+    if(p === 0 && c === 0){ $('err').textContent = '本金和每月投入至少要填一個大於 0 的數字'; return; }
+
+    var rate = r / 100, i = Math.pow(1 + rate, 1 / 12) - 1;
+    function fv(months){
+      var g = Math.pow(1 + i, months);
+      var annuity = Math.abs(i) < 1e-12 ? months : (g - 1) / i;
+      return p * g + c * annuity;
+    }
+    var total = [], invested = [];
+    for(var y = 0; y <= n; y++){ total.push(fv(12 * y)); invested.push(p + c * 12 * y); }
+    var FV = total[n], inv = invested[n], gain = FV - inv;
+    $('oFV').textContent = V.fmtNT(FV);
+    $('oFVs').textContent = '約 ' + V.fmtShort(FV);
+    $('oInv').textContent = V.fmtShort(inv);
+    $('oGain').textContent = (gain < 0 ? '' : '+') + V.fmtShort(gain);
+    $('oShare').textContent = FV > 0 ? Math.round(Math.max(0, gain) / FV * 100) + '%' : '–';
+    if(inf > 0){
+      var real = FV / Math.pow(1 + inf / 100, n);
+      $('oReal').textContent = V.fmtShort(real);
+      $('oRealS').textContent = '通膨 ' + V.trimNum(inf, 2) + '% 下的購買力';
+    } else { $('oReal').textContent = '–'; $('oRealS').textContent = '未設定通膨'; }
+    $('oDouble').textContent = rate > 0
+      ? '72 法則：年報酬 ' + V.trimNum(r, 2) + '% 時，本金約 ' + V.trimNum(72 / r, 1) + ' 年翻一倍（精算約 ' + V.trimNum(Math.log(2) / Math.log(1 + rate), 1) + ' 年）。'
+      : '';
+
+    var tb = $('tbody'); tb.textContent = '';
+    var ys = [];
+    for(var k = 5; k < n; k += 5) ys.push(k);
+    ys.push(n);
+    ys.forEach(function(yr){
+      var tr = document.createElement('tr');
+      [yr + ' 年', V.fmtShort(invested[yr]), V.fmtShort(total[yr]), V.fmtShort(total[yr] - invested[yr])].forEach(function(t){
+        var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    last = {years: n, total: total, invested: invested};
+    draw();
+  }
+  function draw(){
+    if(!last) return;
+    V.drawChart($('chart'), {
+      years: last.years,
+      label: '資產成長曲線：總資產與累計投入本金，共 ' + last.years + ' 年',
+      series: [
+        {name: '累計投入本金', color: '#7B8794', dash: '6 5', values: last.invested},
+        {name: '總資產', color: '#2E7391', fill: true, values: last.total}
+      ]
+    });
+  }
+  ['p','c','r','n','inf'].forEach(function(id){ $(id).addEventListener('input', calc); });
+  V.onResize(draw);
+  calc();
+})();
+</script>
+</body>
+</html>

@@ -49,6 +49,15 @@
   img{max-width:100%; height:auto; display:block;}
   .wrap{max-width:1120px; margin:0 auto; padding:0 24px;}
 
+  /* ---------- 免費試算工具入口 ---------- */
+  .tools-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:22px;}
+  .tool-card{display:block; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px; text-decoration:none; color:var(--ink);}
+  .tool-card:hover{border-color:var(--teal); box-shadow:0 8px 24px rgba(22,50,63,.08);}
+  .tool-card b{display:block; font-family:"Noto Serif TC",serif; font-size:19px; color:var(--navy); margin-bottom:6px;}
+  .tool-card span{font-size:14px; color:var(--ink-soft);}
+  .tool-card em{display:block; margin-top:10px; font-style:normal; font-size:13.5px; font-weight:700; color:var(--teal-deep);}
+  @media (max-width:640px){.tools-row{grid-template-columns:1fr;}}
+
   /* ---------- 導覽列 ---------- */
   .topnav-bar{position:sticky; top:0; z-index:50; background:rgba(245,247,246,0.92); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
   .topnav{display:flex; align-items:center; justify-content:space-between; padding:14px 0;}
@@ -324,6 +333,18 @@
   </div>
 </section>
 
+<!-- 免費試算工具（不用登入，也是搜尋引擎的入口） -->
+<section class="block alt" id="free-tools">
+  <div class="wrap">
+    <h2>免費試算工具｜不用登入就能用</h2>
+    <p style="color:var(--ink-soft);margin:8px 0 0;">想先試試看？這兩個小工具直接打開就能算，資料只在你的瀏覽器裡計算，不會送出。</p>
+    <div class="tools-row">
+      <a class="tool-card" href="compound-interest-calculator.html"><b>複利計算機</b><span>輸入本金、每月投入、年報酬率和年數，看資產怎麼長大。</span><em>開始試算 →</em></a>
+      <a class="tool-card" href="inflation-calculator.html"><b>通膨試算</b><span>你的錢放 N 年後，購買力還剩多少？要多少錢才買得到今天的生活？</span><em>開始試算 →</em></a>
+    </div>
+  </div>
+</section>
+
 <!-- ⑤ 最後只留一個行動 -->
 <section class="block" style="padding-bottom:0">
   <div class="final">
@@ -369,6 +390,8 @@
 <footer>
   Vicauria ・ 資產配置工作台
   <div class="footer-links">
+    <a href="compound-interest-calculator.html">複利計算機</a>
+    <a href="inflation-calculator.html">通膨試算</a>
     <a href="legal.html">服務資訊與條款</a>
     <a href="mailto:jess818200228@gmail.com">客服信箱</a>
   </div>
