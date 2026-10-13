@@ -950,7 +950,22 @@ function dayOptions(year, month, selectedDay){
    題目定義
 ========================================================= */
 const PAGES = [
-  {id:"lifeStage", stage:"你的輪廓", icon:"👤", n:1,
+  {id:"vision", stage:"財富願景", icon:"🧭", n:1,
+   title:"你想抵達的地方", sub:"選出你最想達成的財務目標，選了下方會出現輸入欄位。",
+   render: ()=>`
+     <div class="field">
+       <div class="choice-group" data-mode="multi" data-bind="goals">
+         ${GOALS.map(g=>`<div class="choice-pill">${g}</div>`).join("")}
+         <div class="choice-pill">自行輸入</div>
+       </div>
+       <div id="customGoalWrap" style="display:${visionA.goals.includes("自行輸入")?"block":"none"};margin-top:14px;">
+         <input type="text" id="customGoalInput" placeholder="輸入你的目標" value="${vcEsc(visionA.customGoalName)}">
+       </div>
+     </div>
+     <div id="goalCalcMount"></div>
+   `},
+
+  {id:"lifeStage", stage:"你的輪廓", icon:"👤", n:2,
    title:"你目前的人生階段？", sub:"可以複選，選出最貼近你現況的階段。",
    render: ()=>`
      <div class="field">
@@ -959,7 +974,7 @@ const PAGES = [
        </div>
      </div>
    `},
-  {id:"profileDetails", stage:"你的輪廓", icon:"👤", n:2,
+  {id:"profileDetails", stage:"你的輪廓", icon:"👤", n:3,
    title:"", sub:"",
    render: ()=>`
      <div class="field">
@@ -987,7 +1002,7 @@ const PAGES = [
        </div>
      </div>
    `},
-  {id:"job", stage:"你的輪廓", icon:"👤", n:3,
+  {id:"job", stage:"你的輪廓", icon:"👤", n:4,
    title:"職業", sub:"選最接近的類別就好。",
    render: ()=>`
      <div class="field">
@@ -1001,7 +1016,7 @@ const PAGES = [
      </div>
    `},
 
-  {id:"maritalChildren", stage:"你的後盾", icon:"🏠", n:4,
+  {id:"maritalChildren", stage:"你的後盾", icon:"🏠", n:5,
    title:"", sub:"",
    render: ()=>`
      <div class="field">
@@ -1021,7 +1036,7 @@ const PAGES = [
        <button class="add-member-btn" id="addChildBtn" type="button">＋ 新增子女</button>
      </div>
    `},
-  {id:"supportParents", stage:"你的後盾", icon:"🏠", n:5,
+  {id:"supportParents", stage:"你的後盾", icon:"🏠", n:6,
    title:"需要撫養父母嗎？", sub:"",
    render: ()=>`
      <div class="field">
@@ -1031,33 +1046,33 @@ const PAGES = [
      </div>
    `},
 
-  {id:"income", stage:"錢都去哪了", icon:"💧", n:6,
+  {id:"income", stage:"錢都去哪了", icon:"💧", n:7,
    title:"你的收入", sub:"不用精確到每一塊錢，抓大概的數字就好。",
    render: ()=>`
      <div id="incomeMount"></div>
      <div class="group-total-row"><span class="k">年收入合計</span><span class="v" id="incomeTotal">$0</span></div>
    `},
-  {id:"expense", stage:"錢都去哪了", icon:"💧", n:7,
+  {id:"expense", stage:"錢都去哪了", icon:"💧", n:8,
    title:"你的支出", sub:"",
    render: ()=>`
      <div id="expenseMount"></div>
      <div class="group-total-row warm"><span class="k">年支出合計</span><span class="v" id="expenseTotal">$0</span></div>
    `},
 
-  {id:"assets", stage:"你的起點", icon:"⚖️", n:8,
+  {id:"assets", stage:"你的起點", icon:"⚖️", n:9,
    title:"你擁有的資產", sub:"以目前的估計市值填寫。",
    render: ()=>`
      <div id="assetMount"></div>
      <div class="group-total-row"><span class="k">資產合計</span><span class="v" id="assetTotal">$0</span></div>
    `},
-  {id:"liabilities", stage:"你的起點", icon:"⚖️", n:9,
+  {id:"liabilities", stage:"你的起點", icon:"⚖️", n:10,
    title:"你目前的負債", sub:"",
    render: ()=>`
      <div id="liabilityMount"></div>
      <div class="group-total-row warm"><span class="k">負債合計</span><span class="v" id="liabilityTotal">$0</span></div>
    `},
 
-  {id:"risk", stage:"財務個性", icon:"🎯", n:10,
+  {id:"risk", stage:"財務個性", icon:"🎯", n:11,
    title:"關於金錢，你的真實感受？", sub:"1 = 非常不像我　　5 = 非常像我。沒有標準答案，憑直覺回答就好。",
    render: ()=>`
      ${RISK_QUESTIONS.map((q,i)=>`
@@ -1069,7 +1084,7 @@ const PAGES = [
        </div>
      `).join('')}
    `},
-  {id:"decisionStyle", stage:"財務個性", icon:"🎯", n:11,
+  {id:"decisionStyle", stage:"財務個性", icon:"🎯", n:12,
    title:"平時怎麼做財務決定的？", sub:"依你最常用的方式，依序點選（第一次點＝最常用）。",
    render: ()=>`
      <div class="field">
@@ -1078,7 +1093,7 @@ const PAGES = [
        </div>
      </div>
    `},
-  {id:"moneyMeaning", stage:"財務個性", icon:"🎯", n:12,
+  {id:"moneyMeaning", stage:"財務個性", icon:"🎯", n:13,
    title:"對你來說，錢最重要的意義是？", sub:"憑直覺依序點選，最重要的先點。",
    render: ()=>`
      <div class="field">
@@ -1087,7 +1102,7 @@ const PAGES = [
        </div>
      </div>
    `},
-  {id:"lifeEvents", stage:"財務個性", icon:"🎯", n:13,
+  {id:"lifeEvents", stage:"財務個性", icon:"🎯", n:14,
    title:"最近一年，是否經歷這些事？", sub:"可複選。",
    render: ()=>`
      <div class="field">
@@ -1096,21 +1111,6 @@ const PAGES = [
          <div class="choice-pill ${eventsA.selected.includes('以上皆無')?'selected':''}" data-val="以上皆無">以上皆無</div>
        </div>
      </div>
-   `},
-
-  {id:"vision", stage:"財富願景", icon:"🧭", n:14,
-   title:"你想抵達的地方", sub:"選出你最想達成的財務目標，選了下方會出現輸入欄位。",
-   render: ()=>`
-     <div class="field">
-       <div class="choice-group" data-mode="multi" data-bind="goals">
-         ${GOALS.map(g=>`<div class="choice-pill">${g}</div>`).join("")}
-         <div class="choice-pill">自行輸入</div>
-       </div>
-       <div id="customGoalWrap" style="display:${visionA.goals.includes("自行輸入")?"block":"none"};margin-top:14px;">
-         <input type="text" id="customGoalInput" placeholder="輸入你的目標" value="${vcEsc(visionA.customGoalName)}">
-       </div>
-     </div>
-     <div id="goalCalcMount"></div>
    `},
 
   {id:"summary", isSummary:true, stage:"總覽", icon:"✅", n:15,
@@ -2025,6 +2025,10 @@ function buildFullAnswerSummaryHTML(){
     <div class="report-section">
       <h3>每題答題簡表</h3>
       <div class="summary-card-grid">
+        <div class="summary-card" style="grid-column:1/-1;">
+          <div class="summary-card-head"><span class="summary-card-icon">🧭</span><span class="summary-card-title">財富願景</span></div>
+          <div class="summary-row" style="align-items:flex-start;"><span class="k">想達成的目標</span><span class="v">${goalsText}</span></div>
+        </div>
         <div class="summary-card">
           <div class="summary-card-head"><span class="summary-card-icon">👤</span><span class="summary-card-title">個人背景</span></div>
           <div class="summary-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
@@ -2053,11 +2057,10 @@ function buildFullAnswerSummaryHTML(){
         </div>
 
         <div class="summary-card">
-          <div class="summary-card-head"><span class="summary-card-icon">🎯</span><span class="summary-card-title">人生目標與決策</span></div>
+          <div class="summary-card-head"><span class="summary-card-icon">🎯</span><span class="summary-card-title">決策與價值觀</span></div>
           <div class="summary-row" style="align-items:flex-start;"><span class="k">財務決策方式排序</span><span class="v">${decisionA.order.join('→')||'—'}</span></div>
           <div class="summary-row" style="align-items:flex-start;"><span class="k">金錢意義排序</span><span class="v">${moneyA.order.join('→')||'—'}</span></div>
           <div class="summary-row"><span class="k">近一年重大事件</span><span class="v">${eventsA.selected.join('、')||'—'}</span></div>
-          <div class="summary-row" style="align-items:flex-start;"><span class="k">財富願景</span><span class="v">${goalsText}</span></div>
         </div>
       </div>
     </div>
@@ -2090,6 +2093,10 @@ function renderSummaryHTML(){
   const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
   return `
     <div class="summary-block">
+      <h3>財富願景</h3>
+      <div class="summary-row"><span class="k">選擇的目標</span><span class="v">${vcEsc(visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g).join('、')||'—')}</span></div>
+    </div>
+    <div class="summary-block">
       <h3>你的輪廓</h3>
       <div class="summary-row"><span class="k">人生階段</span><span class="v">${basicA.lifeStage.join('、')||'—'}</span></div>
       <div class="summary-row"><span class="k">出生年月日</span><span class="v">${basicA.dobY&&basicA.dobM&&basicA.dobD ? basicA.dobY+'/'+basicA.dobM+'/'+basicA.dobD : '—'}</span></div>
@@ -2110,10 +2117,6 @@ function renderSummaryHTML(){
       <div class="summary-row"><span class="k">總資產</span><span class="v">${money(assetTotal)}</span></div>
       <div class="summary-row"><span class="k">總負債</span><span class="v">${money(liabilityTotal)}</span></div>
       <div class="summary-row"><span class="k">淨值</span><span class="v">${money(assetTotal-liabilityTotal)}</span></div>
-    </div>
-    <div class="summary-block">
-      <h3>財富願景</h3>
-      <div class="summary-row"><span class="k">選擇的目標</span><span class="v">${vcEsc(visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g).join('、')||'—')}</span></div>
     </div>
   `;
 }
@@ -2776,7 +2779,7 @@ function saveDraftNow(){
     if(isViewingSavedRecord || currentIndex < 0) return;
     if(document.getElementById('screen-report').classList.contains('active')) return;
     const draft = {
-      at: Date.now(), index: currentIndex, trackingClientId, loadedClientName,
+      at: Date.now(), index: currentIndex, pageId: (PAGES[currentIndex]||{}).id, trackingClientId, loadedClientName,
       state: { basicA, backerA, riskA, decisionA, moneyA, eventsA, visionA,
                incomeGroups, expenseGroups, assetGroups, liabilityGroups, investCostBasis, investHoldYears }
     };
@@ -2795,12 +2798,22 @@ function readDraft(){
 ['input','change','click'].forEach(type=>{
   document.getElementById('screen-stage').addEventListener(type, scheduleDraftSave, true);
 });
+// 舊版暫存只記了第幾頁（index）；v3.24.0 把「財富願景」移到第一題後順序變了，
+// 所以改用頁面 id 找回位置，舊暫存則依舊順序換算。
+const LEGACY_PAGE_ORDER = ["lifeStage","profileDetails","job","maritalChildren","supportParents","income","expense",
+  "assets","liabilities","risk","decisionStyle","moneyMeaning","lifeEvents","vision","summary"];
+function draftPageIndex(d){
+  const id = d.pageId || LEGACY_PAGE_ORDER[d.index];
+  const i = PAGES.findIndex(p => p.id === id);
+  return i >= 0 ? i : 0;
+}
 function offerDraftResume(){
   const d = readDraft();
   if(!d) return;
   const t = new Date(d.at);
   const p2 = n => String(n).padStart(2,'0');
-  const page = PAGES[Math.min(d.index, PAGES.length - 1)];
+  const resumeIndex = draftPageIndex(d);
+  const page = PAGES[resumeIndex];
   const where = page ? (page.isSummary ? '已經填到最後的總覽' : `停在「${page.stage}」第 ${page.n} 題`) : '';
   document.getElementById('draftInfo').textContent =
     `${t.getMonth()+1}/${t.getDate()} ${p2(t.getHours())}:${p2(t.getMinutes())} 填寫，${where}${d.loadedClientName ? '（' + d.loadedClientName + '）' : ''}`;
@@ -2810,7 +2823,7 @@ function offerDraftResume(){
     trackingClientId = d.trackingClientId || null;
     loadedClientName = d.loadedClientName || '';
     document.getElementById('draftBanner').hidden = true;
-    enterPage(Math.min(Math.max(0, d.index), PAGES.length - 1));
+    enterPage(resumeIndex);
   };
   document.getElementById('draftDiscard').onclick = ()=>{
     clearDraft();
