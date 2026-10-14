@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>預約財務諮詢 - Vicauria</title>
+<meta name="description" content="填寫簡單的資料，讓顧問先了解你的狀況，再為你安排一對一財務諮詢。">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="/icons/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#16323F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="public-pages.css">
+<style>
+  .form-wrap{max-width:640px;margin:0 auto;padding:0 20px 40px;}
+  .hero-c{padding:34px 0 8px;}
+  .hero-c h1{font-size:clamp(24px,6vw,32px);line-height:1.35;font-weight:900;}
+  .hero-c .lead{margin:10px 0 0;color:var(--ink-soft);font-size:15.5px;}
+  .intro{background:#fff;border:1px solid var(--line);border-left:4px solid var(--warm);border-radius:12px;padding:14px 16px;margin:16px 0 0;white-space:pre-wrap;font-size:15px;}
+  .intro b{display:block;font-family:"Noto Serif TC",serif;color:var(--navy);margin-bottom:4px;}
+  .card{margin-top:16px;}
+  .q{margin-bottom:22px;}
+  .q > label, .q > .ql{display:block;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+  .q .req{color:#B3402A;font-weight:700;margin-left:4px;}
+  .q .opt{color:var(--ink-soft);font-weight:500;font-size:12.5px;margin-left:6px;}
+  .q .hint{font-size:12.5px;color:var(--ink-soft);margin:-4px 0 8px;}
+  .q input[type=text], .q textarea{width:100%;border:1.5px solid #CBD5D6;border-radius:10px;padding:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink);}
+  .q input[type=text]:focus, .q textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(46,115,145,.18);}
+  .q textarea{min-height:90px;resize:vertical;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1.5px solid #CBD5D6;background:#fff;color:var(--ink);border-radius:22px;padding:10px 15px;font:inherit;font-size:14.5px;cursor:pointer;min-height:44px;}
+  .chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .q.invalid .chips, .q.invalid input[type=text]{outline:2px solid rgba(179,64,42,.5);outline-offset:3px;border-radius:12px;}
+  .consent{background:var(--paper);border-radius:12px;padding:14px;font-size:13.5px;}
+  .consent details summary{cursor:pointer;color:var(--teal-deep);font-weight:700;margin-top:8px;}
+  .consent .body{margin-top:8px;color:var(--ink);line-height:1.8;}
+  .consent .body p{margin:0 0 8px;}
+  .consent label{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .consent input[type=checkbox]{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:var(--navy);}
+  .submit{width:100%;background:var(--warm);color:#fff;border:none;border-radius:30px;padding:16px;font:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:6px;}
+  .submit:hover{background:var(--warm-deep);}
+  .submit:disabled{opacity:.6;cursor:wait;}
+  .form-err{color:#B3402A;font-size:14px;font-weight:600;min-height:20px;margin-top:10px;text-align:center;}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
+  .done{text-align:center;padding:34px 22px;}
+  .done .ic{font-size:44px;}
+  .done h2{font-size:22px;margin:10px 0 8px;}
+  .done p{color:var(--ink-soft);margin:6px 0;}
+  .done .links{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
+  .done .links a{display:block;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px;text-decoration:none;color:var(--navy);font-weight:700;}
+  .state{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+  .state h2{margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span class="logo"><img src="icons/vicauria-mark.png" alt=""> VICAURIA</span>
+</div></div>
+
+<div class="form-wrap">
+  <div id="stateLoading" class="state">載入中…</div>
+
+  <div id="stateInvalid" class="state" hidden>
+    <h2>這個連結目前無法使用</h2>
+    <p>可能是連結輸入不完整，或顧問已暫停接受申請。<br>請直接私訊你的顧問，向他索取最新的連結。</p>
+  </div>
+
+  <div id="formView" hidden>
+    <header class="hero-c">
+      <div class="eyebrow">FINANCIAL CONSULTATION</div>
+      <h1>預約一對一財務諮詢</h1>
+      <p class="lead">花 2 分鐘填一下，讓 <b id="advName">顧問</b> 先了解你的狀況，見面時就能直接聊重點。</p>
+      <div class="intro" id="introBox" hidden><b id="introName"></b><span id="introText"></span></div>
+    </header>
+
+    <form id="form" class="card" novalidate>
+      <div class="hp" aria-hidden="true"><label>網站<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
+
+      <div class="q" data-key="name">
+        <label for="fName">怎麼稱呼你？<span class="req">*</span></label>
+        <input type="text" id="fName" maxlength="40" autocomplete="name" placeholder="例如：王小姐、阿明">
+      </div>
+      <div class="q" data-key="contact">
+        <label for="fContact">顧問要怎麼聯絡你？<span class="req">*</span></label>
+        <div class="hint">LINE ID、手機或 IG 帳號，擇一即可</div>
+        <input type="text" id="fContact" maxlength="80" autocomplete="off" placeholder="例如：LINE ID：wang123">
+      </div>
+
+      <div class="q" data-key="age_range" data-required="1">
+        <div class="ql">你的年齡<span class="req">*</span></div>
+        <div class="chips" data-single="age_range"></div>
+      </div>
+      <div class="q" data-key="needs" data-required="1">
+        <div class="ql">最想解決的問題<span class="req">*</span><span class="opt">可複選</span></div>
+        <div class="chips" data-multi="needs"></div>
+      </div>
+      <div class="q" data-key="monthly_budget" data-required="1">
+        <div class="ql">每個月大概能撥多少錢做規劃？<span class="req">*</span></div>
+        <div class="hint">選一個大概的範圍就好</div>
+        <div class="chips" data-single="monthly_budget"></div>
+      </div>
+      <div class="q" data-key="idle_funds">
+        <div class="ql">目前有沒有一筆閒置的資金？<span class="opt">選填</span></div>
+        <div class="chips" data-single="idle_funds"></div>
+      </div>
+      <div class="q" data-key="timeline" data-required="1">
+        <div class="ql">希望多久內開始規劃？<span class="req">*</span></div>
+        <div class="chips" data-single="timeline"></div>
+      </div>
+      <div class="q" data-key="current_planning">
+        <div class="ql">目前有在做哪些規劃？<span class="opt">選填</span></div>
+        <div class="chips" data-single="current_planning"></div>
+      </div>
+      <div class="q" data-key="preferred_time">
+        <div class="ql">方便諮詢的時段<span class="opt">可複選・選填</span></div>
+        <div class="chips" data-multi="preferred_time"></div>
+      </div>
+      <div class="q" data-key="meeting_mode">
+        <div class="ql">想用什麼方式諮詢？<span class="opt">選填</span></div>
+        <div class="chips" data-single="meeting_mode"></div>
+      </div>
+      <div class="q" data-key="source">
+        <div class="ql">你是從哪裡知道顧問的？<span class="opt">選填</span></div>
+        <div class="chips" data-single="source"></div>
+      </div>
+      <div class="q" data-key="message">
+        <label for="fMessage">還有什麼想先讓顧問知道的？<span class="opt">選填</span></label>
+        <textarea id="fMessage" maxlength="500" placeholder="例如：最近剛換工作，想重新規劃收入分配"></textarea>
+      </div>
+
+      <div class="q consent" data-key="consent">
+        <label><input type="checkbox" id="fConsent"> <span>我已閱讀並同意下方的個人資料蒐集告知事項<span class="req">*</span></span></label>
+        <details>
+          <summary>查看個人資料蒐集告知事項</summary>
+          <div class="body">
+            <p><b>蒐集者：</b><span class="advNameInline">顧問</span>（透過 Vicauria 平台提供的表單蒐集）。</p>
+            <p><b>蒐集目的：</b>了解你的需求並安排財務諮詢、與你聯繫。</p>
+            <p><b>蒐集的資料：</b>你填寫的稱呼、聯絡方式、年齡區間、需求與財務概況區間等內容。</p>
+            <p><b>使用方式與對象：</b>只有負責你的顧問本人可以看到這些資料，不會提供給其他顧問或第三方，也不會用於上述目的以外的用途。</p>
+            <p><b>保存期間：</b>最長保存 180 天；你也可以隨時要求提前刪除。</p>
+            <p><b>你的權利：</b>你可以向顧問請求查詢、閱覽、更正、停止使用或刪除你的資料，也可以來信 <a href="mailto:jess818200228@gmail.com">jess818200228@gmail.com</a>。</p>
+            <p><b>不提供的影響：</b>如果不填寫必填欄位或不同意，將無法透過此表單預約諮詢，你仍可以直接私訊顧問。</p>
+            <p>本表單僅用於安排諮詢，不構成任何投資、保險或財務建議。</p>
+          </div>
+        </details>
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">送出，預約諮詢</button>
+      <div class="form-err" id="formErr" role="alert"></div>
+    </form>
+  </div>
+
+  <div id="doneView" class="card done" hidden>
+    <div class="ic">✅</div>
+    <h2>已經收到你的資料了</h2>
+    <p><b class="advNameInline">顧問</b> 看過之後，會透過你留的聯絡方式跟你聯繫。</p>
+    <p>等待的時候，可以先用這兩個免費小工具看看自己的狀況：</p>
+    <div class="links">
+      <a href="compound-interest-calculator.html">📈 複利計算機：看錢怎麼長大</a>
+      <a href="inflation-calculator.html">🔥 通膨試算：存款的購買力剩多少</a>
+    </div>
+  </div>
+</div>
+
+<footer><div class="wrap">表單由 Vicauria 提供・<a href="legal.html">服務資訊與條款</a></div></footer>
+
+<script src="vendor/supabase-js-2.117.2.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var OPTIONS = {
+    age_range: ['20–29 歲', '30–39 歲', '40–49 歲', '50–59 歲', '60 歲以上'],
+    needs: ['退休規劃', '存第一桶金', '被動收入／現金流', '子女教育金', '購屋規劃', '保障檢視', '資產傳承', '其他'],
+    monthly_budget: ['5 千以下', '5 千–1 萬', '1–3 萬', '3–5 萬', '5 萬以上', '還不確定'],
+    idle_funds: ['沒有', '50 萬以下', '50–100 萬', '100–300 萬', '300 萬以上', '不方便透露'],
+    timeline: ['一個月內', '三個月內', '半年內', '還在了解'],
+    current_planning: ['還沒有', '有保險', '有投資', '保險和投資都有', '不太確定'],
+    preferred_time: ['平日白天', '平日晚上', '週末'],
+    meeting_mode: ['線上', '實體', '都可以'],
+    source: ['Instagram', 'Threads', 'Facebook', 'YouTube', '朋友介紹', '其他']
+  };
+  var picked = {};
+
+  function buildChips(){
+    document.querySelectorAll('.chips').forEach(function(box){
+      var key = box.dataset.single || box.dataset.multi, multi = !!box.dataset.multi;
+      picked[key] = multi ? [] : '';
+      OPTIONS[key].forEach(function(label){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip'; b.textContent = label; b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function(){
+          if(multi){
+            var i = picked[key].indexOf(label);
+            if(i > -1) picked[key].splice(i, 1); else picked[key].push(label);
+            b.setAttribute('aria-pressed', i > -1 ? 'false' : 'true');
+          } else {
+            var on = picked[key] !== label;
+            picked[key] = on ? label : '';
+            box.querySelectorAll('.chip').forEach(function(c){ c.setAttribute('aria-pressed', 'false'); });
+            if(on) b.setAttribute('aria-pressed', 'true');
+          }
+          var q = box.closest('.q'); if(q) q.classList.remove('invalid');
+        });
+        box.appendChild(b);
+      });
+    });
+  }
+
+  var slug = (new URLSearchParams(location.search).get('c') || '').trim().toLowerCase();
+
+  function show(id){
+    ['stateLoading', 'stateInvalid', 'formView', 'doneView'].forEach(function(x){ $(x).hidden = x !== id; });
+    window.scrollTo(0, 0);
+  }
+
+  async function init(){
+    buildChips();
+    if(!/^[a-z0-9]{6,20}$/.test(slug)){ show('stateInvalid'); return; }
+    try{
+      var res = await supabaseClient.rpc('vc_consult_form_info', { p_slug: slug });
+      if(res.error || !res.data){ show('stateInvalid'); return; }
+      var name = res.data.advisor_name || '你的顧問';
+      $('advName').textContent = name;
+      document.querySelectorAll('.advNameInline').forEach(function(el){ el.textContent = name; });
+      document.title = '預約財務諮詢｜' + name;
+      if(res.data.intro){
+        $('introName').textContent = name;
+        $('introText').textContent = res.data.intro;
+        $('introBox').hidden = false;
+      }
+      show('formView');
+    }catch(e){ show('stateInvalid'); }
+  }
+
+  function validate(){
+    var bad = [];
+    document.querySelectorAll('.q').forEach(function(q){ q.classList.remove('invalid'); });
+    if(!$('fName').value.trim()) bad.push('name');
+    if(!$('fContact').value.trim()) bad.push('contact');
+    document.querySelectorAll('.q[data-required]').forEach(function(q){
+      var v = picked[q.dataset.key];
+      if(!v || (Array.isArray(v) && !v.length)) bad.push(q.dataset.key);
+    });
+    if(!$('fConsent').checked) bad.push('consent');
+    bad.forEach(function(k){ var q = document.querySelector('.q[data-key="' + k + '"]'); if(q) q.classList.add('invalid'); });
+    return bad;
+  }
+
+  var ERR = {
+    LINK_INVALID: '這個連結已失效，請向顧問索取最新的連結。',
+    CONSENT_REQUIRED: '請先勾選同意個人資料蒐集告知事項。',
+    MISSING_FIELDS: '請填寫稱呼和聯絡方式。',
+    DUPLICATE: '你今天已經送出過了，顧問會盡快跟你聯絡，不用再送一次喔。',
+    RATE_LIMIT: '送出的次數太頻繁了，請稍後再試，或直接私訊顧問。'
+  };
+
+  $('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    $('formErr').textContent = '';
+    if($('hpWebsite').value){ show('doneView'); return; } // 機器人填了隱藏欄位：假裝成功，不送出
+    var bad = validate();
+    if(bad.length){
+      $('formErr').textContent = bad.indexOf('consent') > -1 && bad.length === 1
+        ? '請先勾選同意個人資料蒐集告知事項。' : '還有標示 * 的必填項目沒有完成，請再看一下。';
+      var first = document.querySelector('.q.invalid');
+      if(first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    var btn = $('submitBtn');
+    btn.disabled = true; btn.textContent = '送出中…';
+    var payload = {
+      name: $('fName').value.trim(), contact: $('fContact').value.trim(), consent: true,
+      age_range: picked.age_range, needs: picked.needs, monthly_budget: picked.monthly_budget,
+      idle_funds: picked.idle_funds, timeline: picked.timeline, current_planning: picked.current_planning,
+      preferred_time: picked.preferred_time.join('、'), meeting_mode: picked.meeting_mode,
+      source: picked.source, message: $('fMessage').value.trim()
+    };
+    try{
+      var res = await supabaseClient.rpc('vc_submit_consult', { p_slug: slug, p: payload });
+      if(res.error){
+        var code = Object.keys(ERR).find(function(k){ return String(res.error.message || '').indexOf(k) > -1; });
+        $('formErr').textContent = code ? ERR[code] : '送出失敗，請檢查網路後再試一次。';
+        if(code === 'DUPLICATE'){ show('doneView'); }
+      } else {
+        show('doneView');
+      }
+    }catch(err){
+      $('formErr').textContent = '送出失敗，請檢查網路後再試一次。';
+    }
+    btn.disabled = false; btn.textContent = '送出，預約諮詢';
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

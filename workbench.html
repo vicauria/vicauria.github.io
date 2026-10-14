@@ -373,6 +373,9 @@
   }
 
   /* ---------- 分級鎖定的模組（例如市場情報，Free 方案不開放） ---------- */
+  .nav-badge{display:inline-block; min-width:20px; height:20px; line-height:20px; padding:0 6px; margin-left:6px; border-radius:10px;
+    background:var(--warm, #C97B3D); color:#fff; font-size:11.5px; font-weight:700; text-align:center; vertical-align:middle; font-family:"Roboto Mono",monospace;}
+  .nav-badge[hidden]{display:none;}
   .mod-lock-icon{display:none; font-size:12px; margin-left:5px; vertical-align:middle;}
   .mod-btn.mod-locked{opacity:.6;}
   .mod-btn.mod-locked .mod-lock-icon{display:inline;}
@@ -621,6 +624,11 @@
             <span class="name"><span class="num">◆</span>名單管理</span>
             <span class="desc">列名單：A／B／C 三區名單</span>
           </button>
+          <button class="mod-btn" data-target="frame-consults">
+            <span class="collapsed-icon">📨</span>
+            <span class="name"><span class="num">◆</span>諮詢申請<span class="nav-badge" id="consultBadge" hidden></span></span>
+            <span class="desc">專屬預約表單／網友填完先篩選</span>
+          </button>
           <button class="mod-btn" data-target="frame-blueprint">
             <span class="collapsed-icon">🗺️</span>
             <span class="name"><span class="num">◆</span>財富地圖</span>
@@ -732,7 +740,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.24.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.25.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -792,6 +800,7 @@
     <iframe id="frame-blueprint" data-src="modules/blueprint.html" title="財富地圖"></iframe>
     <iframe id="frame-clientrecords" data-src="modules/client-records.html" title="客戶資料"></iframe>
     <iframe id="frame-namelist" data-src="modules/name-list.html" title="名單管理"></iframe>
+    <iframe id="frame-consults" data-src="modules/consults.html" title="諮詢申請"></iframe>
     <iframe id="frame-calendar" data-src="modules/calendar.html" title="行事曆"></iframe>
     <iframe id="frame-contracts" data-src="modules/contracts.html" title="簽約管理"></iframe>
     <iframe id="frame-balance" data-src="modules/balance.html" title="資產負債表"></iframe>
@@ -978,6 +987,7 @@
     if(window.vcLoadingGreet) window.vcLoadingGreet(name);
     document.getElementById('settingsCurrentEmail').textContent = '目前登入：' + user.email;
     window.currentAdvisorId = user.id; // 讓內嵌的模組（例如客戶資料）之後可以用這個 id 存取自己的資料
+    window.vcRefreshConsultBadge();
 
     // 管理後台入口：只有在管理者名單裡的帳號才看得到（資料庫還沒設定後台時，呼叫會失敗，入口就維持隱藏）
     supabaseClient.rpc('vc_is_admin').then(({ data, error })=>{
@@ -1422,7 +1432,7 @@
     });
   }
   window.vcEnsureFrame = ensureFrame;
-  const PRELOAD_ORDER = ['frame-blueprint','frame-clientrecords','frame-calendar','frame-simulation','frame-namelist','frame-contracts',
+  const PRELOAD_ORDER = ['frame-blueprint','frame-clientrecords','frame-calendar','frame-simulation','frame-namelist','frame-consults','frame-contracts',
     'frame-guide','frame-team','frame-cashflow','frame-balance','frame-loan','frame-efficiency','frame-marketoverview','frame-marketnews','frame-feedback'];
   function startPreload(){
     const c = navigator.connection;
@@ -1566,6 +1576,19 @@
   window.goToHome = ()=> activateFrame('frame-home');
   // 讓內嵌的 iframe（例如工作台首頁的捷徑卡片）可以呼叫這個函式切換到任何模組
   window.goToModule = (targetId)=> activateFrame(targetId);
+  // 諮詢申請：側邊選單上的「新申請」數字（沒建資料表或讀取失敗就不顯示）
+  window.vcRefreshConsultBadge = async function(){
+    const b = document.getElementById('consultBadge');
+    if(!b || !window.currentAdvisorId) return;
+    try{
+      const { count, error } = await supabaseClient.from('consult_requests')
+        .select('id', { count:'exact', head:true }).eq('advisor_id', window.currentAdvisorId).eq('status', 'new');
+      const n = error ? 0 : (count || 0);
+      b.textContent = n > 99 ? '99+' : String(n);
+      b.hidden = n === 0;
+      try{ const h = document.getElementById('frame-home'); h && h.contentWindow && h.contentWindow.vcShowConsultAlert && h.contentWindow.vcShowConsultAlert(n); }catch(e){}
+    }catch(e){ b.hidden = true; }
+  };
 
   // ---- 手機版：漢堡選單開關全螢幕抽屜 ----
   const sidebarEl = document.querySelector('aside.sidebar');
