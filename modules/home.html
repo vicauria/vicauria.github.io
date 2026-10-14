@@ -60,6 +60,14 @@
 
   /* ---------- 卡片 ---------- */
   .grid2{display:grid; grid-template-columns:1.25fr 1fr; gap:18px; align-items:start;}
+  .consult-alert{display:flex; align-items:center; gap:10px; width:100%; margin:0 0 14px; padding:14px 18px; border-radius:14px; cursor:pointer;
+    background:var(--warm-tint, #FBEFE2); border:1.5px solid rgba(201,123,61,.55); color:var(--ink); font:inherit; font-size:15px; text-align:left;}
+  .consult-alert[hidden]{display:none;}
+  .consult-alert .ca-ic{font-size:20px;}
+  .consult-alert .ca-tx{flex:1; font-weight:600;}
+  .consult-alert .ca-tx b{color:var(--warm-deep, #A85F27); font-size:17px;}
+  .consult-alert .ca-go{color:var(--warm-deep, #A85F27); font-weight:700; font-size:13.5px; white-space:nowrap;}
+  .consult-alert:hover{border-color:var(--warm-deep, #A85F27);}
   .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; margin-bottom:18px;}
   .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px;}
   .card-head h2{font-family:"Noto Serif TC",serif; font-size:17px; color:var(--navy); margin:0;}
@@ -138,6 +146,9 @@
 </header>
 
 <main class="wrap">
+  <button type="button" class="consult-alert" id="consultAlert" data-go="frame-consults" hidden>
+    <span class="ca-ic">📨</span><span class="ca-tx">有 <b id="consultAlertN">0</b> 筆新的諮詢申請</span><span class="ca-go">點我查看 →</span>
+  </button>
   <div class="kpis">
     <button class="kpi" data-go="frame-calendar"><div class="lbl">📅 今日行程</div><div class="val" id="kAgenda">–</div><div class="hint" id="kAgendaHint">筆安排</div></button>
     <button class="kpi" id="kFollowCard" data-go="frame-clientrecords"><div class="lbl">🔔 近期待辦事項</div><div class="val" id="kFollow">–</div><div class="hint">逾期、到期與 7 天內</div></button>
@@ -200,7 +211,7 @@ document.addEventListener('click', e=>{
 });
 
 const TOOLS = [
-  ['frame-namelist','📋','名單管理'], ['frame-blueprint','🗺️','財富地圖'], ['frame-clientrecords','🗂️','客戶資料'],
+  ['frame-namelist','📋','名單管理'], ['frame-consults','📨','諮詢申請'], ['frame-blueprint','🗺️','財富地圖'], ['frame-clientrecords','🗂️','客戶資料'],
   ['frame-contracts','📝','簽約管理'], ['frame-calendar','📅','行事曆'], ['frame-team','👥','團隊'],
   ['frame-simulation','🎯','沙盤推演必勝'], ['frame-cashflow','💧','收支現金流'], ['frame-balance','⚖️','資產負債表'],
   ['frame-loan','🏦','貸款試算室'], ['frame-efficiency','🔥','資金效率健檢'], ['frame-marketnews','📰','市場快訊'],
@@ -223,6 +234,13 @@ function emptyRow(text, btnText, target){
   return `<div class="empty"><span>${text}</span>${btnText ? `<button class="go" data-go="${target}">${btnText}</button>` : ''}</div>`;
 }
 const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
+// 工作台（或本頁自己）查到新的諮詢申請筆數後，顯示／隱藏首頁最上方的提醒
+window.vcShowConsultAlert = function(n){
+  const a = document.getElementById('consultAlert');
+  if(!a) return;
+  document.getElementById('consultAlertN').textContent = n;
+  a.hidden = !(n > 0);
+};
 
 (async function init(){
   let session = null;
@@ -254,6 +272,8 @@ const fmtMD = d => d ? d.slice(5).replace('-','/') : '';
         .eq('advisor_id', myId).eq('paid', false).lte('due_date', soonStr).order('due_date', { ascending:true }); })(),
     names: supabaseClient.from('name_list_entries').select('name').eq('advisor_id', myId)
   };
+  supabaseClient.from('consult_requests').select('id', { count:'exact', head:true }).eq('advisor_id', myId).eq('status', 'new')
+    .then(r => window.vcShowConsultAlert(r && !r.error ? (r.count || 0) : 0), () => {});
   const [ev, wk, cl, rp, py, nm] = await Promise.all(Object.values(q).map(p => Promise.resolve(p).catch(e=>({ error:e }))));
 
   const events = (ev && ev.data) || [];

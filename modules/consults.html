@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
+<script src="../ui-kit.js"></script>
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>諮詢申請</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2; --teal-light-text:#BFE0EA;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --paper:#F5F7F6; --card:#FFFFFF; --ink:#182226; --ink-soft:#5B6B70; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:"Noto Sans TC",sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{width:100%; max-width:980px; margin:0 auto; padding:0 24px;}
+  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%); color:#fff; padding:30px 0 40px;}
+  header.hero .eyebrow{font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:8px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
+  header.hero p{color:#DCEAEE; font-size:13.5px; line-height:1.8; margin:0;}
+  main{margin-top:-20px; position:relative; z-index:10; padding-bottom:120px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:16px; box-shadow:0 6px 20px rgba(22,50,63,.05);}
+  .card h2{font-size:17px; margin-bottom:6px;}
+  .muted{color:var(--ink-soft); font-size:13px;}
+
+  /* 專屬連結 */
+  .link-row{display:flex; gap:8px; margin:12px 0 6px; flex-wrap:wrap;}
+  .link-box{flex:1 1 260px; min-width:0; font-family:"Roboto Mono",monospace; font-size:13.5px; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:11px 12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--navy);}
+  .btn{border:1.5px solid var(--navy); background:var(--navy); color:#fff; border-radius:10px; padding:10px 16px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; min-height:44px;}
+  .btn.ghost{background:#fff; color:var(--navy);}
+  .btn.small{padding:7px 12px; font-size:13px; min-height:36px;}
+  .btn.danger{background:#fff; color:var(--negative); border-color:rgba(179,73,47,.45);}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+  .link-meta{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:13.5px;}
+  .switch{display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; color:var(--navy);}
+  .switch input{width:18px; height:18px; accent-color:var(--positive);}
+  .paused{color:var(--negative); font-weight:700;}
+  .linkish{background:none; border:none; color:var(--teal-deep); font:inherit; font-size:13px; font-weight:700; cursor:pointer; text-decoration:underline; padding:6px 2px;}
+  .intro-edit{margin-top:12px;}
+  .intro-edit summary{cursor:pointer; color:var(--teal-deep); font-weight:700; font-size:13.5px;}
+  .intro-edit textarea{width:100%; min-height:80px; margin-top:8px; border:1.5px solid #CBD5D6; border-radius:10px; padding:10px; font:inherit; font-size:14.5px;}
+  .tips{margin:12px 0 0; padding-left:18px; color:var(--ink-soft); font-size:13px;}
+
+  /* 篩選 */
+  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 14px;}
+  .tab{border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); border-radius:20px; padding:8px 14px; font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; min-height:40px;}
+  .tab[aria-pressed="true"]{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .tab .n{font-family:"Roboto Mono",monospace; margin-left:4px; opacity:.8;}
+
+  /* 申請卡片 */
+  .req{border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:#fff; overflow:hidden;}
+  .req.is-new{border-color:rgba(201,123,61,.55); box-shadow:0 0 0 3px rgba(201,123,61,.10);}
+  .req-head{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; font:inherit; text-align:left; cursor:pointer; padding:14px 16px; color:var(--ink);}
+  .req-head .nm{font-weight:700; font-size:15.5px; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40%;}
+  .badge-new{background:var(--warm); color:#fff; font-size:11px; font-weight:700; border-radius:10px; padding:2px 8px; flex-shrink:0;}
+  .status-pill{font-size:12px; font-weight:700; border-radius:10px; padding:2px 9px; flex-shrink:0; background:var(--paper); color:var(--ink-soft);}
+  .status-pill.contacted{background:var(--teal-tint); color:var(--teal-deep);}
+  .status-pill.booked{background:#E3F2EA; color:var(--positive);}
+  .status-pill.declined{background:#F1F1F1; color:#8A9497;}
+  .req-head .sum{flex:1; min-width:0; font-size:13px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .req-head .when{font-size:12px; color:var(--ink-soft); white-space:nowrap; font-family:"Roboto Mono",monospace;}
+  .req-head .chev{color:var(--ink-soft); transition:transform .2s;}
+  .req.open .req-head .chev{transform:rotate(180deg);}
+  .req-body{display:none; padding:0 16px 16px; border-top:1px solid var(--line);}
+  .req.open .req-body{display:block;}
+  .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; margin:14px 0;}
+  @media (max-width:620px){ .grid{grid-template-columns:1fr;} .req-head .sum{display:none;} .req-head .nm{max-width:none; flex:1;} }
+  .kv .k{font-size:12px; color:var(--ink-soft);}
+  .kv .v{font-size:14.5px; color:var(--ink); font-weight:600; overflow-wrap:anywhere;}
+  .kv.full{grid-column:1/-1;}
+  .needs{display:flex; flex-wrap:wrap; gap:6px; margin-top:2px;}
+  .needs span{background:var(--teal-tint); color:var(--teal-deep); border-radius:12px; padding:2px 10px; font-size:13px; font-weight:700;}
+  .contact-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .msg{white-space:pre-wrap; background:var(--paper); border-radius:10px; padding:10px 12px; font-weight:500;}
+  .section-label{font-size:12.5px; font-weight:700; color:var(--navy); margin:14px 0 6px;}
+  .status-btns{display:flex; gap:6px; flex-wrap:wrap;}
+  .status-btns button{border:1.5px solid var(--line); background:#fff; color:var(--ink); border-radius:18px; padding:7px 13px; font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; min-height:38px;}
+  .status-btns button[aria-pressed="true"]{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .note{width:100%; min-height:70px; border:1.5px solid #CBD5D6; border-radius:10px; padding:10px; font:inherit; font-size:14px;}
+  .actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; align-items:center;}
+  .tier-pick{display:none; gap:6px; align-items:center; flex-wrap:wrap;}
+  .tier-pick.show{display:inline-flex;}
+  .empty{text-align:center; color:var(--ink-soft); padding:30px 10px; font-size:14px;}
+  .setup{display:none;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Consultation Requests</div>
+    <h1>諮詢申請</h1>
+    <p>把你的專屬連結貼在 IG、Threads 或私訊裡，網友填完表單會出現在這裡。先看過他的狀況，再決定要不要約。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card" id="notLoggedIn" style="display:none;">目前沒有偵測到登入狀態，請重新整理這個頁面，或重新登入後再試一次。</div>
+  <div class="card" id="setupMsg" style="display:none;">
+    <h2>這個功能還沒開通</h2>
+    <p class="muted">系統的資料表還沒建立好，請稍後再試；如果你是管理者，請先執行「vicauria-consult-requests.sql」。</p>
+  </div>
+
+  <div id="app" style="display:none;">
+    <section class="card" aria-label="我的專屬連結">
+      <h2>我的專屬連結</h2>
+      <div class="muted">任何人打開這個連結就能填寫預約表單，不用註冊。資料只有你看得到。</div>
+      <div class="link-row">
+        <div class="link-box" id="linkBox">產生中…</div>
+        <button class="btn" id="copyBtn" type="button">複製連結</button>
+        <a class="btn ghost" id="previewBtn" target="_blank" rel="noopener" href="#">預覽表單</a>
+      </div>
+      <div class="link-meta">
+        <label class="switch"><input type="checkbox" id="enabledChk"> <span id="enabledLbl">接受新的申請</span></label>
+        <button class="linkish" id="regenBtn" type="button">換一個新連結</button>
+      </div>
+      <details class="intro-edit">
+        <summary>表單開頭的自我介紹（選填）</summary>
+        <textarea id="introTxt" maxlength="300" placeholder="例如：嗨，我是 Jess，從工程師轉做財務規劃，專長是幫上班族建立穩定的現金流。填完表單我會在 2 天內聯絡你！"></textarea>
+        <div class="actions"><button class="btn small" id="introSave" type="button">儲存自我介紹</button><span class="muted">最多 300 字，會顯示在表單最上方。</span></div>
+      </details>
+      <ul class="tips">
+        <li>可以放在：IG 簡介連結、限時動態連結貼紙、回覆私訊、Threads 置頂</li>
+        <li>超過 180 天的申請會自動刪除（表單上的個資告知也是這樣寫的）</li>
+      </ul>
+    </section>
+
+    <section class="card" aria-label="申請列表">
+      <h2>收到的申請</h2>
+      <div class="tabs" id="tabs" role="group" aria-label="依處理狀態篩選"></div>
+      <div id="list"></div>
+    </section>
+  </div>
+</main>
+
+<script src="../vendor/supabase-js-2.117.2.js"></script>
+<script src="../supabase-config.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var myId = null, rows = [], link = null, filter = 'todo';
+  var STATUS = [
+    { key:'todo',      label:'待處理',   match:function(s){ return s === 'new' || s === 'read'; } },
+    { key:'contacted', label:'已聯絡',   match:function(s){ return s === 'contacted'; } },
+    { key:'booked',    label:'已約諮詢', match:function(s){ return s === 'booked'; } },
+    { key:'declined',  label:'暫不約',   match:function(s){ return s === 'declined'; } },
+    { key:'all',       label:'全部',     match:function(){ return true; } }
+  ];
+  var STATUS_LABEL = { new:'新申請', read:'待處理', contacted:'已聯絡', booked:'已約諮詢', declined:'暫不約' };
+  var pad = function(n){ return String(n).padStart(2, '0'); };
+  function fmtTime(iso){
+    var d = new Date(iso), now = new Date();
+    var mins = Math.round((now - d) / 60000);
+    if(mins < 1) return '剛剛';
+    if(mins < 60) return mins + ' 分鐘前';
+    if(mins < 60 * 24 && d.getDate() === now.getDate()) return '今天 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+  function refreshParentBadge(){ try{ window.parent && window.parent.vcRefreshConsultBadge && window.parent.vcRefreshConsultBadge(); }catch(e){} }
+  function formURL(slug){ return new URL('../consult.html?c=' + encodeURIComponent(slug), location.href).href; }
+
+  /* ---------- 專屬連結 ---------- */
+  function renderLink(){
+    var url = formURL(link.slug);
+    $('linkBox').textContent = url;
+    $('linkBox').title = url;
+    $('previewBtn').href = url;
+    $('enabledChk').checked = !!link.enabled;
+    $('enabledLbl').textContent = link.enabled ? '接受新的申請' : '已暫停接受申請';
+    $('enabledLbl').className = link.enabled ? '' : 'paused';
+    if(document.activeElement !== $('introTxt')) $('introTxt').value = link.intro || '';
+  }
+  async function saveLink(enabled, intro, regenerate){
+    var res = await supabaseClient.rpc('vc_set_consult_link', { p_enabled: enabled, p_intro: intro, p_regenerate: !!regenerate });
+    if(res.error){ vcToast('儲存失敗，請稍後再試', 'err'); return false; }
+    link = res.data; renderLink(); return true;
+  }
+  $('copyBtn').addEventListener('click', async function(){
+    var url = formURL(link.slug);
+    try{ await navigator.clipboard.writeText(url); vcToast('已複製連結'); }
+    catch(e){
+      var r = document.createRange(); r.selectNodeContents($('linkBox'));
+      var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      vcToast('請按 Ctrl／⌘ + C 複製');
+    }
+  });
+  $('enabledChk').addEventListener('change', async function(){
+    var on = this.checked;
+    if(await saveLink(on, null, false)) vcToast(on ? '已開始接受申請' : '已暫停，網友打開連結會看到「暫停接受申請」');
+  });
+  $('introSave').addEventListener('click', async function(){
+    if(await saveLink(null, $('introTxt').value.trim(), false)) vcToast('已儲存自我介紹');
+  });
+  $('regenBtn').addEventListener('click', async function(){
+    var ok = await vcConfirm('換新連結後，舊的連結會立刻失效，之前貼出去的地方都要換成新連結。確定要換嗎？', { okText:'換新連結' });
+    if(ok && await saveLink(null, null, true)) vcToast('已換成新連結，記得更新你貼出去的地方');
+  });
+
+  /* ---------- 申請列表 ---------- */
+  function renderTabs(){
+    var box = $('tabs'); box.textContent = '';
+    STATUS.forEach(function(s){
+      var n = rows.filter(function(r){ return s.match(r.status); }).length;
+      var b = el('button', 'tab'); b.type = 'button';
+      b.setAttribute('aria-pressed', filter === s.key ? 'true' : 'false');
+      b.appendChild(document.createTextNode(s.label));
+      b.appendChild(el('span', 'n', String(n)));
+      b.addEventListener('click', function(){ filter = s.key; renderTabs(); renderList(); });
+      box.appendChild(b);
+    });
+  }
+  function kv(label, value, full){
+    var d = el('div', 'kv' + (full ? ' full' : ''));
+    d.appendChild(el('div', 'k', label));
+    if(value instanceof Node) d.appendChild(value); else d.appendChild(el('div', 'v', value || '—'));
+    return d;
+  }
+  function renderList(){
+    var st = STATUS.find(function(s){ return s.key === filter; });
+    var list = $('list'); list.textContent = '';
+    var shown = rows.filter(function(r){ return st.match(r.status); });
+    if(!shown.length){
+      list.appendChild(el('div', 'empty', rows.length ? '這個分類目前沒有申請。' : '還沒有收到申請。把上面的專屬連結貼出去，網友填完就會出現在這裡。'));
+      return;
+    }
+    shown.forEach(function(r){ list.appendChild(renderRow(r)); });
+  }
+  function renderRow(r){
+    var wrap = el('div', 'req' + (r.status === 'new' ? ' is-new' : ''));
+    var head = el('button', 'req-head'); head.type = 'button'; head.setAttribute('aria-expanded', 'false');
+    head.appendChild(el('span', 'nm', r.name));
+    if(r.status === 'new') head.appendChild(el('span', 'badge-new', 'NEW'));
+    else head.appendChild(el('span', 'status-pill ' + r.status, STATUS_LABEL[r.status] || ''));
+    head.appendChild(el('span', 'sum', [r.age_range, r.monthly_budget && ('每月 ' + r.monthly_budget), r.timeline].filter(Boolean).join('・')));
+    head.appendChild(el('span', 'when', fmtTime(r.created_at)));
+    head.appendChild(el('span', 'chev', '▾'));
+    var body = el('div', 'req-body');
+
+    var grid = el('div', 'grid');
+    var contact = el('div', 'contact-row');
+    contact.appendChild(el('span', 'v', r.contact));
+    var cp = el('button', 'btn small ghost', '複製'); cp.type = 'button';
+    cp.addEventListener('click', async function(){ try{ await navigator.clipboard.writeText(r.contact); vcToast('已複製聯絡方式'); }catch(e){} });
+    contact.appendChild(cp);
+    grid.appendChild(kv('聯絡方式', contact, true));
+    var needs = el('div', 'needs');
+    (r.needs || []).forEach(function(n){ needs.appendChild(el('span', '', n)); });
+    if(!(r.needs || []).length) needs.appendChild(el('div', 'v', '—'));
+    grid.appendChild(kv('最想解決的問題', needs, true));
+    grid.appendChild(kv('年齡', r.age_range));
+    grid.appendChild(kv('每月可規劃金額', r.monthly_budget));
+    grid.appendChild(kv('閒置資金', r.idle_funds));
+    grid.appendChild(kv('希望開始時間', r.timeline));
+    grid.appendChild(kv('目前的規劃', r.current_planning));
+    grid.appendChild(kv('方便時段', r.preferred_time));
+    grid.appendChild(kv('諮詢方式', r.meeting_mode));
+    grid.appendChild(kv('從哪裡知道你', r.source));
+    if(r.message) grid.appendChild(kv('想先讓你知道的事', el('div', 'v msg', r.message), true));
+    body.appendChild(grid);
+
+    body.appendChild(el('div', 'section-label', '處理狀態'));
+    var sb = el('div', 'status-btns');
+    [['read','待處理'], ['contacted','已聯絡'], ['booked','已約諮詢'], ['declined','暫不約']].forEach(function(o){
+      var b = el('button', '', o[1]); b.type = 'button';
+      b.setAttribute('aria-pressed', (r.status === o[0] || (o[0] === 'read' && r.status === 'new')) ? 'true' : 'false');
+      b.addEventListener('click', function(){ setStatus(r, o[0]); });
+      sb.appendChild(b);
+    });
+    body.appendChild(sb);
+
+    body.appendChild(el('div', 'section-label', '我的備註（只有你看得到）'));
+    var note = el('textarea', 'note'); note.maxLength = 1000; note.value = r.advisor_note || '';
+    note.placeholder = '例如：預算偏低，先分享資訊、半年後再追蹤';
+    note.addEventListener('blur', async function(){
+      if(note.value === (r.advisor_note || '')) return;
+      var res = await supabaseClient.from('consult_requests').update({ advisor_note: note.value }).eq('id', r.id).eq('advisor_id', myId);
+      if(res.error){ vcToast('備註儲存失敗', 'err'); return; }
+      r.advisor_note = note.value; vcToast('已儲存備註');
+    });
+    body.appendChild(note);
+
+    var act = el('div', 'actions');
+    var toList = el('button', 'btn small', '＋ 轉入名單'); toList.type = 'button';
+    var pick = el('span', 'tier-pick');
+    pick.appendChild(el('span', 'muted', '放進：'));
+    ['A','B','C'].forEach(function(t){
+      var b = el('button', 'btn small ghost', t + ' 名單'); b.type = 'button';
+      b.addEventListener('click', function(){ addToNameList(r, t, b); });
+      pick.appendChild(b);
+    });
+    toList.addEventListener('click', function(){ pick.classList.toggle('show'); });
+    var del = el('button', 'btn small danger', '刪除'); del.type = 'button';
+    del.addEventListener('click', function(){ removeRow(r); });
+    act.appendChild(toList); act.appendChild(pick); act.appendChild(del);
+    body.appendChild(act);
+
+    head.addEventListener('click', function(){
+      var open = !wrap.classList.contains('open');
+      wrap.classList.toggle('open', open);
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if(open && r.status === 'new') markRead(r, wrap, head);
+    });
+    wrap.appendChild(head); wrap.appendChild(body);
+    return wrap;
+  }
+  async function markRead(r, wrap, head){
+    var res = await supabaseClient.from('consult_requests').update({ status:'read' }).eq('id', r.id).eq('advisor_id', myId);
+    if(res.error) return;
+    r.status = 'read';
+    wrap.classList.remove('is-new');
+    var b = head.querySelector('.badge-new');
+    if(b) b.replaceWith(el('span', 'status-pill read', STATUS_LABEL.read));
+    renderTabs(); refreshParentBadge();
+  }
+  async function setStatus(r, status){
+    var res = await supabaseClient.from('consult_requests').update({ status: status }).eq('id', r.id).eq('advisor_id', myId);
+    if(res.error){ vcToast('更新失敗，請稍後再試', 'err'); return; }
+    r.status = status;
+    vcToast('已標記為「' + STATUS_LABEL[status] + '」');
+    renderTabs(); renderList(); refreshParentBadge();
+  }
+  async function removeRow(r){
+    var ok = await vcConfirm('確定要刪除「' + r.name + '」的申請嗎？刪除後無法復原。', { okText:'刪除', danger:true });
+    if(!ok) return;
+    var res = await supabaseClient.from('consult_requests').delete().eq('id', r.id).eq('advisor_id', myId);
+    if(res.error){ vcToast('刪除失敗，請稍後再試', 'err'); return; }
+    rows = rows.filter(function(x){ return x.id !== r.id; });
+    vcToast('已刪除'); renderTabs(); renderList(); refreshParentBadge();
+  }
+  async function addToNameList(r, tier, btn){
+    btn.disabled = true;
+    var note = ['諮詢申請', r.contact, (r.needs || []).join('、'), r.monthly_budget && ('每月 ' + r.monthly_budget), r.timeline]
+      .filter(Boolean).join('｜').slice(0, 500);
+    // 名單裡預設會有空白列：優先填進該區第一個空白列，沒有空白列才新增到最後
+    var all = await supabaseClient.from('name_list_entries').select('id, name, note, sort_order').eq('advisor_id', myId).eq('tier', tier)
+      .order('sort_order', { ascending:true });
+    var list = (all.data || []).slice().sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
+    var blank = list.find(function(x){ return !(x.name || '').trim() && !(x.note || '').trim(); });
+    var res;
+    if(blank){
+      res = await supabaseClient.from('name_list_entries').update({ name: r.name, note: note }).eq('id', blank.id).eq('advisor_id', myId);
+    } else {
+      var next = list.reduce(function(m, x){ return Math.max(m, x.sort_order || 0); }, 0) + 1;
+      res = await supabaseClient.from('name_list_entries').insert({ advisor_id: myId, tier: tier, name: r.name, note: note, sort_order: next });
+    }
+    btn.disabled = false;
+    if(res.error){ vcToast('轉入名單失敗，請稍後再試', 'err'); return; }
+    vcToast('已加入 ' + tier + ' 名單');
+    try{
+      var f = window.parent && window.parent.document.getElementById('frame-namelist');
+      if(f && f.contentWindow && typeof f.contentWindow.loadEntries === 'function') f.contentWindow.loadEntries();
+    }catch(e){}
+    if(r.status === 'new' || r.status === 'read') setStatus(r, 'contacted');
+  }
+
+  async function loadRows(){
+    // 超過 180 天的申請自動刪除（與表單上的個資告知一致）
+    var cutoff = new Date(Date.now() - 180 * 86400000).toISOString();
+    await supabaseClient.from('consult_requests').delete().eq('advisor_id', myId).lt('created_at', cutoff);
+    var res = await supabaseClient.from('consult_requests').select('*').eq('advisor_id', myId).order('created_at', { ascending:false });
+    if(res.error) throw res.error;
+    rows = res.data || [];
+    renderTabs(); renderList(); refreshParentBadge();
+  }
+  window.refreshConsults = function(){ if(myId) loadRows().catch(function(){}); };
+
+  (async function init(){
+    var s = await supabaseClient.auth.getSession();
+    var session = s && s.data && s.data.session;
+    if(!session){ $('notLoggedIn').style.display = 'block'; return; }
+    myId = session.user.id;
+    var lr = await supabaseClient.rpc('vc_my_consult_link');
+    if(lr.error || !lr.data){ $('setupMsg').style.display = 'block'; return; }
+    link = lr.data;
+    $('app').style.display = 'block';
+    renderLink();
+    try{ await loadRows(); }catch(e){ $('list').textContent = '讀取申請失敗，請重新整理再試一次。'; }
+  })();
+})();
+</script>
+</body>
+</html>
