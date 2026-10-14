@@ -141,14 +141,13 @@
   var V = window.VPub, last = null;
 
   function calc(){
-    var a = V.parseNum($('a').value), inf = V.parseNum($('inf').value), n = V.parseNum($('n').value), r = V.parseNum($('r').value);
-    var msg = '';
-    if(isNaN(a) || a <= 0 || a > 1e11) msg = '金額請填大於 0、不超過 1,000 億的數字';
-    else if(isNaN(inf) || inf < -20 || inf > 50) msg = '通膨率請填 -20 到 50 之間的數字';
-    else if(isNaN(n) || n < 1 || n > 80 || Math.floor(n) !== n) msg = '經過年數請填 1 到 80 的整數';
-    else if(isNaN(r) || r < -50 || r > 50) msg = '報酬率請填 -50 到 50 之間的數字';
-    $('err').textContent = msg;
-    if(msg) return;
+    // 空白一律當 0、超出範圍自動調整，不會擋住計算（避免清空欄位時畫面停在舊結果）
+    var fA = V.readNum($('a'), {min:0, max:1e11, label:'金額'}),
+        fI = V.readNum($('inf'), {min:-20, max:50, label:'通膨率'}),
+        fN = V.readNum($('n'), {min:1, max:80, int:true, emptyAs:1, label:'經過年數'}),
+        fR = V.readNum($('r'), {min:-50, max:50, label:'報酬率'});
+    var a = fA.v, inf = fI.v, n = fN.v, r = fR.v;
+    $('err').textContent = [fA, fI, fN, fR].map(function(f){ return f.note; }).filter(Boolean).join('；');
 
     var pi = inf / 100, ro = r / 100;
     var nominal = [], real = [];
@@ -158,8 +157,8 @@
     }
     var realN = real[n], mult = Math.pow(1 + pi, n);
     $('oReal').textContent = V.fmtNT(realN);
-    $('oRealS').textContent = '約 ' + V.fmtShort(realN) + '；相當於今天的 ' + V.trimNum(realN / a * 100, 1) + '%';
-    var chg = (realN / a - 1) * 100;
+    $('oRealS').textContent = a > 0 ? '約 ' + V.fmtShort(realN) + '；相當於今天的 ' + V.trimNum(realN / a * 100, 1) + '%' : '請先輸入金額';
+    var chg = a > 0 ? (realN / a - 1) * 100 : 0;
     $('oLoss').textContent = (chg >= 0 ? '+' : '') + V.trimNum(chg, 1) + '%';
     $('oMult').textContent = V.trimNum(mult, 2) + ' 倍';
     $('kA').textContent = V.fmtShort(a);
@@ -179,7 +178,7 @@
     });
     rates.forEach(function(p){
       var rv = a * Math.pow((1 + ro) / (1 + p / 100), n), tr = document.createElement('tr');
-      [p + '%', V.fmtShort(rv), V.trimNum(rv / a * 100, 1) + '%', V.trimNum(Math.pow(1 + p / 100, n), 2) + ' 倍'].forEach(function(t){
+      [p + '%', V.fmtShort(rv), (a > 0 ? V.trimNum(rv / a * 100, 1) : '0') + '%', V.trimNum(Math.pow(1 + p / 100, n), 2) + ' 倍'].forEach(function(t){
         var td = document.createElement('td'); td.textContent = t; tr.appendChild(td);
       });
       bd.appendChild(tr);
@@ -198,7 +197,7 @@
       ]
     });
   }
-  ['a','inf','n','r'].forEach(function(id){ $(id).addEventListener('input', calc); });
+  ['a','inf','n','r'].forEach(function(id){ $(id).addEventListener('input', calc); $(id).addEventListener('change', calc); });
   V.onResize(draw);
   calc();
 })();

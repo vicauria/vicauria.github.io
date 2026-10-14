@@ -147,17 +147,14 @@
   var V = window.VPub, last = null;
 
   function calc(){
-    var p = V.parseNum($('p').value), c = V.parseNum($('c').value), r = V.parseNum($('r').value),
-        n = V.parseNum($('n').value), inf = V.parseNum($('inf').value);
-    var msg = '';
-    if(isNaN(p) || p < 0 || p > 1e10) msg = '現有本金請填 0 到 100 億之間的數字';
-    else if(isNaN(c) || c < 0 || c > 1e8) msg = '每月投入請填 0 到 1 億之間的數字';
-    else if(isNaN(r) || r < -50 || r > 50) msg = '年報酬率請填 -50 到 50 之間的數字';
-    else if(isNaN(n) || n < 1 || n > 80 || Math.floor(n) !== n) msg = '投資年數請填 1 到 80 的整數';
-    else if(isNaN(inf) || inf < 0 || inf > 50) msg = '通膨率請填 0 到 50 之間的數字';
-    $('err').textContent = msg;
-    if(msg) return;
-    if(p === 0 && c === 0){ $('err').textContent = '本金和每月投入至少要填一個大於 0 的數字'; return; }
+    // 空白一律當 0、超出範圍自動調整，不會擋住計算（避免清空欄位時畫面停在舊結果）
+    var fP = V.readNum($('p'), {min:0, max:1e10, label:'本金'}),
+        fC = V.readNum($('c'), {min:0, max:1e8, label:'每月投入'}),
+        fR = V.readNum($('r'), {min:-50, max:50, label:'年報酬率'}),
+        fN = V.readNum($('n'), {min:1, max:80, int:true, emptyAs:1, label:'投資年數'}),
+        fI = V.readNum($('inf'), {min:0, max:50, label:'通膨率'});
+    var p = fP.v, c = fC.v, r = fR.v, n = fN.v, inf = fI.v;
+    $('err').textContent = [fP, fC, fR, fN, fI].map(function(f){ return f.note; }).filter(Boolean).join('；');
 
     var rate = r / 100, i = Math.pow(1 + rate, 1 / 12) - 1;
     function fv(months){
@@ -172,7 +169,7 @@
     $('oFVs').textContent = '約 ' + V.fmtShort(FV);
     $('oInv').textContent = V.fmtShort(inv);
     $('oGain').textContent = (gain < 0 ? '' : '+') + V.fmtShort(gain);
-    $('oShare').textContent = FV > 0 ? Math.round(Math.max(0, gain) / FV * 100) + '%' : '–';
+    $('oShare').textContent = FV > 0 ? Math.round(Math.max(0, gain) / FV * 100) + '%' : '0%';
     if(inf > 0){
       var real = FV / Math.pow(1 + inf / 100, n);
       $('oReal').textContent = V.fmtShort(real);
@@ -207,7 +204,7 @@
       ]
     });
   }
-  ['p','c','r','n','inf'].forEach(function(id){ $(id).addEventListener('input', calc); });
+  ['p','c','r','n','inf'].forEach(function(id){ $(id).addEventListener('input', calc); $(id).addEventListener('change', calc); });
   V.onResize(draw);
   calc();
 })();

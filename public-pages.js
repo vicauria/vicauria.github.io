@@ -110,5 +110,19 @@
     var t; window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(fn, 120); });
   }
 
-  window.VPub = {parseNum: parseNum, fmtShort: fmtShort, fmtNT: fmtNT, drawChart: drawChart, onResize: onResize, trimNum: trimNum};
+  /* 讀取輸入框：空白當作 emptyAs（預設 0）；超出範圍就自動調到上下限；看不懂的文字當 0。
+     一律回傳可以計算的數字，不擋住計算——note 是給使用者看的小提示（可能是空字串）。 */
+  function readNum(el, o){
+    o = o || {};
+    var raw = String(el.value || '').trim(), v = parseNum(raw), note = '';
+    var label = o.label || '這個欄位';
+    if(raw === ''){ v = o.emptyAs != null ? o.emptyAs : 0; }
+    else if(isNaN(v)){ v = o.emptyAs != null ? o.emptyAs : 0; note = label + '看不懂，先用 ' + v + ' 計算'; }
+    if(o.int) v = Math.round(v);
+    if(o.min != null && v < o.min){ v = o.min; note = label + '最少是 ' + o.min + '，先用 ' + o.min + ' 計算'; }
+    if(o.max != null && v > o.max){ v = o.max; note = label + '最多是 ' + o.max.toLocaleString('en-US') + '，先用上限計算'; }
+    return { v: v, note: note };
+  }
+
+  window.VPub = {parseNum: parseNum, readNum: readNum, fmtShort: fmtShort, fmtNT: fmtNT, drawChart: drawChart, onResize: onResize, trimNum: trimNum};
 })();
