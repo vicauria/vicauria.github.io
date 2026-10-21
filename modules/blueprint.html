@@ -486,21 +486,83 @@
   }
 
   .report-timestamp{
-    position:fixed; top:8px; right:14px; z-index:150;
-    font-family:"Roboto Mono",monospace; font-size:10px; color:var(--ink-soft);
-    background:rgba(245,247,246,0.85); padding:2px 8px; border-radius:4px;
-    letter-spacing:.02em; pointer-events:none;
+    text-align:right; margin:-6px 0 10px;
+    font-family:"Roboto Mono",monospace; font-size:11px; color:var(--ink-soft);
+    letter-spacing:.02em;
   }
   @media print{
     /* 這個滿版重複「Vicauria」浮水印在部分瀏覽器的列印／存成PDF流程裡，
        會被錯誤放大成一大塊灰色色塊而不是淡淡的重複小字，所以匯出時乾脆不印這層，
        封面本來就已經有清楚的 Logo／標題／品牌標語，不差這層浮水印 */
     #screen-report .panel::before{ display:none !important; }
-    .report-timestamp{
-      position:fixed; top:6px; right:10px; color:#8B979C; background:none;
-      -webkit-print-color-adjust:exact; print-color-adjust:exact;
-    }
+    /* 列印時不再每頁右上角壓時間（內容多時會跟標題疊在一起），填表時間改寫在封面 */
+    .report-timestamp{ display:none !important; }
     @page{ size:A4; margin:14mm 12mm; }
+  }
+  /* 列印／存成 PDF：壓縮字級與間距、雙欄排版，讓每個章節盡量在一頁內看完 */
+  .ba-charts{display:block;}
+  @media print{
+    .report-section{margin-bottom:10px !important; padding-bottom:8px !important;}
+    .report-section h3{font-size:14px !important; margin-bottom:8px !important;}
+    .vf-h{font-size:11.5px !important; margin-bottom:4px !important;}
+    .vf-top{grid-template-columns:190px minmax(0,1fr) !important; gap:16px !important; margin-bottom:10px !important; align-items:start !important;}
+    .vf-cash, .vf-bs{grid-template-columns:1fr 1fr !important; gap:12px !important;}
+    .vf-table{font-size:9.5px !important;}
+    .vf-table th{padding:4px 6px !important;}
+    .vf-table td{padding:1.5px 6px !important; line-height:1.35 !important; font-size:9.5px !important;}
+    .vf-table .vf-ratio td, .vf-table .vf-sub td{font-size:8.5px !important;}
+    .vf-table .vf-cat td{background:#EAF2F4 !important;}
+    #screen-report .panel{padding-left:0 !important; padding-right:0 !important; box-shadow:none !important; border:none !important;}
+    #screen-report main.wrap{max-width:none !important; padding-left:0 !important; padding-right:0 !important;}
+    .vf-table .vf-cat td{padding-top:4px !important;}
+    .vf-table .vf-sub td{font-size:9px !important; padding:2px 6px 0 9px !important;}
+    .vf-table td.vf-item{padding-left:13px !important;}
+    .vf-table.vf-summary td{padding:4px 6px !important; font-size:10.5px !important;}
+    .vf-table.vf-summary .vf-balance td{font-size:15px !important; padding:7px 6px !important;}
+    .vf-table.vf-summary .vf-balance td:first-child{font-size:12px !important;}
+    .vf-donut{flex-direction:column !important; gap:6px !important;}
+    .vf-donut-ring{width:150px !important; height:150px !important;}
+    .vf-donut-ring svg{width:150px !important; height:150px !important;}
+    .vf-donut-c b{font-size:17px !important;}
+    .vf-legend{min-width:0 !important; width:100%;}
+    .vf-leg{font-size:9.5px !important; padding:1px 0 !important; gap:5px !important;}
+    .vf-note{font-size:8.5px !important;}
+    .ratio-wrap{margin-top:8px !important;}
+    .ratio-card{padding:6px 12px !important;}
+    .ratio-row{padding:4px 0 !important;}
+    .ratio-name{font-size:10.5px !important;} .ratio-name small{font-size:9px !important;}
+    .ratio-value{font-size:13px !important;}
+    .ratio-card.ratio-2col{grid-template-columns:repeat(4,minmax(0,1fr)) !important; column-gap:14px !important;}
+    .ratio-card.ratio-2col .ratio-name small{display:none !important;}
+    .ratio-wrap{break-inside:avoid; page-break-inside:avoid;}
+    /* 資產負債：配置圓餅＋兩張風險屬性圖排成一列 */
+    .ba-charts{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:10px; break-inside:avoid; page-break-inside:avoid;}
+    .ba-charts > .breakdown-grid{display:block !important; margin:0 !important;}
+    .ba-charts > .risk-split-row{display:contents;}
+    #reportAdvisor .ba-charts > .breakdown-grid{grid-column:1/-1; display:grid !important; grid-template-columns:1fr 1fr !important; gap:14px;}
+    .ba-charts .chart-card .highlight-stat{display:none !important;}
+    .ba-charts .chart-card h4{font-size:11.5px !important;}
+    .ba-charts .chart-card .chart-sub{font-size:9px !important; margin-bottom:6px !important;}
+    .ba-charts .donut-wrap, .ba-charts .donut-wrap svg{width:120px !important; height:120px !important;}
+    .ba-charts .legend{margin-top:6px !important;}
+    .ba-charts .legend-row{font-size:9px !important; padding:1px 0 !important; gap:5px !important;}
+    .ba-charts .legend-pct{min-width:0 !important;} .ba-charts .legend-amt{font-size:8.5px !important; min-width:0 !important;}
+    .risk-split-card{padding:10px 12px !important; border-radius:10px !important;}
+    .risk-split-title{font-size:10.5px !important; margin-bottom:6px !important;}
+    .risk-split-body{flex-direction:column !important; gap:6px !important; align-items:center !important;}
+    .risk-split-body .donut-wrap{width:110px !important; height:110px !important;}
+    .risk-split-body .donut-wrap svg{width:110px !important; height:110px !important;}
+    .risk-split-body .dc-value{font-size:15px !important;} .risk-split-body .dc-label{font-size:8px !important;}
+    .risk-split-legend{width:100%; min-width:0 !important; gap:3px !important;}
+    .risk-split-legend .item{font-size:9.5px !important;}
+    .risk-split-note{font-size:8.5px !important; margin-top:6px !important; line-height:1.5 !important;}
+    /* 財務小結：字級略縮，讓結尾簽名一起留在同一頁 */
+    .fa-p{font-size:11.5px !important; line-height:1.75 !important; margin-bottom:8px !important;}
+    .fa-section h3{margin-bottom:10px !important;}
+    .fa-priority-card{padding:10px 12px !important; margin-bottom:8px !important;}
+    .fa-path-list li{font-size:11px !important;}
+    .fa-quote{margin:12px 0 !important; padding:10px 0 !important;}
+    .vc-sign{margin-top:12px !important;}
   }
   /* 從「客戶資料」開啟報告／追蹤更新時的載入畫面：資料載好之前不讓同意書閃出來 */
   #bpLoading{display:none; position:fixed; inset:0; z-index:9999; background:var(--paper, #f6f4ef);
@@ -607,7 +669,6 @@
 </div>
 
 <div class="screen" id="screen-report">
-  <div class="report-timestamp" id="reportTimestamp"></div>
   <header class="hero">
     <div class="wrap">
       <div class="eyebrow">Wealth Map · 財富地圖</div>
@@ -617,6 +678,7 @@
   </header>
   <main class="wrap">
     <div class="panel">
+      <div class="report-timestamp" id="reportTimestamp"></div>
       <div class="report-toggle">
         <button class="active" data-view="client">客戶版・財富畫像</button>
         <button data-view="advisor">顧問版・分析筆記</button>
@@ -684,6 +746,28 @@ function formatOnInput(e){
   const pos = Math.max(0, formatted.length - cursorFromEnd);
   el.setSelectionRange(pos, pos);
   return formatted;
+}
+// 星座（需要月、日）與生肖（以立春 2/4 為界：2/4 以前出生算前一年的生肖）
+const ZODIAC_SIGNS = [[1,20,'摩羯座'],[2,19,'水瓶座'],[3,21,'雙魚座'],[4,20,'牡羊座'],[5,21,'金牛座'],[6,22,'雙子座'],
+  [7,23,'巨蟹座'],[8,23,'獅子座'],[9,23,'處女座'],[10,24,'天秤座'],[11,23,'天蠍座'],[12,22,'射手座'],[12,32,'摩羯座']];
+const CN_ZODIAC = ['鼠','牛','虎','兔','龍','蛇','馬','羊','猴','雞','狗','豬'];
+function westernZodiac(m, d){
+  m = parseInt(m); d = parseInt(d); if(!m || !d) return '';
+  for(const [em, ed, name] of ZODIAC_SIGNS){ if(m < em || (m === em && d < ed)) return name; }
+  return '摩羯座';
+}
+function chineseZodiac(y, m, d){
+  y = parseInt(y); if(!y) return '';
+  m = parseInt(m)||0; d = parseInt(d)||0;
+  if(m && (m < 2 || (m === 2 && d && d < 4))) y -= 1;
+  return '屬' + CN_ZODIAC[((y - 1900) % 12 + 12) % 12];
+}
+function dobHintText(){
+  if(!basicA.dobY) return '';
+  const parts = ['今年 ' + getCurrentAge() + ' 歲'];
+  const w = westernZodiac(basicA.dobM, basicA.dobD); if(w) parts.push(w);
+  const c = chineseZodiac(basicA.dobY, basicA.dobM, basicA.dobD); if(c) parts.push(c);
+  return parts.join('・');
 }
 function getCurrentAge(){const y=parseInt(basicA.dobY);if(!y)return null;return new Date().getFullYear()-y;}
 function yearsUntil(targetAge){
@@ -1024,7 +1108,7 @@ const PAGES = [
          <select data-bind="dobM">${monthOptions()}</select>
          <select data-bind="dobD" id="dobDSelect">${dayOptions(basicA.dobY, basicA.dobM, basicA.dobD)}</select>
        </div>
-       <div class="hint" id="dobAgeHint">${basicA.dobY ? "今年 "+getCurrentAge()+" 歲" : ""}</div>
+       <div class="hint" id="dobAgeHint">${dobHintText()}</div>
      </div>
      <div class="field" style="margin-top:26px;">
        <label>性別</label>
@@ -1429,7 +1513,7 @@ function bindPageInputs(id){
         }
       }
       const hintEl = document.getElementById('dobAgeHint');
-      if(hintEl) hintEl.textContent = basicA.dobY ? "今年 "+getCurrentAge()+" 歲" : "";
+      if(hintEl) hintEl.textContent = dobHintText();
     });
   });
 
@@ -2435,6 +2519,7 @@ function buildBalanceBreakdownHTML(uid, opts){
     <div class="report-section">
       <h3>資產負債表</h3>
       ${VCFin.balanceTableHTML(assetGroups, liabilityGroups)}
+      <div class="ba-charts">
       <div class="breakdown-grid no-ratio${hideRatios?' only-chart':''}" style="margin-top:20px;">
         <div class="chart-card">
           <div class="highlight-stat">
@@ -2488,6 +2573,7 @@ function buildBalanceBreakdownHTML(uid, opts){
           </div>
           <div class="risk-split-note">＊此版本扣除房產（自用動產／不動產、不動產投資），只看其他資產的比例，避免房產金額太大稀釋掉比例。</div>
         </div>
+      </div>
       </div>
     </div>`;
 }
@@ -2599,7 +2685,7 @@ function formatTimestamp(d){
 /* ---------------- 報告封面 ---------------- */
 function buildReportCoverHTML(){
   const today = new Date();
-  const dateStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+  const dateStr = formatTimestamp(today).slice(0,16);
   const namePart = loadedClientName ? vcEsc(loadedClientName)+' ' : '';
   const advisorLine = currentAdvisorName ? `顧問：${vcEsc(currentAdvisorName)}` : '';
   return `
