@@ -14,6 +14,7 @@ const APP_SHELL = [
   './modules/home.html',
   './modules/cashflow.html',
   './modules/balance.html',
+  './fin-schema.js',
   './modules/loan.html',
   './modules/efficiency.html',
   './modules/blueprint.html',
