@@ -70,7 +70,7 @@
   ]; }
   function defaultLiabilities(){ return [
     {key:'short', cat:'short', title:'短期負債', hint:'尚未還清的本金餘額', rows: single(['信用貸款','紓困貸款','親友借貸','保單貸款','標會（死會）'])},
-    {key:'long',  cat:'long',  title:'長期負債', hint:'尚未還清的本金餘額', rows: single(['裝潢貸款','車貸','自用不動產抵押貸款','投資型不動產抵押貸款','私人借貸'])}
+    {key:'long',  cat:'long',  title:'長期負債', hint:'尚未還清的本金餘額', rows: single(['房貸','裝潢貸款','車貸','私人借貸'])}
   ]; }
 
   /* ---------------- 舊版存檔 → 新分類 ---------------- */
@@ -88,7 +88,7 @@
     '房貸月付金':['nec_loan','房貸'], '信貸／車貸':['nec_loan','信用貸款'],
     '薪資所得':['work','主業收入'], '年終獎金／分紅':['work','年終獎金'], '房租收入':['finance','租金收入'], '股息／利息收入':['finance','股息收入'],
     '活期存款':['liquid','活存'], '保單價值準備金':['liquid','儲蓄險'], '自住不動產':['property','房屋'], '車輛':['property','汽車/機車'],
-    '房貸餘額':['long','自用不動產抵押貸款'], '信貸餘額':['short','信用貸款']
+    '房貸餘額':['long','房貸'], '信貸餘額':['short','信用貸款']
   };
 
   function isNew(groups, defs){
@@ -127,9 +127,26 @@
     });
     return out;
   }
+  // v3.26.0 的長期負債曾有「自用／投資型不動產抵押貸款」兩列，之後合併成「房貸」：
+  // 空白的直接拿掉，有金額的併進「房貸」
+  var MERGE_TO_MORTGAGE = /^(自用|投資型)不動產抵押貸款$/;
+  function mergeMortgageRows(groups){
+    groups.forEach(function(g){
+      if(!g || !Array.isArray(g.rows) || g.cat !== 'long') return;
+      var olds = g.rows.filter(function(r){ return MERGE_TO_MORTGAGE.test(String(r.name||'').trim()); });
+      if(!olds.length) return;
+      var total = olds.reduce(function(s,r){ return s + (+r.amount||0); }, 0);
+      var idx = g.rows.indexOf(olds[0]);
+      g.rows = g.rows.filter(function(r){ return olds.indexOf(r) < 0; });
+      var m = g.rows.find(function(r){ return String(r.name||'').trim() === '房貸'; });
+      if(m) m.amount = (+m.amount||0) + total;
+      else g.rows.splice(Math.min(idx, g.rows.length), 0, {name:'房貸', amount: total});
+    });
+    return groups;
+  }
   function normalize(groups, defsFn, groupMap, isDual){
     var defs = defsFn();
-    if(isNew(groups, defs)) return fillMissing(groups, defs);
+    if(isNew(groups, defs)) return mergeMortgageRows(fillMissing(groups, defs));
     if(!Array.isArray(groups) || !groups.length) return defs;
     return migrate(groups, defs, groupMap, isDual);
   }
@@ -289,6 +306,25 @@
     return '<div class="vf-bs"><div>' + left + '</div><div>' + right + '</div></div>';
   }
 
+  /* 一目了然：每月結餘、年度結餘、可運用資金（流動性資產＋流動性投資）
+     有房貸的人看「淨值」會被房子跟房貸拉偏；每月按時繳完房貸後還剩多少、手上隨時能動用多少，才是能拿來規劃的錢 */
+  function keyFiguresHTML(income, expense, assets, opts){
+    opts = opts || {};
+    var S = cashSummary(income, expense);
+    var liq = assets ? catAmount(assets, 'liquid') : 0, inv = assets ? catAmount(assets, 'liqinv') : 0;
+    var loanM = sumGroups((expense||[]).filter(function(g){ return g.key === 'nec_loan'; }), rowMonthly);
+    function card(label, val, sub, cls){
+      return '<div class="vf-kf' + (cls ? ' ' + cls : '') + '"><div class="vf-kf-l">' + label + '</div><div class="vf-kf-v' + (val < 0 ? ' neg' : '') + '">' + money(val) + '</div><div class="vf-kf-s">' + sub + '</div></div>';
+    }
+    var html = '<div class="vf-kfs' + (assets ? '' : ' two') + '">';
+    html += card('每月結餘', S.month.balance, '月收入 − 月支出' + (S.month.wealth > 0 ? '（已扣理財支出 ' + money(S.month.wealth) + '）' : '') + (loanM > 0 ? '，貸款月付 ' + money(loanM) + ' 已扣除' : ''));
+    html += card('年度結餘', S.year.balance, '含年終、年繳等單筆收支' + (S.year.wealth > 0 ? '；另有理財支出 ' + money(S.year.wealth) + ' 持續累積' : ''));
+    if(assets) html += card('可運用資金', liq + inv, '流動性資產 ' + money(liq) + ' ＋ 流動性投資 ' + money(inv), 'accent');
+    html += '</div>';
+    if(opts.note !== false) html += '<div class="vf-kf-note">' + (assets ? '有房貸不代表不能規劃：房貸每月已照實扣在支出裡，扣完還有結餘、手上也有可運用資金，就能拿來安排目標。看「淨值」容易被房子跟房貸拉偏，規劃時以這三個數字為主。' : '貸款月付已照實扣在支出裡，扣完剩下的結餘，就是每月、每年真正能拿來規劃的錢。') + '</div>';
+    return html;
+  }
+
   var CSS = '' +
     '.vf-table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}' +
     '.vf-table th{background:#1F3A47;color:#fff;font-weight:600;padding:8px 10px;text-align:right;white-space:nowrap}' +
@@ -317,7 +353,16 @@
     '.vf-dot{width:11px;height:11px;border-radius:3px}.vf-leg-p{font-weight:700}.vf-leg-a{color:#5B6B70;font-variant-numeric:tabular-nums}' +
     '.vf-note{font-size:11.5px;color:#8A9AA0;margin-top:6px}' +
     '.vf-h{font-size:15px;font-weight:700;color:#1F3A47;margin:0 0 8px}' +
-    '@media (max-width:760px){.vf-bs,.vf-cash,.vf-top{grid-template-columns:1fr}.vf-table{font-size:13px}.vf-table td,.vf-table th{padding:6px 7px}.vf-table td.vf-item{padding-left:14px}}' +
+    '.vf-kfs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:4px 0 8px}' +
+    '.vf-kfs.two{grid-template-columns:repeat(2,minmax(0,1fr))}' +
+    '.vf-kf{background:#16323F;color:#fff;border-radius:14px;padding:18px 18px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.vf-kf.accent{background:#1F5C73}' +
+    '.vf-kf-l{font-size:13px;font-weight:700;color:#BFE0EA;letter-spacing:.06em}' +
+    '.vf-kf-v{font-family:"Roboto Mono",ui-monospace,monospace;font-weight:800;font-size:clamp(24px,3.4vw,32px);margin:6px 0 6px;color:#8EE0B5;overflow-wrap:anywhere}' +
+    '.vf-kf-v.neg{color:#FFB4A2}' +
+    '.vf-kf-s{font-size:12px;color:#D4E3E8;line-height:1.55}' +
+    '.vf-kf-note{font-size:12.5px;color:#5B6B70;line-height:1.7;margin:0 0 18px}' +
+    '@media (max-width:760px){.vf-bs,.vf-cash,.vf-top,.vf-kfs,.vf-kfs.two{grid-template-columns:1fr}.vf-table{font-size:13px}.vf-table td,.vf-table th{padding:6px 7px}.vf-table td.vf-item{padding-left:14px}}' +
     '@media print{.vf-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.vf-table tr{break-inside:avoid}}';
   function injectCSS(){
     if(document.getElementById('vf-css')) return;
@@ -334,7 +379,7 @@
     rowAnnual:rowAnnual, rowMonthly:rowMonthly, rowAmount:rowAmount, sumGroups:sumGroups,
     catAnnual:catAnnual, catMonthly:catMonthly, catAmount:catAmount, rowsWhere:rowsWhere, groupByKey:groupByKey,
     realEstateAssets:realEstateAssets, realEstateLoans:realEstateLoans,
-    cashSummary:cashSummary, cashTableHTML:cashTableHTML, summaryTableHTML:summaryTableHTML, donutSVG:donutSVG, balanceTableHTML:balanceTableHTML,
+    cashSummary:cashSummary, keyFiguresHTML:keyFiguresHTML, cashTableHTML:cashTableHTML, summaryTableHTML:summaryTableHTML, donutSVG:donutSVG, balanceTableHTML:balanceTableHTML,
     injectCSS:injectCSS
   };
 })();
