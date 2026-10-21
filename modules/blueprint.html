@@ -499,6 +499,13 @@
     .report-timestamp{ display:none !important; }
     @page{ size:A4; margin:14mm 12mm; }
   }
+  /* 列印用浮水印：用真正的 SVG 圖形（不是背景圖），所以不勾「背景圖形」也印得出來，
+     position:fixed 會在每一頁重複出現 */
+  #printWatermark{display:none;}
+  @media print{
+    #printWatermark{display:block; position:fixed; inset:0; z-index:50; pointer-events:none;}
+    #printWatermark svg{width:100%; height:100%; display:block;}
+  }
   /* 列印／存成 PDF：壓縮字級與間距、雙欄排版，讓每個章節盡量在一頁內看完 */
   .ba-charts{display:block;}
   @media print{
@@ -2300,6 +2307,23 @@ async function checkClientLimitBeforeSave(){
 // 不要再存一次——不然每按一次「列印／存PDF」客戶資料裡就會多一份一模一樣的報告
 let reportSavePromise = null;
 
+// 列印浮水印：預設「Vicauria」，企業版有設定浮水印文字就用企業的
+function vcBuildPrintWatermark(){
+  let text = 'Vicauria';
+  try{
+    if(window.self !== window.top && window.vcOrgBrand){
+      const b = window.vcOrgBrand() || {};
+      const wm = String(b.watermark_text || '').trim().slice(0, 12);
+      if(wm) text = wm;
+    }
+  }catch(e){}
+  let el = document.getElementById('printWatermark');
+  if(!el){ el = document.createElement('div'); el.id = 'printWatermark'; el.setAttribute('aria-hidden','true'); document.body.appendChild(el); }
+  const w = Array.from(text).reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 26 : 15), 48);
+  el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="pwmPattern" width="${w}" height="96" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)"><text x="6" y="56" font-size="22" font-family="sans-serif" fill="rgba(22,50,63,0.08)">${vcEsc(text)}</text></pattern></defs><rect width="100%" height="100%" fill="url(#pwmPattern)"/></svg>`;
+}
+window.addEventListener('beforeprint', vcBuildPrintWatermark);
+
 async function handleGenerateReport(){
   vcTrack('blueprint', 'print', document.getElementById('reportAdvisor') && document.getElementById('reportAdvisor').classList.contains('active') ? 'advisor' : 'client');
   if(reportSavePromise){
@@ -2759,6 +2783,7 @@ function renderReport(){
   const ts = document.getElementById('reportTimestamp');
   if(ts) ts.textContent = '填表日期：' + formatTimestamp(new Date());
 
+  vcBuildPrintWatermark();
   const clientPages = buildReportPages('c', {includeProfile:false, hideRatios:false});
   document.getElementById('reportClient').innerHTML =
     clientPages.map(html=>`<div class="report-page">${html}</div>`).join('');
