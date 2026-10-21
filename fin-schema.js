@@ -173,9 +173,19 @@
   // 不動產淨值不算進可用資金：資產＝非流動性投資裡的不動產＋自用的土地、房屋；負債＝不動產抵押貸款
   var RE_ASSET = /不動產|土地|房屋|房產|房子|房地/;
   var RE_LOAN = /不動產抵押|房貸|房屋貸款/;
+  var RE_VEHICLE = /車|機車|汽車|船/;
   function realEstateAssets(assets){
     return (assets||[]).reduce(function(s,g){
-      if(g.cat !== 'illiquid' && g.cat !== 'property') return s;
+      return s + g.rows.reduce(function(t,r){
+        var name = String(r.name||'');
+        var isRE = g.cat === 'property' ? !RE_VEHICLE.test(name) : (g.cat === 'illiquid' && RE_ASSET.test(name));
+        return t + (isRE ? rowAmount(r) : 0);
+      }, 0);
+    }, 0);
+  }
+  // 非流動性投資裡的不動產（例如不動產投資）
+  function realEstateInvest(assets){
+    return (assets||[]).filter(function(g){ return g.cat === 'illiquid'; }).reduce(function(s,g){
       return s + g.rows.reduce(function(t,r){ return t + (RE_ASSET.test(String(r.name||'')) ? rowAmount(r) : 0); }, 0);
     }, 0);
   }
@@ -244,7 +254,7 @@
     ];
     var html = '<table class="vf-table vf-summary"><thead><tr><th>摘要</th><th>月結算</th><th>年結算</th></tr></thead><tbody>';
     rows.forEach(function(r){
-      var cls = r[1] === 'balance' ? ' class="vf-total"' : (r[1] === 'netIncome' || r[1] === 'spend' ? ' class="vf-subtotal"' : '');
+      var cls = r[1] === 'balance' ? ' class="vf-total vf-balance"' : (r[1] === 'netIncome' || r[1] === 'spend' ? ' class="vf-subtotal"' : '');
       var m = s.month[r[1]], y = s.year[r[1]];
       var style = r[1] === 'balance' ? function(v){ return ' style="color:' + (v < 0 ? 'var(--negative,#B3412E)' : 'var(--positive,#2E7D5B)') + '"'; } : function(){ return ''; };
       html += '<tr' + cls + '><td>' + r[0] + '</td><td class="num"' + style(m) + '>' + money(m) + '</td><td class="num"' + style(y) + '>' + money(y) + '</td></tr>';
@@ -306,25 +316,6 @@
     return '<div class="vf-bs"><div>' + left + '</div><div>' + right + '</div></div>';
   }
 
-  /* 一目了然：每月結餘、年度結餘、可運用資金（流動性資產＋流動性投資）
-     有房貸的人看「淨值」會被房子跟房貸拉偏；每月按時繳完房貸後還剩多少、手上隨時能動用多少，才是能拿來規劃的錢 */
-  function keyFiguresHTML(income, expense, assets, opts){
-    opts = opts || {};
-    var S = cashSummary(income, expense);
-    var liq = assets ? catAmount(assets, 'liquid') : 0, inv = assets ? catAmount(assets, 'liqinv') : 0;
-    var loanM = sumGroups((expense||[]).filter(function(g){ return g.key === 'nec_loan'; }), rowMonthly);
-    function card(label, val, sub, cls){
-      return '<div class="vf-kf' + (cls ? ' ' + cls : '') + '"><div class="vf-kf-l">' + label + '</div><div class="vf-kf-v' + (val < 0 ? ' neg' : '') + '">' + money(val) + '</div><div class="vf-kf-s">' + sub + '</div></div>';
-    }
-    var html = '<div class="vf-kfs' + (assets ? '' : ' two') + '">';
-    html += card('每月結餘', S.month.balance, '月收入 − 月支出' + (S.month.wealth > 0 ? '（已扣理財支出 ' + money(S.month.wealth) + '）' : '') + (loanM > 0 ? '，貸款月付 ' + money(loanM) + ' 已扣除' : ''));
-    html += card('年度結餘', S.year.balance, '含年終、年繳等單筆收支' + (S.year.wealth > 0 ? '；另有理財支出 ' + money(S.year.wealth) + ' 持續累積' : ''));
-    if(assets) html += card('可運用資金', liq + inv, '流動性資產 ' + money(liq) + ' ＋ 流動性投資 ' + money(inv), 'accent');
-    html += '</div>';
-    if(opts.note !== false) html += '<div class="vf-kf-note">' + (assets ? '有房貸不代表不能規劃：房貸每月已照實扣在支出裡，扣完還有結餘、手上也有可運用資金，就能拿來安排目標。看「淨值」容易被房子跟房貸拉偏，規劃時以這三個數字為主。' : '貸款月付已照實扣在支出裡，扣完剩下的結餘，就是每月、每年真正能拿來規劃的錢。') + '</div>';
-    return html;
-  }
-
   var CSS = '' +
     '.vf-table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}' +
     '.vf-table th{background:#1F3A47;color:#fff;font-weight:600;padding:8px 10px;text-align:right;white-space:nowrap}' +
@@ -340,6 +331,9 @@
     '.vf-table .vf-ratio td{color:#5B6B70;font-size:12.5px}' +
     '.vf-table .vf-strong td{background:#DCE9EC}' +
     '.vf-table .vf-total td{font-weight:800;border-top:2px solid #1F3A47;background:#F1F5F6}' +
+    '.vf-table.vf-summary .vf-balance td{font-size:22px;padding:14px 10px;background:#E8F4EE;border-top:2px solid #1F3A47;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.vf-table.vf-summary .vf-balance td:first-child{font-size:17px}' +
+    '.vf-table .vf-strong td{font-size:15px}' +
     '.vf-table .vf-empty{color:#8A9AA0;text-align:center;padding:14px}' +
     '.vf-bs{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}' +
     '.vf-cash{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}' +
@@ -353,16 +347,7 @@
     '.vf-dot{width:11px;height:11px;border-radius:3px}.vf-leg-p{font-weight:700}.vf-leg-a{color:#5B6B70;font-variant-numeric:tabular-nums}' +
     '.vf-note{font-size:11.5px;color:#8A9AA0;margin-top:6px}' +
     '.vf-h{font-size:15px;font-weight:700;color:#1F3A47;margin:0 0 8px}' +
-    '.vf-kfs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:4px 0 8px}' +
-    '.vf-kfs.two{grid-template-columns:repeat(2,minmax(0,1fr))}' +
-    '.vf-kf{background:#16323F;color:#fff;border-radius:14px;padding:18px 18px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-    '.vf-kf.accent{background:#1F5C73}' +
-    '.vf-kf-l{font-size:13px;font-weight:700;color:#BFE0EA;letter-spacing:.06em}' +
-    '.vf-kf-v{font-family:"Roboto Mono",ui-monospace,monospace;font-weight:800;font-size:clamp(24px,3.4vw,32px);margin:6px 0 6px;color:#8EE0B5;overflow-wrap:anywhere}' +
-    '.vf-kf-v.neg{color:#FFB4A2}' +
-    '.vf-kf-s{font-size:12px;color:#D4E3E8;line-height:1.55}' +
-    '.vf-kf-note{font-size:12.5px;color:#5B6B70;line-height:1.7;margin:0 0 18px}' +
-    '@media (max-width:760px){.vf-bs,.vf-cash,.vf-top,.vf-kfs,.vf-kfs.two{grid-template-columns:1fr}.vf-table{font-size:13px}.vf-table td,.vf-table th{padding:6px 7px}.vf-table td.vf-item{padding-left:14px}}' +
+    '@media (max-width:760px){.vf-table.vf-summary .vf-balance td{font-size:18px}.vf-table.vf-summary .vf-balance td:first-child{font-size:15px}.vf-bs,.vf-cash,.vf-top{grid-template-columns:1fr}.vf-table{font-size:13px}.vf-table td,.vf-table th{padding:6px 7px}.vf-table td.vf-item{padding-left:14px}}' +
     '@media print{.vf-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.vf-table tr{break-inside:avoid}}';
   function injectCSS(){
     if(document.getElementById('vf-css')) return;
@@ -378,8 +363,8 @@
     normalizeLiabilities:function(g){ return normalize(g, defaultLiabilities, OLD_LIAB_GROUP, false); },
     rowAnnual:rowAnnual, rowMonthly:rowMonthly, rowAmount:rowAmount, sumGroups:sumGroups,
     catAnnual:catAnnual, catMonthly:catMonthly, catAmount:catAmount, rowsWhere:rowsWhere, groupByKey:groupByKey,
-    realEstateAssets:realEstateAssets, realEstateLoans:realEstateLoans,
-    cashSummary:cashSummary, keyFiguresHTML:keyFiguresHTML, cashTableHTML:cashTableHTML, summaryTableHTML:summaryTableHTML, donutSVG:donutSVG, balanceTableHTML:balanceTableHTML,
+    realEstateAssets:realEstateAssets, realEstateInvest:realEstateInvest, realEstateLoans:realEstateLoans,
+    cashSummary:cashSummary, cashTableHTML:cashTableHTML, summaryTableHTML:summaryTableHTML, donutSVG:donutSVG, balanceTableHTML:balanceTableHTML,
     injectCSS:injectCSS
   };
 })();
