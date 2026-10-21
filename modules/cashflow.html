@@ -614,6 +614,7 @@
     </div>
     <p class="panel-sub">淨收入＝總收入－理財支出；總支出＝必要開支＋浮動開支；結餘現金流＝淨收入－總支出。月結算只加總「月」欄，不把年終、年繳攤成每月。</p>
 
+    <div id="cfKeyFigures"></div>
     <div class="vf-top">
       <div><div class="vf-h">支出佔比圖</div><div id="cfDonut"></div></div>
       <div><div id="cfSummary"></div></div>
@@ -837,6 +838,7 @@ function recalc(){
   document.getElementById("sumSavingsRate").textContent = pct(share(Y.balance + Y.wealth));
 
   // 摘要＋支出佔比圖＋明細（只列有填的項目）
+  document.getElementById("cfKeyFigures").innerHTML = VCFin.keyFiguresHTML(incomeGroups, expenseGroups, null);
   document.getElementById("cfSummary").innerHTML = VCFin.summaryTableHTML(S);
   document.getElementById("cfDonut").innerHTML = totalIncome>0 ? VCFin.donutSVG(S) : '<div class="vf-note">請先輸入收入</div>';
   document.getElementById("cfIncomeTable").innerHTML = VCFin.cashTableHTML('income', incomeGroups, totalIncome, S.month.income);

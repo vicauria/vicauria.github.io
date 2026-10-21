@@ -1263,7 +1263,7 @@ function validateCurrentPage(){
     const loanPaid = re => VCFin.rowsWhere(expenseGroups.filter(g=>g.key==='nec_loan'), re, rowAnnual) > 0;
     const owed = re => VCFin.rowsWhere(liabilityGroups, re, r=>r.amount||0) > 0;
     if(loanPaid(/房貸/) && !owed(/不動產抵押|房貸|房屋貸款/)){
-      return '你在「錢都去哪了」填了房貸月付金，代表應該有對應的房貸餘額——請在長期負債的「自用不動產抵押貸款」（或投資型不動產抵押貸款）填上尚未還清的本金，才能繼續下一步。';
+      return '你在「錢都去哪了」填了房貸月付金，代表應該有對應的房貸餘額——請在長期負債的「房貸」填上尚未還清的本金，才能繼續下一步。';
     }
     if(loanPaid(/信用貸款|信貸/) && !owed(/信用貸款|信貸|紓困/)){
       return '你在「錢都去哪了」填了信用貸款月付金，代表應該有對應的貸款餘額——請在短期負債的「信用貸款」填上尚未還清的本金，才能繼續下一步。';
@@ -1907,6 +1907,7 @@ function computeFinanceMetrics(){
   const annualBonus = incomeGroups.reduce((s,g)=>s+g.rows.filter(r=>/年終|分紅|獎金/.test(r.name||'')).reduce((t,r)=>t+(r.once||0),0),0);
   const mcf = computeMonthlyCashflow();
   const investAssets = VCFin.catAmount(assetGroups, 'liqinv');
+  const usableFunds = liquidAssets + investAssets; // 可運用資金＝流動性資產＋流動性投資
   const investConcentration = assetTotal>0 ? investAssets/assetTotal : 0;
   return {age, incomeTotal, expenseTotal, assetTotal, liabilityTotal, netWorth,
     monthlyIncome, monthlyExpense, monthlySavings, savingsRate,
@@ -1914,7 +1915,7 @@ function computeFinanceMetrics(){
     monthlyCashIncome: mcf.income, monthlyCashExpense: mcf.expense, monthlyCashNet: mcf.net, monthlyCashWealth: mcf.wealth,
     onceIncome: mcf.onceIncome, onceExpense: mcf.onceExpense, annualNet: incomeTotal - expenseTotal,
     liquidAssets, emergencyMonths, hasInsurance, annualBonus,
-    investAssets, investConcentration};
+    investAssets, investConcentration, usableFunds};
 }
 
 function buildFinancialAnalysisHTML(){
@@ -1931,7 +1932,14 @@ function buildFinancialAnalysisHTML(){
     }
     overview += m.incomeTotal>0 ? `<span class="fa-hl">，總儲蓄率 ${(m.totalSavingsRate*100).toFixed(1)}%</span>` : '';
     overview += (m.monthlySavings>=0 && m.monthlyCashNet>=0) ? '，這是一個很好的開始，代表您有能力為未來累積財富。' : '，目前收支較為緊繃，這是我們可以一起優先改善的地方。';
-    overview += m.liabilityTotal===0 ? '同時，您沒有任何負債，這讓您的財務基礎非常穩固。' : `目前您還有 ${money(m.liabilityTotal)} 元的負債需要留意，會影響資金運用的彈性。`;
+    if(m.liabilityTotal===0){
+      overview += '同時，您沒有任何負債，這讓您的財務基礎非常穩固。';
+    } else {
+      // 房貸每月按時繳、已扣在支出裡：不代表不能規劃，重點看扣完後的結餘與可運用資金
+      const mortgage = VCFin.realEstateLoans(liabilityGroups), otherDebt = m.liabilityTotal - mortgage;
+      if(mortgage>0) overview += `房貸餘額 ${money(mortgage)} 元每月按時繳納、已照實扣在支出裡${m.monthlyCashNet>=0 ? '，扣完每月仍有結餘，加上手上 '+money(m.usableFunds)+' 元的可運用資金，都是可以拿來規劃的資源' : ''}。`;
+      if(otherDebt>0) overview += `另外還有 ${money(otherDebt)} 元的其他負債，建議優先處理利率較高的部分。`;
+    }
     overview += `然而，<span class="fa-hl">以您 ${m.age} 歲的年紀</span>，${familyDesc ? familyDesc+'，' : ''}肩上承擔著重要的家庭責任，有幾個地方值得我們一起多加留意。`;
   } else {
     overview = '以下是根據您目前提供的資料，為您整理的財務全貌與建議方向。';
@@ -2411,6 +2419,15 @@ function buildCashflowBreakdownHTML(uid, opts){
     </div>`;
 }
 
+// 報告開頭的「一目了然」：每月結餘、年度結餘、可運用資金
+function buildKeyFiguresHTML(){
+  return `
+    <div class="report-section">
+      <h3>一目了然：能拿來規劃的錢</h3>
+      ${VCFin.keyFiguresHTML(incomeGroups, expenseGroups, assetGroups)}
+    </div>`;
+}
+
 function buildBalanceBreakdownHTML(uid, opts){
   opts = opts || {};
   const hideRatios = !!opts.hideRatios;
@@ -2430,7 +2447,7 @@ function buildBalanceBreakdownHTML(uid, opts){
       <div class="breakdown-grid no-ratio${hideRatios?' only-chart':''}" style="margin-top:20px;">
         <div class="chart-card">
           <div class="highlight-stat">
-            <div class="hs-label">資產淨額</div>
+            <div class="hs-label">可運用資金（流動性資產＋流動性投資）</div>
             <div class="hs-value" id="baHighlightVal-${uid}">$0</div>
           </div>
           <h4>資產配置結構</h4>
@@ -2515,7 +2532,7 @@ function fillBalanceBreakdown(uid){
   setText('baLiabilityTotal', money(liabilityTotal));
   const netEl = el('baNet'); if(netEl){ netEl.textContent = money(netWorth); netEl.style.color = netWorth>=0?'var(--positive)':'var(--negative)'; }
   const baHighlightEl = el('baHighlightVal');
-  if(baHighlightEl){ baHighlightEl.textContent = money(netWorth); baHighlightEl.className = "hs-value"+(netWorth>=0?" positive":" negative"); }
+  if(baHighlightEl){ baHighlightEl.textContent = money(liquid + liqinv); baHighlightEl.className = "hs-value positive"; }
   setText('baRatioDebt', pctStr(assetTotal>0?liabilityTotal/assetTotal:0));
   setText('baRatioLiquidity', shortDebt>0 ? pctStr(liquid/shortDebt) : '—');
   setText('baRatioRealestate', pctStr(assetTotal>0?realestate/assetTotal:0));
@@ -2649,6 +2666,7 @@ function buildReportPages(uid, opts){
     pages.push(`<div class="report-section"><h3>你的財富畫像</h3><p style="color:var(--ink-soft);font-size:13.5px;line-height:1.9;">所有題目都完成了，這是根據你的回答整理出的財富現況。</p></div>` + renderSummaryProfileHTML());
     pages.push(buildFullAnswerSummaryHTML());
   }
+  pages.push(buildKeyFiguresHTML());
   pages.push(buildCashflowBreakdownHTML(uid, {hideRatios}));
   pages.push(buildBalanceBreakdownHTML(uid, {hideRatios}));
   pages.push(riskSection);

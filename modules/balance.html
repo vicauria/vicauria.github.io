@@ -275,6 +275,7 @@
     <p class="panel-sub">總資產、總負債逐項加總後的結果，數字會隨上面表格即時更新。</p>
 
     <div class="breakdown-grid">
+      <div class="bs-full" id="bsKey"></div>
       <div class="bs-full" id="bsTable"></div>
 
       <div class="chart-card">
@@ -489,6 +490,13 @@ function recalc(){
 
   const midEl = document.getElementById("midLiquidInvest");
   if(midEl) midEl.textContent = money(liquid + liqinv);
+  // 可運用資金：有房貸的人看淨值會被房子跟房貸拉偏，規劃時看手上隨時能動用的錢
+  document.getElementById("bsKey").innerHTML =
+    `<div class="vf-kfs two">
+       <div class="vf-kf accent"><div class="vf-kf-l">可運用資金</div><div class="vf-kf-v">${money(liquid + liqinv)}</div><div class="vf-kf-s">流動性資產 ${money(liquid)} ＋ 流動性投資 ${money(liqinv)}</div></div>
+       <div class="vf-kf"><div class="vf-kf-l">流動性資產</div><div class="vf-kf-v">${money(liquid)}</div><div class="vf-kf-s">活存、緊急預備金、儲蓄險等隨時可動用的錢</div></div>
+     </div>
+     <div class="vf-kf-note">有房貸不代表不能規劃：房子跟房貸會讓「淨值」看起來偏高或偏低，規劃時以手上隨時能動用的可運用資金為主。</div>`;
   // 資產負債表（只列有填金額的項目）
   document.getElementById("bsTable").innerHTML = VCFin.balanceTableHTML(assetGroups, liabilityGroups);
 
