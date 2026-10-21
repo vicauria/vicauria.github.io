@@ -105,6 +105,9 @@
   .checkline input{width:16px;height:16px;margin-top:3px;accent-color:var(--brass);}
   .checkline label{margin:0;font-size:13px;}
   .stepper-note{font-size:12px; color:var(--text-soft); margin-top:10px;}
+  /* 輸入不合理時的提醒文字（橘黃警示色），空字串時自動隱藏 */
+  .calc-warn{font-size:12px; color:#8A5A12; background:rgba(184,121,30,0.1); border-left:3px solid #B8791E; padding:6px 10px; margin:0 0 12px; line-height:1.6;}
+  .calc-warn:empty{display:none;}
 
   .results{padding:28px 30px; background:#E6F0F2; color:var(--text); display:flex; flex-direction:column; border-left:1px solid var(--paper-line);}
   .result-label{font-family:'Roboto Mono'; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-soft); margin-bottom:8px;}
@@ -214,6 +217,7 @@
         </div>
       </div>
       <div class="results">
+        <div class="calc-warn" id="c_warn"></div>
         <div class="result-label">每月應繳金額</div>
         <div class="dim-line"><div class="dim-tick-r"></div>
           <div class="dim-value"><span class="cur">NT$</span><span id="c_monthly">0</span><span class="sub-unit">元／月</span></div>
@@ -249,6 +253,7 @@
         </div>
       </div>
       <div class="results">
+        <div class="calc-warn" id="m_warn"></div>
         <div class="result-label">每月應繳金額</div>
         <div class="dim-line"><div class="dim-tick-r"></div>
           <div class="dim-value"><span class="cur">NT$</span><span id="m_monthly">0</span><span class="sub-unit">元／月</span></div>
@@ -288,6 +293,7 @@
         </div>
       </div>
       <div class="results">
+        <div class="calc-warn" id="g_warn"></div>
         <div class="result-label">寬限期內 / 期滿後 月付金</div>
         <div class="breakdown" style="margin-top:6px;">
           <div class="bd-row"><span>寬限期內（只繳利息）</span><span id="g_bd_grace" class="mono">0 元／月</span></div>
@@ -297,6 +303,8 @@
         <div class="result-label" style="margin-top:22px;">總還款金額（本金＋利息）</div>
         <div class="breakdown">
           <div class="bd-row"><span>總利息</span><span id="g_bd_interest" class="mono">0 元</span></div>
+          <div class="bd-row"><span>不使用寬限期的總利息</span><span id="g_bd_interestNo" class="mono">0 元</span></div>
+          <div class="bd-row"><span>寬限期讓你多付的總利息</span><span id="g_bd_extra" class="mono neg">0 元</span></div>
         </div>
         <div class="dim-line" style="margin-top:8px;"><div class="dim-tick-r"></div>
           <div class="dim-value"><span id="g_bd_repayWith">0</span><span class="sub-unit">元</span></div>
@@ -343,6 +351,7 @@
         </div>
       </div>
       <div class="results">
+        <div class="calc-warn" id="cmp_warn"></div>
         <div class="result-label">月付金比較</div>
         <div class="cmp-wrap">
           <div class="cmp-item">
@@ -409,9 +418,10 @@
           <label>配置工具假設年化報酬率 <span class="hint">（試算用假設值，非保證）</span></label>
           <div class="input-wrap"><input type="number" id="s_investRate" value="6" min="0" step="0.01"><span class="unit">%</span></div>
         </div>
-        <div class="stepper-note">貸款總利息以「貸款金額」實際攤還計算（不論資金如何運用，利息照付）；配置成長只用「實際投入配置工具金額」複利估算，兩者計算基礎不同，僅供抓大方向參考。</div>
+        <div class="stepper-note">試算假設：借款當天把「實際投入金額」放進配置工具，之後每個月的貸款月付金都從配置部位提領（配置部位按月複利成長）；配置部位提領完後，月付金改由未投入的預備金、再不夠由自有資金支付（這兩筆不計收益）。淨利差＝貸款還清時剩下的配置部位＋預備金，扣掉額外投入的自有資金與自掏腰包的還款。</div>
       </div>
       <div class="results">
+        <div class="calc-warn" id="s_warn"></div>
         <div id="s_flag"></div>
         <div class="result-label">年化利差（配置報酬率 － 貸款利率）</div>
         <div class="dim-line"><div class="dim-tick-r"></div>
@@ -433,7 +443,9 @@
         <div class="breakdown" style="margin-top:14px;">
           <div class="bd-row"><span>月還貸款金額</span><span id="s_bd_monthly" class="mono">0 元／月</span></div>
           <div class="bd-row"><span>貸款總利息（實際攤還）</span><span id="s_bd_loanInterest" class="mono neg">0 元</span></div>
-          <div class="bd-row"><span>配置估算總收益（僅計入投入部分）</span><span id="s_bd_investGain" class="mono pos">0 元</span></div>
+          <div class="bd-row"><span>累計還款（逐月從配置部位提領）</span><span id="s_bd_paid" class="mono neg">0 元</span></div>
+          <div class="bd-row"><span>配置估算總收益（已扣逐月提領）</span><span id="s_bd_investGain" class="mono pos">0 元</span></div>
+          <div class="bd-row"><span>貸款還清時剩餘：配置部位＋預備金</span><span id="s_bd_end" class="mono">0 元</span></div>
           <div class="bd-row total"><span>估算淨利差金額</span><span id="s_bd_net" class="mono">0 元</span></div>
         </div>
       </div>
@@ -475,6 +487,7 @@
         <div class="stepper-note">常見循環動用期：3／5／7／10 年；VIP 客戶最長可達 20 年，實際依銀行核定與續約審核為準。週轉金貸款通常僅就「實際動用金額」計息，未動用額度不計息。</div>
       </div>
       <div class="results">
+        <div class="calc-warn" id="p_warn"></div>
         <div id="p_flag"></div>
         <div class="result-label">額度・動用・投入</div>
         <div class="breakdown" style="margin-top:6px;">
@@ -489,14 +502,14 @@
         <div class="breakdown">
           <div class="bd-row"><span>每月只繳利息</span><span id="p_bd_monthly" class="mono">0 元／月</span></div>
           <div class="bd-row"><span>該期間總利息支出</span><span id="p_bd_interest" class="mono neg">0 元</span></div>
-          <div class="bd-row"><span>保本工具估算總收益</span><span id="p_bd_gain" class="mono pos">0 元</span></div>
+          <div class="bd-row"><span>保本工具估算總收益 <span style="font-size:11px;">（投資收益以複利再投入估算；貸款利息另以現金按月支付）</span></span><span id="p_bd_gain" class="mono pos">0 元</span></div>
           <div class="bd-row total"><span>套利階段淨利差</span><span id="p_bd_net" class="mono">0 元</span></div>
         </div>
 
         <div class="dim-line" style="margin-top:20px;"><div class="dim-tick-r"></div>
           <div class="dim-value"><span id="p_spread">0</span><span class="sub-unit">個百分點</span></div>
         </div>
-        <div class="stepper-note" style="color:rgba(245,247,246,0.55); margin-top:-14px;">年化利差（保本工具報酬率 － 貸款利率）</div>
+        <div class="stepper-note" style="color:var(--text-soft); margin-top:-14px;">年化利差（保本工具報酬率 － 貸款利率）</div>
       </div>
     </div>
   </section>
@@ -523,7 +536,11 @@ function fmtYuan(wan){
   const yuan = Math.round(wan*10000);
   return yuan.toLocaleString('zh-Hant-TW');
 }
-function num(id){ return parseFloat(document.getElementById(id).value) || 0; }
+// 讀取輸入值：空白或非數字視為 0；金額、利率、年限都不可能是負數，負數一律當 0 處理
+function num(id){ return Math.max(0, parseFloat(document.getElementById(id).value) || 0); }
+// 年限換算成月數：取整數月（例如 2.3 年 → 28 個月），避免出現 27.6 期這種銀行不存在的期數
+function toMonths(years){ return Math.round(years*12); }
+function setWarn(id, msg){ const el = document.getElementById(id); if(el) el.textContent = msg || ''; }
 
 function monthlyPayment(P, annualRatePct, months){
   const r = annualRatePct/100/12;
@@ -537,7 +554,15 @@ function calcLoan(prefix){
   const P = num(prefix+'_amount');
   const rate = num(prefix+'_rate');
   const years = num(prefix+'_years');
-  const months = years*12;
+  const months = toMonths(years);
+  // 年限為 0／空白時算不出月付金：顯示「—」，不要算出負的總利息
+  if(months < 1 || P <= 0){
+    ['_monthly'].forEach(k=>document.getElementById(prefix+k).textContent = '—');
+    ['_bd_p','_bd_total','_bd_interest'].forEach(k=>document.getElementById(prefix+k).textContent = '— 元');
+    setWarn(prefix+'_warn', months < 1 ? '請輸入大於 0 的貸款年限' : '請輸入大於 0 的貸款金額');
+    return null;
+  }
+  setWarn(prefix+'_warn', '');
   const M = monthlyPayment(P, rate, months);
   const total = M*months;
   const interest = total - P;
@@ -553,9 +578,24 @@ function calcGrace(){
   const rate = num('g_rate');
   const years = num('g_years');
   const grace = num('g_grace');
-  const totalMonths = years*12;
-  const graceMonths = Math.round(grace*12);
-  const remainMonths = Math.max(0, totalMonths - graceMonths);
+  const totalMonths = toMonths(years);
+  const ids = ['g_bd_grace','g_bd_after','g_bd_interest','g_bd_interestNo','g_bd_extra','g_bd_repayWith'];
+  if(totalMonths < 1 || P <= 0){
+    ids.forEach(id=>document.getElementById(id).textContent = '—');
+    setWarn('g_warn', totalMonths < 1 ? '請輸入大於 0 的總貸款年限' : '請輸入大於 0 的貸款金額');
+    return;
+  }
+  // 寬限期一定要比總年限短，否則本金永遠不用還、會算出 0 月付金與負利息；
+  // 最多只算到「總年限 − 1 年」（總年限 1 年以內則不給寬限期）
+  let graceMonths = toMonths(grace);
+  const maxGrace = Math.max(0, totalMonths - 12);
+  let warn = '';
+  if(graceMonths > maxGrace){
+    graceMonths = maxGrace;
+    warn = '寬限期必須比總貸款年限短，已改以 ' + fmt(maxGrace/12) + ' 年（總年限 − 1 年）試算';
+  }
+  setWarn('g_warn', warn);
+  const remainMonths = totalMonths - graceMonths;
 
   const r = rate/100/12;
   const gracePayment = P*r;
@@ -563,7 +603,12 @@ function calcGrace(){
 
   const totalWith = gracePayment*graceMonths + afterPayment*remainMonths;
   const interestWith = totalWith - P;
+  // 對照組：同金額、同利率、同總年限，但沒有寬限期
+  const interestNo = monthlyPayment(P, rate, totalMonths)*totalMonths - P;
+  const extra = interestWith - interestNo;
 
+  document.getElementById('g_bd_interestNo').textContent = fmtYuan(interestNo)+' 元';
+  document.getElementById('g_bd_extra').textContent = (extra>=0.5?'＋':'')+fmtYuan(extra)+' 元';
   document.getElementById('g_bd_grace').textContent = fmtYuan(gracePayment)+' 元／月';
   document.getElementById('g_bd_after').textContent = fmtYuan(afterPayment)+' 元／月';
   document.getElementById('g_bd_interest').textContent = fmtYuan(interestWith)+' 元';
@@ -573,9 +618,18 @@ function calcGrace(){
 function calcCompare(){
   const a = {P:num('cmp_a_amount'), rate:num('cmp_a_rate'), years:num('cmp_a_years')};
   const b = {P:num('cmp_b_amount'), rate:num('cmp_b_rate'), years:num('cmp_b_years')};
-  const aM = monthlyPayment(a.P, a.rate, a.years*12);
-  const bM = monthlyPayment(b.P, b.rate, b.years*12);
-  const aTotal = aM*a.years*12, bTotal = bM*b.years*12;
+  a.n = toMonths(a.years); b.n = toMonths(b.years);
+  const cmpIds = ['a_m','b_m','a_i','b_i','a_t','b_t'];
+  if(a.n < 1 || b.n < 1 || a.P <= 0 || b.P <= 0){
+    cmpIds.forEach(k=>{ document.getElementById('cmp_'+k+'_label').textContent = '— 元'; document.getElementById('cmp_'+k+'_bar').style.width = '0%'; });
+    document.getElementById('cmp_diff').textContent = '總利息差距：—';
+    setWarn('cmp_warn', '請輸入兩個方案大於 0 的貸款金額與年限');
+    return;
+  }
+  setWarn('cmp_warn', '');
+  const aM = monthlyPayment(a.P, a.rate, a.n);
+  const bM = monthlyPayment(b.P, b.rate, b.n);
+  const aTotal = aM*a.n, bTotal = bM*b.n;
   const aInterest = aTotal - a.P, bInterest = bTotal - b.P;
 
   const maxM = Math.max(aM, bM, 0.0001);
@@ -598,8 +652,13 @@ function calcCompare(){
   document.getElementById('cmp_b_t_bar').style.width = (bTotal/maxT*100)+'%';
 
   const diff = Math.abs(aInterest - bInterest);
-  const cheaper = aInterest <= bInterest ? 'A' : 'B';
-  document.getElementById('cmp_diff').textContent = `總利息差距：${fmtYuan(diff)} 元（方案 ${cheaper} 較低）`;
+  // 差距四捨五入後是 0 元，就直接說兩方案相同，不要硬選一個「較低」
+  if(Math.round(diff) === 0){
+    document.getElementById('cmp_diff').textContent = '總利息差距：0 元（兩方案相同）';
+  } else {
+    const cheaper = aInterest < bInterest ? 'A' : 'B';
+    document.getElementById('cmp_diff').textContent = `總利息差距：${fmtYuan(diff)} 元（方案 ${cheaper} 較低）`;
+  }
 }
 
 function calcSpread(){
@@ -608,25 +667,59 @@ function calcSpread(){
   const investRate = num('s_investRate');
   const years = num('s_years');
   const deployed = num('s_deployed');
-  const months = years*12;
+  const months = toMonths(years);
+  const spread = investRate - loanRate;
 
-  const M = monthlyPayment(P, loanRate, months);
+  if(months < 1 || P <= 0){
+    ['s_bd_monthly','s_bd_loanInterest','s_bd_paid','s_bd_investGain','s_bd_end','s_bd_net'].forEach(id=>document.getElementById(id).textContent = '—');
+    setWarn('s_warn', months < 1 ? '請輸入大於 0 的貸款年限' : '請輸入大於 0 的貸款金額');
+  } else {
+    setWarn('s_warn', '');
+  }
+
+  const M = months >= 1 ? monthlyPayment(P, loanRate, months) : 0;
   const loanInterest = M*months - P;
 
-  const idle = Math.max(0, P - deployed);
-  const investGain = deployed*(Math.pow(1+investRate/100, years) - 1);
+  const idle = Math.max(0, P - deployed);          // 借來但沒投入的錢（預備金，不計收益）
+  const ownMoney = Math.max(0, deployed - P);      // 投入金額大於貸款時，差額是自己的錢
 
-  const spread = investRate - loanRate;
-  const netDiff = investGain - loanInterest;
+  // 逐月模擬：月付金必須從某個地方付出來，不能假設整筆投資放滿整個年限。
+  // 配置部位每月以「年化報酬率換算的月複利」成長，然後提領當月月付金；
+  // 配置部位不夠付時，先動用預備金，再不夠就是自掏腰包（這兩筆都不計收益）。
+  const im = Math.pow(1+investRate/100, 1/12) - 1;
+  let bal = deployed, cash = idle, pocket = 0, drawnFromInv = 0, depletedAt = 0;
+  for(let k=1; k<=months; k++){
+    bal *= (1+im);
+    if(bal >= M){ bal -= M; drawnFromInv += M; }
+    else{
+      let short = M - bal; drawnFromInv += bal; bal = 0;
+      if(!depletedAt) depletedAt = k;
+      const fromCash = Math.min(cash, short); cash -= fromCash; short -= fromCash;
+      pocket += short;
+    }
+  }
+  // 配置部位實際賺到的錢＝期末餘額＋期間被提領去還款的部分－原始投入
+  const investGain = bal + drawnFromInv - deployed;
+  const endValue = bal + cash;
+  // 淨利差＝還清貸款後手上多出來的錢（扣掉額外投入的自有資金與自掏腰包的還款）＝ 配置收益 － 貸款利息
+  const netDiff = endValue - ownMoney - pocket;
 
   document.getElementById('s_spread').textContent = (spread>=0?'+':'') + fmt(spread);
   document.getElementById('s_bd_loanAmt').textContent = fmtYuan(P)+' 元';
   document.getElementById('s_bd_deployed').textContent = fmtYuan(deployed)+' 元';
   document.getElementById('s_bd_idle').textContent = fmtYuan(idle)+' 元';
-  document.getElementById('s_bd_monthly').textContent = fmtYuan(M)+' 元／月';
-  document.getElementById('s_bd_loanInterest').textContent = '－'+fmtYuan(loanInterest)+' 元';
-  document.getElementById('s_bd_investGain').textContent = '＋'+fmtYuan(investGain)+' 元';
-  document.getElementById('s_bd_net').textContent = (netDiff>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
+  if(months >= 1 && P > 0){
+    document.getElementById('s_bd_monthly').textContent = fmtYuan(M)+' 元／月';
+    document.getElementById('s_bd_loanInterest').textContent = '－'+fmtYuan(loanInterest)+' 元';
+    document.getElementById('s_bd_paid').textContent = '－'+fmtYuan(M*months)+' 元';
+    document.getElementById('s_bd_investGain').textContent = '＋'+fmtYuan(investGain)+' 元';
+    document.getElementById('s_bd_end').textContent = fmtYuan(endValue)+' 元';
+    document.getElementById('s_bd_net').textContent = (Math.round(netDiff)>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
+    const notes = [];
+    if(depletedAt) notes.push('配置部位在第 '+depletedAt+' 個月被月付金提領完，之後的月付金改由預備金'+(pocket>0.5?'與自有資金（共自付 '+fmtYuan(pocket)+' 元）':'')+'支付。');
+    if(ownMoney>0) notes.push('投入金額比貸款多 '+fmtYuan(ownMoney)+' 元，差額視為自有資金，已從淨利差扣回。');
+    setWarn('s_warn', notes.join(''));
+  }
 
   const maxRate = Math.max(loanRate, investRate, 1);
   const loanPct = (loanRate/maxRate)*80 + 10;
@@ -652,13 +745,17 @@ function calcSpread(){
 
 function calcPledge(){
   const limit = num('p_limit');
-  let P = num('p_amount');
-  if(P > limit){
-    P = limit;
-    document.getElementById('p_amount').value = limit;
-  }
+  // 不在打字時改寫使用者輸入（例如清空額度再打 8000，打到一半會把動用金額改成 0）；
+  // 只在計算時把「動用 ≤ 額度」、「投入 ≤ 動用」夾住，並用提醒文字告知
+  const rawP = num('p_amount');
+  const P = Math.min(rawP, limit);
   document.getElementById('p_amount').max = limit;
-  const deployed = num('p_deployed');
+  const rawDeployed = num('p_deployed');
+  const deployed = Math.min(rawDeployed, P);   // 沒借出來的錢不能拿去投資賺收益
+  const pNotes = [];
+  if(rawP > limit) pNotes.push('實際動用金額超過額度，已以額度 '+fmtYuan(limit)+' 元試算。');
+  if(rawDeployed > P) pNotes.push('投入金額不能超過實際動用金額，已以 '+fmtYuan(P)+' 元試算。');
+  setWarn('p_warn', pNotes.join(''));
   const rate = num('p_rate');
   const ioYears = num('p_ioYears');
   const investRate = num('p_investRate');
@@ -669,9 +766,10 @@ function calcPledge(){
   // 只繳息期間・套利空間（週轉金貸款僅就「實際動用金額」計息）
   const r = rate/100/12;
   const monthlyInterest = P*r;
-  const ioMonths = ioYears*12;
+  const ioMonths = toMonths(ioYears);
   const totalInterestIO = monthlyInterest*ioMonths;
-  const gain = deployed*(Math.pow(1+investRate/100, ioYears) - 1);
+  // 投資收益以年複利再投入估算（利息另以現金按月支付，不從投資部位扣）
+  const gain = deployed*(Math.pow(1+investRate/100, ioMonths/12) - 1);
   const netDiff = gain - totalInterestIO;
   const spread = investRate - rate;
 
@@ -684,7 +782,7 @@ function calcPledge(){
   document.getElementById('p_bd_monthly').textContent = fmtYuan(monthlyInterest)+' 元／月';
   document.getElementById('p_bd_interest').textContent = '－'+fmtYuan(totalInterestIO)+' 元';
   document.getElementById('p_bd_gain').textContent = '＋'+fmtYuan(gain)+' 元';
-  document.getElementById('p_bd_net').textContent = (netDiff>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
+  document.getElementById('p_bd_net').textContent = (Math.round(netDiff)>=0?'＋':'－')+fmtYuan(Math.abs(netDiff))+' 元';
   document.getElementById('p_spread').textContent = (spread>=0?'+':'') + fmt(spread);
 
   const pTier = spread>=1 ? 'pos' : (spread>=0 ? 'warn' : 'neg');

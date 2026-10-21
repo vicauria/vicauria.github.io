@@ -311,7 +311,7 @@
             <div class="ratio-value" id="ratioDebt">0%</div>
           </div>
           <div class="ratio-row">
-            <div class="ratio-name">流動性比率<small>理財型資產 ÷ 總負債，衡量短期還款能力</small></div>
+            <div class="ratio-name">流動性比率<small>理財型資產 ÷ 非房貸負債（信貸／車貸＋信用卡等短期負債），衡量短期還款能力；房貸為長期攤還，不列入</small></div>
             <div class="ratio-value" id="ratioLiquidity">0%</div>
           </div>
           <div class="ratio-row">
@@ -415,7 +415,8 @@ function pct(n){
   if(!isFinite(n)) return "0%";
   return (n*100).toFixed(1) + "%";
 }
-function rowAmt(row){ return Number(row.amount)||0; }
+// 資產市值／負債餘額不會是負數：負數一律當 0（避免負的資產把總額算小）
+function rowAmt(row){ return Math.max(0, Number(row.amount)||0); }
 function groupTotal(group){ return group.rows.reduce((s,r)=>s+rowAmt(r),0); }
 
 function renderGroupTable(group, isLiability){
@@ -432,7 +433,7 @@ function renderGroupTable(group, isLiability){
       <thead>
         <tr>
           <th style="width:55%">項目名稱</th>
-          <th>金額</th>
+          <th>金額（元）</th>
           <th></th>
         </tr>
       </thead>
@@ -458,12 +459,12 @@ function renderRow(group, row){
   const tr = document.createElement("tr");
   tr.innerHTML = `
     <td data-label="項目名稱"><input type="text" value="${vcEsc(row.name)}" placeholder="輸入項目名稱"></td>
-    <td data-label="金額"><input type="number" min="0" step="1000" value="${row.amount||0}"></td>
+    <td data-label="金額（元）"><input type="number" min="0" step="1000" value="${rowAmt(row)}"></td>
     <td data-label=""><button class="del-btn" type="button" title="刪除">✕</button></td>
   `;
   const [nameInput, amtInput] = tr.querySelectorAll("input");
   nameInput.addEventListener("input", e=>{ row.name = e.target.value; recalc(); });
-  amtInput.addEventListener("input", e=>{ row.amount = Number(e.target.value)||0; recalc(); });
+  amtInput.addEventListener("input", e=>{ row.amount = Math.max(0, Number(e.target.value)||0); recalc(); });
   tr.querySelector(".del-btn").addEventListener("click", ()=>{
     const i = group.rows.indexOf(row);
     if(i>-1) group.rows.splice(i,1);
@@ -530,7 +531,11 @@ function recalc(){
   const realestate = groupTotal(assetGroups.find(g=>g.key==="realestate"));
   const other = groupTotal(assetGroups.find(g=>g.key==="other"));
 
-  const liquidityRatio = totalLiabilities>0 ? liquid/totalLiabilities : (liquid>0 ? Infinity : 0);
+  // 流動性比率只看「短期內要還」的負債：信貸／車貸＋信用卡等短期負債（房貸是長期攤還，不列入）
+  const shortDebt = groupTotal(liabilityGroups.find(g=>g.key==="otherloan")) + groupTotal(liabilityGroups.find(g=>g.key==="shortterm"));
+  const liquidityRatio = shortDebt>0 ? liquid/shortDebt : (liquid>0 ? Infinity : 0);
+  // 沒有任何資產卻有負債：負債比無法計算（不是 0%），要用警示色提醒
+  const noAssetsWithDebt = totalAssets<=0 && totalLiabilities>0;
   const realestateRatio = totalAssets>0 ? realestate/totalAssets : 0;
   const investRatio = totalAssets>0 ? invest/totalAssets : 0;
 
@@ -540,7 +545,9 @@ function recalc(){
   const netEl = document.getElementById("sumNet");
   netEl.textContent = money(netWorth);
   netEl.className = "sum-value " + (netWorth>=0?"positive":"negative");
-  document.getElementById("sumDebtRatio").textContent = pct(debtRatio);
+  const sumDebtEl = document.getElementById("sumDebtRatio");
+  sumDebtEl.textContent = noAssetsWithDebt ? "無資產" : pct(debtRatio);
+  sumDebtEl.className = "sum-value" + (noAssetsWithDebt ? " negative" : "");
 
   // breakdown tables
   document.getElementById("bdAssetBody").innerHTML = assetGroups.map(g=>
@@ -558,9 +565,11 @@ function recalc(){
 
   // ratios
   const debtEl = document.getElementById("ratioDebt");
-  debtEl.textContent = pct(debtRatio);
-  debtEl.className = "ratio-value" + (debtRatio>0.5 ? " warn" : "");
-  document.getElementById("ratioLiquidity").textContent = isFinite(liquidityRatio) ? pct(liquidityRatio) : "—";
+  debtEl.textContent = noAssetsWithDebt ? "—（無資產）" : pct(debtRatio);
+  debtEl.className = "ratio-value" + (noAssetsWithDebt || debtRatio>0.5 ? " warn" : "");
+  const liqEl = document.getElementById("ratioLiquidity");
+  liqEl.textContent = noAssetsWithDebt ? "—（無資產）" : (isFinite(liquidityRatio) ? pct(liquidityRatio) : "—");
+  liqEl.className = "ratio-value" + (noAssetsWithDebt ? " warn" : "");
   document.getElementById("ratioRealestate").textContent = pct(realestateRatio);
   document.getElementById("ratioInvest").textContent = pct(investRatio);
 

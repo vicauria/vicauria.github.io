@@ -588,10 +588,11 @@
           </div>
           <div class="field">
             <div class="field-label"><span>現有勞退專戶餘額（選填）</span></div>
-            <div class="input-suffix"><input type="number" id="in-laborExisting" value="0"></div>
+            <div class="input-suffix"><input type="number" id="in-laborExisting" value="0" min="0"></div>
+            <div class="stat-note">不知道可留空：若年資比距退休年數長，會用目前月薪×（6%＋自提）粗估過去已繳的本金（不計報酬）。</div>
           </div>
         </div>
-        <div class="note-box">勞保投保薪資以 2026 年（115 年）上限 45,800 元計算；勞退月提繳工資另以 2026 年上限 150,000 元計算（兩者是不同分級表）。勞保年金採 A、B 式擇優估算，勞退月退以個人專戶累積本金 ÷ 20 年（240 個月）簡化估算。實際金額以勞動部勞工保險局核定為準。</div>
+        <div class="note-box">勞保投保薪資以 2026 年（115 年）上限 45,800 元計算；勞退月提繳工資另以 2026 年上限 150,000 元計算（兩者是不同分級表）。勞保年金採 A、B 式擇優估算，勞退月退以個人專戶累積本金折回今日購買力後 ÷ 20 年（240 個月）簡化估算。實際金額以勞動部勞工保險局核定為準。</div>
       </div>
     </div>
 
@@ -663,7 +664,7 @@
             <div class="labor-detail-card">
               <div class="ldc-label">勞保老年年金</div>
               <div class="ldc-value" id="rt-laborPension">$0<small>/月</small></div>
-              <div class="ldc-note">A、B 式擇優（退休當年名目）</div>
+              <div class="ldc-note">A、B 式擇優（今日購買力）</div>
             </div>
             <div class="labor-detail-card">
               <div class="ldc-label">勞退月退金（粗估）</div>
@@ -824,6 +825,7 @@
           <div class="field">
             <div class="field-label"><span>寬限期</span><span class="fv" id="v-haGrace">3 年</span></div>
             <input type="range" id="in-haGrace" min="0" max="10" value="3">
+            <div class="stat-note" id="ha-graceHint" style="display:none;"></div>
           </div>
           <div class="field">
             <div class="field-label"><span>儲蓄預期報酬率</span><span class="fv" id="v-haSaveReturn">4.0%</span></div>
@@ -1148,11 +1150,11 @@
               <div class="stepper"><button data-lgstep="children" data-d="-1">−</button><span class="count" id="v-lgChildren">2</span><button data-lgstep="children" data-d="1">+</button></div>
             </div>
             <div class="row-between">
-              <span class="tr-label">‣ 其中未成年人數<span class="tr-sub">按距滿 20 歲年數，每年加扣 56 萬</span></span>
+              <span class="tr-label">‣ 其中未成年人數<span class="tr-sub">按距屆滿成年（18 歲）年數，每年加扣 56 萬</span></span>
               <div class="stepper"><button data-lgstep="minors" data-d="-1">−</button><span class="count" id="v-lgMinors">0</span><button data-lgstep="minors" data-d="1">+</button></div>
             </div>
             <div class="row-between" id="row-lgMinoryears" style="display:none;">
-              <span class="tr-label">‣ 平均距滿 20 歲年數</span>
+              <span class="tr-label">‣ 平均距滿 18 歲年數</span>
               <div class="stepper"><button data-lgstep="minoryears" data-d="-1">−</button><span class="count" id="v-lgMinoryears">5</span><button data-lgstep="minoryears" data-d="1">+</button></div>
             </div>
             <div class="row-between">
@@ -1632,6 +1634,26 @@ function calcLaborLumpSum(salary, years, voluntaryPct, returnRate, existing, inf
   return balance;
 }
 
+// 勞退專戶（正算／反算共用，確保兩邊數字一致）
+// - 「勞保投保年資」滑桿是「退休時累計」的總年資，所以未來還要提繳的月數只有 min(年資, 距退休年數)×12，
+//   其餘年資是過去已經繳過、應該已經在「現有勞退專戶餘額」裡，不能再重複加一次。
+// - 使用者不知道餘額（留空／0）但年資比距退休年數長時，用「過去年資 × 12 × 目前月薪(上限內) × (6%+自提)」
+//   粗估過去已累積的本金（不計報酬，偏保守），避免沒填餘額的人被低估。
+// - 帳戶累積到退休當年是「名目」金額，要先用通膨折回今日購買力，才能跟其他「今日購買力」的數字相加。
+function rtLaborPensionInfo(salary, laborYears, yearsToRetire, voluntaryPct, returnRate, existing, inflation){
+  const futureYears = Math.max(0, Math.min(laborYears, yearsToRetire));
+  const pastYears = Math.max(0, laborYears - futureYears);
+  let startBalance = existing;
+  let estimatedPast = false;
+  if(existing<=0 && pastYears>0){
+    startBalance = pastYears * 12 * Math.min(salary, LABOR_PENSION_CONTRIBUTION_CAP) * (0.06 + voluntaryPct);
+    estimatedPast = true;
+  }
+  const lumpNominal = calcLaborLumpSum(salary, futureYears, voluntaryPct, returnRate, startBalance, inflation);
+  const lumpToday = lumpNominal / Math.pow(1+inflation, Math.max(0, yearsToRetire));
+  return { lumpNominal, lumpToday, monthly: lumpToday / PENSION_PAYOUT_MONTHS, estimatedPast };
+}
+
 function calcRetirement(){
   const currentAge = +document.getElementById('in-rtCurrentAge').value;
   const retireAge = +document.getElementById('in-rtRetireAge').value;
@@ -1656,7 +1678,9 @@ function calcRetirement(){
       : monthlyInvest*12*years;
   }
   const projected = fvAssets + fvContrib;
-  const investMonthly = Math.abs(realReturn)>0.0001 ? projected*realReturn/12 : projected/(years>0?years*12:1);
+  // 退休後每月可提領：跟「所需準備總額」用同一條公式的反函數（實質報酬為 0 或負時改用 30 年提領完），
+  // 避免實質報酬為負時算出負的月收入
+  const investMonthly = rtAffordableMonthly(projected, realReturn);
 
   // 勞保勞退
   const laborSalary = +document.getElementById('in-laborSalary').value || 0;
@@ -1667,8 +1691,9 @@ function calcRetirement(){
   const laborExisting = +document.getElementById('in-laborExisting').value || 0;
 
   const laborPensionMonthly = calcLaborPension(laborSalary, laborYears);
-  const pensionLump = calcLaborLumpSum(laborSalary, laborYears, voluntaryPct, pensionReturn, laborExisting, inflation);
-  const pensionMonthly = pensionLump / PENSION_PAYOUT_MONTHS;
+  const pensionInfo = rtLaborPensionInfo(laborSalary, laborYears, years, voluntaryPct, pensionReturn, laborExisting, inflation);
+  const pensionLump = pensionInfo.lumpNominal;
+  const pensionMonthly = pensionInfo.monthly;
 
   const laborTotal = laborOn ? (laborPensionMonthly + pensionMonthly) : 0;
   const totalMonthlyIncome = investMonthly + laborTotal;
@@ -1762,12 +1787,15 @@ function calcRetirement(){
 
   document.getElementById('rt-laborPension').innerHTML = money(laborPensionMonthly)+'<small>/月</small>';
   document.getElementById('rt-pensionMonthly').innerHTML = money(pensionMonthly)+'<small>/月</small>';
-  document.getElementById('rt-pensionLump').textContent = '或選一次領帳戶 '+money(pensionLump);
+  // 一次領帳戶顯示退休當年的名目金額（實際會看到的帳戶數字）；月退則已折回今日購買力
+  document.getElementById('rt-pensionLump').textContent = '或選一次領帳戶 '+money(pensionLump)+'（退休當年名目）'
+    + (pensionInfo.estimatedPast ? '，過去本金為粗估' : '');
 
   const claimGapYears = laborClaimAge - retireAge;
   const gapWarnEl = document.getElementById('rt-gapWarning');
   if(laborOn && claimGapYears>0){
-    gapWarnEl.innerHTML = `<b>注意時間差：</b>勞保要到 ${laborClaimAge} 歲才能請領，退休後有 ${claimGapYears} 年只有勞退＋自備儲蓄、還沒有勞保，這段要另外備好。（上方「達成率」已把勞保按 ${laborClaimAge} 歲折算，不是退休當年就有。）`;
+    // 誠實說明：達成率是簡化估算，把勞保當成退休當年就開始領，並沒有扣掉空窗期
+    gapWarnEl.innerHTML = `<b>注意時間差：</b>勞保要到 ${laborClaimAge} 歲才能請領，退休後有 ${claimGapYears} 年只有勞退＋自備儲蓄、還沒有勞保，這段要另外備好。（上方「達成率」為簡化估算，是把勞保當作退休當年就開始領，並未扣掉這 ${claimGapYears} 年的空窗，實際缺口會比畫面上大。）`;
     gapWarnEl.style.display = 'block';
   } else {
     gapWarnEl.style.display = 'none';
@@ -1814,7 +1842,7 @@ function rtAffordableMonthly(asset, realReturn){
   if(Math.abs(realReturn) < 0.0005) return asset/(12*DRAWDOWN_HORIZON_YEARS);
   return asset*realReturn/(12*(1-Math.pow(1+realReturn,-DRAWDOWN_HORIZON_YEARS)));
 }
-function rtLaborMonthlyTotal(inflation){
+function rtLaborMonthlyTotal(inflation, years){
   if(!laborOn) return { total:0, laborPensionMonthly:0, pensionMonthly:0 };
   const laborSalary = +document.getElementById('in-laborSalary').value || 0;
   const laborYears = +document.getElementById('in-laborYears').value;
@@ -1822,7 +1850,8 @@ function rtLaborMonthlyTotal(inflation){
   const pensionReturn = (+document.getElementById('in-laborReturn').value)/100;
   const laborExisting = +document.getElementById('in-laborExisting').value || 0;
   const laborPensionMonthly = calcLaborPension(laborSalary, laborYears);
-  const pensionMonthly = calcLaborLumpSum(laborSalary, laborYears, voluntaryPct, pensionReturn, laborExisting, inflation) / PENSION_PAYOUT_MONTHS;
+  // 跟正算共用同一個勞退函式（未來提繳月數、過去本金粗估、折回今日購買力）
+  const pensionMonthly = rtLaborPensionInfo(laborSalary, laborYears, years, voluntaryPct, pensionReturn, laborExisting, inflation).monthly;
   return { total: laborPensionMonthly + pensionMonthly, laborPensionMonthly, pensionMonthly };
 }
 // 在某個報酬率假設下，回推每月需投入多少
@@ -1847,7 +1876,7 @@ function calcRetirementReverse(){
   const years = Math.max(0, retireAge - currentAge);
   updateTimelineVisual();
 
-  const labor = rtLaborMonthlyTotal(inflation);
+  const labor = rtLaborMonthlyTotal(inflation, years);
   const p = { desiredMonthly, inflation, assets, years, laborTotal: labor.total };
   const s = rtSolveMonthly(p, nominalReturn);
   const { realReturn, required, fvAssets, gap, needMonthly } = s;
@@ -1984,6 +2013,23 @@ rtCalcBtn.addEventListener('click', ()=>{
   vcTrack('simulation', 'calc', 'retirement-' + rtMode);
   if(rtMode === 'reverse') calcRetirementReverse(); else calcRetirement();
 });
+// 同一輪事件裡多次觸發（例如 input＋change 一起來）只重算一次：
+// 圖示腳本 vc-icons.js 會在 DOM 變動後替換文字節點，同一輪內重寫多次會讓它拿到已被移除的節點而報錯
+const liveQueued = new Set();
+function queueLive(fn){
+  if(liveQueued.has(fn)) return;
+  liveQueued.add(fn);
+  queueMicrotask(()=>{ liveQueued.delete(fn); fn(); });
+}
+// 算過一次之後，改任何輸入都即時重算，避免畫面留著舊數字（按鈕行為不變）
+function rtRecalcNow(){
+  if(!rtHasCalculated) return;
+  if(rtMode === 'reverse') calcRetirementReverse(); else calcRetirement();
+}
+function rtLiveRecalc(){ queueLive(rtRecalcNow); }
+document.getElementById('panel-retirement').addEventListener('input', rtLiveRecalc);
+document.getElementById('panel-retirement').addEventListener('change', rtLiveRecalc);
+laborToggle.addEventListener('click', rtLiveRecalc);
 updateTimelineVisual();
 
 /* ---------------- 投資理財 ---------------- */
@@ -2077,6 +2123,16 @@ function calcInvest(){
 }
 document.getElementById('btn-calcInvest').addEventListener('click', calcInvest);
 document.getElementById('btn-calcInvest').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'invest'));
+// 共用：某個區塊的結果顯示過之後，區塊內任何輸入變動就即時重算（還沒按過按鈕時不自動跳結果）
+function bindLiveRecalc(containerId, resultId, fn){
+  const box = document.getElementById(containerId);
+  const run = ()=>{ if(document.getElementById(resultId).classList.contains('show')) fn(); };
+  const handler = ()=> queueLive(run);
+  box.addEventListener('input', handler);
+  box.addEventListener('change', handler);
+  return handler;
+}
+bindLiveRecalc('panel-invest', 'inv-resultSection', calcInvest);
 
 /* ---------------- 遺贈方案 ---------------- */
 document.querySelectorAll('#legacySubTabs button').forEach(btn=>{
@@ -2111,12 +2167,15 @@ wireLgToggle('tg-lgAmt', v=>{ lgAmtToggleOn=v; calcLegacyAmt(); });
 document.querySelectorAll('#panel-legacy .stepper button[data-lgstep]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const key = btn.dataset.lgstep, d = parseInt(btn.dataset.d);
+    // 子女、父母人數只有一個來源（資產分配頁的子女清單／父母在世開關），這裡的 stepper 是直接改那份資料，
+    // 兩個子分頁才不會各算各的
+    if(key==='children'){ lgStepChildren(d); return; }
+    if(key==='parents'){ lgStepParents(d); return; }
     const min = 0;
-    const max = (key==='parents') ? 2 : (key==='minoryears' ? 20 : 12);
+    // 遺贈稅法 §17：未成年加扣按「距屆滿成年之年數」，民法 112 年起成年為 18 歲，故最多 18 年
+    const max = key==='minoryears' ? 18 : (key==='minors' ? lgState.children : 12);
     lgState[key] = Math.max(min, Math.min(max, (lgState[key]||0) + d));
-    if(key==='children') lgState.minors = Math.min(lgState.minors, lgState.children);
-    document.getElementById('v-lg'+key.charAt(0).toUpperCase()+key.slice(1)).textContent = lgState[key];
-    document.getElementById('row-lgMinoryears').style.display = lgState.minors>0 ? 'flex' : 'none';
+    lgSyncTaxFamilyUI();
     calcLegacyTax();
   });
 });
@@ -2133,7 +2192,13 @@ bindLgRange('in-lgReratio','reratio','v-lgReratio', v=>v+'%');
 bindLgRange('in-lgDecl','decl','v-lgDecl', v=>v+'%');
 
 function bindLgNum(id, key){
-  document.getElementById(id).addEventListener('input', e=>{ lgState[key] = parseFloat(e.target.value)||0; calcLegacyTax(); });
+  document.getElementById(id).addEventListener('input', e=>{
+    // 金額不可能是負數（例如債務填 -500 會反而讓遺產淨額變大），一律夾到 0 以上
+    const v = parseFloat(e.target.value);
+    if(v<0) e.target.value = 0;
+    lgState[key] = Math.max(0, v||0);
+    calcLegacyTax();
+  });
 }
 bindLgNum('in-lgListed','listed');
 bindLgNum('in-lgUnlisted','unlisted');
@@ -2239,12 +2304,64 @@ function getAliveParentLabels(){
   }
 }
 
+// ---- 家庭結構單一來源：子女＝childList，父母＝在世開關；租稅規劃頁的 stepper 只是另一個操作入口 ----
+// 各父母身分底下對應的在世開關（stateKey ↔ 按鈕 id），stepper 加減時依序開／關
+const LG_PARENT_SWITCHES = {
+  '本生父母': [['fatherAlive','tg-fatherAlive'], ['motherAlive','tg-motherAlive']],
+  '被收養':   [['adoptFatherAlive','tg-adoptFatherAlive'], ['adoptMotherAlive','tg-adoptMotherAlive']],
+  'other':    [['stepBioFatherAlive','tg-stepBioFather'], ['stepBioMotherAlive','tg-stepBioMother'],
+               ['stepAdoptFatherAlive','tg-stepAdoptFather'], ['stepAdoptMotherAlive','tg-stepAdoptMother']]
+};
+function lgStepChildren(d){
+  if(d>0){
+    if(lgState.childList.length>=12) return;
+    lgState.childList.push({id:++childIdSeq, type:'親生子女'});
+  } else {
+    if(lgState.childList.length<=0) return;
+    lgState.childList.pop();
+  }
+  renderChildList();
+  lgFamilyChanged();
+}
+function lgStepParents(d){
+  const list = LG_PARENT_SWITCHES[lgState.parentType] || LG_PARENT_SWITCHES.other;
+  if(d>0){
+    if(lgState.parents>=2) return;
+    const next = list.find(([k])=>!lgState[k]);
+    if(next) lgState[next[0]] = true;
+  } else {
+    const on = list.filter(([k])=>lgState[k]);
+    if(on.length) lgState[on[on.length-1][0]] = false;
+  }
+  list.forEach(([k,id])=> document.getElementById(id).classList.toggle('on', !!lgState[k]));
+  lgFamilyChanged();
+}
+// 租稅規劃頁的人數顯示跟著狀態走
+function lgSyncTaxFamilyUI(){
+  document.getElementById('v-lgChildren').textContent = lgState.children;
+  document.getElementById('v-lgMinors').textContent = lgState.minors;
+  document.getElementById('v-lgMinoryears').textContent = lgState.minoryears;
+  document.getElementById('v-lgParents').textContent = lgState.parents;
+  document.getElementById('v-lgDisabled').textContent = lgState.disabled;
+  document.getElementById('row-lgMinoryears').style.display = lgState.minors>0 ? 'flex' : 'none';
+}
+// 任何一個子分頁改了子女／父母，兩邊（人數顯示、順位、分配、遺產稅）一起更新
+function lgFamilyChanged(){
+  syncChildrenCount();
+  syncParentsCount();
+  updateTierStates();
+  calcLegacyAlloc();
+  lgSyncTaxFamilyUI();
+  calcLegacyTax();
+}
+
 // ---- 配偶 toggle（租稅規劃／資產分配兩處同步） ----
 function setSpouse(v){
   lgState.spouse = v;
   document.getElementById('tg-lgSpouse').classList.toggle('on', v);
   document.getElementById('tg-allocSpouse').classList.toggle('on', v);
   calcLegacyAlloc();
+  calcLegacyTax(); // 配偶扣除額會變，遺產稅也要立刻更新
 }
 document.getElementById('tg-allocSpouse').addEventListener('click', ()=> setSpouse(!lgState.spouse));
 
@@ -2265,20 +2382,16 @@ function renderChildList(){
     row.querySelector('select').addEventListener('change', e=>{ child.type = e.target.value; });
     row.querySelector('.repeat-del').addEventListener('click', ()=>{
       lgState.childList = lgState.childList.filter(c=>c.id!==child.id);
-      syncChildrenCount();
       renderChildList();
-      updateTierStates();
-      calcLegacyAlloc();
+      lgFamilyChanged();
     });
     mount.appendChild(row);
   });
 }
 document.getElementById('btn-addChild').addEventListener('click', ()=>{
   lgState.childList.push({id:++childIdSeq, type:'親生子女'});
-  syncChildrenCount();
   renderChildList();
-  updateTierStates();
-  calcLegacyAlloc();
+  lgFamilyChanged();
 });
 renderChildList();
 syncChildrenCount();
@@ -2300,51 +2413,51 @@ document.querySelectorAll('#parentTypeTabs button').forEach(btn=>{
       lgState.parentType==='本生父母' ? '未被收養：由本生父母繼承。' :
       lgState.parentType==='被收養' ? '已被他人收養：本生父母依法無繼承權，由收養父母繼承。' :
       '夫妻一方收養他方子女之例外：續存的本生方（一位）與收養的繼親（一位）得併存繼承，最多 2 位。';
-    syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+    lgFamilyChanged();
   });
 });
 updateParentRowVisibility();
 document.getElementById('tg-fatherAlive').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.fatherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 document.getElementById('tg-motherAlive').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.motherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 document.getElementById('tg-adoptFatherAlive').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.adoptFatherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 document.getElementById('tg-adoptMotherAlive').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.adoptMotherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 
 // ---- 一方收養：四個獨立開關，自由勾選 ----
 document.getElementById('tg-stepBioFather').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.stepBioFatherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 document.getElementById('tg-stepBioMother').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.stepBioMotherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 document.getElementById('tg-stepAdoptFather').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.stepAdoptFatherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 document.getElementById('tg-stepAdoptMother').addEventListener('click', function(){
   this.classList.toggle('on');
   lgState.stepAdoptMotherAlive = this.classList.contains('on');
-  syncParentsCount(); updateTierStates(); calcLegacyAlloc();
+  lgFamilyChanged();
 });
 
 // ---- 兄弟姊妹（不限人數）／祖父母（上限4人）stepper ----
@@ -2544,14 +2657,14 @@ function updateCustomTotal(heirs){
 const LG_AMT_EX_INS = 3740, LG_AMT_EX_BASE = 750, LG_AMT_RATE = 0.20, LG_OVERSEAS_THRESHOLD = 100;
 
 function calcLegacyAmt(){
-  const insurance = parseFloat(document.getElementById('in-lgAmtIns').value)||0;
-  const income = parseFloat(document.getElementById('in-lgAmtIncome').value)||0;
-  const overseas = parseFloat(document.getElementById('in-lgAmtOverseas').value)||0;
-  const sec = parseFloat(document.getElementById('in-lgAmtSec').value)||0;
-  const donate = parseFloat(document.getElementById('in-lgAmtDonate').value)||0;
-  const div = parseFloat(document.getElementById('in-lgAmtDiv').value)||0;
-  const generalTax = parseFloat(document.getElementById('in-lgAmtGenertax').value)||0;
-  const credit = parseFloat(document.getElementById('in-lgAmtCredit').value)||0;
+  const insurance = Math.max(0, parseFloat(document.getElementById('in-lgAmtIns').value)||0);
+  const income = Math.max(0, parseFloat(document.getElementById('in-lgAmtIncome').value)||0);
+  const overseas = Math.max(0, parseFloat(document.getElementById('in-lgAmtOverseas').value)||0);
+  const sec = Math.max(0, parseFloat(document.getElementById('in-lgAmtSec').value)||0);
+  const donate = Math.max(0, parseFloat(document.getElementById('in-lgAmtDonate').value)||0);
+  const div = Math.max(0, parseFloat(document.getElementById('in-lgAmtDiv').value)||0);
+  const generalTax = Math.max(0, parseFloat(document.getElementById('in-lgAmtGenertax').value)||0);
+  const credit = Math.max(0, parseFloat(document.getElementById('in-lgAmtCredit').value)||0);
 
   const s1 = lgAmtToggleOn ? Math.max(0, insurance - LG_AMT_EX_INS) : 0;
   const s2 = overseas >= LG_OVERSEAS_THRESHOLD ? overseas : 0;
@@ -2624,30 +2737,35 @@ function calcEducation(){
   const contributionPct = targetInflated>0 ? totalContribution/targetInflated*100 : 0;
 
   // 延後一年開始的比較（負擔敏感度）
-  const yearsDelay = Math.max(1, years-1);
-  const nDelay = yearsDelay*12;
-  const targetInflatedDelay = target * Math.pow(1+eduInflation, yearsDelay);
-  const existingFVDelay = existing * Math.pow(1+monthlyRate, nDelay);
-  const gapDelay = Math.max(0, targetInflatedDelay - existingFVDelay);
-  const pmtDelay = monthlyRate>0.00001
-    ? gapDelay * monthlyRate / (Math.pow(1+monthlyRate, nDelay) - 1)
-    : gapDelay / nDelay;
+  // 截止時間（孩子用錢的年齡）不變：目標金額、現有資金的複利都一樣，只是每月投入少了第一年的 12 個月
+  const nDelay = (years-1)*12;
+  const pmtDelay = nDelay<=0 ? Infinity : (monthlyRate>0.00001
+    ? gap * monthlyRate / (Math.pow(1+monthlyRate, nDelay) - 1)
+    : gap / nDelay);
   const delayIncrease = pmtDelay - pmt;
 
   // ---- 可行性分級（依每月需存占家庭常見負擔感的粗略分級：無明確比較基準時，改用「複利貢獻比例」與缺口是否為0判斷） ----
   const feasible = gap <= targetInflated*1.5; // 目標本身>0時基本上都算可行，主要用於極端情況（如通膨吃掉太多本金）
-  const tier = compoundRate>=25 ? 'pos' : (compoundRate>=10 ? 'warn' : 'neg');
+  // 狀態分級：缺口為 0 代表現有資金已足額；報酬率設 0% 時複利本來就是 0，不該歸咎「準備期太短」
+  const fullyFunded = gap <= 0;
+  const zeroReturn = annualReturn <= 0;
+  const tier = fullyFunded ? 'pos' : (zeroReturn ? 'warn' : (compoundRate>=25 ? 'pos' : (compoundRate>=10 ? 'warn' : 'neg')));
 
   const banner = document.getElementById('edu-statusBanner');
   banner.className = 'stat-card status-banner-compact' + (tier==='pos' ? '' : (tier==='warn' ? ' tier-warn-banner' : ' tier-neg-banner'));
-  document.getElementById('edu-statusBadge').textContent = tier==='pos' ? '✓ 計畫可行，時間複利幫上大忙' : (tier==='warn' ? '⚠ 計畫可行，但複利幫助有限' : '✕ 準備期太短，幾乎得靠本金硬存');
+  document.getElementById('edu-statusBadge').textContent = fullyFunded ? '✓ 現有資金已足額，不需每月再存'
+    : zeroReturn ? '⚠ 報酬率設為 0%，全靠本金累積'
+    : (tier==='pos' ? '✓ 計畫可行，時間複利幫上大忙' : (tier==='warn' ? '⚠ 計畫可行，但複利幫助有限' : '✕ 準備期太短，幾乎得靠本金硬存'));
 
   const monthlyNeedEl = document.getElementById('edu-monthlyNeed');
   monthlyNeedEl.innerHTML = money(pmt)+'<small style="font-size:16px;font-weight:600;">/月</small>';
   monthlyNeedEl.className = 'status-diff tier-'+tier;
 
-  document.getElementById('edu-statusDesc').textContent =
-    '時間複利是你最強的夥伴。越早開始，越多教育金由投資幫你賺，每月負擔越輕。';
+  document.getElementById('edu-statusDesc').textContent = fullyFunded
+    ? '現有資金依目前報酬假設，到時已足以支應教育金目標，不需要再每月投入。'
+    : zeroReturn
+    ? '報酬率設為 0% 時，教育金全部要靠每月存下的本金累積；若能放在有合理報酬的工具，每月負擔會減輕。'
+    : '時間複利是你最強的夥伴。越早開始，越多教育金由投資幫你賺，每月負擔越輕。';
 
   const rateBig = document.getElementById('edu-compoundRate');
   rateBig.innerHTML = compoundRate.toFixed(0)+'<small>%</small>';
@@ -2684,11 +2802,20 @@ function calcEducation(){
   document.getElementById('edu-legendGain').textContent = money(compoundGain);
   document.getElementById('edu-legendGainPct').textContent = compoundRate.toFixed(0)+'%';
 
+  let delayText;
+  if(fullyFunded){
+    delayText = '現有資金已足額，就算延後一年也不需要每月投入。';
+  } else if(!isFinite(pmtDelay)){
+    delayText = `距離用錢只剩 ${years} 年，若再延後一年就沒有分期的時間，缺口 ${money(gap)} 需一次到位。`;
+  } else {
+    delayText = `若延後一年才開始，依目前報酬假設，每月約需多投入 ${money(Math.max(0,delayIncrease))}（由 ${money(pmt)} 增至 ${money(pmtDelay)}）。`;
+  }
   document.getElementById('edu-delayWarning').innerHTML =
-    `<b>準備期長短會影響每月負擔：</b>若延後一年才開始，依目前報酬假設，每月約需多投入 ${money(Math.max(0,delayIncrease))} 元（由 ${money(pmt)} 增至 ${money(pmtDelay)}）。實際金額隨報酬率與市場波動而變動，僅供規劃參考。`;
+    `<b>準備期長短會影響每月負擔：</b>${delayText}實際金額隨報酬率與市場波動而變動，僅供規劃參考。`;
 
-  document.getElementById('edu-tip-1').textContent =
-    `教育金需約 ${years} 年累積、每月約存 ${money(pmt)}；這段準備期若延後開始，每月負擔會明顯增加，越早規劃越輕鬆。`;
+  document.getElementById('edu-tip-1').textContent = fullyFunded
+    ? `教育金距離用錢還有約 ${years} 年，現有資金依目前假設已足夠；之後每年檢視一次報酬與學費通膨即可。`
+    : `教育金需約 ${years} 年累積、每月約存 ${money(pmt)}；這段準備期若延後開始，每月負擔會明顯增加，越早規劃越輕鬆。`;
   document.getElementById('edu-tip-2').textContent =
     '這段準備期若收入中斷，可能影響目標達成。規劃時可一併考量保障，使目標金額在意外發生時仍有著落；本試算僅供教育與財務規劃參考，非保險招攬或要約，實際保障依商品條款及核保，完整評估請洽合格從業人員。';
 
@@ -2696,13 +2823,15 @@ function calcEducation(){
 }
 document.getElementById('btn-calcEducation').addEventListener('click', calcEducation);
 document.getElementById('btn-calcEducation').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'education'));
+bindLiveRecalc('panel-education', 'edu-resultSection', calcEducation);
 
 /* ---------------- 購屋基金：子分頁切換 ---------------- */
 document.querySelectorAll('#houseSubTabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#houseSubTabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    document.querySelectorAll('.house-sub').forEach(s=>s.classList.remove('active'));
+    // 只動購屋分頁自己的子分頁（遺贈方案也用 .house-sub，全頁搜尋會把它關掉）
+    document.querySelectorAll('#panel-house .house-sub').forEach(s=>s.classList.remove('active'));
     document.getElementById('house-sub-'+btn.dataset.sub).classList.add('active');
   });
 });
@@ -2724,7 +2853,16 @@ function calcHouseAbility(){
   const loanYears = +document.getElementById('in-haLoanYears').value;
   const price = +document.getElementById('in-haPrice').value || 0;
   const cash = +document.getElementById('in-haCash').value || 0;
-  const grace = +document.getElementById('in-haGrace').value;
+  const graceInput = +document.getElementById('in-haGrace').value;
+  // 寬限期不能等於或超過貸款年限（至少留 1 年本息攤還），否則月付金會爆量失真
+  const grace = Math.min(graceInput, Math.max(0, loanYears-1));
+  const graceHint = document.getElementById('ha-graceHint');
+  if(grace < graceInput){
+    graceHint.textContent = `寬限期不可超過貸款年限，已依 ${loanYears} 年貸款以 ${grace} 年計算。`;
+    graceHint.style.display = 'block';
+  } else {
+    graceHint.style.display = 'none';
+  }
   const saveReturn = (+document.getElementById('in-haSaveReturn').value)/100;
 
   const years = Math.max(1, buyAge - currentAge);
@@ -2809,10 +2947,13 @@ function calcHouseAbility(){
   const cfAfterVal = grace>0 ? graceMonthly : normalMonthly;
   document.getElementById('ha-cfAfter').innerHTML = money(cfAfterVal)+'<small>/月</small>';
   document.getElementById('ha-cfAfterNote').textContent = grace>0 ? ('寬限期內（前'+grace+'年），寬限期後 '+money(normalMonthly)+' /月') : '本息攤還';
-  const diff = cfAfterVal - monthlyNeed;
+  // 寬限期只繳息會讓房貸看起來比存頭期款還輕，所以同時列出寬限期後（本息攤還）的差額，避免誤讀成「買了反而比較省」
+  const graceDiff = graceMonthly - monthlyNeed;
+  const normalDiff = normalMonthly - monthlyNeed;
+  const signed = v => (v>=0?'+':'') + lgFmtSigned(v);
   const diffEl = document.getElementById('ha-cfDiff');
-  diffEl.textContent = (diff>=0?'+':'') + lgFmtSigned(diff);
-  diffEl.className = 'cf-diff' + (diff>0 ? ' neg' : '');
+  diffEl.textContent = grace>0 ? ('寬限期 '+signed(graceDiff)+'／之後 '+signed(normalDiff)) : signed(normalDiff);
+  diffEl.className = 'cf-diff' + (Math.max(normalDiff, grace>0 ? graceDiff : normalDiff)>0 ? ' neg' : '');
 
   // ---- 購屋總成本來源結構 ----
   document.getElementById('ha-totalCost').textContent = money(totalCost);
@@ -2834,6 +2975,7 @@ function lgFmtSigned(n){
 }
 document.getElementById('btn-calcHouse').addEventListener('click', calcHouseAbility);
 document.getElementById('btn-calcHouse').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'house'));
+bindLiveRecalc('house-sub-ability', 'ha-resultSection', calcHouseAbility);
 
 // 滑桿即時標籤顯示（不觸發完整試算）
 function bindSliderLabel(id, vid, suffix, decimals){
@@ -2882,7 +3024,8 @@ document.querySelectorAll('#taxSystemTabs button').forEach(btn=>{
     document.getElementById('taxNote').textContent = taxSystem==='new'
       ? '新制：持有≤2年45%／2-5年35%／5-10年20%／>10年15%；符合自住優惠者，課稅所得400萬以下免稅，超過部分按10%課徵。'
       : '舊制（105年前取得）：房屋部分交易所得併入綜合所得稅申報，土地部分另計土地增值稅（不在此試算內）；房屋評定現值比例與適用稅率請依實際資料調整。';
-    document.getElementById('tax-resultSection').classList.remove('show');
+    // 已經算過就直接用新制度重算，沒算過維持隱藏等按鈕
+    if(document.getElementById('tax-resultSection').classList.contains('show')) calcTax();
   });
 });
 
@@ -2945,6 +3088,8 @@ function calcTax(){
 }
 document.getElementById('btn-calcTax').addEventListener('click', calcTax);
 document.getElementById('btn-calcTax').addEventListener('click', ()=> vcTrack('simulation', 'calc', 'house-tax'));
+const taxLiveRecalc = bindLiveRecalc('house-sub-tax', 'tax-resultSection', calcTax);
+selfUseToggle.addEventListener('click', taxLiveRecalc);
 
 /* ---------------- 初始化（不自動顯示結果，等按鈕觸發） ---------------- */
 updateTimelineVisual();

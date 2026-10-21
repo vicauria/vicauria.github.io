@@ -441,11 +441,11 @@
             <div class="stepper"><button data-step="children" data-d="-1">−</button><span class="count" id="v-children">2</span><button data-step="children" data-d="1">+</button></div>
           </div>
           <div class="row-between">
-            <span class="row-label">‣ 其中未成年人數<span class="sub">按距滿 20 歲年數，每年加扣 56 萬</span></span>
+            <span class="row-label">‣ 其中未成年人數<span class="sub">按距滿 18 歲（成年）年數，每年加扣 56 萬</span></span>
             <div class="stepper"><button data-step="minors" data-d="-1">−</button><span class="count" id="v-minors">0</span><button data-step="minors" data-d="1">+</button></div>
           </div>
           <div class="row-between" id="row-minoryears" style="display:none;">
-            <span class="row-label">‣ 平均距滿 20 歲年數</span>
+            <span class="row-label">‣ 平均距滿 18 歲年數</span>
             <div class="stepper"><button data-step="minoryears" data-d="-1">−</button><span class="count" id="v-minoryears">5</span><button data-step="minoryears" data-d="1">+</button></div>
           </div>
           <div class="row-between">
@@ -466,7 +466,7 @@
             <div class="field-note">指定受益人之壽險給付不計入遺產總額，但會沿用到「最低稅負」頁計算。</div>
           </div>
           <div class="field">
-            <div class="field-label"><span>每年已做贈與</span></div>
+            <div class="field-label"><span>死亡前 2 年內贈與</span></div>
             <div class="input-suffix"><input type="number" id="in-gifted" placeholder="0"></div>
             <div class="field-note">死亡前 2 年內對配偶及特定親屬的贈與，仍會被追回併入遺產總額計稅。</div>
           </div>
@@ -492,9 +492,10 @@
       <div class="ledger-row"><span class="lbl">計稅遺產總額（不動產已折算公告現值）</span><span class="val" id="r-grossestate">0 萬</span></div>
       <div class="ledger-row sub"><span class="lbl">非不動產部分</span><span class="val" id="r-nonre">0 萬</span></div>
       <div class="ledger-row sub"><span class="lbl">不動產部分（× 公告現值比率）</span><span class="val" id="r-re">0 萬</span></div>
+      <div class="ledger-row sub"><span class="lbl">加：死亡前 2 年內贈與（併入遺產）</span><span class="val" id="r-gifted">0 萬</span></div>
       <div class="ledger-row"><span class="lbl">減：免稅額</span><span class="val">1,333 萬</span></div>
       <div class="ledger-row"><span class="lbl">減：扣除額合計</span><span class="val" id="r-deductions">0 萬</span></div>
-      <div class="ledger-row sub"><span class="lbl">配偶／子女／父母／身障／喪葬費／債務／夫妻差額</span><span class="val" id="r-deductbreak">—</span></div>
+      <div class="ledger-row sub"><span class="lbl">配偶／子女（含未成年加扣）／父母／身障／喪葬費／債務／夫妻差額</span><span class="val" id="r-deductbreak">—</span></div>
       <div class="ledger-total">
         <div class="lbl">遺產淨額</div>
         <div class="big" id="r-netestate">0 <small>萬</small></div>
@@ -613,7 +614,7 @@
   </section>
 
   <div class="disclaimer">
-    <strong>試算依據：</strong>財政部 115 年度（2026）公告遺產稅免稅額 1,333 萬、配偶扣除額 553 萬、直系血親卑親屬扣除額每人 56 萬（未成年按距滿 20 歲年數加扣）、父母扣除額每人 138 萬、重度身心障礙特別扣除額每人 693 萬、喪葬費扣除額 138 萬，課稅級距 5,621 萬以下 10%、超過 5,621 萬至 1 億 1,242 萬部分 15%、超過部分 20%；所得基本稅額條例現行規定基本所得額免稅額 750 萬、稅率 20%、保險死亡給付免計額 3,740 萬、海外所得 100 萬門檻；民法應繼分／特留分依現行第 1138、1144、1223 條（兄弟姊妹特留分刪除案已三讀通過，尚待公布施行）。本工具僅供教育性試算參考，實際規劃請洽會計師、律師或持牌顧問確認。
+    <strong>試算依據：</strong>財政部 115 年度（2026）公告遺產稅免稅額 1,333 萬、配偶扣除額 553 萬、直系血親卑親屬扣除額每人 56 萬（未成年按距滿 18 歲成年之年數加扣）、父母扣除額每人 138 萬、重度身心障礙特別扣除額每人 693 萬、喪葬費扣除額 138 萬，課稅級距 5,621 萬以下 10%、超過 5,621 萬至 1 億 1,242 萬部分 15%、超過部分 20%；所得基本稅額條例現行規定基本所得額免稅額 750 萬、稅率 20%、保險死亡給付免計額 3,740 萬、海外所得 100 萬門檻；民法應繼分／特留分依現行第 1138、1144、1223 條（兄弟姊妹特留分刪除案已三讀通過，尚待公布施行）。本工具僅供教育性試算參考，實際規劃請洽會計師、律師或持牌顧問確認。
   </div>
 
 </div>
@@ -659,7 +660,7 @@
     btn.addEventListener('click', ()=>{
       const key = btn.dataset.step, d = parseInt(btn.dataset.d);
       const min = (key==='minoryears') ? 0 : 0;
-      const max = (key==='parents') ? 2 : (key==='minoryears' ? 20 : 12);
+      const max = (key==='parents') ? 2 : (key==='minoryears' ? 18 : 12);
       state[key] = Math.max(min, Math.min(max, (state[key]||0) + d));
       if(key==='children') state.minors = Math.min(state.minors, state.children);
       $('v-'+key).textContent = state[key];
@@ -682,7 +683,8 @@
 
   function bindNum(id, key, cb){
     $(id).addEventListener('input', e=>{
-      state[key] = parseFloat(e.target.value)||0;
+      // 金額不能是負數（負的債務會讓遺產淨額變大，結果失真）
+      state[key] = Math.max(0, parseFloat(e.target.value)||0);
       calcTax();
       if(cb) cb();
     });
@@ -714,7 +716,9 @@
   function calcTax(){
     const nonRe = state.assets * (1 - state.reratio/100);
     const re = state.assets * (state.reratio/100) * (state.decl/100);
-    const gross = nonRe + re;
+    // 死亡前 2 年內對配偶及特定親屬的贈與，依法併入遺產總額（遺產及贈與稅法 §15）
+    const gifted = state.gifted || 0;
+    const gross = nonRe + re + gifted;
 
     let ded = 0;
     if(state.spouse) ded += DED_SPOUSE;
@@ -732,9 +736,10 @@
     $('r-grossestate').textContent = fmt(gross)+' 萬';
     $('r-nonre').textContent = fmt(nonRe)+' 萬';
     $('r-re').textContent = fmt(re)+' 萬';
+    $('r-gifted').textContent = fmt(gifted)+' 萬';
     $('r-deductions').textContent = fmt(ded)+' 萬';
     $('r-deductbreak').textContent =
-      (state.spouse?DED_SPOUSE:0)+' / '+(state.children*DED_CHILD)+' / '+(state.parents*DED_PARENT)+' / '+(state.disabled*DED_DISABLED)+' / '+DED_FUNERAL+' / '+state.debt+' / '+state.spousaldiff;
+      (state.spouse?DED_SPOUSE:0)+' / '+(state.children*DED_CHILD + state.minors*state.minoryears*DED_CHILD)+' / '+(state.parents*DED_PARENT)+' / '+(state.disabled*DED_DISABLED)+' / '+DED_FUNERAL+' / '+state.debt+' / '+state.spousaldiff;
     $('r-netestate').textContent = fmt(net);
     $('r-tax').textContent = fmt(tax);
     $('r-bracket').textContent = rate+'%';

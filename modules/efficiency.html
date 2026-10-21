@@ -164,6 +164,10 @@
   .lg-card .lg-rate span{font-size:12px;color:var(--ink-soft);}
   .lg-card .lg-meta{font-size:12px;color:var(--ink-soft);line-height:1.7;margin-top:8px;}
   .lg-card .lg-meta b{color:var(--ink);font-family:"Roboto Mono",monospace;}
+  .lg-card .lg-meta .lg-exact{color:var(--ink-soft);font-size:11.5px;}
+  /* 報酬率超出 0.1–30% 時的提醒 */
+  .lg-card .lg-err{font-size:11.5px;color:#B3492F;line-height:1.5;margin-top:4px;}
+  .lg-card .lg-err:empty{display:none;}
   .chart-wrap{position:relative;width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 0 0;overflow:hidden;}
   #r72Chart svg{display:block;touch-action:pan-y;outline:none;}
   #r72Chart svg:focus-visible{box-shadow:inset 0 0 0 2px var(--teal);}
@@ -353,7 +357,9 @@ function formatNT(n){
   return 'NT$ ' + rounded.toLocaleString('zh-Hant-TW');
 }
 
-function calc(){
+// live=true：結果已經顯示後，使用者改數字時即時重算（不重播動畫）
+let calcShown = false;
+function calc(live){
   const totalCash = parseFloat(document.getElementById('cash').value) || 0;
   const years = parseFloat(document.getElementById('years').value) || 0;
   const inflationRaw = document.getElementById('inflation').value.trim();
@@ -366,6 +372,8 @@ function calc(){
     : Math.pow(1 + rate/100, years);
   const change = totalCash * (netFactor - 1);
   const isGain = change >= 0;
+  // 四捨五入到元後是 0：不算成長也不算虧損，標成「持平」
+  const isFlat = Math.round(change) === 0;
   const totalValue = totalCash + change;
 
   const amountEl = document.getElementById('resultAmount');
@@ -380,14 +388,23 @@ function calc(){
   amountEl.textContent = formatNT(totalValue);
   amountEl.classList.toggle('gain', isGain);
   badge.classList.toggle('gain', isGain);
-  badge.textContent = isGain ? '成長' : '虧損提醒';
+  badge.textContent = isFlat ? '持平' : (isGain ? '成長' : '虧損提醒');
   labelEl.textContent = hasInflation ? '實質購買力' : '名目金額';
 
-  const annualizedNetRate = years > 0 ? Math.pow(netFactor, 1/years) - 1 : (rate - inflation)/100;
-  subEl.textContent =
-    (isGain ? '成長了 ' : '虧損了 ') + formatNT(Math.abs(change)) +
-    '（年化約 ' + Math.abs(annualizedNetRate*100).toFixed(1) + '%，複利計算，放置 ' + years + ' 年）' +
-    (hasInflation ? '，已扣除通膨。' : '，尚未扣除通膨，僅供參考帳面金額。');
+  if(years <= 0){
+    // 放置 0 年：時間還沒開始作用，金額不變，不顯示沒有意義的年化數字
+    subEl.textContent = '放置 0 年，金額還沒有變化；輸入放置年數，就能看到利率與通膨的長期影響。';
+  } else {
+    const annualizedNetRate = Math.pow(netFactor, 1/years) - 1;
+    const rateTxt = '年化約 ' + (annualizedNetRate < 0 ? '－' : '') + Math.abs(annualizedNetRate*100).toFixed(1) + '%';
+    subEl.textContent =
+      (isFlat ? '金額大致持平' : (isGain ? '成長了 ' : '虧損了 ') + formatNT(Math.abs(change))) +
+      '（' + rateTxt + '，複利計算，放置 ' + years + ' 年）' +
+      (hasInflation ? '，已扣除通膨。' : '，尚未扣除通膨，僅供參考帳面金額。');
+  }
+
+  calcShown = true;
+  if(live === true){ card.classList.add('show'); badge.classList.add('show'); return; }
 
   card.classList.remove('show');
   badge.classList.remove('show');
@@ -397,6 +414,9 @@ function calc(){
     setTimeout(() => badge.classList.add('show'), 220);
   });
 }
+
+// 按過一次「算出我的實質變化」之後，改任何一個欄位都即時更新結果，避免畫面停在舊數字
+['cash','years','inflation','rate'].forEach(id=> document.getElementById(id).addEventListener('input', ()=>{ if(calcShown) calc(true); }));
 
 /* ---------- 72 法則：四種報酬率 100 年複利比較圖 ---------- */
 const R72 = {
@@ -438,13 +458,18 @@ function buildR72Legend(){
     const inp = document.createElement('input'); inp.type = 'number'; inp.step = '0.1'; inp.min = '0.1'; inp.max = '30';
     inp.inputMode = 'decimal'; inp.value = p.rate; inp.setAttribute('aria-label', p.name + ' 年化報酬率');
     const pct = document.createElement('span'); pct.textContent = '% / 年';
+    const err = document.createElement('div'); err.className = 'lg-err'; err.setAttribute('aria-live', 'polite');
     inp.addEventListener('input', ()=>{
       const v = parseFloat(inp.value);
-      if(v > 0 && v <= 30){ p.rate = v; renderR72(); }
+      if(v >= 0.1 && v <= 30){ p.rate = v; err.textContent = ''; renderR72(); }
+      // 超出範圍時不要默默忽略：提示使用者，圖表與說明仍以上一個有效值計算
+      else err.textContent = '請輸入 0.1–30 之間的數字，目前仍以 ' + trimNum(p.rate, 2) + '% 計算';
     });
+    // 離開欄位時，把無效的輸入還原成目前實際採用的報酬率，讓輸入框與圖表一致
+    inp.addEventListener('blur', ()=>{ if(err.textContent){ inp.value = p.rate; err.textContent = ''; } });
     rw.appendChild(inp); rw.appendChild(pct);
     const meta = document.createElement('div'); meta.className = 'lg-meta'; meta.id = 'lgMeta' + i;
-    card.appendChild(nm); card.appendChild(rw); card.appendChild(meta);
+    card.appendChild(nm); card.appendChild(rw); card.appendChild(err); card.appendChild(meta);
     box.appendChild(card);
   });
 }
@@ -459,6 +484,9 @@ function renderR72(){
     m.textContent = '';
     const l1 = document.createElement('div'); l1.appendChild(document.createTextNode('72 ÷ ' + trimNum(p.rate,1) + ' ≈ '));
     const b1 = document.createElement('b'); b1.textContent = trimNum(72/p.rate, 1); l1.appendChild(b1); l1.appendChild(document.createTextNode(' 年翻倍'));
+    // 72 法則是速算；旁邊附上精確的翻倍年數 ln2 ÷ ln(1+r)，和圖上的翻倍點一致
+    const ex = document.createElement('span'); ex.className = 'lg-exact';
+    ex.textContent = '（精算 ' + (Math.log(2)/Math.log(1+p.rate/100)).toFixed(1) + ' 年）'; l1.appendChild(ex);
     const l2 = document.createElement('div'); l2.appendChild(document.createTextNode(R72.years + ' 年後 '));
     const b2 = document.createElement('b'); b2.textContent = amt > 0 ? fmtShort(r72Value(p, R72.years)) : '—'; l2.appendChild(b2);
     m.appendChild(l1); m.appendChild(l2);
@@ -644,11 +672,15 @@ function calc631(){
   if(spendRaw !== '' && inc > 0){
     const spend = Math.max(0, parseFloat(spendRaw) || 0);
     const pct = spend / inc * 100;
+    const gap = Math.round(spend - inc*0.6);   // 以「元」判斷多或少，避免四捨五入後出現「約佔 60%，比 60% 多了…」的矛盾
+    // 百分比至少顯示一位小數；若四捨五入後剛好變成 60.0，就多顯示幾位，讓「多／少」看得出來
+    let d = 1; while(d < 4 && Number(pct.toFixed(d)) === 60) d++;
+    const pctTxt = pct.toFixed(d);
     check.style.display = 'block';
-    if(pct > 60){
-      check.textContent = '你目前生活開銷約佔收入 ' + pct.toFixed(0) + '%，比 60% 多了 ' + formatNT(spend - inc*0.6) + ' / 月。這代表投資理財和保障的空間被壓縮，可以先檢視哪些支出能調整。';
-    } else if(pct < 60){
-      check.textContent = '你目前生活開銷約佔收入 ' + pct.toFixed(0) + '%，比 60% 少 ' + formatNT(inc*0.6 - spend) + ' / 月。這筆結餘如果沒有安排好用途，很容易不知不覺花掉，可以考慮多分配給投資理財或保障。';
+    if(gap > 0){
+      check.textContent = '你目前生活開銷約佔收入 ' + pctTxt + '%，比 60% 多了 ' + formatNT(gap) + ' / 月。這代表投資理財和保障的空間被壓縮，可以先檢視哪些支出能調整。';
+    } else if(gap < 0){
+      check.textContent = '你目前生活開銷約佔收入 ' + pctTxt + '%，比 60% 少 ' + formatNT(-gap) + ' / 月。這筆結餘如果沒有安排好用途，很容易不知不覺花掉，可以考慮多分配給投資理財或保障。';
     } else {
       check.textContent = '你目前的生活開銷剛好落在 60%，和 631 法則一致。';
     }

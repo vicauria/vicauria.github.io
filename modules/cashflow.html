@@ -689,7 +689,7 @@
             <div class="ratio-value" id="ratioInsurance">0%</div>
           </div>
           <div class="ratio-row">
-            <div class="ratio-name">貸款壓力比<small>貸款支出 ÷ 總收入</small></div>
+            <div class="ratio-name">非房貸貸款壓力比<small>信貸／車貸等非房貸月付 ÷ 總收入；房貸已列在必要支出，不含在此</small></div>
             <div class="ratio-value" id="ratioLoan">0%</div>
           </div>
         </div>
@@ -798,9 +798,13 @@ function pct(n){
   if(!isFinite(n)) return "0%";
   return (n*100).toFixed(1) + "%";
 }
+// 收入、支出金額都不會是負數：負數一律當 0（避免填 -500,000 把總支出算成負的）
+function amt(v){ return Math.max(0, Number(v)||0); }
 function rowAnnual(row){
-  return (Number(row.monthly)||0)*12 + (Number(row.once)||0);
+  return amt(row.monthly)*12 + amt(row.once);
 }
+// 通常是「一年一次」的項目（年終、旅遊、年繳保費）：每月欄留空並提示改填右邊的年度一次性欄
+function isYearlyItem(name){ return /年終|獎金|分紅|旅遊|壽險|醫療險|意外險|保費/.test(String(name||'')); }
 function groupAnnual(group){
   return group.rows.reduce((s,r)=>s+rowAnnual(r),0);
 }
@@ -845,17 +849,18 @@ function renderGroupTable(group, isExpense){
 
 function renderRow(group, row, idx){
   const tr = document.createElement("tr");
+  const yearly = isYearlyItem(row.name);
   tr.innerHTML = `
     <td data-label="項目名稱"><input type="text" value="${vcEsc(row.name)}" placeholder="輸入項目名稱"></td>
-    <td data-label="每月金額"><input type="number" min="0" step="100" value="${row.monthly||0}"></td>
-    <td data-label="年度一次性"><input type="number" min="0" step="100" value="${row.once||0}"></td>
+    <td data-label="每月金額"><input type="number" min="0" step="100" value="${amt(row.monthly) || (yearly ? '' : 0)}"${yearly ? ' placeholder="年繳填一次性" title="這項通常是一年一次，請把全年金額填在「年度一次性」欄"' : ''}></td>
+    <td data-label="年度一次性"><input type="number" min="0" step="100" value="${amt(row.once)}"${yearly ? ' title="一年一次的金額填這裡（只加一次，不乘 12）"' : ''}></td>
     <td class="row-subtotal" data-label="年度小計">${money(rowAnnual(row))}</td>
     <td data-label=""><button class="del-btn" type="button" title="刪除">✕</button></td>
   `;
   const [nameInput, monthlyInput, onceInput] = tr.querySelectorAll("input");
   nameInput.addEventListener("input", e=>{ row.name = e.target.value; recalc(); });
-  monthlyInput.addEventListener("input", e=>{ row.monthly = Number(e.target.value)||0; recalc(); });
-  onceInput.addEventListener("input", e=>{ row.once = Number(e.target.value)||0; recalc(); });
+  monthlyInput.addEventListener("input", e=>{ row.monthly = amt(e.target.value); recalc(); });
+  onceInput.addEventListener("input", e=>{ row.once = amt(e.target.value); recalc(); });
   tr.querySelector(".del-btn").addEventListener("click", ()=>{
     const i = group.rows.indexOf(row);
     if(i>-1) group.rows.splice(i,1);

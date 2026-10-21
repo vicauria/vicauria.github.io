@@ -1543,10 +1543,9 @@ function renderGoalCalcCards(){
    只把通膨考慮進去，讓客戶先看清楚「什麼都不做、只是存」的真實落差。
    如果客戶有在投資、想看報酬率的威力，交給顧問帶去試算工具箱的計算機當面演示。
 
-   房貸的特別處理：房子淨值（市值－房貸餘額）單獨抓出來、維持不變（不假設房價漲跌，
-   也不模擬房貸攤還進度）；年結餘裡已經扣掉的「房貸月付金」要加回來，因為那筆錢
-   已經反映在「房屋淨值維持不變」這個假設裡，不能在結餘裡重複扣一次，不然這筆本金
-   等於在推算過程中憑空消失。 */
+   不動產的處理（2026/10 調整）：房子不能拿來支付退休、買房或其他目標，所以
+   不動產淨值（市值－房貸餘額）一律不算進目標的可用資金；計算只用「扣掉不動產與房貸後」
+   的流動淨值。房貸月付金是實際支出，維持在年結餘裡扣除，不加回。 */
 const VISION_INFLATION_RATE = 0.02;
 const VISION_SAVINGS_RATE = 0.01; // 銀行活存利率情境假設
 function computeGoalTarget(goalName){
@@ -1563,7 +1562,7 @@ function computeGoalAchievement(goalName){
   const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
   const netWorth = assetTotal - liabilityTotal;
 
-  // 房屋淨值單獨抓出來、維持不變，避免跟下面加回去的房貸月付金重複計算
+  // 不動產淨值（含房貸）整個排除：房子不能拿來支付任何目標
   const realEstateGroup = assetGroups.find(g=>g.key==='realestate');
   const realEstateValue = realEstateGroup ? groupAmountTotal(realEstateGroup) : 0;
   const mortgageGroup = liabilityGroups.find(g=>g.key==='mortgage');
@@ -1573,20 +1572,17 @@ function computeGoalAchievement(goalName){
 
   const incomeTotal = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
   const expenseTotal = expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
-  let annualSurplus = incomeTotal - expenseTotal;
+  const annualSurplus = incomeTotal - expenseTotal;
 
-  // 「房貸月付金」已經反映在「房屋淨值維持不變」的假設裡，結餘裡不能再扣一次
-  const loanGroup = expenseGroups.find(g=>g.key==='loan');
-  const mortgageRow = loanGroup ? loanGroup.rows.find(r=>r.name==='房貸月付金') : null;
-  if(mortgageRow) annualSurplus += rowAnnual(mortgageRow);
+  // 房貸月付金是實際支出，已在年結餘裡扣除，不加回
 
   const years = yearsUntil(parseInt(c.age)) || 0;
   const rate = VISION_SAVINGS_RATE;
 
-  // 用複利推估屆時累積：房屋淨值維持不變 + 流動淨值成長 + 每年結餘持續投入成長
+  // 用複利推估屆時累積：流動淨值（不含不動產）成長 + 每年結餘持續投入成長
   const fvLiquid = liquidNetWorth * Math.pow(1+rate, years);
   const fvSavings = rate>0 ? annualSurplus * ((Math.pow(1+rate, years)-1)/rate) : annualSurplus*years;
-  const projected = homeEquity + fvLiquid + fvSavings;
+  const projected = fvLiquid + fvSavings;
 
   // 通膨調整後，屆時真正需要準備的金額（今日設定的目標，換算成那個年紀的幣值）
   const inflationAdjustedTarget = target * Math.pow(1+VISION_INFLATION_RATE, years);
@@ -2523,7 +2519,8 @@ function fillCashflowBreakdown(uid){
     legend.appendChild(row);
     cum += len;
   });
-  dv.textContent = pctStr(net>=0?savingsRate:net/totalIncome);
+  // 沒有收入時不能除以 0（避免顯示 -Infinity%）
+  dv.textContent = totalIncome>0 ? pctStr(net>=0?savingsRate:net/totalIncome) : '—';
   dv.className = "dc-value"+(net<0?" negative":"");
   dl.textContent = net>=0 ? "年度儲蓄率" : "收支缺口";
 }
@@ -2662,7 +2659,7 @@ function buildReportPages(uid, opts){
     <div class="report-section">
       <h3>財富願景・達成率</h3>
       ${buildVisionGoalListHTML(uid)}
-      <div class="report-note">達成率＝單純存錢累積（假設銀行活存利率 1%，不計投資報酬），對比通膨調整後的目標金額；有房貸的話，房屋淨值先當作不變，避免跟月付金重複扣。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
+      <div class="report-note">達成率＝單純存錢累積（假設銀行活存利率 1%，不計投資報酬），對比通膨調整後的目標金額；房子（不動產淨值）不算進可用資金，房貸月付金照實際支出扣除。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
     </div>`;
 
   const financialAnalysisSection = buildFinancialAnalysisHTML();
