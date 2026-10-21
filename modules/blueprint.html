@@ -1907,7 +1907,7 @@ function computeFinanceMetrics(){
   const annualBonus = incomeGroups.reduce((s,g)=>s+g.rows.filter(r=>/年終|分紅|獎金/.test(r.name||'')).reduce((t,r)=>t+(r.once||0),0),0);
   const mcf = computeMonthlyCashflow();
   const investAssets = VCFin.catAmount(assetGroups, 'liqinv');
-  const usableFunds = liquidAssets + investAssets; // 可運用資金＝流動性資產＋流動性投資
+  const usableFunds = liquidAssets + investAssets; // 流動性資產與投資
   const investConcentration = assetTotal>0 ? investAssets/assetTotal : 0;
   return {age, incomeTotal, expenseTotal, assetTotal, liabilityTotal, netWorth,
     monthlyIncome, monthlyExpense, monthlySavings, savingsRate,
@@ -1935,10 +1935,10 @@ function buildFinancialAnalysisHTML(){
     if(m.liabilityTotal===0){
       overview += '同時，您沒有任何負債，這讓您的財務基礎非常穩固。';
     } else {
-      // 房貸每月按時繳、已扣在支出裡：不代表不能規劃，重點看扣完後的結餘與可運用資金
+      // 房貸每月按時繳、已照實扣在支出裡：重點看扣完後的結餘與流動性資產與投資
       const mortgage = VCFin.realEstateLoans(liabilityGroups), otherDebt = m.liabilityTotal - mortgage;
-      if(mortgage>0) overview += `房貸餘額 ${money(mortgage)} 元每月按時繳納、已照實扣在支出裡${m.monthlyCashNet>=0 ? '，扣完每月仍有結餘，加上手上 '+money(m.usableFunds)+' 元的可運用資金，都是可以拿來規劃的資源' : ''}。`;
-      if(otherDebt>0) overview += `另外還有 ${money(otherDebt)} 元的其他負債，建議優先處理利率較高的部分。`;
+      if(mortgage>0) overview += `房貸餘額 ${money(mortgage)} 元每月按時繳納、已照實扣在支出裡${m.monthlyCashNet>=0 ? '，扣完每月仍有結餘；另外流動性資產與投資共 '+money(m.usableFunds)+' 元' : ''}。`;
+      if(otherDebt>0) overview += `其他負債還有 ${money(otherDebt)} 元，建議優先處理利率較高的部分。`;
     }
     overview += `然而，<span class="fa-hl">以您 ${m.age} 歲的年紀</span>，${familyDesc ? familyDesc+'，' : ''}肩上承擔著重要的家庭責任，有幾個地方值得我們一起多加留意。`;
   } else {
@@ -2409,22 +2409,13 @@ function buildCashflowBreakdownHTML(uid, opts){
       <h3>收支總結</h3>
       <div class="vf-top">
         <div><div class="vf-h">支出佔比圖</div>${S.year.income>0 ? VCFin.donutSVG(S, 180) : '<div class="vf-note">尚未填寫收入</div>'}</div>
-        <div>${VCFin.summaryTableHTML(S)}<div class="vf-note">淨收入＝總收入－理財支出；總支出＝必要開支＋浮動開支；月結算只看每月固定收支，不含年終、年繳等單筆。</div></div>
+        <div>${VCFin.summaryTableHTML(S)}</div>
       </div>
       <div class="vf-cash">
         <div><div class="vf-h">收入</div>${VCFin.cashTableHTML('income', incomeGroups, S.year.income, S.month.income)}</div>
         <div><div class="vf-h">支出</div>${VCFin.cashTableHTML('expense', expenseGroups, S.year.income, S.month.income)}</div>
       </div>
       ${ratioBlock}
-    </div>`;
-}
-
-// 報告開頭的「一目了然」：每月結餘、年度結餘、可運用資金
-function buildKeyFiguresHTML(){
-  return `
-    <div class="report-section">
-      <h3>一目了然：能拿來規劃的錢</h3>
-      ${VCFin.keyFiguresHTML(incomeGroups, expenseGroups, assetGroups)}
     </div>`;
 }
 
@@ -2447,7 +2438,7 @@ function buildBalanceBreakdownHTML(uid, opts){
       <div class="breakdown-grid no-ratio${hideRatios?' only-chart':''}" style="margin-top:20px;">
         <div class="chart-card">
           <div class="highlight-stat">
-            <div class="hs-label">可運用資金（流動性資產＋流動性投資）</div>
+            <div class="hs-label">流動性資產與投資</div>
             <div class="hs-value" id="baHighlightVal-${uid}">$0</div>
           </div>
           <h4>資產配置結構</h4>
@@ -2478,7 +2469,7 @@ function buildBalanceBreakdownHTML(uid, opts){
             </div>
             <div class="risk-split-legend" id="riskSplitLegendRe-${uid}"></div>
           </div>
-          <div class="risk-split-note">＊無風險資產＝流動性資產；風險性資產＝流動性投資＋非流動性投資＋其他資產＋自用不動產（土地、房屋）。</div>
+          <div class="risk-split-note">＊無風險資產＝流動性資產；風險性資產＝其餘所有資產（房子以市值計入，不扣房貸）。</div>
         </div>
         <div class="risk-split-card">
           <div class="risk-split-title">資產風險屬性比例（不含不動產）</div>
@@ -2495,7 +2486,7 @@ function buildBalanceBreakdownHTML(uid, opts){
             </div>
             <div class="risk-split-legend" id="riskSplitLegend-${uid}"></div>
           </div>
-          <div class="risk-split-note">＊此版本不計所有不動產（土地、房屋、不動產投資）與汽機車，避免持有房子的人稀釋掉風險性資產的顯示比例。</div>
+          <div class="risk-split-note">＊此版本扣除房產（自用動產／不動產、不動產投資），只看其他資產的比例，避免房產金額太大稀釋掉比例。</div>
         </div>
       </div>
     </div>`;
@@ -2523,7 +2514,7 @@ function fillBalanceBreakdown(uid){
   const cat = c => VCFin.catAmount(assetGroups, c);
   const liquid = cat('liquid'), liqinv = cat('liqinv'), illiquid = cat('illiquid'), other = cat('other'), property = cat('property');
   const realestate = VCFin.realEstateAssets(assetGroups);
-  const reInvest = VCFin.rowsWhere(assetGroups.filter(g=>g.cat==='illiquid'), /不動產|土地|房屋|房產|房子|房地/, r=>Math.max(0,r.amount||0));
+  const reInvest = VCFin.realEstateInvest(assetGroups);
   const shortDebt = VCFin.catAmount(liabilityGroups, 'short');
 
   const el = id => document.getElementById(id+'-'+uid);
@@ -2592,8 +2583,9 @@ function fillBalanceBreakdown(uid){
     });
     pctEl.textContent = pctStr(riskAmt/base);
   };
-  const homeRE = realestate - reInvest; // 自用的土地、房屋
-  fillRiskSplitDonut('riskSplitSegRe','riskSplitLegendRe','riskSplitPctRe', liquid, liqinv + illiquid + other + homeRE);
+  // 含不動產：房子（照市值，不扣房貸）算風險性資產＝流動性資產以外的全部資產
+  // 不含不動產：把自用動產／不動產整類與不動產投資都拿掉，只看其餘資產的比例（房產金額太大會稀釋比例）
+  fillRiskSplitDonut('riskSplitSegRe','riskSplitLegendRe','riskSplitPctRe', liquid, assetTotal - liquid);
   fillRiskSplitDonut('riskSplitSeg','riskSplitLegend','riskSplitPct', liquid, liqinv + (illiquid - reInvest) + other);
 }
 
@@ -2666,7 +2658,6 @@ function buildReportPages(uid, opts){
     pages.push(`<div class="report-section"><h3>你的財富畫像</h3><p style="color:var(--ink-soft);font-size:13.5px;line-height:1.9;">所有題目都完成了，這是根據你的回答整理出的財富現況。</p></div>` + renderSummaryProfileHTML());
     pages.push(buildFullAnswerSummaryHTML());
   }
-  pages.push(buildKeyFiguresHTML());
   pages.push(buildCashflowBreakdownHTML(uid, {hideRatios}));
   pages.push(buildBalanceBreakdownHTML(uid, {hideRatios}));
   pages.push(riskSection);
