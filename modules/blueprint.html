@@ -7,6 +7,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
+<script src="../fin-schema.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>財富地圖</title>
@@ -132,6 +133,14 @@
   .row-table thead th{font-size:11.5px;color:var(--ink-soft);font-weight:500;text-align:left;padding:8px 10px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
   .row-table td{padding:6px 8px;border-bottom:1px dashed var(--line);vertical-align:middle;}
   .row-table tr:last-child td{border-bottom:none;}
+  @media (max-width:560px){
+    .row-table td{padding:4px 2px;}
+    .row-table thead th{padding:8px 4px 6px;}
+    .row-table th.name-col{width:36% !important;}
+    .row-table input[type=text]{padding:6px 4px;font-size:13px;}
+    .row-table td:last-child{width:26px;}
+    .row-del{padding:4px !important;}
+  }
   .row-table input[type=text]{width:100%;border:1px solid transparent;background:transparent;font-family:inherit;font-size:13.5px;padding:7px 8px;border-radius:6px;color:var(--ink);}
   .row-table input[type=text]:hover,.row-table input[type=text]:focus{border-color:var(--line);background:#fff;}
   .row-table input[type=number]{width:108px;border:1px solid var(--line);background:#fff;font-size:13.5px;padding:7px 8px;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums;}
@@ -143,6 +152,16 @@
   .group-total-row .v{font-family:"Roboto Mono",monospace;font-weight:800;font-size:19px;}
   .group-total-row.warm{background:var(--warm-deep);}
   .group-total-row.warm .k{color:var(--warm-tint);}
+  .group-total-row.mid{background:var(--teal-tint, #EAF2F4);color:var(--navy);margin:-4px 0 14px;padding:10px 18px;}
+  .group-total-row.mid .k{color:var(--navy);}
+  .group-total-row.mid .v{font-size:16px;}
+  .group-subtotal .sub-lbl{display:block;font-family:inherit;font-size:11px;font-weight:500;color:var(--ink-soft);text-align:right;}
+  .cat-block{margin:0 0 18px;}
+  .cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:2px solid var(--navy);padding:4px 2px 8px;margin-bottom:12px;}
+  .cat-head h3{margin:0;font-family:"Noto Serif TC",serif;font-size:18px;color:var(--navy);}
+  .cat-head .cat-sum{text-align:right;white-space:nowrap;}
+  .cat-head .cat-sum b{font-family:"Roboto Mono",monospace;font-size:16px;color:var(--navy);}
+  .cat-head .cat-sum span{display:block;font-size:11.5px;color:var(--ink-soft);}
 
   .mini-calc-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--teal-tint);border-radius:10px;margin-top:6px;}
   .mini-calc-row .k{font-size:13px;font-weight:700;color:var(--teal-deep);}
@@ -364,6 +383,9 @@
   /* 報告書內：彩色收支／資產負債總結面板 */
   .breakdown-grid{display:grid;grid-template-columns:1fr 0.9fr 1fr;gap:22px;margin-top:6px;}
   .breakdown-grid.no-ratio{grid-template-columns:1fr 1fr;}
+  .breakdown-grid.only-chart{grid-template-columns:1fr;}
+  .ratio-card.ratio-2col{display:grid;grid-template-columns:1fr 1fr;column-gap:28px;}
+  @media (max-width:760px){.ratio-card.ratio-2col{grid-template-columns:1fr;}}
   @media (max-width:980px){.breakdown-grid{grid-template-columns:1fr;}}
   .bd-table{width:100%;border-collapse:collapse;font-size:13.5px;}
   .bd-table th{text-align:left;font-size:11.5px;color:var(--ink-soft);font-weight:500;padding:6px 4px;border-bottom:1px solid var(--line);}
@@ -384,6 +406,10 @@
   .chart-card .highlight-stat .hs-value{font-family:"Roboto Mono",monospace;font-weight:800;font-size:30px;color:var(--navy);}
   .chart-card .highlight-stat .hs-value.negative{color:var(--negative);}
   .chart-card .highlight-stat .hs-value.positive{color:var(--positive);}
+  .chart-card .highlight-pair{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  .chart-card .highlight-pair .highlight-stat{margin-bottom:0;}
+  .chart-card .highlight-pair .hs-value{font-size:clamp(18px,4.6vw,24px); overflow-wrap:anywhere;}
+  .chart-card .highlight-stat .hs-sub{font-size:11.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5;}
   .legend{width:100%;margin-top:14px;text-align:left;}
   .legend-row{display:flex;align-items:center;gap:8px;padding:5px 2px;font-size:12px;}
   .legend-dot{width:9px;height:9px;border-radius:50%;flex:none;}
@@ -456,7 +482,7 @@
     .report-view{display:block !important;}
     .report-view:not(.active){display:none !important;}
     #reportClient .ratio-wrap{display:none !important;}
-    #reportClient .breakdown-grid{grid-template-columns:1fr 1fr !important;}
+    #reportClient .breakdown-grid{grid-template-columns:1fr !important;}
   }
 
   .report-timestamp{
@@ -629,42 +655,12 @@ let investCostBasis = 0;
 let investHoldYears = 0;
 let loadedClientName = '';
 
-const incomeGroups = [
-  {key:"active", title:"工作收入（主動）", hint:"薪資、接案等持續性主動收入",
-   rows:[{name:"薪資所得", monthly:0, once:0},{name:"年終獎金／分紅", monthly:0, once:0}]},
-  {key:"passive", title:"理財收入（被動）", hint:"房租、股息等不用花額外時間就有的收入",
-   rows:[{name:"房租收入", monthly:0, once:0},{name:"股息／利息收入", monthly:0, once:0}]}
-];
-const expenseGroups = [
-  {key:"necessary", title:"必要支出", hint:"食衣住行等生活必需",
-   rows:[{name:"房租", monthly:0, once:0},{name:"三餐飲食", monthly:0, once:0},{name:"交通費", monthly:0, once:0},{name:"水電瓦斯／電信", monthly:0, once:0}]},
-  {key:"flexible", title:"浮動支出", hint:"娛樂、治裝等非必要消費",
-   rows:[{name:"娛樂消費", monthly:0, once:0},{name:"治裝／美容", monthly:0, once:0}]},
-  {key:"insurance", title:"保費支出", hint:"壽險、醫療、意外等保障型保費",
-   rows:[{name:"壽險／醫療險", monthly:0, once:0},{name:"意外險", monthly:0, once:0}]},
-  {key:"dependent", title:"撫養支出", hint:"子女教育、孝親費等家庭責任支出",
-   rows:[{name:"子女教育費", monthly:0, once:0},{name:"孝親費", monthly:0, once:0}]},
-  {key:"loan", title:"貸款支出", hint:"房貸、信貸、車貸等貸款月付金",
-   rows:[{name:"房貸月付金", monthly:0, once:0},{name:"信貸／車貸", monthly:0, once:0}]}
-];
-const assetGroups = [
-  {key:"liquid", title:"理財型資產", hint:"現金、活存、定存",
-   rows:[{name:"活期存款", amount:0},{name:"定期存款", amount:0}]},
-  {key:"invest", title:"投資資產", hint:"股票、基金、保單價值準備金",
-   rows:[{name:"股票／基金／ETF", amount:0},{name:"保單價值準備金", amount:0}]},
-  {key:"realestate", title:"不動產", hint:"以目前市值估算",
-   rows:[{name:"自住不動產", amount:0}]},
-  {key:"other", title:"其他資產", hint:"車輛、其他",
-   rows:[{name:"車輛", amount:0}]}
-];
-const liabilityGroups = [
-  {key:"mortgage", title:"房貸餘額", hint:"尚未還清的房貸本金餘額",
-   rows:[{name:"房貸餘額", amount:0}]},
-  {key:"otherloan", title:"信貸／車貸餘額", hint:"非房貸類貸款的尚未還清本金",
-   rows:[{name:"信貸餘額", amount:0}]},
-  {key:"shortterm", title:"信用卡及其他短期負債", hint:"卡費循環、親友借款等",
-   rows:[{name:"信用卡循環餘額", amount:0}]}
-];
+// 收支／資產負債分類照顧問的表格範本（定義在 ../fin-schema.js，三個模組共用）
+const incomeGroups = VCFin.defaultIncome();
+const expenseGroups = VCFin.defaultExpense();
+const assetGroups = VCFin.defaultAssets();
+const liabilityGroups = VCFin.defaultLiabilities();
+VCFin.injectCSS();
 
 function money(n){const v=Math.round(n||0);return (v<0?"-$":"$")+Math.abs(v).toLocaleString("zh-TW");}
 
@@ -700,6 +696,16 @@ function yearsUntil(targetAge){
    共用：分組表格（雙欄位＝收支／單欄位＝資產負債）
 ========================================================= */
 function rowAnnual(row){ return (row.monthly||0)*12 + (row.once||0); }
+// 真正的「月」數字：只加總「月收入／月支出」那一欄，不把年終、年繳等單筆金額攤成每月
+function groupsMonthly(groups){ return groups.reduce((s,g)=>s+g.rows.reduce((t,r)=>t+(r.monthly||0),0),0); }
+function groupsOnce(groups){ return groups.reduce((s,g)=>s+g.rows.reduce((t,r)=>t+(r.once||0),0),0); }
+function computeMonthlyCashflow(){
+  const income = groupsMonthly(incomeGroups);
+  const expense = groupsMonthly(expenseGroups);
+  const wealth = groupsMonthly(expenseGroups.filter(g=>g.cat==='wealth'));
+  return { income, expense, net: income - expense, wealth,
+           onceIncome: groupsOnce(incomeGroups), onceExpense: groupsOnce(expenseGroups) };
+}
 function groupAnnualTotal(g){ return g.rows.reduce((s,r)=>s+rowAnnual(r),0); }
 function groupAmountTotal(g){ return g.rows.reduce((s,r)=>s+(r.amount||0),0); }
 
@@ -710,16 +716,17 @@ function renderDualGroups(groups, mountId, totalId, opts){
   const warm = !!opts.warm;
   const mount = document.getElementById(mountId);
   mount.innerHTML = "";
+  const catBlocks = buildCatBlocks(mount, opts.cats, groups, groupAnnualTotal, " /年");
   groups.forEach(g=>{
     const wrap = document.createElement("div");
     wrap.className = "group" + (warm ? " warm" : "");
     wrap.innerHTML = `
       <div class="group-head">
-        <div class="group-title">${g.title}<small>${g.hint}</small></div>
+        <div class="group-title">${g.title}<small>${g.hint||''}</small></div>
         <div class="group-subtotal" data-role="subtotal">$0</div>
       </div>
       <table class="row-table">
-        <thead><tr><th style="width:40%">項目</th><th>${monthLabel}</th><th>${onceLabel}</th><th></th></tr></thead>
+        <thead><tr><th class="name-col" style="width:40%">項目</th><th>${monthLabel}</th><th>${onceLabel}</th><th></th></tr></thead>
         <tbody></tbody>
       </table>
       <button class="add-row-btn" type="button">＋ 新增項目</button>
@@ -752,9 +759,10 @@ function renderDualGroups(groups, mountId, totalId, opts){
       updateGrandTotal();
     }
     updateSubtotal();
-    mount.appendChild(wrap);
+    (catBlocks.mountFor(g)).appendChild(wrap);
   });
   function updateGrandTotal(){
+    catBlocks.update();
     const total = groups.reduce((s,g)=>s+groupAnnualTotal(g),0);
     document.getElementById(totalId).textContent = money(total)+" /年（約 "+money(total/12)+" /月）";
   }
@@ -766,16 +774,19 @@ function renderSingleGroups(groups, mountId, totalId, opts){
   const warm = !!opts.warm;
   const mount = document.getElementById(mountId);
   mount.innerHTML = "";
+  const catBlocks = buildCatBlocks(mount, null, groups, groupAmountTotal, "");
+  const subLabel = {}; (opts.cats||[]).forEach(c=>{ subLabel[c.cat] = c.sub; });
+  const midTotals = [];
   groups.forEach(g=>{
     const wrap = document.createElement("div");
     wrap.className = "group" + (warm ? " warm" : "");
     wrap.innerHTML = `
       <div class="group-head">
-        <div class="group-title">${g.title}<small>${g.hint}</small></div>
+        <div class="group-title">${g.title}<small>${g.hint||''}</small></div>
         <div class="group-subtotal" data-role="subtotal">$0</div>
       </div>
       <table class="row-table">
-        <thead><tr><th style="width:60%">項目</th><th>金額</th><th></th></tr></thead>
+        <thead><tr><th class="name-col" style="width:50%">項目</th><th>金額</th><th style="width:34px"></th></tr></thead>
         <tbody></tbody>
       </table>
       <button class="add-row-btn" type="button">＋ 新增項目</button>
@@ -802,17 +813,46 @@ function renderSingleGroups(groups, mountId, totalId, opts){
       const r={name:"",amount:0}; g.rows.push(r); addRow(r); updateSubtotal();
     });
     function updateSubtotal(){
-      wrap.querySelector('[data-role="subtotal"]').textContent = money(groupAmountTotal(g));
+      wrap.querySelector('[data-role="subtotal"]').innerHTML = money(groupAmountTotal(g)) + (subLabel[g.cat] ? `<small class="sub-lbl">${subLabel[g.cat]}</small>` : '');
       updateGrandTotal();
     }
     updateSubtotal();
     mount.appendChild(wrap);
+    // 資產：流動性投資後面多一行「流動性資產與投資」
+    if(opts.midAfter && g.key===opts.midAfter.key){
+      const mid = document.createElement("div");
+      mid.className = "group-total-row mid";
+      mid.innerHTML = `<span class="k">${opts.midAfter.label}</span><span class="v">$0</span>`;
+      mount.appendChild(mid);
+      midTotals.push({el:mid.querySelector('.v'), cats:opts.midAfter.cats});
+    }
   });
   function updateGrandTotal(){
+    midTotals.forEach(m=>{ m.el.textContent = money(groups.filter(g=>m.cats.includes(g.cat)).reduce((s,g)=>s+groupAmountTotal(g),0)); });
     const total = groups.reduce((s,g)=>s+groupAmountTotal(g),0);
     document.getElementById(totalId).textContent = money(total);
   }
   updateGrandTotal();
+}
+
+// 收支頁：大分類（必要／理財／浮動）標題＋小計，底下放小分類表格
+function buildCatBlocks(mount, cats, groups, totalFn, unit){
+  if(!cats) return {mountFor:()=>mount, update:()=>{}};
+  const blocks = {};
+  cats.forEach(c=>{
+    const b = document.createElement("div");
+    b.className = "cat-block";
+    b.innerHTML = `<div class="cat-head"><h3>${c.title}</h3><div class="cat-sum"><b>$0</b><span>${c.sub}</span></div></div>`;
+    mount.appendChild(b);
+    blocks[c.cat] = b;
+  });
+  return {
+    mountFor: g => blocks[g.cat] || mount,
+    update: ()=> cats.forEach(c=>{
+      const t = groups.filter(g=>g.cat===c.cat).reduce((s,g)=>s+totalFn(g),0);
+      blocks[c.cat].querySelector('.cat-sum b').textContent = money(t) + unit;
+    })
+  };
 }
 
 /* =========================================================
@@ -1047,29 +1087,29 @@ const PAGES = [
    `},
 
   {id:"income", stage:"錢都去哪了", icon:"💧", n:7,
-   title:"你的收入", sub:"不用精確到每一塊錢，抓大概的數字就好。",
+   title:"你的收入", sub:"不用精確到每一塊錢，抓大概的數字就好。年終、三節獎金這類一年一次的填「年度一次性」；沒有的項目留空或按 ✕ 刪掉。",
    render: ()=>`
      <div id="incomeMount"></div>
      <div class="group-total-row"><span class="k">年收入合計</span><span class="v" id="incomeTotal">$0</span></div>
    `},
   {id:"expense", stage:"錢都去哪了", icon:"💧", n:8,
-   title:"你的支出", sub:"",
+   title:"你的支出", sub:"分成必要支出、理財支出、浮動支出。理財支出（零存整付、定期定額、儲蓄保險等）是為未來存的錢；所得稅這類一年繳一次的填「年繳／單筆」。",
    render: ()=>`
      <div id="expenseMount"></div>
-     <div class="group-total-row warm"><span class="k">年支出合計</span><span class="v" id="expenseTotal">$0</span></div>
+     <div class="group-total-row warm"><span class="k">年支出合計（含理財支出）</span><span class="v" id="expenseTotal">$0</span></div>
    `},
 
   {id:"assets", stage:"你的起點", icon:"⚖️", n:9,
    title:"你擁有的資產", sub:"以目前的估計市值填寫。",
    render: ()=>`
      <div id="assetMount"></div>
-     <div class="group-total-row"><span class="k">資產合計</span><span class="v" id="assetTotal">$0</span></div>
+     <div class="group-total-row"><span class="k">資產總計</span><span class="v" id="assetTotal">$0</span></div>
    `},
   {id:"liabilities", stage:"你的起點", icon:"⚖️", n:10,
-   title:"你目前的負債", sub:"",
+   title:"你目前的負債", sub:"填目前尚未還清的本金餘額（不是每月還款金額）。",
    render: ()=>`
      <div id="liabilityMount"></div>
-     <div class="group-total-row warm"><span class="k">負債合計</span><span class="v" id="liabilityTotal">$0</span></div>
+     <div class="group-total-row warm"><span class="k">負債總計</span><span class="v" id="liabilityTotal">$0</span></div>
    `},
 
   {id:"risk", stage:"財務個性", icon:"🎯", n:11,
@@ -1219,21 +1259,17 @@ function validateCurrentPage(){
     return '請至少填寫一筆資產資料，才能繼續下一步。';
   }
   if(id==='liabilities'){
-    const loanGroup = expenseGroups.find(g=>g.key==='loan');
-    const mortgageRow = loanGroup ? loanGroup.rows.find(r=>r.name==='房貸月付金') : null;
-    const otherLoanRow = loanGroup ? loanGroup.rows.find(r=>r.name==='信貸／車貸') : null;
-
-    if(mortgageRow && rowAnnual(mortgageRow) > 0){
-      const mortgageGroup = liabilityGroups.find(g=>g.key==='mortgage');
-      if(!mortgageGroup || !groupHasData(mortgageGroup)){
-        return '你在「錢都去哪了」填了房貸月付金，代表應該有對應的房貸餘額——請在「房貸餘額」填上對應數字，才能繼續下一步。';
-      }
+    // 「錢都去哪了」有填貸款月付金，就要有對應的貸款餘額
+    const loanPaid = re => VCFin.rowsWhere(expenseGroups.filter(g=>g.key==='nec_loan'), re, rowAnnual) > 0;
+    const owed = re => VCFin.rowsWhere(liabilityGroups, re, r=>r.amount||0) > 0;
+    if(loanPaid(/房貸/) && !owed(/不動產抵押|房貸|房屋貸款/)){
+      return '你在「錢都去哪了」填了房貸月付金，代表應該有對應的房貸餘額——請在長期負債的「自用不動產抵押貸款」（或投資型不動產抵押貸款）填上尚未還清的本金，才能繼續下一步。';
     }
-    if(otherLoanRow && rowAnnual(otherLoanRow) > 0){
-      const otherLoanGroup = liabilityGroups.find(g=>g.key==='otherloan');
-      if(!otherLoanGroup || !groupHasData(otherLoanGroup)){
-        return '你在「錢都去哪了」填了信貸／車貸支出，代表應該有對應的貸款餘額——請在「信貸／車貸餘額」填上對應數字，才能繼續下一步。';
-      }
+    if(loanPaid(/信用貸款|信貸/) && !owed(/信用貸款|信貸|紓困/)){
+      return '你在「錢都去哪了」填了信用貸款月付金，代表應該有對應的貸款餘額——請在短期負債的「信用貸款」填上尚未還清的本金，才能繼續下一步。';
+    }
+    if(loanPaid(/車貸/) && !owed(/車貸/)){
+      return '你在「錢都去哪了」填了車貸月付金，代表應該有對應的貸款餘額——請在長期負債的「車貸」填上尚未還清的本金，才能繼續下一步。';
     }
   }
   return null;
@@ -1446,12 +1482,12 @@ function bindPageInputs(id){
     document.getElementById('addChildBtn').addEventListener('click', addChild);
   }
 
-  if(id==='income') renderDualGroups(incomeGroups, 'incomeMount', 'incomeTotal', {monthLabel:"月收入", onceLabel:"單筆收入"});
-  if(id==='expense') renderDualGroups(expenseGroups, 'expenseMount', 'expenseTotal', {monthLabel:"月支出", onceLabel:"單筆支出", warm:true});
+  if(id==='income') renderDualGroups(incomeGroups, 'incomeMount', 'incomeTotal', {monthLabel:"月收入", onceLabel:"年度一次性"});
+  if(id==='expense') renderDualGroups(expenseGroups, 'expenseMount', 'expenseTotal', {monthLabel:"月支出", onceLabel:"年繳／單筆", warm:true, cats:VCFin.EXPENSE_CATS});
   if(id==='assets'){
-    renderSingleGroups(assetGroups, 'assetMount', 'assetTotal');
+    renderSingleGroups(assetGroups, 'assetMount', 'assetTotal', {cats:VCFin.ASSET_CATS, midAfter:{key:'liqinv', label:'流動性資產與投資', cats:['liquid','liqinv']}});
   }
-  if(id==='liabilities') renderSingleGroups(liabilityGroups, 'liabilityMount', 'liabilityTotal', {warm:true});
+  if(id==='liabilities') renderSingleGroups(liabilityGroups, 'liabilityMount', 'liabilityTotal', {warm:true, cats:VCFin.LIAB_CATS});
 
   if(id==='vision'){
     const customInput = document.getElementById('customGoalInput');
@@ -1562,17 +1598,14 @@ function computeGoalAchievement(goalName){
   const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
   const netWorth = assetTotal - liabilityTotal;
 
-  // 不動產淨值（含房貸）整個排除：房子不能拿來支付任何目標
-  const realEstateGroup = assetGroups.find(g=>g.key==='realestate');
-  const realEstateValue = realEstateGroup ? groupAmountTotal(realEstateGroup) : 0;
-  const mortgageGroup = liabilityGroups.find(g=>g.key==='mortgage');
-  const mortgageBalance = mortgageGroup ? groupAmountTotal(mortgageGroup) : 0;
-  const homeEquity = realEstateValue - mortgageBalance;
+  // 不動產淨值整個排除：土地、房屋、不動產投資的市值，扣掉不動產抵押貸款——房子不能拿來支付任何目標
+  const homeEquity = VCFin.realEstateAssets(assetGroups) - VCFin.realEstateLoans(liabilityGroups);
   const liquidNetWorth = netWorth - homeEquity;
 
   const incomeTotal = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
   const expenseTotal = expenseGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
-  const annualSurplus = incomeTotal - expenseTotal;
+  // 理財支出（零存整付、定期定額、儲蓄保險）是持續累積的資金，算進每年可累積的金額
+  const annualSurplus = incomeTotal - expenseTotal + VCFin.catAnnual(expenseGroups, 'wealth');
 
   // 房貸月付金是實際支出，已在年結餘裡扣除，不加回
 
@@ -1701,16 +1734,15 @@ function pickQuote(){
 function buildInvestRealityCheckHTML(){
   if(!investCostBasis || investCostBasis<=0) return '';
 
-  const investGroup = assetGroups.find(g=>g.key==='invest');
-  const currentValue = investGroup ? groupAmountTotal(investGroup) : 0;
+  const currentValue = VCFin.catAmount(assetGroups, 'liqinv');
 
-  // 防呆：填了成本，但「你的起點」裡股票／基金／ETF的市值卻是0，代表很可能是漏填市值，
+  // 防呆：填了成本，但「你的起點」裡流動性投資的市值卻是0，代表很可能是漏填市值，
   // 不是真的全部虧光——這種情況不算損益，改成提醒，避免算出誤導的「-100%」。
   if(currentValue<=0){
     return `
       <div class="report-section">
         <h3>你的投資，真的如你以為的好嗎？</h3>
-        <div class="report-note">你在「你的起點」填了原始投入成本 ${money(investCostBasis)}，但「股票／基金／ETF」目前市值還是 0——請回到「你的起點」那一頁，把目前市值也填上，才能算出正確的損益對比。</div>
+        <div class="report-note">你在「你的起點」填了原始投入成本 ${money(investCostBasis)}，但「流動性投資」目前市值還是 0——請回到「你的起點」那一頁，把目前市值也填上，才能算出正確的損益對比。</div>
       </div>
     `;
   }
@@ -1825,7 +1857,9 @@ function buildInvestGrowthChartSVG(monthly, years){
 function buildInvestGrowthSectionHTML(){
   const m = computeFinanceMetrics();
   const years = 30;
-  let monthly = Math.round(m.monthlySavings);
+  // 優先用真正的每月結餘；每月是負的但全年有結餘時，改用全年平均
+  const useAvg = !(m.monthlyCashNet > 0);
+  let monthly = Math.round(useAvg ? m.monthlySavings : m.monthlyCashNet);
   let usedFallback = false;
   if(monthly <= 0){
     monthly = 5000;
@@ -1838,7 +1872,7 @@ function buildInvestGrowthSectionHTML(){
       <p style="color:var(--ink-soft);font-size:13.5px;line-height:1.9;margin-bottom:16px;">
         ${usedFallback
           ? `以下以每月投入 ${money(monthly)} 元為例（尚未計算出實際月儲蓄金額，先用此金額示範）：`
-          : `以你目前每月結餘約 ${money(monthly)} 元為基礎，同樣一筆錢，放在銀行儲蓄跟做定期定額投資，${years} 年後的差距會是這樣：`}
+          : `以你目前${useAvg ? '全年結餘平均下來每月約' : '每月結餘約'} ${money(monthly)} 元為基礎，同樣一筆錢，放在銀行儲蓄跟做定期定額投資，${years} 年後的差距會是這樣：`}
       </p>
       ${chartHTML}
       <div class="report-note">此圖僅為示意，以固定月投入金額、固定年化報酬率簡化試算，不代表任何實際商品之保證報酬；銀行儲蓄利率、投資報酬率均會隨市場變動，實際結果可能與圖中不同。理財應先於投資：建議先配置保本型工具建立安全水位，再視風險承受度決定投資部位。</div>
@@ -1857,20 +1891,28 @@ function computeFinanceMetrics(){
   const monthlyExpense = expenseTotal/12;
   const monthlySavings = monthlyIncome - monthlyExpense;
   const savingsRate = incomeTotal>0 ? (incomeTotal-expenseTotal)/incomeTotal : 0;
-  const liquidGroup = assetGroups.find(g=>g.key==='liquid');
-  const liquidAssets = liquidGroup ? groupAmountTotal(liquidGroup) : 0;
-  const emergencyMonths = monthlyExpense>0 ? liquidAssets/monthlyExpense : null;
-  const insuranceGroup = expenseGroups.find(g=>g.key==='insurance');
-  const insuranceAnnual = insuranceGroup ? groupAnnualTotal(insuranceGroup) : 0;
+  // 理財支出（定期定額、儲蓄險）是為未來存的錢：計入「總儲蓄」，但不算進生活開銷
+  const wealthAnnual = VCFin.catAnnual(expenseGroups, 'wealth');
+  const monthlyWealth = wealthAnnual/12;
+  const monthlyTotalSaving = monthlySavings + monthlyWealth;
+  const totalSavingsRate = incomeTotal>0 ? (incomeTotal-expenseTotal+wealthAnnual)/incomeTotal : 0;
+  const monthlyLivingExpense = (expenseTotal - wealthAnnual)/12;
+  // 流動性資產（活存、緊急預備金、儲蓄險、境外儲蓄）
+  const liquidAssets = VCFin.catAmount(assetGroups, 'liquid');
+  // 緊急預備金看的是「生活開銷」：遇到急用時理財支出可以先暫停，所以不計入
+  const emergencyMonths = monthlyLivingExpense>0 ? liquidAssets/monthlyLivingExpense : null;
+  const insuranceAnnual = groupAnnualTotal(VCFin.groupByKey(expenseGroups, 'nec_ins'));
   const hasInsurance = insuranceAnnual > 0;
-  const activeGroup = incomeGroups.find(g=>g.key==='active');
-  const bonusRow = activeGroup ? activeGroup.rows.find(r=>r.name.includes('年終')) : null;
-  const annualBonus = bonusRow ? (bonusRow.once||0) : 0;
-  const investGroup = assetGroups.find(g=>g.key==='invest');
-  const investAssets = investGroup ? groupAmountTotal(investGroup) : 0;
+  // 年終／三節／分紅：收入裡名稱有「年終、分紅、獎金」的單筆金額加總
+  const annualBonus = incomeGroups.reduce((s,g)=>s+g.rows.filter(r=>/年終|分紅|獎金/.test(r.name||'')).reduce((t,r)=>t+(r.once||0),0),0);
+  const mcf = computeMonthlyCashflow();
+  const investAssets = VCFin.catAmount(assetGroups, 'liqinv');
   const investConcentration = assetTotal>0 ? investAssets/assetTotal : 0;
   return {age, incomeTotal, expenseTotal, assetTotal, liabilityTotal, netWorth,
     monthlyIncome, monthlyExpense, monthlySavings, savingsRate,
+    wealthAnnual, monthlyWealth, monthlyTotalSaving, totalSavingsRate, monthlyLivingExpense,
+    monthlyCashIncome: mcf.income, monthlyCashExpense: mcf.expense, monthlyCashNet: mcf.net, monthlyCashWealth: mcf.wealth,
+    onceIncome: mcf.onceIncome, onceExpense: mcf.onceExpense, annualNet: incomeTotal - expenseTotal,
     liquidAssets, emergencyMonths, hasInsurance, annualBonus,
     investAssets, investConcentration};
 }
@@ -1881,9 +1923,14 @@ function buildFinancialAnalysisHTML(){
 
   let overview = '';
   if(m.age!==null){
-    overview += `我看到您目前<span class="fa-hl">每個月有 ${money(Math.round(m.monthlySavings))} 元的儲蓄</span>`;
-    overview += m.incomeTotal>0 ? `<span class="fa-hl">，儲蓄率達到 ${(m.savingsRate*100).toFixed(1)}%</span>` : '';
-    overview += m.monthlySavings>=0 ? '，這是一個很好的開始，代表您有能力為未來累積財富。' : '，目前收支較為緊繃，這是我們可以一起優先改善的地方。';
+    // 月現金流：只看每月固定的收入與支出（不含年終、年繳等單筆）
+    overview += `我看到您目前每個月固定收入 ${money(Math.round(m.monthlyCashIncome))} 元、固定支出 ${money(Math.round(m.monthlyCashExpense))} 元，<span class="fa-hl">每月結餘 ${money(Math.round(m.monthlyCashNet))} 元</span>`;
+    overview += m.monthlyCashWealth>0 ? `（另外每月已有 ${money(Math.round(m.monthlyCashWealth))} 元投入零存整付、定期定額、儲蓄保險等理財支出）` : '';
+    if(m.onceIncome>0 || m.onceExpense>0){
+      overview += `；加上${m.annualBonus>0 ? '年終、三節獎金與分紅約 '+money(Math.round(m.annualBonus))+' 元等' : ''}單筆收支後，<span class="fa-hl">全年結餘約 ${money(Math.round(m.annualNet))} 元</span>`;
+    }
+    overview += m.incomeTotal>0 ? `<span class="fa-hl">，總儲蓄率 ${(m.totalSavingsRate*100).toFixed(1)}%</span>` : '';
+    overview += (m.monthlySavings>=0 && m.monthlyCashNet>=0) ? '，這是一個很好的開始，代表您有能力為未來累積財富。' : '，目前收支較為緊繃，這是我們可以一起優先改善的地方。';
     overview += m.liabilityTotal===0 ? '同時，您沒有任何負債，這讓您的財務基礎非常穩固。' : `目前您還有 ${money(m.liabilityTotal)} 元的負債需要留意，會影響資金運用的彈性。`;
     overview += `然而，<span class="fa-hl">以您 ${m.age} 歲的年紀</span>，${familyDesc ? familyDesc+'，' : ''}肩上承擔著重要的家庭責任，有幾個地方值得我們一起多加留意。`;
   } else {
@@ -1892,24 +1939,33 @@ function buildFinancialAnalysisHTML(){
 
   const concernParts = [];
   if(m.emergencyMonths!==null && m.emergencyMonths<6){
-    concernParts.push(`<span class="fa-hl">您現有的 ${money(Math.round(m.liquidAssets))} 元活存，大約只能支撐家庭 ${m.emergencyMonths.toFixed(1)} 個月的開銷</span>`);
+    concernParts.push(`<span class="fa-hl">您現有的 ${money(Math.round(m.liquidAssets))} 元流動性資產（活存、緊急預備金等），大約只能支撐家庭 ${m.emergencyMonths.toFixed(1)} 個月的開銷</span>`);
+  }
+  // 每月是負的、靠年終等單筆收入才補平：提醒先調整每月固定支出
+  if(m.monthlyCashNet<0 && m.annualNet>=0){
+    concernParts.push(`<span class="fa-hl">每個月的固定收支其實是負的（每月短少約 ${money(Math.abs(Math.round(m.monthlyCashNet)))} 元）</span>，目前是靠年終或其他單筆收入才補平`);
   }
   let overview2 = '';
   if(concernParts.length>0){
     overview2 = `目前最值得優先思考的是，${concernParts.join('；此外，')}。`;
     overview2 += '考量到收入可能會有波動，加上家庭日常開銷的不確定性，這筆緊急備用金可能還不足以應付生活中的突發狀況。';
   }
+  // 年終／分紅的建議：這筆錢最容易在不知不覺中花掉
+  if(m.annualBonus>0){
+    const bonusTarget = (m.emergencyMonths!==null && m.emergencyMonths<6) ? '緊急預備金' : (visionA.goals.length>0 ? '您設定的優先目標' : '長期的資產累積');
+    overview2 += `另外，您每年的年終、三節獎金與分紅約 ${money(Math.round(m.annualBonus))} 元，這筆錢最容易在不知不覺中被花掉。建議收到時先撥出至少三分之一（約 ${money(Math.round(m.annualBonus/3))} 元）放進${bonusTarget}，剩下的再安排消費與犒賞自己。`;
+  }
 
   const priorityCards = [];
   const cashflowNegative = m.monthlySavings < 0;
-  const cashflowTight = !cashflowNegative && m.incomeTotal>0 && m.savingsRate < 0.1;
+  const cashflowTight = !cashflowNegative && m.incomeTotal>0 && m.totalSavingsRate < 0.1;
 
   if(cashflowNegative){
     priorityCards.push({
       title:'先讓收支打平，站穩腳步',
       body:`目前每月支出比收入多出 ${money(Math.abs(Math.round(m.monthlySavings)))} 元，長期下來會持續消耗積蓄或增加負債。在往下一步規劃緊急備用金或長期目標之前，建議先把收支調整到不再持續虧空，這是所有後續財務目標能夠往前走的基礎。`,
-      short:'盤點浮動支出（娛樂、治裝等非必要消費），找出可以立即減少的項目。',
-      mid:'檢視必要支出結構（房貸房租、保費、貸款），評估是否有調整空間，目標讓每月收支至少打平。',
+      short:'盤點浮動支出裡「可調整」的項目（娛樂、聚餐、治裝、旅遊），找出可以立即減少的項目。',
+      mid:'檢視必要支出結構（生活、貸款、保險、稅賦等），評估是否有調整空間，目標讓每月收支至少打平。',
       long:'收支穩定轉正、有結餘可存之後，再依序規劃緊急備用金與長期目標，避免同時多線作戰。',
       impact:'收支打平後，才有餘裕談儲蓄與投資，這是財務規劃能往前走的第一步。'
     });
@@ -1917,11 +1973,11 @@ function buildFinancialAnalysisHTML(){
 
   if(m.emergencyMonths!==null && m.emergencyMonths<6 && !cashflowNegative){
     const emergencyGoal = visionA.goals.includes('緊急預備金') ? visionA.calc['緊急預備金'] : null;
-    const targetAmt = emergencyGoal && emergencyGoal.target ? parseNum(emergencyGoal.target) : m.monthlyExpense*6;
+    const targetAmt = emergencyGoal && emergencyGoal.target ? parseNum(emergencyGoal.target) : m.monthlyLivingExpense*6;
     priorityCards.push({
       title:'補足緊急備用金，讓生活更有底氣',
-      body:`您目前有 ${money(Math.round(m.liquidAssets))} 元的活存，但考量到家庭每月 ${money(Math.round(m.monthlyExpense))} 元的支出，這筆錢大約只能支撐 ${m.emergencyMonths.toFixed(1)} 個月。面對生活中的不確定性，例如工作轉換、家庭成員生病或突發意外，建議您可以將緊急備用金逐步累積到至少能支撐 6 到 12 個月的家庭開銷。${m.annualBonus>0 ? `您可以將每年 ${money(m.annualBonus)} 元的獎金，撥出一部分來加速這個目標的達成。` : (cashflowTight ? `目前月儲蓄率約 ${(m.savingsRate*100).toFixed(1)}%，可以先從固定提撥一小部分開始累積。` : '')}`,
-      short:'先將活存增加到能支撐 6 個月的家庭開銷。',
+      body:`您目前有 ${money(Math.round(m.liquidAssets))} 元的流動性資產，但考量到家庭每月 ${money(Math.round(m.monthlyLivingExpense))} 元的生活支出，這筆錢大約只能支撐 ${m.emergencyMonths.toFixed(1)} 個月。面對生活中的不確定性，例如工作轉換、家庭成員生病或突發意外，建議您可以將緊急備用金逐步累積到至少能支撐 6 到 12 個月的家庭開銷。${m.annualBonus>0 ? `您可以將每年 ${money(m.annualBonus)} 元的獎金，撥出一部分來加速這個目標的達成。` : (cashflowTight ? `目前月儲蓄率約 ${(m.savingsRate*100).toFixed(1)}%，可以先從固定提撥一小部分開始累積。` : '')}`,
+      short:'先將流動性資產（活存、緊急預備金）增加到能支撐 6 個月的家庭開銷。',
       mid:'逐步累積到能支撐 9 個月的家庭開銷。',
       long: targetAmt>0 ? `朝您設定的 ${money(targetAmt)} 元目標邁進，讓家庭面對任何狀況都能更從容。` : '持續累積到您安心的水準，讓家庭面對任何狀況都能更從容。',
       impact:'補足後，緊急金可撐滿 6 個月以上，面對突發狀況更有底氣。'
@@ -1931,8 +1987,8 @@ function buildFinancialAnalysisHTML(){
     const goalLabels = visionA.goals.map(g=>g==='自行輸入'?(visionA.customGoalName||'自訂目標'):g);
     priorityCards.push({
       title:'規劃長期目標，讓夢想藍圖更清晰',
-      body:`您設定了${goalLabels.map(g=>'「'+g+'」').join('、')}等目標，這都非常棒。${m.investAssets>0?`目前您有 ${money(m.investAssets)} 元的投資資產，佔總資產的 ${(m.investConcentration*100).toFixed(1)}%，這顯示您對資產成長有積極的期待。`:''}在追求效率的同時，我們可以一起思考，如何透過穩健的資產配置，讓您的投資組合在成長與風險之間取得平衡，同時兼顧短期財務彈性，讓這些目標能更順利地達成。`,
-      short: m.annualBonus>0 ? '將部分年終獎金投入優先目標的累積。' : `維持目前約 ${(m.savingsRate*100).toFixed(1)}% 的月儲蓄率，固定撥一部分投入優先目標。`,
+      body:`您設定了${goalLabels.map(g=>'「'+g+'」').join('、')}等目標，這都非常棒。${m.investAssets>0?`目前您有 ${money(m.investAssets)} 元的流動性投資，佔總資產的 ${(m.investConcentration*100).toFixed(1)}%，這顯示您對資產成長有積極的期待。`:''}在追求效率的同時，我們可以一起思考，如何透過穩健的資產配置，讓您的投資組合在成長與風險之間取得平衡，同時兼顧短期財務彈性，讓這些目標能更順利地達成。`,
+      short: m.annualBonus>0 ? '將部分年終獎金投入優先目標的累積。' : `維持目前約 ${(m.totalSavingsRate*100).toFixed(1)}% 的總儲蓄率，固定撥一部分投入優先目標。`,
       mid:'在補足緊急備用金後，可以考慮將部分資金配置於分散風險的投資工具，追求長期穩健成長。',
       long:'定期檢視您的投資組合，確保其與您的長期目標和風險承受度保持一致。',
       impact:'透過穩健的資產配置，有助於您在追求長期目標的同時，也能兼顧短期的財務彈性。'
@@ -2214,7 +2270,8 @@ function replaceArrayInPlace(target, source){
   target.length = 0;
   (source||[]).forEach(item=>target.push(item));
 }
-
+// 舊報告（v3.26.0 以前的分類）載入時，由 VCFin.normalize* 自動對應到新分類；
+// 新版存檔如果少了某個小分類，也會依原本位置補回空白版
 function applyStateToForm(s){
   if(!s) return;
   Object.assign(basicA, s.basicA);
@@ -2226,10 +2283,10 @@ function applyStateToForm(s){
   Object.assign(visionA, s.visionA);
   investCostBasis = s.investCostBasis || 0;
   investHoldYears = s.investHoldYears || 0;
-  replaceArrayInPlace(incomeGroups, s.incomeGroups);
-  replaceArrayInPlace(expenseGroups, s.expenseGroups);
-  replaceArrayInPlace(assetGroups, s.assetGroups);
-  replaceArrayInPlace(liabilityGroups, s.liabilityGroups);
+  replaceArrayInPlace(incomeGroups, VCFin.normalizeIncome(s.incomeGroups));
+  replaceArrayInPlace(expenseGroups, VCFin.normalizeExpense(s.expenseGroups));
+  replaceArrayInPlace(assetGroups, VCFin.normalizeAssets(s.assetGroups));
+  replaceArrayInPlace(liabilityGroups, VCFin.normalizeLiabilities(s.liabilityGroups));
 }
 
 /* 網址帶 ?reportId=  → 純檢視某一份已存的報告（唯讀，直接跳到報告畫面）
@@ -2325,57 +2382,32 @@ function runLoadingThenReport(){
 function buildCashflowBreakdownHTML(uid, opts){
   opts = opts || {};
   const hideRatios = !!opts.hideRatios;
+  const S = VCFin.cashSummary(incomeGroups, expenseGroups);
   const ratioBlock = hideRatios ? '' : `
-        <div class="ratio-wrap">
-          <div class="ratio-card">
-            <div class="ratio-row"><div class="ratio-name">名目儲蓄率<small>年度結餘 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioSavings-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">理財收入比<small>理財(被動)收入 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioFinIncome-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">必要支出比<small>必要支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioNecessary-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">浮動支出比<small>浮動支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioFlexible-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">保費支出比<small>保費支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioInsurance-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">貸款壓力比<small>貸款支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioLoan-${uid}">0%</div></div>
+        <div class="ratio-wrap" style="margin-top:18px;">
+          <div class="ratio-card ratio-2col">
+            <div class="ratio-row"><div class="ratio-name">總儲蓄率<small>（結餘現金流＋理財支出）÷ 總收入</small></div><div class="ratio-value" id="cfRatioTotalSavings-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">名目儲蓄率<small>結餘現金流 ÷ 總收入（不含理財支出）</small></div><div class="ratio-value" id="cfRatioSavings-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">主動收入所得占比<small>工作收入 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioWork-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">固定支出／所得比<small>必要支出（含稅）÷ 總收入</small></div><div class="ratio-value" id="cfRatioNecessary-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">理財支出／所得比<small>理財支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioWealth-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">浮動支出／所得比<small>浮動支出 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioFlexible-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">保費支出比<small>保險小類 ÷ 總收入</small></div><div class="ratio-value" id="cfRatioInsurance-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">貸款支出比<small>貸款小類（房貸、信貸、車貸月付）÷ 總收入</small></div><div class="ratio-value" id="cfRatioLoan-${uid}">0%</div></div>
           </div>
         </div>`;
   return `
     <div class="report-section">
       <h3>收支總結</h3>
-      <div class="breakdown-grid${hideRatios?' no-ratio':''}">
-        <div>
-          <table class="bd-table">
-            <thead><tr><th>收入項目</th><th style="text-align:right">年度合計</th></tr></thead>
-            <tbody>${incomeGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAnnualTotal(g))}</td></tr>`).join('')}</tbody>
-            <tbody><tr class="total"><td>總收入</td><td class="num" id="bdIncomeTotal-${uid}">$0</td></tr></tbody>
-          </table>
-          <table class="bd-table" style="margin-top:16px;">
-            <thead><tr><th>支出項目</th><th style="text-align:right">年度合計</th></tr></thead>
-            <tbody>${expenseGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAnnualTotal(g))}</td></tr>`).join('')}</tbody>
-            <tbody>
-              <tr class="total"><td>總支出</td><td class="num" id="bdExpenseTotal-${uid}">$0</td></tr>
-              <tr class="net"><td>年度現金流結餘</td><td class="num" id="bdNet-${uid}">$0</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="chart-card">
-          <div class="highlight-stat">
-            <div class="hs-label">年度現金流結餘</div>
-            <div class="hs-value" id="cfHighlightVal-${uid}">$0</div>
-          </div>
-          <h4>整體收支結構</h4>
-          <div class="chart-sub" id="cfChartSub-${uid}">占總收入的比例</div>
-          <div class="donut-wrap">
-            <svg viewBox="0 0 200 200" width="190" height="190">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
-              <g id="cfDonutSeg-${uid}" transform="rotate(-90 100 100)"></g>
-            </svg>
-            <div class="donut-center">
-              <div class="dc-value" id="cfDonutVal-${uid}">0%</div>
-              <div class="dc-label" id="cfDonutLabel-${uid}">年度儲蓄率</div>
-            </div>
-          </div>
-          <div class="legend" id="cfLegend-${uid}"></div>
-        </div>
-        ${ratioBlock}
+      <div class="vf-top">
+        <div><div class="vf-h">支出佔比圖</div>${S.year.income>0 ? VCFin.donutSVG(S, 180) : '<div class="vf-note">尚未填寫收入</div>'}</div>
+        <div>${VCFin.summaryTableHTML(S)}<div class="vf-note">淨收入＝總收入－理財支出；總支出＝必要開支＋浮動開支；月結算只看每月固定收支，不含年終、年繳等單筆。</div></div>
       </div>
+      <div class="vf-cash">
+        <div><div class="vf-h">收入</div>${VCFin.cashTableHTML('income', incomeGroups, S.year.income, S.month.income)}</div>
+        <div><div class="vf-h">支出</div>${VCFin.cashTableHTML('expense', expenseGroups, S.year.income, S.month.income)}</div>
+      </div>
+      ${ratioBlock}
     </div>`;
 }
 
@@ -2385,38 +2417,24 @@ function buildBalanceBreakdownHTML(uid, opts){
   const ratioBlock = hideRatios ? '' : `
         <div class="ratio-wrap">
           <div class="ratio-card">
-            <div class="ratio-row"><div class="ratio-name">負債比<small>總負債 ÷ 總資產</small></div><div class="ratio-value" id="baRatioDebt-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">流動性比率<small>理財型資產 ÷ 總負債</small></div><div class="ratio-value" id="baRatioLiquidity-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">不動產佔比<small>不動產 ÷ 總資產</small></div><div class="ratio-value" id="baRatioRealestate-${uid}">0%</div></div>
-            <div class="ratio-row"><div class="ratio-name">投資資產佔比<small>投資資產 ÷ 總資產</small></div><div class="ratio-value" id="baRatioInvest-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">負債比<small>負債總計 ÷ 資產總計</small></div><div class="ratio-value" id="baRatioDebt-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">流動性比率<small>流動性資產 ÷ 短期負債</small></div><div class="ratio-value" id="baRatioLiquidity-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">不動產佔比<small>土地、房屋、不動產投資 ÷ 資產總計</small></div><div class="ratio-value" id="baRatioRealestate-${uid}">0%</div></div>
+            <div class="ratio-row"><div class="ratio-name">流動性資產與投資佔比<small>（流動性資產＋流動性投資）÷ 資產總計</small></div><div class="ratio-value" id="baRatioInvest-${uid}">0%</div></div>
           </div>
         </div>`;
   return `
     <div class="report-section">
-      <h3>資產負債總結</h3>
-      <div class="breakdown-grid${hideRatios?' no-ratio':''}">
-        <div>
-          <table class="bd-table">
-            <thead><tr><th>資產項目</th><th style="text-align:right">金額</th></tr></thead>
-            <tbody>${assetGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAmountTotal(g))}</td></tr>`).join('')}</tbody>
-            <tbody><tr class="total"><td>總資產</td><td class="num" id="baAssetTotal-${uid}">$0</td></tr></tbody>
-          </table>
-          <table class="bd-table" style="margin-top:16px;">
-            <thead><tr><th>負債項目</th><th style="text-align:right">金額</th></tr></thead>
-            <tbody>${liabilityGroups.map(g=>`<tr><td>${g.title}</td><td class="num">${money(groupAmountTotal(g))}</td></tr>`).join('')}</tbody>
-            <tbody>
-              <tr class="total"><td>總負債</td><td class="num" id="baLiabilityTotal-${uid}">$0</td></tr>
-              <tr class="net"><td>淨值</td><td class="num" id="baNet-${uid}">$0</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <h3>資產負債表</h3>
+      ${VCFin.balanceTableHTML(assetGroups, liabilityGroups)}
+      <div class="breakdown-grid no-ratio${hideRatios?' only-chart':''}" style="margin-top:20px;">
         <div class="chart-card">
           <div class="highlight-stat">
-            <div class="hs-label">淨值</div>
+            <div class="hs-label">資產淨額</div>
             <div class="hs-value" id="baHighlightVal-${uid}">$0</div>
           </div>
           <h4>資產配置結構</h4>
-          <div class="chart-sub">占總資產的比例</div>
+          <div class="chart-sub">占資產總計的比例</div>
           <div class="donut-wrap">
             <svg viewBox="0 0 200 200" width="190" height="190">
               <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
@@ -2443,7 +2461,7 @@ function buildBalanceBreakdownHTML(uid, opts){
             </div>
             <div class="risk-split-legend" id="riskSplitLegendRe-${uid}"></div>
           </div>
-          <div class="risk-split-note">＊無風險資產＝理財型資產；風險性資產＝投資型資產＋不動產。</div>
+          <div class="risk-split-note">＊無風險資產＝流動性資產；風險性資產＝流動性投資＋非流動性投資＋其他資產＋自用不動產（土地、房屋）。</div>
         </div>
         <div class="risk-split-card">
           <div class="risk-split-title">資產風險屬性比例（不含不動產）</div>
@@ -2460,7 +2478,7 @@ function buildBalanceBreakdownHTML(uid, opts){
             </div>
             <div class="risk-split-legend" id="riskSplitLegend-${uid}"></div>
           </div>
-          <div class="risk-split-note">＊此版本僅計算「理財型資產」與「投資型資產」兩項，避免持有不動產的人稀釋掉風險性資產的顯示比例。</div>
+          <div class="risk-split-note">＊此版本不計所有不動產（土地、房屋、不動產投資）與汽機車，避免持有房子的人稀釋掉風險性資產的顯示比例。</div>
         </div>
       </div>
     </div>`;
@@ -2468,71 +2486,28 @@ function buildBalanceBreakdownHTML(uid, opts){
 
 const CF_DONUT_R = 80, CF_DONUT_C = 2*Math.PI*80;
 function fillCashflowBreakdown(uid){
-  const totalIncome = incomeGroups.reduce((s,g)=>s+groupAnnualTotal(g),0);
-  const necessary = groupAnnualTotal(expenseGroups.find(g=>g.key==="necessary"));
-  const flexible = groupAnnualTotal(expenseGroups.find(g=>g.key==="flexible"));
-  const insurance = groupAnnualTotal(expenseGroups.find(g=>g.key==="insurance"));
-  const dependent = groupAnnualTotal(expenseGroups.find(g=>g.key==="dependent"));
-  const loan = groupAnnualTotal(expenseGroups.find(g=>g.key==="loan"));
-  const totalExpense = necessary+flexible+insurance+dependent+loan;
-  const net = totalIncome - totalExpense;
-  const savingsRate = totalIncome>0 ? net/totalIncome : 0;
-  const passive = groupAnnualTotal(incomeGroups.find(g=>g.key==="passive"));
-  const finIncomeRatio = totalIncome>0 ? passive/totalIncome : 0;
-
-  const el = id => document.getElementById(id+'-'+uid);
-  const setText = (id, val) => { const n = el(id); if(n) n.textContent = val; };
-  setText('bdIncomeTotal', money(totalIncome));
-  setText('bdExpenseTotal', money(totalExpense));
-  const netEl = el('bdNet'); if(netEl){ netEl.textContent = money(net); netEl.style.color = net>=0?'var(--positive)':'var(--negative)'; }
-  const cfHighlightEl = el('cfHighlightVal');
-  if(cfHighlightEl){ cfHighlightEl.textContent = money(net); cfHighlightEl.className = "hs-value"+(net>=0?" positive":" negative"); }
-  setText('cfRatioSavings', pctStr(savingsRate));
-  setText('cfRatioFinIncome', pctStr(finIncomeRatio));
-  setText('cfRatioNecessary', pctStr(totalIncome>0?necessary/totalIncome:0));
-  setText('cfRatioFlexible', pctStr(totalIncome>0?flexible/totalIncome:0));
-  setText('cfRatioInsurance', pctStr(totalIncome>0?insurance/totalIncome:0));
-  setText('cfRatioLoan', pctStr(totalIncome>0?loan/totalIncome:0));
-
-  const segWrap = el('cfDonutSeg'), legend = el('cfLegend'), dv = el('cfDonutVal'), dl = el('cfDonutLabel'), sub = el('cfChartSub');
-  segWrap.innerHTML = ''; legend.innerHTML = '';
-  if(totalIncome<=0){ dv.textContent='0%'; dl.textContent='請先輸入收入'; return; }
-  const cats = [
-    {k:necessary,label:"必要支出",color:"#1F5C73"}, {k:flexible,label:"浮動支出",color:"#2E7391"},
-    {k:insurance,label:"保費支出",color:"#5FA8C7"}, {k:dependent,label:"撫養支出",color:"#9FCBDB"},
-    {k:loan,label:"貸款支出",color:"#C97B3D"}, {k:Math.max(net,0),label:"年度結餘（儲蓄）",color:"#2E7D5B"}
-  ];
-  const base = net>=0 ? totalIncome : totalExpense;
-  sub.textContent = net>=0 ? "占總收入的比例" : "占總支出的比例（收支不足）";
-  let cum=0;
-  cats.forEach(c=>{
-    if(c.k<=0) return;
-    const frac = c.k/base, len = frac*CF_DONUT_C;
-    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circle.setAttribute("cx","100"); circle.setAttribute("cy","100"); circle.setAttribute("r",CF_DONUT_R);
-    circle.setAttribute("fill","none"); circle.setAttribute("stroke",c.color); circle.setAttribute("stroke-width","30");
-    circle.setAttribute("stroke-dasharray", `${len} ${CF_DONUT_C-len}`);
-    circle.setAttribute("stroke-dashoffset", `${-cum}`);
-    segWrap.appendChild(circle);
-    const row = document.createElement("div"); row.className="legend-row";
-    row.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span><span class="legend-label">${c.label}</span><span class="legend-pct">${pctStr(frac)}</span><span class="legend-amt">${money(c.k)}</span>`;
-    legend.appendChild(row);
-    cum += len;
-  });
-  // 沒有收入時不能除以 0（避免顯示 -Infinity%）
-  dv.textContent = totalIncome>0 ? pctStr(net>=0?savingsRate:net/totalIncome) : '—';
-  dv.className = "dc-value"+(net<0?" negative":"");
-  dl.textContent = net>=0 ? "年度儲蓄率" : "收支缺口";
+  const Y = VCFin.cashSummary(incomeGroups, expenseGroups).year;
+  const share = v => Y.income>0 ? v/Y.income : 0;
+  const setText = (id, val) => { const n = document.getElementById(id+'-'+uid); if(n) n.textContent = val; };
+  setText('cfRatioTotalSavings', pctStr(share(Y.balance + Y.wealth)));
+  setText('cfRatioSavings', pctStr(share(Y.balance)));
+  setText('cfRatioWork', pctStr(share(Y.work)));
+  setText('cfRatioNecessary', pctStr(share(Y.necessary)));
+  setText('cfRatioWealth', pctStr(share(Y.wealth)));
+  setText('cfRatioFlexible', pctStr(share(Y.flexible)));
+  setText('cfRatioInsurance', pctStr(share(groupAnnualTotal(VCFin.groupByKey(expenseGroups,'nec_ins')))));
+  setText('cfRatioLoan', pctStr(share(groupAnnualTotal(VCFin.groupByKey(expenseGroups,'nec_loan')))));
 }
 
 function fillBalanceBreakdown(uid){
   const assetTotal = assetGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
   const liabilityTotal = liabilityGroups.reduce((s,g)=>s+groupAmountTotal(g),0);
   const netWorth = assetTotal - liabilityTotal;
-  const liquid = groupAmountTotal(assetGroups.find(g=>g.key==="liquid"));
-  const invest = groupAmountTotal(assetGroups.find(g=>g.key==="invest"));
-  const realestate = groupAmountTotal(assetGroups.find(g=>g.key==="realestate"));
-  const other = groupAmountTotal(assetGroups.find(g=>g.key==="other"));
+  const cat = c => VCFin.catAmount(assetGroups, c);
+  const liquid = cat('liquid'), liqinv = cat('liqinv'), illiquid = cat('illiquid'), other = cat('other'), property = cat('property');
+  const realestate = VCFin.realEstateAssets(assetGroups);
+  const reInvest = VCFin.rowsWhere(assetGroups.filter(g=>g.cat==='illiquid'), /不動產|土地|房屋|房產|房子|房地/, r=>Math.max(0,r.amount||0));
+  const shortDebt = VCFin.catAmount(liabilityGroups, 'short');
 
   const el = id => document.getElementById(id+'-'+uid);
   const setText = (id, val) => { const n = el(id); if(n) n.textContent = val; };
@@ -2542,17 +2517,18 @@ function fillBalanceBreakdown(uid){
   const baHighlightEl = el('baHighlightVal');
   if(baHighlightEl){ baHighlightEl.textContent = money(netWorth); baHighlightEl.className = "hs-value"+(netWorth>=0?" positive":" negative"); }
   setText('baRatioDebt', pctStr(assetTotal>0?liabilityTotal/assetTotal:0));
-  setText('baRatioLiquidity', liabilityTotal>0 ? pctStr(liquid/liabilityTotal) : '—');
+  setText('baRatioLiquidity', shortDebt>0 ? pctStr(liquid/shortDebt) : '—');
   setText('baRatioRealestate', pctStr(assetTotal>0?realestate/assetTotal:0));
-  setText('baRatioInvest', pctStr(assetTotal>0?invest/assetTotal:0));
+  setText('baRatioInvest', pctStr(assetTotal>0?(liquid+liqinv)/assetTotal:0));
 
   const segWrap = el('baDonutSeg'), legend = el('baLegend');
   segWrap.innerHTML=''; legend.innerHTML='';
   if(assetTotal<=0){ /* 無資產資料，圓餅圖留空 */ }
   else {
   const cats = [
-    {k:liquid,label:"理財型資產",color:"#9C7A3C"}, {k:invest,label:"投資資產",color:"#2E7391"},
-    {k:realestate,label:"不動產",color:"#1F5C73"}, {k:other,label:"其他資產",color:"#5FA8C7"}
+    {k:liquid,label:"流動性資產",color:"#5FA8C7"}, {k:liqinv,label:"流動性投資",color:"#2E7391"},
+    {k:illiquid,label:"非流動性投資",color:"#1F5C73"}, {k:other,label:"其他資產",color:"#9C7A3C"},
+    {k:property,label:"自用動產／不動產",color:"#9FCBDB"}
   ];
   let cum=0;
   cats.forEach(c=>{
@@ -2599,8 +2575,9 @@ function fillBalanceBreakdown(uid){
     });
     pctEl.textContent = pctStr(riskAmt/base);
   };
-  fillRiskSplitDonut('riskSplitSegRe','riskSplitLegendRe','riskSplitPctRe', liquid, invest+realestate);
-  fillRiskSplitDonut('riskSplitSeg','riskSplitLegend','riskSplitPct', liquid, invest);
+  const homeRE = realestate - reInvest; // 自用的土地、房屋
+  fillRiskSplitDonut('riskSplitSegRe','riskSplitLegendRe','riskSplitPctRe', liquid, liqinv + illiquid + other + homeRE);
+  fillRiskSplitDonut('riskSplitSeg','riskSplitLegend','riskSplitPct', liquid, liqinv + (illiquid - reInvest) + other);
 }
 
 function pctStr(n){ if(!isFinite(n)) return "0%"; return (n*100).toFixed(1)+"%"; }
@@ -2659,7 +2636,7 @@ function buildReportPages(uid, opts){
     <div class="report-section">
       <h3>財富願景・達成率</h3>
       ${buildVisionGoalListHTML(uid)}
-      <div class="report-note">達成率＝單純存錢累積（假設銀行活存利率 1%，不計投資報酬），對比通膨調整後的目標金額；房子（不動產淨值）不算進可用資金，房貸月付金照實際支出扣除。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
+      <div class="report-note">達成率＝單純存錢累積（假設銀行活存利率 1%，不計投資報酬），對比通膨調整後的目標金額；土地、房屋、不動產投資扣掉不動產抵押貸款後的淨值不算進可用資金，房貸月付金照實際支出扣除；零存整付、定期定額、儲蓄保險等理財支出視為持續累積的資金。綠色已達標、橘色接近、紅色落差較大。想了解投資報酬率能帶來多少差異，可請顧問用試算工具箱當面演示。</div>
     </div>`;
 
   const financialAnalysisSection = buildFinancialAnalysisHTML();

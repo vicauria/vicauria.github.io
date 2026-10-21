@@ -7,6 +7,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
+<script src="../fin-schema.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>收支現金流試算室</title>
@@ -311,10 +312,20 @@
     margin-top:4px;
   }
 
+  /* ---------- 大分類標題（必要／理財／浮動） ---------- */
+  .cat-block{margin:0 0 22px;}
+  .cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:2px solid var(--navy);padding:4px 2px 8px;margin-bottom:12px;}
+  .cat-head h3{margin:0;font-family:"Noto Serif TC",serif;font-size:18px;color:var(--navy);}
+  .cat-head h3 small{font-family:inherit;font-size:12.5px;color:var(--ink-soft);font-weight:400;margin-left:8px;}
+  .cat-head .cat-sum{font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .cat-head .cat-sum span{display:block;font-size:11.5px;font-weight:400;color:var(--ink-soft);text-align:right;}
+  .result-block{margin-top:22px;}
+  .result-block h3{font-size:15px;color:var(--navy);margin:0 0 10px;}
+
   /* ---------- Breakdown / result panel ---------- */
   .breakdown-grid{
     display:grid;
-    grid-template-columns:1fr 0.95fr 1fr;
+    grid-template-columns:1fr 1fr;
     gap:22px;
   }
   @media (max-width:980px){
@@ -544,7 +555,7 @@
   <div class="wrap">
     <div class="eyebrow">Cash Flow · 收支現金流</div>
     <h1>收支現金流</h1>
-    <p><b>收支現金流試算室</b>。把每一筆工作收入、理財收入，跟每一筆必要、浮動、保費、撫養、貸款支出都列清楚——月收入自動換算成年度，年終獎金這類一次性收入只加一次，最後總收入、總支出、年度結餘，全部即時算給你看。</p>
+    <p><b>收支現金流試算室</b>。收入分工作收入、理財收入；支出分必要支出、理財支出、浮動支出三大類。預設項目都可以改名、刪除或新增——月金額自動 ×12，年終、年繳這類一年一次的只加一次，按下「產生結果」就會算出月結算、年結算與支出佔比。</p>
   </div>
 </header>
 
@@ -555,15 +566,15 @@
       <div class="sum-value" id="sumIncome">$0</div>
     </div>
     <div class="sum-item">
-      <div class="sum-label">年度總支出</div>
+      <div class="sum-label">年度總支出<small style="display:block;font-size:10.5px;font-weight:400">必要＋浮動</small></div>
       <div class="sum-value" id="sumExpense">$0</div>
     </div>
     <div class="sum-item">
-      <div class="sum-label">年度現金流結餘</div>
+      <div class="sum-label">年度結餘現金流</div>
       <div class="sum-value" id="sumNet">$0</div>
     </div>
     <div class="sum-item">
-      <div class="sum-label">名目儲蓄率</div>
+      <div class="sum-label">總儲蓄率</div>
       <div class="sum-value" id="sumSavingsRate">0%</div>
     </div>
   </div>
@@ -576,44 +587,22 @@
   <!-- ================= 收入 ================= -->
   <section class="panel" id="incomePanel">
     <div class="panel-head">
-      <h2><span class="tag-income">●</span> 收入流量表</h2>
+      <h2><span class="tag-income">●</span> 收入</h2>
     </div>
-    <p class="panel-sub">每個項目分開填「月收入」跟「年度一次性收入」。月收入會自動 ×12；年終獎金、分紅這種一年只發一次的，填在後面那格，不會被乘 12，只加一次到年度小計。</p>
+    <p class="panel-sub">每月固定的填「月收入」（自動 ×12）；年終、三節獎金這種一年才發一次的，填「年度一次性」（只加一次）。沒有的項目留空或按 ✕ 刪掉。</p>
     <div id="incomeGroups"></div>
   </section>
 
   <!-- ================= 支出 ================= -->
   <section class="panel" id="expensePanel">
     <div class="panel-head">
-      <h2><span class="tag-expense">●</span> 支出流量表</h2>
+      <h2><span class="tag-expense">●</span> 支出</h2>
     </div>
-    <p class="panel-sub">支出依「必要／浮動／保費／撫養／貸款」五大分類列出，每一類都可以自己增加項目。表格外的臨時支出，就填最下面的「雜項」。</p>
+    <p class="panel-sub">分成必要支出、理財支出、浮動支出三大類。理財支出（零存整付、定期定額、儲蓄保險等）是為未來存的錢，會計入總儲蓄率。所得稅、地價稅這類一年繳一次的，填「年度一次性」。</p>
     <div id="expenseGroups"></div>
-
-    <div class="group" id="miscGroupWrap">
-      <div class="group-head">
-        <div class="group-title">（雜項）未列項目支出
-          <small>不在上述分類裡、但確實會發生的支出，先抓一個估計值放這裡</small>
-        </div>
-        <div class="group-subtotal" id="miscSubtotal">$0<span>年度小計</span></div>
-      </div>
-      <table class="row-table">
-        <thead>
-          <tr>
-            <th style="width:38%">項目說明</th>
-            <th>月支出 <span class="col-hint">(自動×12)</span></th>
-            <th>年度一次性 <span class="col-hint">(只加一次)</span></th>
-            <th style="text-align:right">年度小計</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="miscBody"></tbody>
-      </table>
-      <button class="add-row-btn" data-group="misc">＋ 新增雜項</button>
-    </div>
   </section>
 
-  <div class="placeholder-note" id="placeholderNote">填好上方的收入與支出項目後，按下方按鈕產生年度總結與比率分析。</div>
+  <div class="placeholder-note" id="placeholderNote">填好上方的收入與支出項目後，按下方按鈕產生摘要、支出佔比圖與比率分析。</div>
   <div class="generate-wrap">
     <button class="generate-btn" id="generateBtn">產生結果 →</button>
   </div>
@@ -623,75 +612,52 @@
     <div class="panel-head">
       <h2>收支總結</h2>
     </div>
-    <p class="panel-sub">總收入、總支出逐項加總後的結果，數字會隨上面表格即時更新。</p>
+    <p class="panel-sub">淨收入＝總收入－理財支出；總支出＝必要開支＋浮動開支；結餘現金流＝淨收入－總支出。月結算只加總「月」欄，不把年終、年繳攤成每月。</p>
+
+    <div class="vf-top">
+      <div><div class="vf-h">支出佔比圖</div><div id="cfDonut"></div></div>
+      <div><div id="cfSummary"></div></div>
+    </div>
 
     <div class="breakdown-grid">
-      <div>
-        <table class="bd-table">
-          <thead>
-            <tr><th>收入項目</th><th style="text-align:right">年度合計</th></tr>
-          </thead>
-          <tbody id="bdIncomeBody"></tbody>
-          <tbody>
-            <tr class="total"><td>總收入</td><td class="num" id="bdIncomeTotal">$0</td></tr>
-          </tbody>
-        </table>
+      <div class="result-block" style="margin-top:0"><h3>收入明細</h3><div id="cfIncomeTable"></div></div>
+      <div class="result-block" style="margin-top:0"><h3>支出明細</h3><div id="cfExpenseTable"></div></div>
+    </div>
 
-        <table class="bd-table" style="margin-top:18px;">
-          <thead>
-            <tr><th>支出項目</th><th style="text-align:right">年度合計</th></tr>
-          </thead>
-          <tbody id="bdExpenseBody"></tbody>
-          <tbody>
-            <tr class="total"><td>總支出</td><td class="num" id="bdExpenseTotal">$0</td></tr>
-            <tr class="net"><td>年度現金流結餘</td><td class="num" id="bdNet">$0</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="chart-card">
-        <h3>整體收支結構</h3>
-        <div class="chart-sub" id="chartSubLabel">占總收入的比例</div>
-        <div class="donut-wrap">
-          <svg viewBox="0 0 200 200" width="220" height="220">
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#E7ECEC" stroke-width="30"></circle>
-            <g id="donutSegments" transform="rotate(-90 100 100)"></g>
-          </svg>
-          <div class="donut-center">
-            <div class="dc-value" id="donutCenterValue">0%</div>
-            <div class="dc-label" id="donutCenterLabel">年度儲蓄率</div>
-          </div>
+    <div class="result-block">
+      <h3>比率分析</h3>
+      <div class="ratio-card">
+        <div class="ratio-row">
+          <div class="ratio-name">總儲蓄率<small>（結餘現金流＋理財支出）÷ 總收入，理想值 &gt; 20%</small></div>
+          <div class="ratio-value" id="ratioTotalSavings">0%</div>
         </div>
-        <div id="deficitNote" class="deficit-note" style="display:none;"></div>
-        <div class="legend" id="donutLegend"></div>
-      </div>
-
-      <div>
-        <div class="ratio-card">
-          <div class="ratio-row">
-            <div class="ratio-name">名目儲蓄率<small>年度結餘 ÷ 總收入，理想值 &gt; 20%</small></div>
-            <div class="ratio-value" id="ratioSavings">0%</div>
-          </div>
-          <div class="ratio-row">
-            <div class="ratio-name">理財收入比<small>理財(被動)收入 ÷ 總收入</small></div>
-            <div class="ratio-value" id="ratioFinIncome">0%</div>
-          </div>
-          <div class="ratio-row">
-            <div class="ratio-name">必要支出比<small>必要支出(含稅) ÷ 總收入</small></div>
-            <div class="ratio-value" id="ratioNecessary">0%</div>
-          </div>
-          <div class="ratio-row">
-            <div class="ratio-name">浮動支出比<small>浮動支出 ÷ 總收入，建議 &lt; 20%</small></div>
-            <div class="ratio-value" id="ratioFlexible">0%</div>
-          </div>
-          <div class="ratio-row">
-            <div class="ratio-name">保費支出比<small>保費支出 ÷ 總收入，建議 ≈ 10%</small></div>
-            <div class="ratio-value" id="ratioInsurance">0%</div>
-          </div>
-          <div class="ratio-row">
-            <div class="ratio-name">非房貸貸款壓力比<small>信貸／車貸等非房貸月付 ÷ 總收入；房貸已列在必要支出，不含在此</small></div>
-            <div class="ratio-value" id="ratioLoan">0%</div>
-          </div>
+        <div class="ratio-row">
+          <div class="ratio-name">名目儲蓄率<small>結餘現金流 ÷ 總收入（不含理財支出）</small></div>
+          <div class="ratio-value" id="ratioSavings">0%</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-name">主動收入所得占比<small>工作收入 ÷ 總收入；越高代表越依賴工作收入</small></div>
+          <div class="ratio-value" id="ratioWork">0%</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-name">固定支出／所得比<small>必要支出（含稅）÷ 總收入</small></div>
+          <div class="ratio-value" id="ratioNecessary">0%</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-name">理財支出／所得比<small>理財支出 ÷ 總收入</small></div>
+          <div class="ratio-value" id="ratioWealth">0%</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-name">浮動支出／所得比<small>浮動支出 ÷ 總收入，建議 &lt; 20%</small></div>
+          <div class="ratio-value" id="ratioFlexible">0%</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-name">保費支出比<small>必要支出「保險」小類 ÷ 總收入，建議 ≈ 10%</small></div>
+          <div class="ratio-value" id="ratioInsurance">0%</div>
+        </div>
+        <div class="ratio-row">
+          <div class="ratio-name">貸款支出比<small>必要支出「貸款」小類（房貸、信貸、車貸月付）÷ 總收入</small></div>
+          <div class="ratio-value" id="ratioLoan">0%</div>
         </div>
       </div>
     </div>
@@ -713,80 +679,9 @@ function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); ret
    年度小計 rowAnnual = monthly*12 + once   (月收入自動年化，一次性只加一次)
 --------------------------------------------------------- */
 
-const incomeGroups = [
-  {
-    key:"active",
-    title:"工作收入（主動）",
-    hint:"薪資、接案等持續性主動收入",
-    rows:[
-      {name:"薪資所得", monthly:0, once:0},
-      {name:"年終獎金／分紅", monthly:0, once:0}
-    ]
-  },
-  {
-    key:"passive",
-    title:"理財收入（被動）",
-    hint:"用於計算「理財收入比」，是財富自由度的關鍵指標",
-    rows:[
-      {name:"房租收入", monthly:0, once:0},
-      {name:"股息／利息收入", monthly:0, once:0}
-    ]
-  }
-];
-
-const expenseGroups = [
-  {
-    key:"necessary",
-    title:"必要支出（含稅）",
-    hint:"食衣住行等生活必需，比例越低越好",
-    rows:[
-      {name:"房貸／房租", monthly:0, once:0},
-      {name:"三餐飲食", monthly:0, once:0},
-      {name:"交通費", monthly:0, once:0},
-      {name:"水電瓦斯／電信", monthly:0, once:0}
-    ]
-  },
-  {
-    key:"flexible",
-    title:"浮動支出",
-    hint:"娛樂、治裝等非必要消費，建議控制在收入 20% 以內",
-    rows:[
-      {name:"娛樂消費", monthly:0, once:0},
-      {name:"治裝／美容", monthly:0, once:0},
-      {name:"旅遊基金", monthly:0, once:0}
-    ]
-  },
-  {
-    key:"insurance",
-    title:"保費支出",
-    hint:"壽險、醫療、意外等保障型保費",
-    rows:[
-      {name:"壽險／醫療險", monthly:0, once:0},
-      {name:"意外險", monthly:0, once:0}
-    ]
-  },
-  {
-    key:"dependent",
-    title:"撫養支出",
-    hint:"子女教育、孝親費等家庭責任支出",
-    rows:[
-      {name:"子女教育費", monthly:0, once:0},
-      {name:"孝親費", monthly:0, once:0}
-    ]
-  },
-  {
-    key:"loan",
-    title:"貸款支出",
-    hint:"信貸、車貸等非房貸類貸款月付金",
-    rows:[
-      {name:"信貸／車貸", monthly:0, once:0}
-    ]
-  }
-];
-
-const miscRows = [
-  {name:"其他未列支出", monthly:0, once:0}
-];
+const incomeGroups = VCFin.defaultIncome();
+const expenseGroups = VCFin.defaultExpense();
+VCFin.injectCSS();
 
 /* ---------------- render helpers ---------------- */
 
@@ -804,7 +699,7 @@ function rowAnnual(row){
   return amt(row.monthly)*12 + amt(row.once);
 }
 // 通常是「一年一次」的項目（年終、旅遊、年繳保費）：每月欄留空並提示改填右邊的年度一次性欄
-function isYearlyItem(name){ return /年終|獎金|分紅|旅遊|壽險|醫療險|意外險|保費/.test(String(name||'')); }
+function isYearlyItem(name){ return /年終|三節|獎金|分紅|旅遊|壽險|醫療險|意外險|保險費|保費|儲蓄險|儲蓄保險|所得稅|地價稅|房屋稅|牌照稅|燃料/.test(String(name||'')); }
 function groupAnnual(group){
   return group.rows.reduce((s,r)=>s+rowAnnual(r),0);
 }
@@ -816,7 +711,7 @@ function renderGroupTable(group, isExpense){
 
   wrap.innerHTML = `
     <div class="group-head">
-      <div class="group-title">${group.title}<small>${group.hint}</small></div>
+      <div class="group-title">${group.title}<small>${group.hint||""}</small></div>
       <div class="group-subtotal" data-role="subtotal">$0<span>年度小計</span></div>
     </div>
     <table class="row-table">
@@ -870,26 +765,19 @@ function renderRow(group, row, idx){
   return tr;
 }
 
-/* misc group (single flat list, no sub-groups) */
-function renderMisc(){
-  const tbody = document.getElementById("miscBody");
-  tbody.innerHTML = "";
-  const fakeGroup = {rows:miscRows};
-  miscRows.forEach((row)=> tbody.appendChild(renderRow(fakeGroup, row)) );
-}
-document.querySelector('[data-group="misc"]').addEventListener("click", ()=>{
-  const newRow = {name:"", monthly:0, once:0};
-  miscRows.push(newRow);
-  document.getElementById("miscBody").appendChild(renderRow({rows:miscRows}, newRow));
-  recalc();
-});
-
 /* ---------------- initial render ---------------- */
 const incomeMount = document.getElementById("incomeGroups");
 const expenseMount = document.getElementById("expenseGroups");
 incomeGroups.forEach(g=> incomeMount.appendChild(renderGroupTable(g,false)) );
-expenseGroups.forEach(g=> expenseMount.appendChild(renderGroupTable(g,true)) );
-renderMisc();
+// 支出：大分類（必要／理財／浮動）→ 小分類表格
+VCFin.EXPENSE_CATS.forEach(c=>{
+  const block = document.createElement("div");
+  block.className = "cat-block";
+  block.dataset.cat = c.cat;
+  block.innerHTML = `<div class="cat-head"><h3>${c.title}</h3><div class="cat-sum" data-role="catsum">$0<span>${c.sub}（年）</span></div></div>`;
+  expenseGroups.filter(g=>g.cat===c.cat).forEach(g=> block.appendChild(renderGroupTable(g,true)) );
+  expenseMount.appendChild(block);
+});
 document.getElementById("printDate").textContent = new Date().toLocaleDateString("zh-TW");
 // 列印抬頭的顧問名稱：從工作台右下角的使用者名稱帶入（沒有的話留空白線讓顧問手寫）
 function vcFillAdvisorName(){
@@ -919,164 +807,50 @@ generateBtn.addEventListener("click", ()=>{
 
 /* ---------------- recalc everything ---------------- */
 function recalc(){
-  // group subtotal labels (income + expense groups)
+  // 各小分類小計＋每列年度小計
+  const allGroups = [...incomeGroups, ...expenseGroups];
   document.querySelectorAll("#incomeGroups .group, #expenseGroups .group").forEach(el=>{
-    const key = el.dataset.key;
-    const allGroups = [...incomeGroups, ...expenseGroups];
-    const group = allGroups.find(g=>g.key===key);
+    const group = allGroups.find(g=>g.key===el.dataset.key);
     if(!group) return;
     el.querySelectorAll(".row-table tbody tr").forEach((tr,i)=>{
       const cell = tr.querySelector(".row-subtotal");
-      if(cell) cell.textContent = money(rowAnnual(group.rows[i]));
+      if(cell && group.rows[i]) cell.textContent = money(rowAnnual(group.rows[i]));
     });
-    el.querySelector('[data-role="subtotal"]').innerHTML =
-      money(groupAnnual(group)) + "<span>年度小計</span>";
+    el.querySelector('[data-role="subtotal"]').innerHTML = money(groupAnnual(group)) + "<span>年度小計</span>";
+  });
+  VCFin.EXPENSE_CATS.forEach(c=>{
+    const el = document.querySelector(`.cat-block[data-cat="${c.cat}"] [data-role="catsum"]`);
+    if(el) el.innerHTML = money(VCFin.catAnnual(expenseGroups, c.cat)) + `<span>${c.sub}（年）</span>`;
   });
 
-  // misc subtotal + row values
-  const miscBody = document.getElementById("miscBody");
-  miscBody.querySelectorAll("tr").forEach((tr,i)=>{
-    const cell = tr.querySelector(".row-subtotal");
-    if(cell) cell.textContent = money(rowAnnual(miscRows[i]));
-  });
-  const miscTotal = miscRows.reduce((s,r)=>s+rowAnnual(r),0);
-  document.getElementById("miscSubtotal").innerHTML = money(miscTotal) + "<span>年度小計</span>";
-
-  // grand totals
-  const totalIncome = incomeGroups.reduce((s,g)=>s+groupAnnual(g),0);
-  const totalExpense = expenseGroups.reduce((s,g)=>s+groupAnnual(g),0) + miscTotal;
-  const net = totalIncome - totalExpense;
-  const savingsRate = totalIncome>0 ? net/totalIncome : 0;
-  const passiveIncome = (incomeGroups.find(g=>g.key==="passive")||{rows:[]}).rows.reduce((s,r)=>s+rowAnnual(r),0);
-  const finIncomeRatio = totalIncome>0 ? passiveIncome/totalIncome : 0;
-
-  const necessary = groupAnnual(expenseGroups.find(g=>g.key==="necessary"));
-  const flexible = groupAnnual(expenseGroups.find(g=>g.key==="flexible"));
-  const insurance = groupAnnual(expenseGroups.find(g=>g.key==="insurance"));
-  const dependent = groupAnnual(expenseGroups.find(g=>g.key==="dependent"));
-  const loan = groupAnnual(expenseGroups.find(g=>g.key==="loan"));
+  const S = VCFin.cashSummary(incomeGroups, expenseGroups);
+  const Y = S.year;
+  const totalIncome = Y.income;
+  const share = v => totalIncome>0 ? v/totalIncome : 0;
 
   // sticky dock
   document.getElementById("sumIncome").textContent = money(totalIncome);
-  document.getElementById("sumExpense").textContent = money(totalExpense);
+  document.getElementById("sumExpense").textContent = money(Y.spend);
   const netEl = document.getElementById("sumNet");
-  netEl.textContent = money(net);
-  netEl.className = "sum-value " + (net>=0?"positive":"negative");
-  document.getElementById("sumSavingsRate").textContent = pct(savingsRate);
+  netEl.textContent = money(Y.balance);
+  netEl.className = "sum-value " + (Y.balance>=0?"positive":"negative");
+  document.getElementById("sumSavingsRate").textContent = pct(share(Y.balance + Y.wealth));
 
-  // breakdown tables
-  const incBody = document.getElementById("bdIncomeBody");
-  incBody.innerHTML = incomeGroups.map(g=>
-    `<tr><td>${g.title}</td><td class="num">${money(groupAnnual(g))}</td></tr>`
-  ).join("");
-  document.getElementById("bdIncomeTotal").textContent = money(totalIncome);
-
-  const expBody = document.getElementById("bdExpenseBody");
-  expBody.innerHTML = expenseGroups.map(g=>
-    `<tr><td>${g.title}</td><td class="num">${money(groupAnnual(g))}</td></tr>`
-  ).join("") + `<tr><td>（雜項）未列項目支出</td><td class="num">${money(miscTotal)}</td></tr>`;
-  document.getElementById("bdExpenseTotal").textContent = money(totalExpense);
-  const netRow = document.getElementById("bdNet");
-  netRow.textContent = money(net);
-  netRow.style.color = net>=0 ? "var(--positive)" : "var(--negative)";
+  // 摘要＋支出佔比圖＋明細（只列有填的項目）
+  document.getElementById("cfSummary").innerHTML = VCFin.summaryTableHTML(S);
+  document.getElementById("cfDonut").innerHTML = totalIncome>0 ? VCFin.donutSVG(S) : '<div class="vf-note">請先輸入收入</div>';
+  document.getElementById("cfIncomeTable").innerHTML = VCFin.cashTableHTML('income', incomeGroups, totalIncome, S.month.income);
+  document.getElementById("cfExpenseTable").innerHTML = VCFin.cashTableHTML('expense', expenseGroups, totalIncome, S.month.income);
 
   // ratios
-  document.getElementById("ratioSavings").textContent = pct(savingsRate);
-  document.getElementById("ratioFinIncome").textContent = pct(finIncomeRatio);
-  document.getElementById("ratioNecessary").textContent = pct(totalIncome>0?necessary/totalIncome:0);
-  document.getElementById("ratioFlexible").textContent = pct(totalIncome>0?flexible/totalIncome:0);
-  document.getElementById("ratioInsurance").textContent = pct(totalIncome>0?insurance/totalIncome:0);
-  document.getElementById("ratioLoan").textContent = pct(totalIncome>0?loan/totalIncome:0);
-
-  renderDonut({totalIncome, totalExpense, net, savingsRate, necessary, flexible, insurance, dependent, loan, miscTotal});
-}
-
-/* ---------------- donut chart ---------------- */
-const DONUT_R = 80;
-const DONUT_C = 2 * Math.PI * DONUT_R;
-
-const donutCategories = [
-  {key:"necessary", label:"必要支出", color:"#1F5C73"},
-  {key:"flexible",  label:"浮動支出", color:"#2E7391"},
-  {key:"insurance", label:"保費支出", color:"#5FA8C7"},
-  {key:"dependent", label:"撫養支出", color:"#9FCBDB"},
-  {key:"loan",      label:"貸款支出", color:"#C97B3D"},
-  {key:"misc",      label:"雜項支出", color:"#E3A66D"},
-  {key:"savings",   label:"年度結餘（儲蓄）", color:"#2E7D5B"}
-];
-
-function renderDonut(d){
-  const segWrap = document.getElementById("donutSegments");
-  const legend = document.getElementById("donutLegend");
-  const centerValue = document.getElementById("donutCenterValue");
-  const centerLabel = document.getElementById("donutCenterLabel");
-  const subLabel = document.getElementById("chartSubLabel");
-  const deficitNote = document.getElementById("deficitNote");
-
-  segWrap.innerHTML = "";
-  legend.innerHTML = "";
-
-  if(d.totalIncome <= 0){
-    centerValue.className = "dc-value";
-    centerValue.textContent = "0%";
-    centerLabel.textContent = "請先輸入收入";
-    subLabel.textContent = "占總收入的比例";
-    deficitNote.style.display = "none";
-    return;
-  }
-
-  const values = {
-    necessary:d.necessary, flexible:d.flexible, insurance:d.insurance,
-    dependent:d.dependent, loan:d.loan, misc:d.miscTotal, savings:Math.max(d.net,0)
-  };
-
-  // base：收支平衡或有結餘時，圓餅 100% = 總收入；超支時，圓餅 100% = 總支出（沒有結餘可畫）
-  const base = d.net >= 0 ? d.totalIncome : d.totalExpense;
-  subLabel.textContent = d.net >= 0 ? "占總收入的比例" : "占總支出的比例（收入不足以支應支出）";
-
-  let cumulative = 0;
-  donutCategories.forEach(cat=>{
-    if(cat.key === "savings" && d.net < 0) return; // 超支時不畫結餘那一塊
-    const val = values[cat.key] || 0;
-    if(val <= 0) return;
-    const fraction = val / base;
-    const len = fraction * DONUT_C;
-    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circle.setAttribute("cx","100");
-    circle.setAttribute("cy","100");
-    circle.setAttribute("r", DONUT_R);
-    circle.setAttribute("fill","none");
-    circle.setAttribute("stroke", cat.color);
-    circle.setAttribute("stroke-width","30");
-    circle.setAttribute("stroke-dasharray", `${len} ${DONUT_C-len}`);
-    circle.setAttribute("stroke-dashoffset", `${-cumulative}`);
-    segWrap.appendChild(circle);
-
-    const row = document.createElement("div");
-    row.className = "legend-row";
-    row.innerHTML = `
-      <span class="legend-dot" style="background:${cat.color}"></span>
-      <span class="legend-label">${cat.label}</span>
-      <span class="legend-pct">${pct(fraction)}</span>
-      <span class="legend-amt">${money(val)}</span>
-    `;
-    legend.appendChild(row);
-
-    cumulative += len;
-  });
-
-  if(d.net >= 0){
-    centerValue.className = "dc-value";
-    centerValue.textContent = pct(d.savingsRate);
-    centerLabel.textContent = "年度儲蓄率";
-    deficitNote.style.display = "none";
-  } else {
-    centerValue.className = "dc-value negative";
-    centerValue.textContent = pct(d.net / d.totalIncome);
-    centerLabel.textContent = "收支缺口（占總收入）";
-    deficitNote.style.display = "block";
-    deficitNote.textContent = `目前支出超過收入 ${money(Math.abs(d.net))}，圓餅圖以總支出為 100% 顯示各分類占比`;
-  }
+  document.getElementById("ratioTotalSavings").textContent = pct(share(Y.balance + Y.wealth));
+  document.getElementById("ratioSavings").textContent = pct(share(Y.balance));
+  document.getElementById("ratioWork").textContent = pct(share(Y.work));
+  document.getElementById("ratioNecessary").textContent = pct(share(Y.necessary));
+  document.getElementById("ratioWealth").textContent = pct(share(Y.wealth));
+  document.getElementById("ratioFlexible").textContent = pct(share(Y.flexible));
+  document.getElementById("ratioInsurance").textContent = pct(share(groupAnnual(VCFin.groupByKey(expenseGroups,'nec_ins'))));
+  document.getElementById("ratioLoan").textContent = pct(share(groupAnnual(VCFin.groupByKey(expenseGroups,'nec_loan'))));
 }
 
 recalc();

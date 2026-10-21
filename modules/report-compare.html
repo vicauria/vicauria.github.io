@@ -7,6 +7,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
+<script src="../fin-schema.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>報告比對</title>
@@ -223,31 +224,33 @@ function riskTypeLabel(score){
   return t.emoji+' '+t.name;
 }
 
-function categoryTotals(groups, totalFn){
-  return (groups||[]).map(g => ({ label: g.title, value: totalFn(g) })).filter(g=>g.value > 0);
+// 依大分類加總（流動性資產、流動性投資…），舊報告會先自動對應到新分類
+function categoryTotals(groups, cats, totalFn){
+  return cats.map(c => ({ label: c.title, value: (groups||[]).filter(g=>g.cat===c.cat).reduce((s,g)=>s+totalFn(g),0) })).filter(g=>g.value > 0);
 }
 
 function metricsOf(s){
-  const incomeGroups = s.incomeGroups||[];
-  const expenseGroups = s.expenseGroups||[];
-  const assetGroups = s.assetGroups||[];
-  const liabilityGroups = s.liabilityGroups||[];
+  const incomeGroups = VCFin.normalizeIncome(s.incomeGroups);
+  const expenseGroups = VCFin.normalizeExpense(s.expenseGroups);
+  const assetGroups = VCFin.normalizeAssets(s.assetGroups);
+  const liabilityGroups = VCFin.normalizeLiabilities(s.liabilityGroups);
   const incomeTotal = incomeGroups.reduce((sum,g)=>sum+groupAnnualTotal(g),0);
   const expenseTotal = expenseGroups.reduce((sum,g)=>sum+groupAnnualTotal(g),0);
   const assetTotal = assetGroups.reduce((sum,g)=>sum+groupAmountTotal(g),0);
   const liabilityTotal = liabilityGroups.reduce((sum,g)=>sum+groupAmountTotal(g),0);
-  const liquidGroup = assetGroups.find(g=>g.key==='liquid');
-  const liquidTotal = liquidGroup ? groupAmountTotal(liquidGroup) : 0;
+  const wealthTotal = expenseGroups.filter(g=>g.cat==='wealth').reduce((sum,g)=>sum+groupAnnualTotal(g),0);
+  const liquidTotal = assetGroups.filter(g=>g.cat==='liquid').reduce((sum,g)=>sum+groupAmountTotal(g),0);
   return {
     incomeTotal, expenseTotal, assetTotal, liabilityTotal,
     surplus: incomeTotal - expenseTotal,
     netWorth: assetTotal - liabilityTotal,
-    savingsRate: incomeTotal>0 ? (incomeTotal-expenseTotal)/incomeTotal : null,
+    // 儲蓄率含「理財支出」（零存整付、定期定額、儲蓄保險）：那是為未來存的錢，不是消費；舊報告沒有這個分類時等於 0
+    savingsRate: incomeTotal>0 ? (incomeTotal-expenseTotal+wealthTotal)/incomeTotal : null,
     debtRatio: assetTotal>0 ? liabilityTotal/assetTotal : null,
     liquidAssetRatio: assetTotal>0 ? liquidTotal/assetTotal : null,
     riskScore: riskScoreOf(s),
-    assetBreakdown: categoryTotals(assetGroups, groupAmountTotal),
-    liabilityBreakdown: categoryTotals(liabilityGroups, groupAmountTotal)
+    assetBreakdown: categoryTotals(assetGroups, VCFin.ASSET_CATS, groupAmountTotal),
+    liabilityBreakdown: categoryTotals(liabilityGroups, VCFin.LIAB_CATS, groupAmountTotal)
   };
 }
 
@@ -327,7 +330,7 @@ function buildAdvice(mBefore, mAfter){
     }
   }
   if(mAfter.liquidAssetRatio !== null && mAfter.liquidAssetRatio > 0.7){
-    advice.push('目前理財型資產（活存、定存等）占總資產超過七成，如果這部分資金的利率沒有跑贏通膨，資產配比可以再跟顧問一起探討，評估要不要提高投資部位的比重；如果本來就是選擇抗通膨型的存款工具，維持現狀也沒關係。');
+    advice.push('目前流動性資產（活存、緊急預備金、儲蓄險等）占總資產超過七成，如果這部分資金的利率沒有跑贏通膨，資產配比可以再跟顧問一起探討，評估要不要提高投資部位的比重；如果本來就是選擇抗通膨型的存款工具，維持現狀也沒關係。');
   }
   if(mBefore.debtRatio!==null && mAfter.debtRatio!==null){
     const dr = mAfter.debtRatio - mBefore.debtRatio;

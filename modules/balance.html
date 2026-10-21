@@ -7,6 +7,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script src="../vc-icons.js"></script>
 <script src="../ui-kit.js"></script>
+<script src="../fin-schema.js"></script>
 <script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>資產負債表試算室</title>
@@ -145,7 +146,10 @@
   .add-row-btn:hover{background:var(--teal-tint);}
   .group.liability .add-row-btn:hover{background:var(--warm-tint);}
 
-  .breakdown-grid{display:grid;grid-template-columns:1fr 0.95fr 1fr;gap:22px;}
+  .breakdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .bs-full{grid-column:1/-1;min-width:0;}
+  .mid-total{display:flex;justify-content:space-between;align-items:center;background:var(--navy);color:#fff;border-radius:10px;padding:11px 16px;margin:-6px 0 16px;font-size:14px;font-weight:700;}
+  .mid-total b{font-variant-numeric:tabular-nums;font-size:16px;}
   @media (max-width:980px){.breakdown-grid{grid-template-columns:1fr;}}
 
   .chart-card{display:flex;flex-direction:column;align-items:center;text-align:center;}
@@ -227,7 +231,7 @@
   <div class="wrap">
     <div class="eyebrow">Balance Sheet · 資產負債表</div>
     <h1>資產負債表</h1>
-    <p><b>資產負債表試算室</b>。把名下每一筆資產（現金、投資、不動產）跟每一筆負債（房貸、信貸、其他借款）列清楚，即時算出淨值、負債比與資產配置結構。</p>
+    <p><b>資產負債表試算室</b>。資產分成流動性資產、流動性投資、非流動性投資、其他資產、自用動產／不動產；負債分成短期、長期。預設項目都可以改名、刪除或新增，最後算出資產淨額、負債比與資產配置結構。</p>
   </div>
 </header>
 
@@ -235,7 +239,7 @@
   <div class="summary-inner">
     <div class="sum-item"><div class="sum-label">總資產</div><div class="sum-value" id="sumAssets">$0</div></div>
     <div class="sum-item"><div class="sum-label">總負債</div><div class="sum-value" id="sumLiabilities">$0</div></div>
-    <div class="sum-item"><div class="sum-label">淨值</div><div class="sum-value" id="sumNet">$0</div></div>
+    <div class="sum-item"><div class="sum-label">資產淨額</div><div class="sum-value" id="sumNet">$0</div></div>
     <div class="sum-item"><div class="sum-label">負債比</div><div class="sum-value" id="sumDebtRatio">0%</div></div>
   </div>
 </div>
@@ -248,14 +252,14 @@
     <!-- ================= 資產 ================= -->
     <section class="panel" id="assetPanel">
       <div class="panel-head"><h2><span class="tag-asset">●</span> 資產</h2></div>
-      <p class="panel-sub">依流動性由高到低列出，每一類都可以自己增加項目。</p>
+      <p class="panel-sub">依流動性由高到低列出，以目前市值估算；沒有的項目留空或按 ✕ 刪掉。</p>
       <div id="assetGroups"></div>
     </section>
 
     <!-- ================= 負債 ================= -->
     <section class="panel" id="liabilityPanel">
       <div class="panel-head"><h2><span class="tag-liability">●</span> 負債</h2></div>
-      <p class="panel-sub">列出房貸、信貸、車貸及其他借款的目前餘額（非每月還款金額）。</p>
+      <p class="panel-sub">填目前尚未還清的本金餘額（不是每月還款金額）。</p>
       <div id="liabilityGroups"></div>
     </section>
   </div>
@@ -271,22 +275,7 @@
     <p class="panel-sub">總資產、總負債逐項加總後的結果，數字會隨上面表格即時更新。</p>
 
     <div class="breakdown-grid">
-      <div>
-        <table class="bd-table">
-          <thead><tr><th>資產項目</th><th style="text-align:right">金額</th></tr></thead>
-          <tbody id="bdAssetBody"></tbody>
-          <tbody><tr class="total"><td>總資產</td><td class="num" id="bdAssetTotal">$0</td></tr></tbody>
-        </table>
-
-        <table class="bd-table" style="margin-top:18px;">
-          <thead><tr><th>負債項目</th><th style="text-align:right">金額</th></tr></thead>
-          <tbody id="bdLiabilityBody"></tbody>
-          <tbody>
-            <tr class="total"><td>總負債</td><td class="num" id="bdLiabilityTotal">$0</td></tr>
-            <tr class="net"><td>淨值（總資產－總負債）</td><td class="num" id="bdNet">$0</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="bs-full" id="bsTable"></div>
 
       <div class="chart-card">
         <h3>資產配置結構</h3>
@@ -298,7 +287,7 @@
           </svg>
           <div class="donut-center">
             <div class="dc-value" id="donutCenterValue">$0</div>
-            <div class="dc-label" id="donutCenterLabel">淨值</div>
+            <div class="dc-label" id="donutCenterLabel">資產淨額</div>
           </div>
         </div>
         <div class="legend" id="donutLegend"></div>
@@ -311,15 +300,15 @@
             <div class="ratio-value" id="ratioDebt">0%</div>
           </div>
           <div class="ratio-row">
-            <div class="ratio-name">流動性比率<small>理財型資產 ÷ 非房貸負債（信貸／車貸＋信用卡等短期負債），衡量短期還款能力；房貸為長期攤還，不列入</small></div>
+            <div class="ratio-name">流動性比率<small>流動性資產 ÷ 短期負債，衡量短期還款能力；長期負債（房貸、車貸等）為分期攤還，不列入</small></div>
             <div class="ratio-value" id="ratioLiquidity">0%</div>
           </div>
           <div class="ratio-row">
-            <div class="ratio-name">不動產佔比<small>不動產 ÷ 總資產</small></div>
+            <div class="ratio-name">不動產佔比<small>土地、房屋、不動產投資 ÷ 總資產</small></div>
             <div class="ratio-value" id="ratioRealestate">0%</div>
           </div>
           <div class="ratio-row">
-            <div class="ratio-name">投資資產佔比<small>投資資產 ÷ 總資產，反映資產配置活躍度</small></div>
+            <div class="ratio-name">流動性資產與投資佔比<small>（流動性資產＋流動性投資）÷ 總資產，越高代表越能靈活調度</small></div>
             <div class="ratio-value" id="ratioInvest">0%</div>
           </div>
         </div>
@@ -342,69 +331,11 @@ function vcSafeUrl(u){ try{ const x = new URL(String(u||''), location.href); ret
    每一列 row = { name, amount }
 --------------------------------------------------------- */
 
-const assetGroups = [
-  {
-    key:"liquid",
-    title:"理財型資產",
-    hint:"現金、活存、定存等隨時可動用的資金",
-    rows:[
-      {name:"活期存款", amount:0},
-      {name:"定期存款", amount:0}
-    ]
-  },
-  {
-    key:"invest",
-    title:"投資資產",
-    hint:"股票、基金、ETF、保單價值準備金等",
-    rows:[
-      {name:"股票／基金／ETF", amount:0},
-      {name:"保單價值準備金", amount:0}
-    ]
-  },
-  {
-    key:"realestate",
-    title:"不動產",
-    hint:"以目前市值估算，非購入成本",
-    rows:[
-      {name:"自住不動產", amount:0}
-    ]
-  },
-  {
-    key:"other",
-    title:"其他資產",
-    hint:"車輛、珠寶、未上市股權等",
-    rows:[
-      {name:"車輛", amount:0}
-    ]
-  }
-];
-
-const liabilityGroups = [
-  {
-    key:"mortgage",
-    title:"房貸餘額",
-    hint:"目前尚未還清的房貸本金餘額",
-    rows:[
-      {name:"房貸餘額", amount:0}
-    ]
-  },
-  {
-    key:"otherloan",
-    title:"信貸／車貸餘額",
-    hint:"非房貸類貸款的尚未還清本金",
-    rows:[
-      {name:"信貸餘額", amount:0}
-    ]
-  },
-  {
-    key:"shortterm",
-    title:"信用卡及其他短期負債",
-    hint:"卡費循環、親友借款等",
-    rows:[
-      {name:"信用卡循環餘額", amount:0}
-    ]
-  }
-];
+const assetGroups = VCFin.defaultAssets();
+const liabilityGroups = VCFin.defaultLiabilities();
+const CAT_SUB = {};
+VCFin.ASSET_CATS.concat(VCFin.LIAB_CATS).forEach(c=>{ CAT_SUB[c.cat] = c.sub.replace(/^＊/,''); });
+VCFin.injectCSS();
 
 /* ---------------- render helpers ---------------- */
 function money(n){
@@ -426,8 +357,8 @@ function renderGroupTable(group, isLiability){
 
   wrap.innerHTML = `
     <div class="group-head">
-      <div class="group-title">${group.title}<small>${group.hint}</small></div>
-      <div class="group-subtotal" data-role="subtotal">$0<span>小計</span></div>
+      <div class="group-title">${group.title}<small>${group.hint||""}</small></div>
+      <div class="group-subtotal" data-role="subtotal">$0<span>${CAT_SUB[group.cat]||"小計"}</span></div>
     </div>
     <table class="row-table">
       <thead>
@@ -477,7 +408,15 @@ function renderRow(group, row){
 /* ---------------- initial render ---------------- */
 const assetMount = document.getElementById("assetGroups");
 const liabilityMount = document.getElementById("liabilityGroups");
-assetGroups.forEach(g=> assetMount.appendChild(renderGroupTable(g,false)) );
+assetGroups.forEach(g=>{
+  assetMount.appendChild(renderGroupTable(g,false));
+  if(g.key==='liqinv'){
+    const mid = document.createElement('div');
+    mid.className = 'mid-total';
+    mid.innerHTML = '<span>流動性資產與投資</span><b id="midLiquidInvest">$0</b>';
+    assetMount.appendChild(mid);
+  }
+});
 liabilityGroups.forEach(g=> liabilityMount.appendChild(renderGroupTable(g,true)) );
 document.getElementById("printDate").textContent = new Date().toLocaleDateString("zh-TW");
 // 列印抬頭的顧問名稱：從工作台右下角的使用者名稱帶入（沒有的話留空白線讓顧問手寫）
@@ -518,7 +457,7 @@ function recalc(){
     el.querySelectorAll(".row-table tbody tr").forEach((tr,i)=>{
       // amount cell has no dedicated subtotal span per-row (single amount = row value), nothing to update besides subtotal
     });
-    el.querySelector('[data-role="subtotal"]').innerHTML = money(groupTotal(group)) + "<span>小計</span>";
+    el.querySelector('[data-role="subtotal"]').innerHTML = money(groupTotal(group)) + "<span>" + (CAT_SUB[group.cat]||"小計") + "</span>";
   });
 
   const totalAssets = assetGroups.reduce((s,g)=>s+groupTotal(g),0);
@@ -526,18 +465,17 @@ function recalc(){
   const netWorth = totalAssets - totalLiabilities;
   const debtRatio = totalAssets>0 ? totalLiabilities/totalAssets : 0;
 
-  const liquid = groupTotal(assetGroups.find(g=>g.key==="liquid"));
-  const invest = groupTotal(assetGroups.find(g=>g.key==="invest"));
-  const realestate = groupTotal(assetGroups.find(g=>g.key==="realestate"));
-  const other = groupTotal(assetGroups.find(g=>g.key==="other"));
+  const cat = c => VCFin.catAmount(assetGroups, c);
+  const liquid = cat("liquid"), liqinv = cat("liqinv"), illiquid = cat("illiquid"), other = cat("other"), property = cat("property");
+  const realestate = VCFin.realEstateAssets(assetGroups);
 
-  // 流動性比率只看「短期內要還」的負債：信貸／車貸＋信用卡等短期負債（房貸是長期攤還，不列入）
-  const shortDebt = groupTotal(liabilityGroups.find(g=>g.key==="otherloan")) + groupTotal(liabilityGroups.find(g=>g.key==="shortterm"));
+  // 流動性比率只看「短期負債」（長期負債為分期攤還，不列入）
+  const shortDebt = VCFin.catAmount(liabilityGroups, "short");
   const liquidityRatio = shortDebt>0 ? liquid/shortDebt : (liquid>0 ? Infinity : 0);
   // 沒有任何資產卻有負債：負債比無法計算（不是 0%），要用警示色提醒
   const noAssetsWithDebt = totalAssets<=0 && totalLiabilities>0;
   const realestateRatio = totalAssets>0 ? realestate/totalAssets : 0;
-  const investRatio = totalAssets>0 ? invest/totalAssets : 0;
+  const investRatio = totalAssets>0 ? (liquid+liqinv)/totalAssets : 0;
 
   // sticky dock
   document.getElementById("sumAssets").textContent = money(totalAssets);
@@ -549,19 +487,10 @@ function recalc(){
   sumDebtEl.textContent = noAssetsWithDebt ? "無資產" : pct(debtRatio);
   sumDebtEl.className = "sum-value" + (noAssetsWithDebt ? " negative" : "");
 
-  // breakdown tables
-  document.getElementById("bdAssetBody").innerHTML = assetGroups.map(g=>
-    `<tr><td>${g.title}</td><td class="num">${money(groupTotal(g))}</td></tr>`
-  ).join("");
-  document.getElementById("bdAssetTotal").textContent = money(totalAssets);
-
-  document.getElementById("bdLiabilityBody").innerHTML = liabilityGroups.map(g=>
-    `<tr><td>${g.title}</td><td class="num">${money(groupTotal(g))}</td></tr>`
-  ).join("");
-  document.getElementById("bdLiabilityTotal").textContent = money(totalLiabilities);
-  const netRow = document.getElementById("bdNet");
-  netRow.textContent = money(netWorth);
-  netRow.style.color = netWorth>=0 ? "var(--positive)" : "var(--negative)";
+  const midEl = document.getElementById("midLiquidInvest");
+  if(midEl) midEl.textContent = money(liquid + liqinv);
+  // 資產負債表（只列有填金額的項目）
+  document.getElementById("bsTable").innerHTML = VCFin.balanceTableHTML(assetGroups, liabilityGroups);
 
   // ratios
   const debtEl = document.getElementById("ratioDebt");
@@ -573,7 +502,7 @@ function recalc(){
   document.getElementById("ratioRealestate").textContent = pct(realestateRatio);
   document.getElementById("ratioInvest").textContent = pct(investRatio);
 
-  renderDonut({totalAssets, netWorth, liquid, invest, realestate, other});
+  renderDonut({totalAssets, netWorth, liquid, liqinv, illiquid, other, property});
 }
 
 /* ---------------- donut chart ---------------- */
@@ -581,10 +510,11 @@ const DONUT_R = 80;
 const DONUT_C = 2 * Math.PI * DONUT_R;
 
 const donutCategories = [
-  {key:"liquid",     label:"理財型資產", color:"#5FA8C7"},
-  {key:"invest",     label:"投資資產", color:"#2E7391"},
-  {key:"realestate", label:"不動產",   color:"#1F5C73"},
-  {key:"other",      label:"其他資產", color:"#9FCBDB"}
+  {key:"liquid",   label:"流動性資產", color:"#5FA8C7"},
+  {key:"liqinv",   label:"流動性投資", color:"#2E7391"},
+  {key:"illiquid", label:"非流動性投資", color:"#1F5C73"},
+  {key:"other",    label:"其他資產", color:"#C9A46A"},
+  {key:"property", label:"自用動產／不動產", color:"#9FCBDB"}
 ];
 
 function renderDonut(d){
@@ -605,7 +535,7 @@ function renderDonut(d){
     return;
   }
 
-  const values = {liquid:d.liquid, invest:d.invest, realestate:d.realestate, other:d.other};
+  const values = {liquid:d.liquid, liqinv:d.liqinv, illiquid:d.illiquid, other:d.other, property:d.property};
   subLabel.textContent = "占總資產的比例";
 
   let cumulative = 0;
@@ -639,7 +569,7 @@ function renderDonut(d){
 
   centerValue.className = "dc-value" + (d.netWorth<0 ? " negative" : "");
   centerValue.textContent = money(d.netWorth);
-  centerLabel.textContent = "淨值";
+  centerLabel.textContent = "資產淨額";
 }
 
 recalc();
