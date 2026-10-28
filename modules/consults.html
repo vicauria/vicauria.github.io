@@ -120,6 +120,42 @@
   .seen{margin:4px 0 0; padding-left:18px; font-size:13.5px;}
   .seen li{margin-bottom:4px;}
   .score-pill{font-family:"Roboto Mono",monospace; font-size:12.5px; font-weight:700; border-radius:10px; padding:2px 8px; flex-shrink:0; background:var(--paper); color:var(--navy);}
+  .self-cmp{font-size:13px; font-weight:700; color:var(--ink-soft); background:var(--paper); border-radius:12px; padding:3px 10px;}
+  .self-cmp.gap{color:var(--warm-deep); background:var(--warm-tint);}
+  .qc-contact{background:var(--paper); border-radius:12px; padding:10px 12px; margin-top:10px;}
+  .qc-contact .k{font-size:12.5px; color:var(--ink-soft);}
+  .qc-contact .v{font-weight:700; color:var(--navy); font-size:15px; overflow-wrap:anywhere;}
+  .qc-box{border:1px solid var(--line); border-radius:14px; padding:14px;}
+  .qc-flow{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; text-align:center;}
+  .qc-flow > div{background:var(--paper); border-radius:12px; padding:10px 6px;}
+  .qc-flow .k{font-size:12.5px; color:var(--ink-soft);}
+  .qc-flow .v{font-family:"Roboto Mono",monospace; font-size:clamp(15px,2.4vw,20px); font-weight:700; color:var(--navy); overflow-wrap:anywhere;}
+  .qc-flow .v.pos{color:var(--positive);} .qc-flow .v.neg{color:var(--negative);}
+  .qc-stack{display:flex; height:20px; border-radius:10px; overflow:hidden; margin:12px 0 10px; background:#EEF2F2;}
+  .qc-stack i{display:block; height:100%;}
+  .qc-legend{display:grid; grid-template-columns:1fr 1fr; gap:5px 18px; font-size:13px; margin-bottom:6px;}
+  .qc-legend > div{display:flex; align-items:center; gap:6px; min-width:0;}
+  .qc-legend s{flex-shrink:0; width:10px; height:10px; border-radius:3px;}
+  .qc-legend span{flex:1; min-width:0;}
+  .qc-legend em{font-style:normal; font-family:"Roboto Mono",monospace; color:var(--navy); font-weight:700;}
+  .qc-legend b{font-family:"Roboto Mono",monospace; font-size:12px; color:var(--ink-soft); font-weight:500; min-width:5.5em; text-align:right;}
+  .mini-metrics .k{display:flex; justify-content:space-between; gap:4px;}
+  .mini-metrics .k i{font-style:normal; font-weight:700; font-size:11px;}
+  .mini-metrics > div.good .k i{color:var(--positive);} .mini-metrics > div.warn .k i{color:var(--warm-deep);} .mini-metrics > div.bad .k i{color:var(--negative);}
+  .mini-metrics .v{font-size:16px !important; font-family:"Roboto Mono",monospace;}
+  .mini-metrics .s{font-size:11.5px; color:var(--ink-soft);}
+  .qc-parts{margin-top:8px;}
+  .qc-parts .row{display:grid; grid-template-columns:7em 1fr 3.4em; gap:8px; align-items:center; font-size:12.5px; margin:4px 0; color:var(--ink-soft);}
+  .qc-parts .bar{height:7px; border-radius:4px; background:#EEF2F2; overflow:hidden;}
+  .qc-parts .bar i{display:block; height:100%; background:var(--teal);}
+  .qc-parts .row b{font-family:"Roboto Mono",monospace; text-align:right; color:var(--navy);}
+  .qc-mind{display:flex; flex-direction:column; gap:6px;}
+  .qc-mind > div{display:grid; grid-template-columns:7.5em 1fr; gap:10px; align-items:start; font-size:14px;}
+  .qc-mind .k{color:var(--ink-soft); font-size:13px;}
+  .qc-mind .v{font-weight:700; color:var(--ink);}
+  .qc-raw{margin-top:14px; border-top:1px dashed var(--line); padding-top:10px;}
+  .qc-raw summary{cursor:pointer; color:var(--teal-deep); font-weight:700; font-size:13.5px;}
+  @media (max-width:620px){ .qc-legend{grid-template-columns:1fr;} .qc-flow{grid-template-columns:1fr;} .qc-mind > div{grid-template-columns:1fr; gap:0;} }
 </style>
 </head>
 <body>
@@ -565,27 +601,91 @@
     head.appendChild(el('span', 'chev', '▾'));
     var body = el('div', 'req-body');
 
+    // ---------- 分數＋自評 ----------
     var sc = el('div', 'qc-score');
     var num = el('div', 'num'); num.appendChild(document.createTextNode(String(rep.score))); num.appendChild(el('small', '', ' / 100'));
     sc.appendChild(num); sc.appendChild(el('span', 'grade ' + rep.grade.key, rep.grade.label));
+    if(rep.selfGap){
+      var sg = el('span', 'self-cmp', '自評 ' + rep.selfGap.self + ' / 10　健檢 ' + rep.selfGap.sys + ' / 10');
+      if(Math.abs(rep.selfGap.self - rep.selfGap.sys) >= 2) sg.classList.add('gap');
+      sc.appendChild(sg);
+    }
     body.appendChild(sc);
 
-    var grid = el('div', 'grid');
-    var contact = el('div', 'contact-row');
+    // ---------- 聯絡方式＋切入點 ----------
+    var contact = el('div', 'contact-row qc-contact');
+    contact.appendChild(el('span', 'k', '聯絡方式'));
     contact.appendChild(el('span', 'v', r.contact));
     var cp = el('button', 'btn small ghost', '複製'); cp.type = 'button';
     cp.addEventListener('click', async function(){ try{ await navigator.clipboard.writeText(r.contact); vcToast('已複製聯絡方式'); }catch(e){} });
     contact.appendChild(cp);
-    grid.appendChild(kv('聯絡方式', contact, true));
+    body.appendChild(contact);
     var talk = el('div', 'talk'); rep.talk.forEach(function(t){ talk.appendChild(el('span', '', t)); });
-    grid.appendChild(kv('聊天切入點', talk, true));
+    body.appendChild(el('div', 'section-label', '聊天切入點'));
+    body.appendChild(talk);
+
+    // ---------- 每月現金流（跟客戶報告書一樣的圖） ----------
+    body.appendChild(el('div', 'section-label', '每月現金流'));
+    var cf = el('div', 'qc-box');
+    var flow = el('div', 'qc-flow');
+    [['每月收入', M(vals.income) + (a.other_unknown ? '＋?' : ''), ''], ['每月支出', M(vals.expense), ''], ['每月結餘', M(vals.surplus), vals.surplus < 0 ? 'neg' : 'pos']].forEach(function(x){
+      var c = el('div'); c.appendChild(el('div', 'k', x[0])); c.appendChild(el('div', 'v ' + x[2], x[1])); flow.appendChild(c);
+    });
+    cf.appendChild(flow);
+    var stack = el('div', 'qc-stack'), lg = el('div', 'qc-legend');
+    rep.structure.forEach(function(sx){
+      var i = el('i'); i.style.width = (sx.share * 100) + '%'; i.style.background = sx.color; i.title = sx.label + ' ' + M(sx.v); stack.appendChild(i);
+      var row = el('div'); var sw = el('s'); sw.style.background = sx.color;
+      row.appendChild(sw); row.appendChild(el('span', '', sx.label)); row.appendChild(el('em', '', VCQuick.pct(sx.share))); row.appendChild(el('b', '', M(sx.v)));
+      lg.appendChild(row);
+    });
+    cf.appendChild(stack); cf.appendChild(lg);
+    cf.appendChild(el('div', 'muted', vals.surplus >= 0 ? '以每月收入為 100%。' : '支出超過收入，以每月支出為 100% 顯示。'));
+    body.appendChild(cf);
+
+    // ---------- 四個關鍵指標 ----------
+    body.appendChild(el('div', 'section-label', '四個關鍵指標'));
     var mm = el('div', 'mini-metrics');
-    rep.metrics.forEach(function(m){ var d = el('div', m.status); d.appendChild(el('div', 'k', m.label)); d.appendChild(el('div', 'v', m.value)); mm.appendChild(d); });
-    grid.appendChild(kv('四個指標', mm, true));
+    var tag = { good:'良好', warn:'留意', bad:'優先處理' };
+    rep.metrics.forEach(function(m){
+      var d = el('div', m.status);
+      var k = el('div', 'k'); k.appendChild(el('span', '', m.label)); k.appendChild(el('i', '', tag[m.status]));
+      d.appendChild(k); d.appendChild(el('div', 'v', m.value)); d.appendChild(el('div', 's', m.sub));
+      mm.appendChild(d);
+    });
+    body.appendChild(mm);
+    var parts = el('div', 'qc-parts');
+    rep.parts.forEach(function(pp){
+      var row = el('div', 'row'); row.appendChild(el('span', '', pp.label));
+      var bar = el('div', 'bar'), i = el('i'); i.style.width = (pp.got / pp.max * 100) + '%'; bar.appendChild(i);
+      row.appendChild(bar); row.appendChild(el('b', '', pp.got + '/' + pp.max)); parts.appendChild(row);
+    });
+    body.appendChild(parts);
+
+    // ---------- 客戶的想法（單選題與目標） ----------
+    body.appendChild(el('div', 'section-label', '客戶的想法'));
     var dash = function(x){ return x ? x : '—'; };
+    var mind = el('div', 'qc-mind');
+    [['目前狀況', a.status], ['最想改善', a.want], ['不動產', a.property], ['沒收入時最擔心', a.worry]].forEach(function(x){
+      var row = el('div'); row.appendChild(el('span', 'k', x[0])); row.appendChild(el('span', 'v', dash(x[1]))); mind.appendChild(row);
+    });
+    var gr = el('div'); gr.appendChild(el('span', 'k', '三年目標'));
+    var gs = el('span', 'needs'); (a.goals || []).forEach(function(g){ gs.appendChild(el('span', '', g)); });
+    if(!(a.goals || []).length) gs.appendChild(el('span', 'v', '—'));
+    gr.appendChild(gs); mind.appendChild(gr);
+    body.appendChild(mind);
+
+    body.appendChild(el('div', 'section-label', '他在報告書上看到的建議'));
+    var seen = el('ol', 'seen'); rep.insights.forEach(function(x){ seen.appendChild(el('li', '', x.title)); });
+    body.appendChild(seen);
+
+    // ---------- 15 題原始答案（收合） ----------
+    var raw = el('details', 'qc-raw');
+    raw.appendChild(el('summary', '', '看 15 題原始答案'));
+    var grid = el('div', 'grid');
     grid.appendChild(kv('Q1 財務狀況比較接近', dash(a.status), true));
     grid.appendChild(kv('Q2 最希望改善', dash(a.want), true));
-    grid.appendChild(kv('Q3 自評分數', a.self === null ? '—' : a.self + ' / 10（健檢結果約 ' + Math.round(rep.score / 10) + ' / 10）'));
+    grid.appendChild(kv('Q3 自評分數', a.self === null ? '—' : a.self + ' / 10'));
     grid.appendChild(kv('Q4 工作收入（稅後）', M(a.work_income)));
     grid.appendChild(kv('Q5 其他收入', a.other_unknown ? '無法估算' : M(a.other_income)));
     grid.appendChild(kv('Q6 基本生活支出', M(a.living)));
@@ -597,15 +697,11 @@
     grid.appendChild(kv('Q12 可動用現金', M(a.cash)));
     grid.appendChild(kv('Q13 不動產', dash(a.property)));
     grid.appendChild(kv('Q14 沒有收入時最擔心', dash(a.worry)));
-    var gs = el('div', 'needs'); (a.goals || []).forEach(function(g){ gs.appendChild(el('span', '', g)); });
-    if(!(a.goals || []).length) gs.appendChild(el('div', 'v', '—'));
-    grid.appendChild(kv('Q15 三年目標', gs, true));
-    grid.appendChild(kv('每月收入／支出／結餘', M(vals.income) + '／' + M(vals.expense) + '／' + M(vals.surplus), true));
+    grid.appendChild(kv('Q15 三年目標', (a.goals || []).join('、') || '—', true));
     grid.appendChild(kv('填寫時間', new Date(r.updated_at || r.created_at).toLocaleString('zh-TW', { hour12:false })));
     if(a.legacy) grid.appendChild(kv('版本', '舊版 7 題（部分題目沒有資料）'));
-    var seen = el('ol', 'seen'); rep.insights.forEach(function(x){ seen.appendChild(el('li', '', x.title)); });
-    grid.appendChild(kv('他在報告書上看到的建議', seen, true));
-    body.appendChild(grid);
+    raw.appendChild(grid);
+    body.appendChild(raw);
 
     body.appendChild(el('div', 'section-label', '處理狀態'));
     var sb = el('div', 'status-btns');
