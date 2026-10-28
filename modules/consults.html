@@ -93,7 +93,7 @@
   .empty{text-align:center; color:var(--ink-soft); padding:30px 10px; font-size:14px;}
   .setup{display:none;}
 
-  /* 諮詢申請 ／ 1 分鐘健診 切換 */
+  /* 諮詢申請 ／ 財務健檢 切換 */
   body.view-quick #app, body.view-quick #setupMsg, body.view-quick #notLoggedIn{display:none !important;}
   body:not(.view-quick) #qcApp{display:none !important;}
   .view-switch{display:flex; gap:6px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:5px; margin-bottom:16px; box-shadow:0 6px 20px rgba(22,50,63,.05);}
@@ -141,7 +141,7 @@
 
   <div class="view-switch" id="viewSwitch" hidden role="group" aria-label="切換">
     <button type="button" data-view="consult" aria-pressed="true">諮詢申請<span class="n" id="vsConsultN" hidden></span></button>
-    <button type="button" data-view="quick" aria-pressed="false">1 分鐘健診<span class="beta">測試</span><span class="n" id="vsQuickN" hidden></span></button>
+    <button type="button" data-view="quick" aria-pressed="false">財務健檢<span class="beta">測試</span><span class="n" id="vsQuickN" hidden></span></button>
   </div>
 
   <div id="app" style="display:none;">
@@ -176,9 +176,9 @@
   </div>
 
   <div id="qcApp">
-    <section class="card" aria-label="1 分鐘健診連結">
-      <h2>1 分鐘財務健診連結</h2>
-      <div class="muted">網友不用註冊，填 7 個數字和聯絡方式就能看到簡易健診報告；他的資料和報告會出現在下面，只有你看得到。適合放在自媒體留言、限動連結或私訊。</div>
+    <section class="card" aria-label="財務健檢連結">
+      <h2>15 題免費財務健檢連結</h2>
+      <div class="muted">網友不用註冊，回答 15 題並留下聯絡方式，就能看到簡易財務健檢報告書；他的資料和報告會出現在下面，只有你看得到。適合放在自媒體留言、限動連結或私訊。</div>
       <div class="link-row">
         <div class="link-box" id="qcLinkBox">產生中…</div>
         <button class="btn" id="qcCopyBtn" type="button">複製連結</button>
@@ -189,17 +189,17 @@
         <button class="linkish" id="qcRegenBtn" type="button">換一個新連結</button>
       </div>
       <details class="intro-edit">
-        <summary>健診開頭的自我介紹（選填）</summary>
+        <summary>健檢開頭的自我介紹（選填）</summary>
         <textarea id="qcIntroTxt" maxlength="300" placeholder="例如：嗨，我是 Jess，從工程師轉做財務規劃。填完馬上看到你的財務體質分數，我也會免費幫你一對一解讀！"></textarea>
-        <div class="actions"><button class="btn small" id="qcIntroSave" type="button">儲存自我介紹</button><span class="muted">最多 300 字，會顯示在健診最上方。</span></div>
+        <div class="actions"><button class="btn small" id="qcIntroSave" type="button">儲存自我介紹</button><span class="muted">最多 300 字，會顯示在健檢最上方。</span></div>
       </details>
       <ul class="tips">
         <li>網友要先留下稱呼和聯絡方式才看得到報告；同一個聯絡方式 24 小時內重填，只會更新同一筆</li>
-        <li>超過 180 天的紀錄會自動刪除（健診上的個資告知也是這樣寫的）</li>
+        <li>超過 180 天的紀錄會自動刪除（健檢上的個資告知也是這樣寫的）</li>
       </ul>
     </section>
 
-    <section class="card" aria-label="健診名單">
+    <section class="card" aria-label="健檢名單">
       <h2>填寫名單</h2>
       <div class="tabs" id="qcTabs" role="group" aria-label="依處理狀態篩選"></div>
       <div id="qcList"></div>
@@ -458,7 +458,7 @@
 })();
 </script>
 <script>
-/* ---------- 1 分鐘健診（目前只開放給管理者帳號） ---------- */
+/* ---------- 15 題財務健檢（目前只開放給管理者帳號） ---------- */
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
@@ -483,7 +483,7 @@
   function refreshParentBadge(){ try{ window.parent && window.parent.vcRefreshConsultBadge && window.parent.vcRefreshConsultBadge(); }catch(e){} }
   function formURL(slug){ return new URL('../quick-check.html?c=' + encodeURIComponent(slug), location.href).href; }
 
-  /* ---------- 切換：諮詢申請 ／ 1 分鐘健診 ---------- */
+  /* ---------- 切換：諮詢申請 ／ 財務健檢 ---------- */
   window.vcSetViewBadge = function(view, n){
     var b = $(view === 'quick' ? 'vsQuickN' : 'vsConsultN');
     if(!b) return; b.textContent = n; b.hidden = !n;
@@ -553,14 +553,14 @@
     shown.forEach(function(r){ list.appendChild(renderRow(r)); });
   }
   function renderRow(r){
-    var a = r.answers || {}, rep = VCQuick.compute(a), M = VCQuick.money;
+    var rep = VCQuick.compute(r.answers || {}), a = rep.answers, M = VCQuick.money, vals = rep.values;
     var wrap = el('div', 'req' + (r.status === 'new' ? ' is-new' : ''));
     var head = el('button', 'req-head'); head.type = 'button'; head.setAttribute('aria-expanded', 'false');
     head.appendChild(el('span', 'nm', r.name));
     if(r.status === 'new') head.appendChild(el('span', 'badge-new', 'NEW'));
     else head.appendChild(el('span', 'status-pill ' + r.status, STATUS_LABEL[r.status] || ''));
     head.appendChild(el('span', 'score-pill', rep.score + ' 分'));
-    head.appendChild(el('span', 'sum', [a.age && (a.age + ' 歲'), '月收 ' + VCQuick.wan(a.income || 0), a.goal].filter(Boolean).join('・')));
+    head.appendChild(el('span', 'sum', ['月收 ' + VCQuick.wan(vals.income), '結餘 ' + VCQuick.wan(vals.surplus), a.want].filter(Boolean).join('・')));
     head.appendChild(el('span', 'when', fmtTime(r.updated_at || r.created_at)));
     head.appendChild(el('span', 'chev', '▾'));
     var body = el('div', 'req-body');
@@ -582,18 +582,29 @@
     var mm = el('div', 'mini-metrics');
     rep.metrics.forEach(function(m){ var d = el('div', m.status); d.appendChild(el('div', 'k', m.label)); d.appendChild(el('div', 'v', m.value)); mm.appendChild(d); });
     grid.appendChild(kv('四個指標', mm, true));
-    grid.appendChild(kv('年齡', a.age ? a.age + ' 歲' : ''));
-    grid.appendChild(kv('目標', a.goal));
-    grid.appendChild(kv('每月收入', M(a.income || 0)));
-    grid.appendChild(kv('每月生活支出', M(a.expense || 0)));
-    grid.appendChild(kv('每月固定存／投資', M(a.saving || 0)));
-    grid.appendChild(kv('每月結餘', M(rep.values.surplus)));
-    grid.appendChild(kv('活存／存款', M(a.cash || 0)));
-    grid.appendChild(kv('投資部位', M(a.invest || 0)));
-    grid.appendChild(kv('負債（不含房貸）', M(a.debt || 0)));
+    var dash = function(x){ return x ? x : '—'; };
+    grid.appendChild(kv('Q1 財務狀況比較接近', dash(a.status), true));
+    grid.appendChild(kv('Q2 最希望改善', dash(a.want), true));
+    grid.appendChild(kv('Q3 自評分數', a.self === null ? '—' : a.self + ' / 10（健檢結果約 ' + Math.round(rep.score / 10) + ' / 10）'));
+    grid.appendChild(kv('Q4 工作收入（稅後）', M(a.work_income)));
+    grid.appendChild(kv('Q5 其他收入', a.other_unknown ? '無法估算' : M(a.other_income)));
+    grid.appendChild(kv('Q6 基本生活支出', M(a.living)));
+    grid.appendChild(kv('Q7 保險費', M(a.insurance)));
+    grid.appendChild(kv('Q8 房貸', M(a.mortgage)));
+    grid.appendChild(kv('Q9 其他貸款', M(a.other_loan)));
+    grid.appendChild(kv('Q10 其他固定支出', M(a.fixed)));
+    grid.appendChild(kv('Q11 變動支出', M(a.variable)));
+    grid.appendChild(kv('Q12 可動用現金', M(a.cash)));
+    grid.appendChild(kv('Q13 不動產', dash(a.property)));
+    grid.appendChild(kv('Q14 沒有收入時最擔心', dash(a.worry)));
+    var gs = el('div', 'needs'); (a.goals || []).forEach(function(g){ gs.appendChild(el('span', '', g)); });
+    if(!(a.goals || []).length) gs.appendChild(el('div', 'v', '—'));
+    grid.appendChild(kv('Q15 三年目標', gs, true));
+    grid.appendChild(kv('每月收入／支出／結餘', M(vals.income) + '／' + M(vals.expense) + '／' + M(vals.surplus), true));
     grid.appendChild(kv('填寫時間', new Date(r.updated_at || r.created_at).toLocaleString('zh-TW', { hour12:false })));
+    if(a.legacy) grid.appendChild(kv('版本', '舊版 7 題（部分題目沒有資料）'));
     var seen = el('ol', 'seen'); rep.insights.forEach(function(x){ seen.appendChild(el('li', '', x.title)); });
-    grid.appendChild(kv('他在報告上看到的建議', seen, true));
+    grid.appendChild(kv('他在報告書上看到的建議', seen, true));
     body.appendChild(grid);
 
     body.appendChild(el('div', 'section-label', '處理狀態'));
@@ -608,7 +619,7 @@
 
     body.appendChild(el('div', 'section-label', '我的備註（只有你看得到）'));
     var note = el('textarea', 'note'); note.maxLength = 1000; note.value = r.advisor_note || '';
-    note.placeholder = '例如：預備金只有 1 個月，先約線上聊 30 分鐘';
+    note.placeholder = '例如：續航力只有 1 個月，先約線上聊 30 分鐘';
     note.addEventListener('blur', async function(){
       if(note.value === (r.advisor_note || '')) return;
       var res = await supabaseClient.from('quick_checks').update({ advisor_note: note.value }).eq('id', r.id).eq('advisor_id', myId);
@@ -655,7 +666,7 @@
     renderTabs(); renderList(); refreshParentBadge();
   }
   async function removeRow(r){
-    var ok = await vcConfirm('確定要刪除「' + r.name + '」的健診紀錄嗎？刪除後無法復原。', { okText:'刪除', danger:true });
+    var ok = await vcConfirm('確定要刪除「' + r.name + '」的健檢紀錄嗎？刪除後無法復原。', { okText:'刪除', danger:true });
     if(!ok) return;
     var res = await supabaseClient.from('quick_checks').delete().eq('id', r.id).eq('advisor_id', myId);
     if(res.error){ vcToast('刪除失敗，請稍後再試', 'err'); return; }
@@ -664,7 +675,7 @@
   }
   async function addToNameList(r, rep, tier, btn){
     btn.disabled = true;
-    var note = ['1 分鐘健診 ' + rep.score + ' 分', r.contact, (r.answers || {}).goal, rep.talk.slice(0, 2).join('、')].filter(Boolean).join('｜').slice(0, 500);
+    var note = ['財務健檢 ' + rep.score + ' 分', r.contact, (rep.answers.goals || []).join('、'), rep.talk.slice(0, 2).join('、')].filter(Boolean).join('｜').slice(0, 500);
     var all = await supabaseClient.from('name_list_entries').select('id, name, note, sort_order').eq('advisor_id', myId).eq('tier', tier).order('sort_order', { ascending:true });
     var list = (all.data || []).slice().sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
     var blank = list.find(function(x){ return !(x.name || '').trim() && !(x.note || '').trim(); });

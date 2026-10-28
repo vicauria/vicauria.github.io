@@ -240,7 +240,7 @@ window.vcShowConsultAlert = function(n, quickN){
   if(!a) return;
   document.getElementById('consultAlertN').textContent = n;
   const lbl = document.getElementById('consultAlertLbl');
-  if(lbl) lbl.textContent = quickN > 0 ? (quickN === n ? '健診名單' : '諮詢申請／健診名單') : '諮詢申請';
+  if(lbl) lbl.textContent = quickN > 0 ? (quickN === n ? '健檢名單' : '諮詢申請／健檢名單') : '諮詢申請';
   a.hidden = !(n > 0);
 };
 
