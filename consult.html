@@ -171,6 +171,7 @@
 
 <script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
+<script src="form-track.js"></script>
 <script>
 (function(){
   'use strict';
@@ -187,6 +188,16 @@
     source: ['Instagram', 'Threads', 'Facebook', 'YouTube', '朋友介紹', '其他']
   };
   var picked = {};
+  // 填寫進度回報（只記錄欄位名稱與已填數量，不記錄內容）
+  var T = window.VCFormTrack ? VCFormTrack('consult') : { open:function(){}, step:function(){}, stage:function(){} };
+  function filledCount(){
+    var c = 0;
+    if($('fName').value.trim()) c++; if($('fContact').value.trim()) c++;
+    Object.keys(picked).forEach(function(k){ var v = picked[k]; if(v && (!Array.isArray(v) || v.length)) c++; });
+    if($('fMessage').value.trim()) c++; if($('fConsent').checked) c++;
+    return c;
+  }
+  function track(key){ T.step(filledCount(), key); }
 
   function buildChips(){
     document.querySelectorAll('.chips').forEach(function(box){
@@ -207,6 +218,7 @@
             if(on) b.setAttribute('aria-pressed', 'true');
           }
           var q = box.closest('.q'); if(q) q.classList.remove('invalid');
+          track(key);
         });
         box.appendChild(b);
       });
@@ -236,6 +248,9 @@
         $('introBox').hidden = false;
       }
       show('formView');
+      T.open();
+      [['fName','name'], ['fContact','contact'], ['fMessage','message']].forEach(function(x){ $(x[0]).addEventListener('input', function(){ track(x[1]); }); });
+      $('fConsent').addEventListener('change', function(){ track('consent'); });
     }catch(e){ show('stateInvalid'); }
   }
 
@@ -287,8 +302,9 @@
       if(res.error){
         var code = Object.keys(ERR).find(function(k){ return String(res.error.message || '').indexOf(k) > -1; });
         $('formErr').textContent = code ? ERR[code] : '送出失敗，請檢查網路後再試一次。';
-        if(code === 'DUPLICATE'){ show('doneView'); }
+        if(code === 'DUPLICATE'){ T.stage('submitted'); show('doneView'); }
       } else {
+        T.stage('submitted');
         show('doneView');
       }
     }catch(err){

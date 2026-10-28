@@ -392,6 +392,7 @@
 <script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
 <script src="quick-check-core.js"></script>
+<script src="form-track.js"></script>
 <script>
 (function(){
   'use strict';
@@ -402,6 +403,11 @@
               living:null, insurance:null, mortgage:null, other_loan:null, fixed:null, variable:null, cash:null,
               property:'', worry:'', goals:[] };
   var touchedSelf = false;
+  // 填寫進度回報（只記錄題號，不記錄答案）
+  var T = window.VCFormTrack ? VCFormTrack('quick') : { open:function(){}, step:function(){}, stage:function(){} };
+  var QNO = { status:1, want:2, self:3, work_income:4, other_income:5, living:6, insurance:7, mortgage:8, other_loan:9, fixed:10, variable:11, cash:12, property:13, worry:14, goals:15 };
+  var lastKey = null;
+  function touch(key){ lastKey = QNO[key] ? 'q' + QNO[key] : key; }
 
   function show(id){
     ['stateLoading', 'stateInvalid', 'stepQs', 'stepContact', 'stepReport'].forEach(function(x){ $(x).hidden = x !== id; });
@@ -431,14 +437,14 @@
           ans[key] = label;
           box.querySelectorAll('.opt').forEach(function(o){ o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
         }
-        clearInvalid(key); progress();
+        clearInvalid(key); touch(key); progress();
       });
       box.appendChild(b);
     });
   });
 
   /* ---------- 滑桿 ---------- */
-  $('fSelf').addEventListener('input', function(){ ans.self = Number(this.value); $('selfVal').textContent = this.value; touchedSelf = true; progress(); });
+  $('fSelf').addEventListener('input', function(){ ans.self = Number(this.value); $('selfVal').textContent = this.value; touchedSelf = true; touch('self'); progress(); });
 
   /* ---------- 金額：邊打邊加千分位 ---------- */
   document.querySelectorAll('input.money').forEach(function(inp){
@@ -448,7 +454,7 @@
       inp.value = d ? Number(d).toLocaleString('en-US') : '';
       try{ var pos = Math.max(0, inp.value.length - fromEnd); inp.setSelectionRange(pos, pos); }catch(e){}
       ans[inp.dataset.key] = d === '' ? null : Number(d);
-      clearInvalid(inp.dataset.key); live(); progress();
+      clearInvalid(inp.dataset.key); touch(inp.dataset.key); live(); progress();
     });
   });
   $('otherUnk').addEventListener('click', function(){
@@ -457,7 +463,7 @@
     var inp = document.querySelector('input[data-key="other_income"]');
     inp.disabled = ans.other_unknown; $('otherInp').classList.toggle('off', ans.other_unknown);
     if(ans.other_unknown){ inp.value = ''; ans.other_income = null; }
-    live(); progress();
+    touch('other_income'); live(); progress();
   });
 
   function live(){
@@ -477,6 +483,7 @@
     var c = doneCount();
     $('progBar').style.width = (c / 15 * 100) + '%';
     $('progTxt').textContent = '已完成 ' + c + ' / 15 題';
+    if(lastKey) T.step(c, lastKey);
     if($('qsErr').textContent && !document.querySelector('.q.invalid')) $('qsErr').textContent = '';
   }
 
@@ -506,12 +513,13 @@
       property: ans.property, worry: ans.worry, goals: ans.goals.slice()
     };
     show('stepContact');
+    T.stage('contact');
   });
   $('backBtn').addEventListener('click', function(){ show('stepQs'); });
   ['fName', 'fContact'].forEach(function(id){
-    $(id).addEventListener('input', function(){ this.closest('.field').classList.remove('invalid'); $('contactErr').textContent = ''; });
+    $(id).addEventListener('input', function(){ this.closest('.field').classList.remove('invalid'); $('contactErr').textContent = ''; T.step(15, id === 'fName' ? 'c_name' : 'c_contact'); });
   });
-  $('fConsent').addEventListener('change', function(){ $('contactErr').textContent = ''; });
+  $('fConsent').addEventListener('change', function(){ $('contactErr').textContent = ''; T.step(15, 'c_consent'); });
 
   var ERR = {
     LINK_INVALID: '這個連結已經暫停使用，請向分享連結給你的人索取最新的連結。',
@@ -539,6 +547,7 @@
         var code = Object.keys(ERR).find(function(k){ return String(res.error.message || '').indexOf(k) > -1; });
         $('contactErr').textContent = code ? ERR[code] : '送出失敗，請檢查網路後再試一次。';
       } else {
+        T.stage('submitted');
         renderReport(report, name, contact);
       }
     }catch(err){ $('contactErr').textContent = '送出失敗，請檢查網路後再試一次。'; }
@@ -635,6 +644,7 @@
       document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
       if(res.data.intro){ $('introName').textContent = advName; $('introText').textContent = res.data.intro; $('introBox').hidden = false; }
       show('stepQs');
+      T.open();
     }catch(e){ show('stateInvalid'); }
   }
   init();

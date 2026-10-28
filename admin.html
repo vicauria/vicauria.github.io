@@ -207,6 +207,15 @@
   .kv .num small{color:var(--ink-soft); font-size:11px; margin-left:4px;}
   .sub-h{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:16px 0 4px;}
   .sub-h:first-child{margin-top:0;}
+  .ff-row{display:grid; grid-template-columns:150px 1fr 64px 70px; gap:12px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .ff-row:last-child{border-bottom:none;}
+  .ff-row.head{font-size:11.5px; color:var(--ink-soft); font-weight:700; padding-top:0;}
+  .ff-row .nm{font-weight:700; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ff-row .num{text-align:right; font-family:"Roboto Mono",monospace; font-variant-numeric:tabular-nums;}
+  .ff-row .drop{color:var(--negative); font-weight:700;}
+  .ff-row.hot{background:linear-gradient(90deg, rgba(179,73,47,.07), transparent);}
+  .hbar.red > i{background:linear-gradient(90deg,#E08B73 0%,var(--negative) 100%);}
+  @media (max-width:760px){ .ff-row{grid-template-columns:90px 1fr 44px 56px; gap:8px;} }
   .tip-box{background:var(--warm-tint); color:var(--warm-deep); border-radius:10px; padding:12px 16px; font-size:12.5px; line-height:1.8; margin-bottom:16px;}
 </style>
 </head>
@@ -236,6 +245,7 @@
       <button data-tab="feedback">💬 意見箱 <span class="count mono" id="tabCountFeedback"></span></button>
       <button data-tab="teams">👥 團隊</button>
       <button data-tab="usage">📈 功能使用</button>
+      <button data-tab="forms">📝 表單漏斗</button>
       <button data-tab="orgs">🏢 企業</button>
     </nav>
 
@@ -313,6 +323,23 @@
         <label><input type="checkbox" id="usageIncludeAdmin"> 包含管理者自己的使用</label>
       </div>
       <div id="usageBody"><div class="card empty">載入中…</div></div>
+    </section>
+
+    <!-- 公開表單漏斗（全部顧問合併） -->
+    <section class="panel" id="panel-forms">
+      <div class="usage-toolbar">
+        <div class="pills" id="formsWhich">
+          <button class="pill active" data-f="quick">15 題財務健檢</button>
+          <button class="pill" data-f="consult">預約諮詢表單</button>
+        </div>
+        <div class="pills" id="formsDays">
+          <button class="pill" data-d="7">近 7 天</button>
+          <button class="pill active" data-d="30">近 30 天</button>
+          <button class="pill" data-d="90">近 90 天</button>
+        </div>
+        <label><input type="checkbox" id="formsInternal"> 包含顧問自己測試的紀錄</label>
+      </div>
+      <div id="formsBody"><div class="card empty">載入中…</div></div>
     </section>
 
     <!-- 企業（尚未對外開放：只有你在這裡建立企業、指定主管，一般使用者不會看到任何企業功能） -->
@@ -417,6 +444,7 @@ async function loadAll(){
   state.teams = tm.data || [];
   renderOverview(); renderUsers(); renderFeedback(); renderTeams();
   loadUsage(); // 功能使用另外載入：還沒跑 SQL 也不會影響其他分頁
+  loadForms(); // 表單漏斗另外載入：還沒跑 supabase-form-funnel.sql 時只有這個分頁會提示
   loadOrgs();  // 企業也是另外載入：還沒跑 vicauria-enterprise.sql 時只有這個分頁會提示
 }
 
@@ -853,6 +881,110 @@ document.querySelectorAll('#usageDays .pill').forEach(p=> p.addEventListener('cl
   usageState.days = parseInt(p.dataset.d, 10); loadUsage();
 }));
 document.getElementById('usageIncludeAdmin').addEventListener('change', e=>{ usageState.includeAdmin = e.target.checked; loadUsage(); });
+
+/* ---------------- 公開表單漏斗 ---------------- */
+const formsState = { form:'quick', days:30, internal:false };
+const FORM_STEPS = {
+  quick: [
+    ['q1','Q1 財務狀況比較接近'], ['q2','Q2 最希望改善'], ['q3','Q3 自評分數'], ['q4','Q4 工作收入'], ['q5','Q5 其他收入'],
+    ['q6','Q6 基本生活支出'], ['q7','Q7 保險費'], ['q8','Q8 房貸'], ['q9','Q9 其他貸款'], ['q10','Q10 其他固定支出'],
+    ['q11','Q11 變動支出'], ['q12','Q12 可動用現金'], ['q13','Q13 不動產'], ['q14','Q14 最擔心'], ['q15','Q15 三年目標'],
+    ['c_name','留資料：稱呼'], ['c_contact','留資料：聯絡方式'], ['c_consent','留資料：勾選同意']
+  ],
+  consult: [
+    ['name','稱呼'], ['contact','聯絡方式'], ['age_range','年齡'], ['needs','最想解決的問題'], ['monthly_budget','每月可規劃金額'],
+    ['idle_funds','閒置資金'], ['timeline','希望多久內開始'], ['current_planning','目前的規劃'], ['preferred_time','方便時段'],
+    ['meeting_mode','諮詢方式'], ['source','從哪裡知道'], ['message','想先讓顧問知道的事'], ['consent','勾選同意']
+  ]
+};
+const FORM_TOTAL = { quick:15, consult:13 };
+function fmtSec(sec){
+  if(sec == null) return '—';
+  sec = Math.round(sec);
+  return sec < 60 ? sec + ' 秒' : Math.floor(sec / 60) + ' 分 ' + (sec % 60) + ' 秒';
+}
+async function loadForms(){
+  const body = document.getElementById('formsBody');
+  body.innerHTML = '<div class="card empty">載入中…</div>';
+  const { data, error } = await supabaseClient.rpc('vc_admin_form_funnel', { p_form: formsState.form, p_days: formsState.days, p_include_internal: formsState.internal });
+  if(error){
+    body.innerHTML = `<div class="card empty">表單漏斗還沒設定。<br>請到 Supabase 的 SQL Editor 執行 <code>supabase-form-funnel.sql</code>，再回來按「重新整理」。<br><span style="font-size:11.5px;">（系統訊息：${esc(error.message)}）</span></div>`;
+    return;
+  }
+  renderForms(data || {});
+}
+function renderForms(d){
+  const body = document.getElementById('formsBody');
+  const form = formsState.form, total = FORM_TOTAL[form], steps = FORM_STEPS[form];
+  const opened = d.opened || 0, started = d.started || 0, contact = d.contact || 0, submitted = d.submitted || 0;
+  const hist = d.answered_hist || {};
+  const reach = k => Object.keys(hist).reduce((s, a)=> s + (Number(a) >= k ? hist[a] : 0), 0);   // 至少填了 k 題的人數
+  const leftMap = {}; (d.left_at || []).forEach(x=>{ leftMap[x.step] = (leftMap[x.step] || 0) + x.n; });
+  const leftTotal = Object.values(leftMap).reduce((a, b)=> a + b, 0);
+  const notStarted = (d.left_at || []).filter(x=> x.step === '(none)').reduce((a, x)=> a + x.n, 0);
+  const funnel = form === 'quick' ? [
+    { lbl:'打開健檢', v:opened },
+    { lbl:'開始作答', v:started, conv:pct(started, opened) },
+    { lbl:'15 題答完、進到留資料', v:contact, conv:pct(contact, started) },
+    { lbl:'送出看報告書', v:submitted, conv:pct(submitted, contact) },
+  ] : [
+    { lbl:'打開表單', v:opened },
+    { lbl:'開始填寫', v:started, conv:pct(started, opened) },
+    { lbl:'送出預約', v:submitted, conv:pct(submitted, started) },
+    { lbl:'整體完成率', v:pct(submitted, opened), raw:true },
+  ];
+  const maxLeft = Math.max(1, ...Object.values(leftMap));
+  const worst = Object.entries(leftMap).filter(([k])=> k !== '(none)').sort((a, b)=> b[1] - a[1])[0];
+  const labelOf = k => (steps.find(x=> x[0] === k) || [k, k])[1];
+  const tip = !opened ? '<div class="tip-box">這段期間還沒有人打開表單。更新上線、把連結貼出去之後，就會開始累積。</div>'
+    : (opened < 30 ? `<div class="tip-box">目前只有 ${fmtNum(opened)} 次紀錄，建議累積 30 次以上再判斷哪一題是卡關點，人太少時數字容易被一兩個人左右。</div>` : '');
+
+  body.innerHTML = `
+    ${tip}
+    <div class="kpi-grid">
+      <div class="kpi"><div class="lbl">打開次數</div><div class="val">${fmtNum(opened)}</div><div class="note">手機 ${pct(d.mobile || 0, opened)}</div></div>
+      <div class="kpi"><div class="lbl">完成率</div><div class="val">${pct(submitted, opened)}</div><div class="note">送出 ${fmtNum(submitted)} 次</div></div>
+      <div class="kpi"><div class="lbl">完成者平均花費</div><div class="val" style="font-size:20px;">${fmtSec(d.median_sec_submitted)}</div><div class="note">中位數</div></div>
+      <div class="kpi${worst ? ' attention' : ''}"><div class="lbl">最多人停在</div><div class="val" style="font-size:17px; font-family:'Noto Serif TC',serif;">${worst ? esc(labelOf(worst[0])) : '—'}</div><div class="note">${worst ? fmtNum(worst[1]) + ' 人在這裡離開' : '還沒有資料'}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>大家走到哪一步</h2><span class="sub">次數・百分比是相對於前一步</span></div>
+      <div class="funnel">${funnel.map(f=>`
+        <div class="fstep"><div class="lbl">${f.lbl}</div><div class="val">${f.raw ? f.v : fmtNum(f.v)}</div><div class="conv">${f.conv ? '前一步的 ' + f.conv : '&nbsp;'}</div></div>`).join('')}
+      </div>
+      ${notStarted ? `<div class="privacy-note">有 ${fmtNum(notStarted)} 次打開後一題都沒填就離開了（可能是開頭說明不夠吸引人，或只是點進來看看）。</div>` : ''}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>每一題還剩多少人</h2><span class="sub">至少答到第幾題的人數（不一定照順序作答）</span></div>
+      <div class="rank">
+        <div class="ff-row head"><span>答了幾題</span><span>人數</span><span class="num">人數</span><span class="num">留存</span></div>
+        ${Array.from({ length: total }, (_, i)=> i + 1).map(k=>{ const n = reach(k); return `
+        <div class="ff-row"><span class="nm">至少 ${k} 題</span><div class="hbar"><i style="width:${started ? Math.max(n ? 2 : 0, n / started * 100) : 0}%"></i></div><span class="num">${fmtNum(n)}</span><span class="num">${pct(n, started)}</span></div>`; }).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>沒送出的人，最後停在哪一題</h2><span class="sub">離開前最後動過的題目・紅底是離開最多的前 3 名</span></div>
+      ${leftTotal ? `<div class="rank">
+        <div class="ff-row head"><span>題目</span><span>離開人數</span><span class="num">人數</span><span class="num">佔離開</span></div>
+        ${(()=>{ const top3 = Object.entries(leftMap).filter(([k])=> k !== '(none)').sort((a,b)=> b[1]-a[1]).slice(0,3).map(x=> x[0]);
+          return steps.concat([['(none)','打開後一題都沒填']]).filter(([k])=> leftMap[k]).map(([k, lbl])=>`
+        <div class="ff-row${top3.includes(k) ? ' hot' : ''}"><span class="nm" title="${esc(lbl)}">${esc(lbl)}</span><div class="hbar red"><i style="width:${leftMap[k] / maxLeft * 100}%"></i></div><span class="num drop">${fmtNum(leftMap[k])}</span><span class="num">${pct(leftMap[k], leftTotal)}</span></div>`).join(''); })()}
+      </div>` : '<div class="muted" style="font-size:12.5px;">目前沒有填到一半離開的紀錄。</div>'}
+      <div class="privacy-note">只記錄「填到第幾題、最後動到哪一題、有沒有送出」，不記錄任何答案或聯絡資料；每次打開頁面是一個隨機代號，無法對應到人。${d.internal ? `　這段期間有 ${fmtNum(d.internal)} 次是登入工作台的瀏覽器填的（顧問自己測試），${formsState.internal ? '已包含在上面的數字' : '預設不計入'}。` : ''}</div>
+    </div>`;
+}
+document.querySelectorAll('#formsWhich .pill').forEach(p=> p.addEventListener('click', ()=>{
+  document.querySelectorAll('#formsWhich .pill').forEach(x=> x.classList.toggle('active', x===p));
+  formsState.form = p.dataset.f; loadForms();
+}));
+document.querySelectorAll('#formsDays .pill').forEach(p=> p.addEventListener('click', ()=>{
+  document.querySelectorAll('#formsDays .pill').forEach(x=> x.classList.toggle('active', x===p));
+  formsState.days = parseInt(p.dataset.d, 10); loadForms();
+}));
+document.getElementById('formsInternal').addEventListener('change', e=>{ formsState.internal = e.target.checked; loadForms(); });
 
 /* ---------------- 分頁切換 ---------------- */
 document.querySelectorAll('#tabs button').forEach(btn=> btn.addEventListener('click', ()=>{
