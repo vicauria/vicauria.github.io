@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>房產活化潛力評估 - Vicauria</title>
+<meta name="description" content="花 2 分鐘完成房產活化潛力評估：不賣房，也許還有更多資產運用的可能。">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="/icons/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#16323F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="public-pages.css">
+<style>
+  .qc{max-width:680px;margin:0 auto;padding:0 16px 40px;}
+  .hero-c{padding:28px 0 4px;}
+  .hero-c h1{font-size:clamp(24px,6.2vw,32px);line-height:1.35;font-weight:900;}
+  .hero-c .lead{margin:10px 0 0;color:var(--ink-soft);font-size:15.5px;}
+  .intro{background:#fff;border:1px solid var(--line);border-left:4px solid var(--warm);border-radius:12px;padding:14px 16px;margin:16px 0 0;white-space:pre-wrap;font-size:15px;}
+  .intro b{display:block;font-family:"Noto Serif TC",serif;color:var(--navy);margin-bottom:4px;}
+
+  .progress{position:sticky;top:47px;z-index:15;background:rgba(245,247,246,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:10px 0 8px;margin-top:12px;}
+  .progress .bar{height:6px;border-radius:3px;background:#DCE3E4;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0;background:var(--warm);transition:width .25s;}
+  .progress .lbl{font-size:12.5px;color:var(--ink-soft);margin-top:5px;display:flex;justify-content:space-between;}
+
+  .sec-h{font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);margin:26px 0 10px;font-weight:700;}
+  .qcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px 18px;}
+  .q{padding:18px 0;border-bottom:1px solid var(--line);}
+  .q:last-child{border-bottom:none;}
+  .q .qt{font-size:16px;font-weight:700;color:var(--navy);line-height:1.5;}
+  .q .qt .req{color:#B3402A;margin-left:3px;}
+  .q .qs{font-size:12.5px;color:var(--ink-soft);margin:4px 0 10px;}
+  .q .note{font-size:13px;color:var(--ink-soft);margin-top:8px;line-height:1.7;}
+  .q.invalid{background:linear-gradient(90deg, rgba(179,64,42,.06), transparent);margin:0 -18px;padding-left:18px;padding-right:18px;}
+  .q.invalid .qt::after{content:"　← 請回答這一題";color:#B3402A;font-size:12.5px;font-weight:600;}
+
+  .opts{display:flex;flex-direction:column;gap:6px;}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1.5px solid #E1E7E7;border-radius:12px;padding:11px 14px;font:inherit;font-size:15.5px;color:var(--ink);cursor:pointer;min-height:48px;}
+  .opt .dot{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:2px solid #C3CDCE;display:flex;align-items:center;justify-content:center;}
+  .opt.multi .dot{border-radius:6px;}
+  .opt[aria-pressed="true"]{border-color:var(--navy);background:#F3F7F8;}
+  .opt[aria-pressed="true"] .dot{border-color:var(--navy);background:var(--navy);}
+  .opt[aria-pressed="true"] .dot::after{content:"";width:8px;height:8px;border-radius:50%;background:#fff;}
+  .opt.multi[aria-pressed="true"] .dot::after{width:10px;height:6px;border-radius:0;background:none;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg) translate(1px,-1px);}
+  .opt:disabled{opacity:.45;cursor:not-allowed;}
+  .multi-count{font-size:13px;color:var(--ink-soft);margin-top:8px;}
+
+  .slider-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:var(--ink-soft);margin-bottom:8px;}
+  .slider-row b{font-family:"Roboto Mono",monospace;font-size:24px;color:var(--navy);}
+  input[type=range]{width:100%;accent-color:var(--navy);height:32px;}
+
+  .money-row{display:flex;gap:8px;align-items:stretch;}
+  .money-row .inp{flex:1;border-radius:999px;}
+  .money-row .inp input{font-size:17px;padding:12px 16px;}
+  .unk{flex-shrink:0;border:1.5px solid #CBD5D6;background:#fff;border-radius:999px;padding:0 14px;font:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;}
+  .unk[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .inp.off{background:#F1F4F4;}
+  .sum-live{background:var(--paper);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:14px;display:flex;justify-content:space-between;gap:10px;}
+  .sum-live b{font-family:"Roboto Mono",monospace;color:var(--navy);}
+
+  .q-input{width:100%;border:1.5px solid #CBD5D6;border-radius:10px;padding:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink);}
+  .q-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(46,115,145,.18);}
+  .consent{background:var(--paper);border-radius:12px;padding:14px;font-size:13.5px;margin-top:6px;}
+  .consent details summary{cursor:pointer;color:var(--teal-deep);font-weight:700;margin-top:8px;}
+  .consent .body{margin-top:8px;color:var(--ink);line-height:1.8;}
+  .consent .body p{margin:0 0 8px;}
+  .consent label{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .consent input[type=checkbox]{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:var(--navy);}
+  .btn-main{width:100%;background:var(--warm);color:#fff;border:none;border-radius:30px;padding:16px;font:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:18px;}
+  .btn-main:hover{background:var(--warm-deep);}
+  .btn-main:disabled{opacity:.6;cursor:wait;}
+  .btn-back{display:block;margin:12px auto 0;background:none;border:none;color:var(--teal-deep);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:8px;}
+  .form-err{color:#B3402A;font-size:14px;font-weight:600;min-height:20px;margin-top:10px;text-align:center;}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
+  .state{text-align:center;padding:60px 20px;color:var(--ink-soft);}
+  .state h2{margin-bottom:8px;}
+  .lock{display:flex;gap:10px;align-items:flex-start;background:var(--teal-tint);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--teal-deep);margin-bottom:16px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+  .field .hint{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 6px;}
+  .field.invalid .q-input{border-color:#B3402A;}
+
+  .about{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-top:16px;font-size:15px;line-height:1.85;}
+  .about p{margin:0 0 8px;}
+  .four{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+  .four div{background:var(--paper);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.6;}
+  .four b{display:block;color:var(--navy);font-size:14.5px;}
+  .four b i{font-style:normal;color:var(--warm-deep);margin-right:4px;}
+  .about .fine{font-style:italic;color:var(--ink-soft);font-size:13px;margin-top:8px;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chips button{border:1.5px solid #E1E7E7;background:#fff;border-radius:16px;padding:5px 11px;font:inherit;font-size:13.5px;color:var(--ink-soft);cursor:pointer;}
+  .chips button[aria-pressed="true"]{border-color:var(--navy);background:var(--navy);color:#fff;}
+  .pref{display:flex;gap:8px;}
+  .pref button{flex:1;border:1.5px solid #CBD5D6;background:#fff;border-radius:12px;padding:11px;font:inherit;font-size:15.5px;font-weight:700;color:var(--ink);cursor:pointer;min-height:48px;}
+  .pref button[aria-pressed="true"]{border-color:var(--navy);background:var(--navy);color:#fff;}
+  .field.invalid .pref button{border-color:#B3402A;}
+
+  /* ---------- 評估結果 ---------- */
+  .rep-cover{background:linear-gradient(135deg,#16323F 0%,#1F5C73 60%,#2E7391 100%);color:#fff;border-radius:20px;padding:24px 20px 22px;text-align:center;margin-top:22px;}
+  .rep-cover .eb{font-family:"Roboto Mono",monospace;font-size:11.5px;letter-spacing:.18em;color:#BFE0EA;}
+  .rep-cover h1{color:#fff;font-size:22px;margin:6px 0 2px;}
+  .rep-cover .who{font-size:13.5px;color:#DCEAEE;}
+  .rep-cover p{margin:12px 0 0;color:#EAF3F5;font-size:14.5px;}
+  .rep-cover .tags{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px;}
+  .rep-cover .tags span{background:rgba(255,255,255,.14);border-radius:14px;padding:4px 11px;font-size:13px;font-weight:600;}
+  .rsec{font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);margin:26px 0 10px;font-weight:700;}
+  .rcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .house{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center;}
+  .house > div{background:var(--paper);border-radius:12px;padding:10px 6px;}
+  .house .k{font-size:12.5px;color:var(--ink-soft);}
+  .house .v{font-weight:700;color:var(--navy);font-size:clamp(14px,3.9vw,17px);overflow-wrap:anywhere;}
+  .house .v.eq{color:#2E7D5B;}
+  .hbar{display:flex;height:26px;border-radius:13px;overflow:hidden;margin:14px 0 8px;background:#EEF2F2;font-size:12px;font-weight:700;color:#fff;}
+  .hbar i{display:flex;align-items:center;justify-content:center;height:100%;font-style:normal;white-space:nowrap;overflow:hidden;}
+  .hbar .ln{background:#C97B3D;} .hbar .eq{background:#2E7D5B;}
+  .hnote{font-size:12.5px;color:var(--ink-soft);line-height:1.7;}
+  .ins{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;}
+  .ins .no{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .ins h3{font-size:16px;margin:2px 0 4px;}
+  .ins p{margin:0;font-size:14.5px;line-height:1.8;}
+  .dim{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+  .dim.on{border-color:var(--warm);box-shadow:0 0 0 3px rgba(201,123,61,.10);}
+  .dim .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .dim h3{font-size:16px;margin:0;}
+  .dim .mine{font-size:12px;font-weight:700;color:#fff;background:var(--warm);border-radius:10px;padding:2px 9px;}
+  .dim .qq{font-size:14px;color:var(--navy);font-weight:600;margin:4px 0 2px;}
+  .dim p{margin:0;font-size:14px;line-height:1.8;color:var(--ink-soft);}
+  .cta{background:var(--navy);color:#fff;border-radius:18px;padding:24px 20px;margin-top:24px;text-align:center;}
+  .cta .eb{font-family:"Roboto Mono",monospace;font-size:11.5px;letter-spacing:.16em;color:#BFE0EA;}
+  .cta h2{color:#fff;font-size:20px;margin:6px 0 8px;}
+  .cta p{margin:6px 0;color:#DCEAEE;font-size:14.5px;}
+  .cta ul{text-align:left;margin:10px auto 0;max-width:420px;padding-left:20px;color:#EAF3F5;font-size:14px;line-height:1.9;}
+  .cta .contact{display:inline-block;background:rgba(255,255,255,.12);border-radius:10px;padding:6px 12px;margin-top:8px;font-weight:700;color:#fff;overflow-wrap:anywhere;}
+  .disc{font-size:12px;color:var(--ink-soft);margin-top:18px;line-height:1.7;}
+  @media (max-width:420px){ .four{grid-template-columns:1fr;} .house{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span class="logo"><img src="icons/vicauria-mark.png" alt=""> VICAURIA</span>
+</div></div>
+
+<div class="qc">
+  <div id="stateLoading" class="state">載入中…</div>
+
+  <div id="stateInvalid" class="state" hidden>
+    <h2>這個連結目前無法使用</h2>
+    <p>可能是連結不完整，或已經暫停使用。<br>請直接私訊分享這個連結給你的人，索取最新的連結。</p>
+  </div>
+
+  <!-- 第 1 步：9 題 -->
+  <div id="stepQs" hidden>
+    <header class="hero-c">
+      <div class="eyebrow">PROPERTY ACTIVATION CHECK</div>
+      <h1>你的房子，可能比你想像的更有價值</h1>
+      <p class="lead">不賣房，也許還有更多資產運用的可能。</p>
+      <div class="intro" id="introBox" hidden><b id="introName"></b><span id="introText"></span></div>
+      <div class="about">
+        <p>你知道自己的房子，除了居住、出租與等待增值，還能如何協助你實現財務目標嗎？</p>
+        <p>只要花 2 分鐘完成房產活化潛力評估，我們將根據你的房產條件與需求，初步協助你了解：</p>
+        <div class="four">
+          <div><b><i>①</i>資金潛力</b>不賣房，是否還有可運用的資金空間？</div>
+          <div><b><i>②</i>第二份收入</b>房產是否有機會協助創造額外現金流？</div>
+          <div><b><i>③</i>退休規劃</b>現有房產如何成為未來退休生活的財務後盾？</div>
+          <div><b><i>④</i>資產效率</b>目前的房產配置，有沒有更有效率的運用方式？</div>
+        </div>
+        <p>完成評估後，符合進一步規劃條件者，可預約免費一對一「房產資產效率診斷」，讓你更清楚：你的房子現在值多少，以及未來還能怎麼用。</p>
+        <div class="fine">初步評估與諮詢不保證貸款額度、投資收益或特定財務成果。</div>
+      </div>
+    </header>
+    <div class="progress"><div class="bar"><i id="progBar"></i></div><div class="lbl"><span id="progTxt">已完成 0 / 9 題</span><span>第 1 步，共 2 步</span></div></div>
+
+    <form id="qsForm" novalidate>
+      <div class="sec-h">A. 你的目標</div>
+      <div class="qcard">
+        <div class="q" data-q="goals">
+          <div class="qt">Q1｜你最希望透過房產活化，達成什麼目標？<span class="req">*</span></div>
+          <div class="qs">複選題</div>
+          <div class="opts" data-multi="goals"></div>
+        </div>
+      </div>
+
+      <div class="sec-h">B. 你的房產狀況</div>
+      <div class="qcard">
+        <div class="q" data-q="city">
+          <div class="qt">Q2｜目前房產主要位於哪個縣市？<span class="req">*</span></div>
+          <div class="qs">例如：台北市、新北市、台中市</div>
+          <input type="text" class="q-input" id="fCity" maxlength="20" autocomplete="off" placeholder="輸入縣市，或點下面的選項">
+          <div class="chips" id="cityChips"></div>
+        </div>
+        <div class="q" data-q="usage">
+          <div class="qt">Q3｜目前房產的使用狀況？<span class="req">*</span></div>
+          <div class="qs">複選題</div>
+          <div class="opts" data-multi="usage"></div>
+        </div>
+        <div class="q" data-q="value">
+          <div class="qt">Q4｜目前房產的市場價值大約多少？<span class="req">*</span></div>
+          <div class="qs">單選題｜抓大概就好，多間房產請填合計</div>
+          <div class="opts" data-single="value"></div>
+        </div>
+        <div class="q" data-q="loan">
+          <div class="qt">Q5｜目前房產還有多少貸款？<span class="req">*</span></div>
+          <div class="qs">單選題｜剩餘未還的本金，多間房產請填合計</div>
+          <div class="opts" data-single="loan"></div>
+        </div>
+        <div class="q" data-q="count">
+          <div class="qt">Q6｜目前名下大約有幾間房產？<span class="req">*</span></div>
+          <div class="qs">單選題</div>
+          <div class="opts" data-single="count"></div>
+        </div>
+      </div>
+
+      <div class="sec-h">C. 規劃時間與聯繫方式</div>
+      <div class="qcard">
+        <div class="q" data-q="timeline">
+          <div class="qt">Q7｜你希望什麼時候開始規劃？<span class="req">*</span></div>
+          <div class="qs">單選題</div>
+          <div class="opts" data-single="timeline"></div>
+        </div>
+        <div class="q" data-q="method">
+          <div class="qt">Q8｜如果你的房產值得進一步評估，希望透過什麼方式了解？<span class="req">*</span></div>
+          <div class="qs">複選題</div>
+          <div class="opts" data-multi="method"></div>
+        </div>
+        <div class="q" data-q="times">
+          <div class="qt">Q9｜為了讓顧問更有效率地協助你完成房產評估，請問什麼時段方便與你聯繫？<span class="req">*</span></div>
+          <div class="qs">複選題</div>
+          <div class="opts" data-multi="times"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-main">下一步：看我的評估結果 →</button>
+      <div class="form-err" id="qsErr" role="alert"></div>
+    </form>
+  </div>
+
+  <!-- 第 2 步：聯絡資料 -->
+  <div id="stepContact" hidden>
+    <header class="hero-c">
+      <div class="eyebrow">ALMOST DONE</div>
+      <h1>最後一步，評估結果就出來了</h1>
+    </header>
+    <div class="progress"><div class="bar"><i style="width:100%"></i></div><div class="lbl"><span>9 題都完成了</span><span>第 2 步，共 2 步</span></div></div>
+    <form id="contactForm" class="card" novalidate style="margin-top:12px;">
+      <div class="hp" aria-hidden="true"><label>網站<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
+      <div class="lock"><span>🔒</span><span>留下聯絡方式就能看到評估結果。<b class="advNameInline">顧問</b> 會依你方便的時段和你聯繫；你的資料只有 <b class="advNameInline">顧問</b> 本人看得到。</span></div>
+      <div class="field" data-f="name">
+        <label for="fName">稱呼</label>
+        <input type="text" class="q-input" id="fName" maxlength="40" autocomplete="name" placeholder="例如：王小姐、阿明">
+      </div>
+      <div class="field" data-f="ig">
+        <label for="fIg">IG 帳號<span style="color:#B3402A">*</span></label>
+        <input type="text" class="q-input" id="fIg" maxlength="60" autocomplete="off" placeholder="例如：@wang.home">
+      </div>
+      <div class="field" data-f="line">
+        <label for="fLine">Line ID ／ 手機號碼<span style="color:#B3402A">*</span></label>
+        <input type="text" class="q-input" id="fLine" maxlength="60" autocomplete="off" placeholder="例如：wang123 或 0912-345-678">
+      </div>
+      <div class="field" data-f="pref">
+        <label>偏好聯絡方式<span style="color:#B3402A">*</span></label>
+        <div class="pref" id="prefBox"></div>
+      </div>
+      <div class="consent">
+        <label><input type="checkbox" id="fConsent"> <span>我已閱讀並同意下方的個人資料蒐集與使用說明<span style="color:#B3402A">*</span></span></label>
+        <details>
+          <summary>查看個人資料蒐集與使用說明</summary>
+          <div class="body">
+            <p><b>蒐集者：</b><span class="advNameInline">顧問</span>（透過 Vicauria 平台提供的表單蒐集）。</p>
+            <p><b>蒐集的資料：</b>你填寫的稱呼、IG 帳號、Line ID 或手機號碼、偏好聯絡方式，以及房產資訊、貸款概況與財務規劃需求。</p>
+            <p><b>蒐集目的：</b>僅供房產活化評估、資產配置需求分析、諮詢安排及相關服務聯繫使用。</p>
+            <p><b>使用方式與對象：</b>只有顧問本人可以看到這些資料，不會提供給其他顧問或第三方，也不會用於上述目的以外的用途。</p>
+            <p><b>保存期間：</b>最長保存 180 天；你也可以隨時要求提前刪除。</p>
+            <p><b>你的權利：</b>你可以向顧問請求查詢、閱覽、更正、停止使用或刪除你的資料，也可以來信 <a href="mailto:jess818200228@gmail.com">jess818200228@gmail.com</a>。</p>
+            <p><b>不提供的影響：</b>如果不填寫必填欄位或不同意，將無法產生評估結果。</p>
+            <p>本評估僅為教育性的參考，不保證貸款額度、投資收益或特定財務成果，也不構成任何貸款、投資、保險或財務建議。</p>
+          </div>
+        </details>
+      </div>
+      <button type="submit" class="btn-main" id="submitBtn">看我的房產活化評估 →</button>
+      <div class="form-err" id="contactErr" role="alert"></div>
+      <button type="button" class="btn-back" id="backBtn">← 回上一步修改答案</button>
+    </form>
+  </div>
+
+  <!-- 評估結果 -->
+  <div id="stepReport" hidden>
+    <div class="rep-cover">
+      <div class="eb">PROPERTY ACTIVATION CHECK</div>
+      <h1>房產活化潛力評估</h1>
+      <div class="who" id="rWho"></div>
+      <p id="rLead"></p>
+      <div class="tags" id="rTags"></div>
+    </div>
+
+    <div class="rsec">一、房產淨值粗估</div>
+    <div class="rcard" id="rHouse"></div>
+
+    <div class="rsec">二、你的房產狀況重點</div>
+    <div id="rPoints"></div>
+
+    <div class="rsec">三、房產活化可以一起看的方向</div>
+    <div id="rDims"></div>
+
+    <div class="cta" id="rCta">
+      <div class="eb">NEXT STEP</div>
+      <h2>免費一對一「房產資產效率診斷」</h2>
+      <p id="rCtaLead"></p>
+      <div class="contact" id="rContact"></div>
+      <ul>
+        <li>你的房子現在大概值多少、淨值有多少</li>
+        <li>依你的目標，看房產還能怎麼用</li>
+        <li>把房產放進整體現金流與退休規劃一起看</li>
+      </ul>
+    </div>
+
+    <div class="disc">本結果依你填寫的區間自動粗估，僅供了解房產概況的教育性參考；初步評估與諮詢不保證貸款額度、投資收益或特定財務成果，也不構成任何貸款、投資、保險或財務建議，實際情況請與顧問討論。</div>
+  </div>
+</div>
+
+<footer><div class="wrap">評估由 Vicauria 提供・<a href="legal.html">服務資訊與條款</a></div></footer>
+
+<script src="vendor/supabase-js-2.117.2.js"></script>
+<script src="supabase-config.js"></script>
+<script src="property-check-core.js"></script>
+<script src="form-track.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var slug = (new URLSearchParams(location.search).get('c') || '').trim().toLowerCase();
+  var advName = '顧問', answers = null, pref = '';
+  var ans = { goals:[], city:'', usage:[], value:'', loan:'', count:'', timeline:'', method:[], times:[] };
+  // 填寫進度回報（只記錄題號，不記錄答案）
+  var T = window.VCFormTrack ? VCFormTrack('property') : { open:function(){}, step:function(){}, stage:function(){} };
+  var QNO = { goals:1, city:2, usage:3, value:4, loan:5, count:6, timeline:7, method:8, times:9 };
+  var lastKey = null;
+  function touch(key){ lastKey = QNO[key] ? 'q' + QNO[key] : key; }
+
+  function show(id){
+    ['stateLoading', 'stateInvalid', 'stepQs', 'stepContact', 'stepReport'].forEach(function(x){ $(x).hidden = x !== id; });
+    window.scrollTo(0, 0);
+  }
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+  function clearInvalid(key){ var q = document.querySelector('.q[data-q="' + key + '"]'); if(q) q.classList.remove('invalid'); }
+
+  /* ---------- 單選／複選 ---------- */
+  var EXCLUSIVE = { method: VCProp.METHOD_LATER };   // 選了「先完成評估」就不跟其他選項並存
+  document.querySelectorAll('.opts').forEach(function(box){
+    var key = box.dataset.single || box.dataset.multi, multi = !!box.dataset.multi;
+    VCProp.Q[key].forEach(function(label){
+      var b = el('button', 'opt' + (multi ? ' multi' : '')); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'dot')); b.appendChild(el('span', '', label));
+      b.addEventListener('click', function(){
+        if(multi){
+          var i = ans[key].indexOf(label);
+          if(i > -1) ans[key].splice(i, 1);
+          else {
+            var ex = EXCLUSIVE[key];
+            if(ex && label === ex) ans[key] = [];
+            else if(ex) ans[key] = ans[key].filter(function(x){ return x !== ex; });
+            ans[key].push(label);
+          }
+          box.querySelectorAll('.opt').forEach(function(o){ o.setAttribute('aria-pressed', ans[key].indexOf(o.lastChild.textContent) > -1 ? 'true' : 'false'); });
+        } else {
+          ans[key] = label;
+          box.querySelectorAll('.opt').forEach(function(o){ o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+        }
+        clearInvalid(key); touch(key); progress();
+      });
+      box.appendChild(b);
+    });
+  });
+
+  /* ---------- 縣市 ---------- */
+  var chips = $('cityChips');
+  function syncChips(){ chips.querySelectorAll('button').forEach(function(c){ c.setAttribute('aria-pressed', c.textContent === ans.city ? 'true' : 'false'); }); }
+  VCProp.CITIES.slice(0, 6).forEach(function(c){
+    var b = el('button', '', c); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function(){ $('fCity').value = c; ans.city = c; syncChips(); clearInvalid('city'); touch('city'); progress(); });
+    chips.appendChild(b);
+  });
+  $('fCity').addEventListener('input', function(){ ans.city = this.value.trim(); syncChips(); clearInvalid('city'); touch('city'); progress(); });
+
+  function doneCount(){
+    var c = 0;
+    ['goals','usage','method','times'].forEach(function(k){ if(ans[k].length) c++; });
+    ['city','value','loan','count','timeline'].forEach(function(k){ if(ans[k]) c++; });
+    return c;
+  }
+  function progress(){
+    var c = doneCount();
+    $('progBar').style.width = (c / 9 * 100) + '%';
+    $('progTxt').textContent = '已完成 ' + c + ' / 9 題';
+    if(lastKey) T.step(c, lastKey);
+    if($('qsErr').textContent && !document.querySelector('.q.invalid')) $('qsErr').textContent = '';
+  }
+
+  /* ---------- 送出第 1 步 ---------- */
+  $('qsForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var bad = [];
+    ['goals','usage','method','times'].forEach(function(k){ if(!ans[k].length) bad.push(k); });
+    ['city','value','loan','count','timeline'].forEach(function(k){ if(!ans[k]) bad.push(k); });
+    document.querySelectorAll('.q').forEach(function(q){ q.classList.toggle('invalid', bad.indexOf(q.dataset.q) > -1); });
+    if(bad.length){
+      $('qsErr').textContent = '還有 ' + bad.length + ' 題沒有完成，請再看一下。';
+      var first = document.querySelector('.q.invalid'); if(first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    $('qsErr').textContent = '';
+    answers = { goals: ans.goals.slice(), city: ans.city.slice(0, 20), usage: ans.usage.slice(), value: ans.value, loan: ans.loan,
+                count: ans.count, timeline: ans.timeline, method: ans.method.slice(), times: ans.times.slice() };
+    show('stepContact');
+    T.stage('contact');
+  });
+  $('backBtn').addEventListener('click', function(){ show('stepQs'); });
+
+  /* ---------- 聯絡資料 ---------- */
+  VCProp.Q.pref.forEach(function(p){
+    var b = el('button', '', p); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function(){
+      pref = p;
+      $('prefBox').querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      b.closest('.field').classList.remove('invalid'); $('contactErr').textContent = ''; T.step(9, 'c_pref');
+    });
+    $('prefBox').appendChild(b);
+  });
+  [['fName','c_name'], ['fIg','c_ig'], ['fLine','c_line']].forEach(function(x){
+    $(x[0]).addEventListener('input', function(){ this.closest('.field').classList.remove('invalid'); $('contactErr').textContent = ''; T.step(9, x[1]); });
+  });
+  $('fConsent').addEventListener('change', function(){ $('contactErr').textContent = ''; T.step(9, 'c_consent'); });
+
+  var ERR = {
+    LINK_INVALID: '這個連結已經暫停使用，請向分享連結給你的人索取最新的連結。',
+    CONSENT_REQUIRED: '請先勾選同意個人資料蒐集與使用說明。',
+    MISSING_FIELDS: '請填寫 IG 帳號、Line ID／手機號碼，並選擇偏好聯絡方式。',
+    BAD_ANSWERS: '有答案的格式不正確，請回上一步確認。',
+    RATE_LIMIT: '目前填寫的人太多了，請稍後再試一次。'
+  };
+
+  $('contactForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    $('contactErr').textContent = '';
+    var name = $('fName').value.trim(), ig = $('fIg').value.trim(), line = $('fLine').value.trim();
+    document.querySelector('.field[data-f="ig"]').classList.toggle('invalid', !ig);
+    document.querySelector('.field[data-f="line"]').classList.toggle('invalid', !line);
+    document.querySelector('.field[data-f="pref"]').classList.toggle('invalid', !pref);
+    if(!ig || !line || !pref){ $('contactErr').textContent = ERR.MISSING_FIELDS; return; }
+    if(!$('fConsent').checked){ $('contactErr').textContent = ERR.CONSENT_REQUIRED; return; }
+    var rep = VCProp.compute(answers);
+    var contactShown = pref === 'IG' ? ig : line;
+    if($('hpWebsite').value){ renderReport(rep, name, pref, contactShown); return; } // 機器人填了隱藏欄位：不送出
+    var btn = $('submitBtn');
+    btn.disabled = true; btn.textContent = '產生評估結果中…';
+    try{
+      var res = await supabaseClient.rpc('vc_submit_property_check', { p_slug: slug, p: Object.assign({ name: name, ig: ig, line_phone: line, contact_pref: pref, consent: true }, answers) });
+      if(res.error){
+        var code = Object.keys(ERR).find(function(k){ return String(res.error.message || '').indexOf(k) > -1; });
+        $('contactErr').textContent = code ? ERR[code] : '送出失敗，請檢查網路後再試一次。';
+      } else {
+        T.stage('submitted');
+        renderReport(rep, name, pref, contactShown);
+      }
+    }catch(err){ $('contactErr').textContent = '送出失敗，請檢查網路後再試一次。'; }
+    btn.disabled = false; btn.textContent = '看我的房產活化評估 →';
+  });
+
+  /* ---------- 評估結果 ---------- */
+  function renderReport(r, name, pref, contact){
+    var a = r.answers, d = new Date();
+    $('rWho').textContent = (name ? name + '｜' : '') + d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+    var mine = r.dims.filter(function(x){ return x.on; }).map(function(x){ return x.label; });
+    $('rLead').textContent = mine.length ? '你最在意的是「' + mine.join('、') + '」，下面整理了你的房產概況和可以一起看的方向。' : '下面整理了你的房產概況和可以一起看的方向。';
+    var tags = $('rTags'); tags.textContent = '';
+    [a.city, a.count, a.usage.join('、')].filter(Boolean).forEach(function(t){ tags.appendChild(el('span', '', t)); });
+
+    // 一、淨值粗估
+    var h = $('rHouse'); h.textContent = '';
+    var grid = el('div', 'house');
+    [['房產價值', a.value, ''], ['剩餘貸款', a.loan, ''], ['淨值粗估', r.equity ? r.equity.text : '待估算', 'eq']].forEach(function(x){
+      var c = el('div'); c.appendChild(el('div', 'k', x[0])); c.appendChild(el('div', 'v ' + x[2], x[1])); grid.appendChild(c);
+    });
+    h.appendChild(grid);
+    if(r.equity){
+      var bar = el('div', 'hbar'), lp = Math.round(r.equity.ratio * 100);
+      var ln = el('i', 'ln', lp >= 12 ? '貸款 ' + lp + '%' : ''); ln.style.width = lp + '%';
+      var eq = el('i', 'eq', 100 - lp >= 12 ? '淨值 ' + (100 - lp) + '%' : ''); eq.style.width = (100 - lp) + '%';
+      bar.appendChild(ln); bar.appendChild(eq); h.appendChild(bar);
+      h.appendChild(el('div', 'hnote', '以你選的區間中間值粗估：貸款約占房價 ' + r.equity.ratioText + '。實際數字要看房屋現值、貸款條件與個人還款能力，顧問會在診斷時和你一起確認。'));
+    } else {
+      h.appendChild(el('div', 'hnote', '你選了「不確定」，沒關係：顧問可以協助你用實價登錄等公開資料，先抓出房產價值與淨值的大概範圍。'));
+    }
+
+    // 二、狀況重點
+    var pt = $('rPoints'); pt.textContent = '';
+    r.points.forEach(function(x, i){
+      var c = el('div', 'ins'); c.appendChild(el('div', 'no', String(i + 1)));
+      var b = el('div'); b.appendChild(el('h3', '', x.t)); b.appendChild(el('p', '', x.d)); c.appendChild(b); pt.appendChild(c);
+    });
+
+    // 三、方向
+    var dm = $('rDims'); dm.textContent = '';
+    r.dims.slice().sort(function(x, y){ return (y.on ? 1 : 0) - (x.on ? 1 : 0); }).forEach(function(x){
+      var c = el('div', 'dim' + (x.on ? ' on' : ''));
+      var t = el('div', 't'); t.appendChild(el('h3', '', x.label)); if(x.on) t.appendChild(el('span', 'mine', '你勾選的目標'));
+      c.appendChild(t); c.appendChild(el('div', 'qq', x.q)); c.appendChild(el('p', '', x.body)); dm.appendChild(c);
+    });
+
+    // 下一步
+    var times = a.times.join('、');
+    $('rCtaLead').textContent = r.wantsMeet
+      ? advName + ' 已經收到你的評估，會在你方便的時段（' + times + '）透過 ' + pref + ' 和你聯繫：'
+      : '你選擇先完成評估。之後想進一步了解，' + advName + ' 會透過 ' + pref + ' 和你保持聯繫：';
+    $('rContact').textContent = contact;
+    document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
+    show('stepReport');
+  }
+
+  async function init(){
+    if(!/^[a-z0-9]{6,20}$/.test(slug)){ show('stateInvalid'); return; }
+    try{
+      var res = await supabaseClient.rpc('vc_property_check_form_info', { p_slug: slug });
+      if(res.error || !res.data){ show('stateInvalid'); return; }
+      advName = res.data.advisor_name || '顧問';
+      document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
+      if(res.data.intro){ $('introName').textContent = advName; $('introText').textContent = res.data.intro; $('introBox').hidden = false; }
+      show('stepQs');
+      T.open();
+    }catch(e){ show('stateInvalid'); }
+  }
+  init();
+})();
+</script>
+</body>
+</html>

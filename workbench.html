@@ -740,7 +740,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.31.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.32.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -1584,11 +1584,11 @@
       // 諮詢申請＋1 分鐘健診的新名單（健診資料表還沒建立或沒開通時當 0）
       const cnt = t => supabaseClient.from(t).select('id', { count:'exact', head:true }).eq('advisor_id', window.currentAdvisorId).eq('status', 'new')
         .then(r => r && !r.error ? (r.count || 0) : 0, () => 0);
-      const [c1, c2] = await Promise.all([cnt('consult_requests'), cnt('quick_checks')]);
-      const n = c1 + c2;
+      const [c1, c2, c3] = await Promise.all([cnt('consult_requests'), cnt('quick_checks'), cnt('property_checks')]);
+      const n = c1 + c2 + c3;
       b.textContent = n > 99 ? '99+' : String(n);
       b.hidden = n === 0;
-      try{ const h = document.getElementById('frame-home'); h && h.contentWindow && h.contentWindow.vcShowConsultAlert && h.contentWindow.vcShowConsultAlert(n, c2); }catch(e){}
+      try{ const h = document.getElementById('frame-home'); h && h.contentWindow && h.contentWindow.vcShowConsultAlert && h.contentWindow.vcShowConsultAlert(n, c2 + c3); }catch(e){}
     }catch(e){ b.hidden = true; }
   };
 

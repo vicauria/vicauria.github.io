@@ -331,6 +331,7 @@
         <div class="pills" id="formsWhich">
           <button class="pill active" data-f="quick">15 題財務健檢</button>
           <button class="pill" data-f="consult">預約諮詢表單</button>
+          <button class="pill" data-f="property">房產活化評估</button>
         </div>
         <div class="pills" id="formsDays">
           <button class="pill" data-d="7">近 7 天</button>
@@ -895,9 +896,14 @@ const FORM_STEPS = {
     ['name','稱呼'], ['contact','聯絡方式'], ['age_range','年齡'], ['needs','最想解決的問題'], ['monthly_budget','每月可規劃金額'],
     ['idle_funds','閒置資金'], ['timeline','希望多久內開始'], ['current_planning','目前的規劃'], ['preferred_time','方便時段'],
     ['meeting_mode','諮詢方式'], ['source','從哪裡知道'], ['message','想先讓顧問知道的事'], ['consent','勾選同意']
+  ],
+  property: [
+    ['q1','Q1 活化目標'], ['q2','Q2 房產縣市'], ['q3','Q3 使用狀況'], ['q4','Q4 市場價值'], ['q5','Q5 剩餘貸款'],
+    ['q6','Q6 房產數量'], ['q7','Q7 何時開始規劃'], ['q8','Q8 了解方式'], ['q9','Q9 方便聯繫時段'],
+    ['c_name','留資料：稱呼'], ['c_ig','留資料：IG'], ['c_line','留資料：Line／手機'], ['c_pref','留資料：偏好聯絡方式'], ['c_consent','留資料：勾選同意']
   ]
 };
-const FORM_TOTAL = { quick:15, consult:13 };
+const FORM_TOTAL = { quick:15, consult:13, property:9 };
 function fmtSec(sec){
   if(sec == null) return '—';
   sec = Math.round(sec);
@@ -922,11 +928,11 @@ function renderForms(d){
   const leftMap = {}; (d.left_at || []).forEach(x=>{ leftMap[x.step] = (leftMap[x.step] || 0) + x.n; });
   const leftTotal = Object.values(leftMap).reduce((a, b)=> a + b, 0);
   const notStarted = (d.left_at || []).filter(x=> x.step === '(none)').reduce((a, x)=> a + x.n, 0);
-  const funnel = form === 'quick' ? [
-    { lbl:'打開健檢', v:opened },
+  const funnel = form !== 'consult' ? [
+    { lbl: form === 'quick' ? '打開健檢' : '打開評估', v:opened },
     { lbl:'開始作答', v:started, conv:pct(started, opened) },
-    { lbl:'15 題答完、進到留資料', v:contact, conv:pct(contact, started) },
-    { lbl:'送出看報告書', v:submitted, conv:pct(submitted, contact) },
+    { lbl:(form === 'quick' ? '15' : '9') + ' 題答完、進到留資料', v:contact, conv:pct(contact, started) },
+    { lbl: form === 'quick' ? '送出看報告書' : '送出看評估結果', v:submitted, conv:pct(submitted, contact) },
   ] : [
     { lbl:'打開表單', v:opened },
     { lbl:'開始填寫', v:started, conv:pct(started, opened) },
