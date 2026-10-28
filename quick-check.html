@@ -6,8 +6,8 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>1 分鐘財務健診 - Vicauria</title>
-<meta name="description" content="填 7 個數字，1 分鐘看懂你的財務體質：每月結餘、緊急預備金、負債壓力與資產配置。">
+<title>15 題免費個人財務健檢 - Vicauria</title>
+<meta name="description" content="回答 15 題，馬上拿到你的簡易財務健檢報告書：每月結餘、財務續航力、貸款負擔與支出結構。">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" href="/icons/favicon-96.png" sizes="96x96">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -16,35 +16,62 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="public-pages.css">
 <style>
-  .qc{max-width:640px;margin:0 auto;padding:0 18px 40px;}
-  .hero-c{padding:30px 0 6px;}
-  .hero-c h1{font-size:clamp(25px,6.4vw,34px);line-height:1.35;font-weight:900;}
+  .qc{max-width:680px;margin:0 auto;padding:0 16px 40px;}
+  .hero-c{padding:28px 0 4px;}
+  .hero-c h1{font-size:clamp(24px,6.2vw,32px);line-height:1.35;font-weight:900;}
   .hero-c .lead{margin:10px 0 0;color:var(--ink-soft);font-size:15.5px;}
   .intro{background:#fff;border:1px solid var(--line);border-left:4px solid var(--warm);border-radius:12px;padding:14px 16px;margin:16px 0 0;white-space:pre-wrap;font-size:15px;}
   .intro b{display:block;font-family:"Noto Serif TC",serif;color:var(--navy);margin-bottom:4px;}
-  .steps{display:flex;gap:6px;margin:18px 0 0;}
-  .steps span{flex:1;height:5px;border-radius:3px;background:#DCE3E4;}
-  .steps span.on{background:var(--warm);}
-  .step-lbl{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
-  .card{margin-top:14px;}
-  .q{margin-bottom:18px;}
-  .q > label, .q > .ql{display:block;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;}
-  .q .hint{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 6px;}
-  .q .req{color:#B3402A;margin-left:3px;}
-  .q.invalid .inp, .q.invalid .chips, .q.invalid > input[type=text]{outline:2px solid rgba(179,64,42,.5);outline-offset:3px;border-radius:12px;}
-  .q > input[type=text]{width:100%;border:1.5px solid #CBD5D6;border-radius:10px;padding:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink);}
-  .q > input[type=text]:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(46,115,145,.18);}
-  .inp input{font-size:17px;}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;}
-  .chip{border:1.5px solid #CBD5D6;background:#fff;color:var(--ink);border-radius:22px;padding:10px 15px;font:inherit;font-size:14.5px;cursor:pointer;min-height:44px;}
-  .chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;}
-  .consent{background:var(--paper);border-radius:12px;padding:14px;font-size:13.5px;}
+
+  .progress{position:sticky;top:47px;z-index:15;background:rgba(245,247,246,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:10px 0 8px;margin-top:12px;}
+  .progress .bar{height:6px;border-radius:3px;background:#DCE3E4;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0;background:var(--warm);transition:width .25s;}
+  .progress .lbl{font-size:12.5px;color:var(--ink-soft);margin-top:5px;display:flex;justify-content:space-between;}
+
+  .sec-h{font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);margin:26px 0 10px;font-weight:700;}
+  .qcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px 18px;}
+  .q{padding:18px 0;border-bottom:1px solid var(--line);}
+  .q:last-child{border-bottom:none;}
+  .q .qt{font-size:16px;font-weight:700;color:var(--navy);line-height:1.5;}
+  .q .qt .req{color:#B3402A;margin-left:3px;}
+  .q .qs{font-size:12.5px;color:var(--ink-soft);margin:4px 0 10px;}
+  .q .note{font-size:13px;color:var(--ink-soft);margin-top:8px;line-height:1.7;}
+  .q.invalid{background:linear-gradient(90deg, rgba(179,64,42,.06), transparent);margin:0 -18px;padding-left:18px;padding-right:18px;}
+  .q.invalid .qt::after{content:"　← 請回答這一題";color:#B3402A;font-size:12.5px;font-weight:600;}
+
+  .opts{display:flex;flex-direction:column;gap:6px;}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1.5px solid #E1E7E7;border-radius:12px;padding:11px 14px;font:inherit;font-size:15.5px;color:var(--ink);cursor:pointer;min-height:48px;}
+  .opt .dot{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:2px solid #C3CDCE;display:flex;align-items:center;justify-content:center;}
+  .opt.multi .dot{border-radius:6px;}
+  .opt[aria-pressed="true"]{border-color:var(--navy);background:#F3F7F8;}
+  .opt[aria-pressed="true"] .dot{border-color:var(--navy);background:var(--navy);}
+  .opt[aria-pressed="true"] .dot::after{content:"";width:8px;height:8px;border-radius:50%;background:#fff;}
+  .opt.multi[aria-pressed="true"] .dot::after{width:10px;height:6px;border-radius:0;background:none;border-left:2.5px solid #fff;border-bottom:2.5px solid #fff;transform:rotate(-45deg) translate(1px,-1px);}
+  .opt:disabled{opacity:.45;cursor:not-allowed;}
+  .multi-count{font-size:13px;color:var(--ink-soft);margin-top:8px;}
+
+  .slider-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:var(--ink-soft);margin-bottom:8px;}
+  .slider-row b{font-family:"Roboto Mono",monospace;font-size:24px;color:var(--navy);}
+  input[type=range]{width:100%;accent-color:var(--navy);height:32px;}
+
+  .money-row{display:flex;gap:8px;align-items:stretch;}
+  .money-row .inp{flex:1;border-radius:999px;}
+  .money-row .inp input{font-size:17px;padding:12px 16px;}
+  .unk{flex-shrink:0;border:1.5px solid #CBD5D6;background:#fff;border-radius:999px;padding:0 14px;font:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;}
+  .unk[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .inp.off{background:#F1F4F4;}
+  .sum-live{background:var(--paper);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:14px;display:flex;justify-content:space-between;gap:10px;}
+  .sum-live b{font-family:"Roboto Mono",monospace;color:var(--navy);}
+
+  .q-input{width:100%;border:1.5px solid #CBD5D6;border-radius:10px;padding:12px;font:inherit;font-size:16px;background:#fff;color:var(--ink);}
+  .q-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(46,115,145,.18);}
+  .consent{background:var(--paper);border-radius:12px;padding:14px;font-size:13.5px;margin-top:6px;}
   .consent details summary{cursor:pointer;color:var(--teal-deep);font-weight:700;margin-top:8px;}
   .consent .body{margin-top:8px;color:var(--ink);line-height:1.8;}
   .consent .body p{margin:0 0 8px;}
   .consent label{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;font-weight:600;color:var(--ink);cursor:pointer;}
   .consent input[type=checkbox]{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:var(--navy);}
-  .btn-main{width:100%;background:var(--warm);color:#fff;border:none;border-radius:30px;padding:16px;font:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:4px;}
+  .btn-main{width:100%;background:var(--warm);color:#fff;border:none;border-radius:30px;padding:16px;font:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:18px;}
   .btn-main:hover{background:var(--warm-deep);}
   .btn-main:disabled{opacity:.6;cursor:wait;}
   .btn-back{display:block;margin:12px auto 0;background:none;border:none;color:var(--teal-deep);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:8px;}
@@ -53,19 +80,43 @@
   .state{text-align:center;padding:60px 20px;color:var(--ink-soft);}
   .state h2{margin-bottom:8px;}
   .lock{display:flex;gap:10px;align-items:flex-start;background:var(--teal-tint);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--teal-deep);margin-bottom:16px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:15px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+  .field .hint{font-size:12.5px;color:var(--ink-soft);margin:-2px 0 6px;}
+  .field.invalid .q-input{border-color:#B3402A;}
 
-  /* 報告 */
-  .r-head{text-align:center;padding:26px 18px 22px;}
-  .r-head .who{font-size:13px;color:var(--ink-soft);letter-spacing:.06em;}
-  .ring{position:relative;width:168px;height:168px;margin:12px auto 6px;}
-  .ring svg{width:168px;height:168px;transform:rotate(-90deg);}
+  /* ---------- 報告書 ---------- */
+  .rep-cover{background:linear-gradient(135deg,#16323F 0%,#1F5C73 60%,#2E7391 100%);color:#fff;border-radius:20px;padding:24px 20px 22px;text-align:center;margin-top:22px;}
+  .rep-cover .eb{font-family:"Roboto Mono",monospace;font-size:11.5px;letter-spacing:.18em;color:#BFE0EA;}
+  .rep-cover h1{color:#fff;font-size:22px;margin:6px 0 2px;}
+  .rep-cover .who{font-size:13.5px;color:#DCEAEE;}
+  .ring{position:relative;width:164px;height:164px;margin:14px auto 6px;}
+  .ring svg{width:164px;height:164px;transform:rotate(-90deg);}
   .ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-  .ring .c b{font-family:"Roboto Mono",monospace;font-size:44px;line-height:1;color:var(--navy);}
-  .ring .c small{font-size:12px;color:var(--ink-soft);margin-top:4px;}
-  .grade{display:inline-block;font-weight:700;border-radius:20px;padding:5px 14px;font-size:15px;margin-top:4px;}
-  .grade.a{background:#E3F2EA;color:#2E7D5B;} .grade.b{background:var(--teal-tint);color:var(--teal-deep);}
-  .grade.c{background:var(--warm-tint);color:var(--warm-deep);} .grade.d{background:#FBE7E2;color:#B3402A;}
-  .r-head p{margin:10px 0 0;color:var(--ink);font-size:15px;}
+  .ring .c b{font-family:"Roboto Mono",monospace;font-size:44px;line-height:1;color:#fff;}
+  .ring .c small{font-size:12px;color:#BFE0EA;margin-top:4px;}
+  .grade{display:inline-block;font-weight:700;border-radius:20px;padding:5px 14px;font-size:15px;background:#fff;}
+  .grade.a{color:#2E7D5B;} .grade.b{color:#1F5C73;} .grade.c{color:#A85F27;} .grade.d{color:#B3402A;}
+  .rep-cover p{margin:10px 0 0;color:#EAF3F5;font-size:14.5px;}
+  .selfcmp{display:flex;justify-content:center;gap:18px;margin-top:14px;font-size:13px;color:#DCEAEE;}
+  .selfcmp b{display:block;font-family:"Roboto Mono",monospace;font-size:20px;color:#fff;}
+  .selfnote{font-size:13px;color:#DCEAEE;margin-top:6px;}
+
+  .rsec{font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);margin:26px 0 10px;font-weight:700;}
+  .rcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center;}
+  .flow div{background:var(--paper);border-radius:12px;padding:10px 6px;}
+  .flow .k{font-size:12.5px;color:var(--ink-soft);}
+  .flow .v{font-family:"Roboto Mono",monospace;font-size:clamp(15px,4.2vw,19px);font-weight:700;color:var(--navy);overflow-wrap:anywhere;}
+  .flow .v.pos{color:#2E7D5B;} .flow .v.neg{color:#B3402A;}
+  .stack{display:flex;height:22px;border-radius:11px;overflow:hidden;margin:14px 0 10px;background:#EEF2F2;}
+  .stack i{display:block;height:100%;}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:13px;}
+  .legend div{display:flex;align-items:center;gap:6px;min-width:0;}
+  .legend s{flex-shrink:0;width:10px;height:10px;border-radius:3px;text-decoration:none;}
+  .legend span{flex:1;min-width:0;}
+  .legend em{font-style:normal;font-family:"Roboto Mono",monospace;color:var(--navy);font-weight:600;}
+  .stack-note{font-size:12px;color:var(--ink-soft);margin-top:8px;}
   .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .m{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;border-top:4px solid #CBD5D6;}
   .m.good{border-top-color:#2E7D5B;} .m.warn{border-top-color:var(--warm);} .m.bad{border-top-color:#B3402A;}
@@ -75,25 +126,31 @@
   .m .v{font-family:"Roboto Mono",monospace;font-size:clamp(17px,4.6vw,21px);font-weight:700;color:var(--navy);margin:4px 0 2px;overflow-wrap:anywhere;}
   .m .s{font-size:12.5px;color:var(--ink-soft);}
   .m .t{font-size:11.5px;color:#8A979B;margin-top:4px;}
-  .sec-t{font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);margin:26px 0 10px;}
+  .parts{margin-top:12px;}
+  .parts .row{display:grid;grid-template-columns:7em 1fr 3.6em;gap:8px;align-items:center;font-size:13px;margin:5px 0;}
+  .parts .bar{height:8px;border-radius:4px;background:#EEF2F2;overflow:hidden;}
+  .parts .bar i{display:block;height:100%;background:var(--teal);}
+  .parts .row b{font-family:"Roboto Mono",monospace;text-align:right;color:var(--navy);font-size:12.5px;}
   .ins{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;gap:12px;}
   .ins .no{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px;}
   .ins h3{font-size:16px;margin:2px 0 4px;}
   .ins p{margin:0;font-size:14.5px;line-height:1.8;}
-  .proj{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
-  .proj .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14.5px;}
-  .proj .row:last-of-type{border-bottom:none;}
-  .proj .row b{font-family:"Roboto Mono",monospace;color:var(--navy);white-space:nowrap;}
-  .proj .row.hl b{color:#2E7D5B;}
-  .proj .note{font-size:12px;color:var(--ink-soft);margin-top:6px;}
-  .cta{background:var(--navy);color:#fff;border-radius:18px;padding:24px 20px;margin-top:22px;text-align:center;}
-  .cta h2{color:#fff;font-size:20px;margin-bottom:8px;}
+  .goal{border-left:4px solid var(--warm);background:#fff;border-radius:0 12px 12px 0;padding:12px 14px;margin-bottom:8px;}
+  .goal b{display:block;color:var(--navy);font-size:15px;}
+  .goal span{font-size:14px;line-height:1.75;}
+  .three{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14.5px;}
+  .three:last-of-type{border-bottom:none;}
+  .three b{font-family:"Roboto Mono",monospace;color:var(--navy);white-space:nowrap;}
+  .cta{background:var(--navy);color:#fff;border-radius:18px;padding:24px 20px;margin-top:24px;text-align:center;}
+  .cta .eb{font-family:"Roboto Mono",monospace;font-size:11.5px;letter-spacing:.16em;color:#BFE0EA;}
+  .cta h2{color:#fff;font-size:20px;margin:6px 0 8px;}
   .cta p{margin:6px 0;color:#DCEAEE;font-size:14.5px;}
-  .cta .contact{display:inline-block;background:rgba(255,255,255,.12);border-radius:10px;padding:6px 12px;margin-top:6px;font-weight:700;color:#fff;overflow-wrap:anywhere;}
+  .cta ul{text-align:left;margin:10px auto 0;max-width:420px;padding-left:20px;color:#EAF3F5;font-size:14px;line-height:1.9;}
+  .cta .contact{display:inline-block;background:rgba(255,255,255,.12);border-radius:10px;padding:6px 12px;margin-top:8px;font-weight:700;color:#fff;overflow-wrap:anywhere;}
   .disc{font-size:12px;color:var(--ink-soft);margin-top:18px;line-height:1.7;}
   .tools{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
   .tools a{display:block;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:var(--navy);font-weight:700;font-size:14.5px;}
-  @media (max-width:380px){ .mgrid{grid-template-columns:1fr;} }
+  @media (max-width:380px){ .mgrid,.legend{grid-template-columns:1fr;} .flow{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
@@ -110,58 +167,127 @@
     <p>可能是連結不完整，或已經暫停使用。<br>請直接私訊分享這個連結給你的人，索取最新的連結。</p>
   </div>
 
-  <!-- 第 1 步：7 個數字 -->
-  <div id="stepNums" hidden>
+  <!-- 第 1 步：15 題 -->
+  <div id="stepQs" hidden>
     <header class="hero-c">
-      <div class="eyebrow">1-MINUTE FINANCIAL CHECK</div>
-      <h1>1 分鐘財務健診</h1>
-      <p class="lead">填 7 個數字，馬上看懂你的財務體質：每月結餘、緊急預備金、負債壓力、資產配置。抓大概的數字就好。</p>
+      <div class="eyebrow">FREE FINANCIAL CHECK · STAGE 1</div>
+      <h1>第一階段｜15 題免費個人財務健檢</h1>
+      <p class="lead">大約 3 分鐘，回答完馬上拿到你的簡易財務健檢報告書。金額抓大概就好，不需要精確到每一塊錢。</p>
       <div class="intro" id="introBox" hidden><b id="introName"></b><span id="introText"></span></div>
-      <div class="steps"><span class="on"></span><span></span></div>
-      <div class="step-lbl">第 1 步，共 2 步：你的數字</div>
     </header>
+    <div class="progress"><div class="bar"><i id="progBar"></i></div><div class="lbl"><span id="progTxt">已完成 0 / 15 題</span><span>第 1 步，共 2 步</span></div></div>
 
-    <form id="numsForm" class="card" novalidate>
-      <div class="q" data-key="age">
-        <label for="fAge">你的年齡<span class="req">*</span></label>
-        <div class="inp"><input id="fAge" type="text" inputmode="numeric" maxlength="3" placeholder="例如：32" autocomplete="off"><span class="u">歲</span></div>
+    <form id="qsForm" novalidate>
+      <div class="sec-h">A. 財務現況與需求（第 1～3 題）</div>
+      <div class="qcard">
+        <div class="q" data-q="status">
+          <div class="qt">Q1｜你覺得自己目前的財務狀況比較接近哪一種？<span class="req">*</span></div>
+          <div class="qs">單選題</div>
+          <div class="opts" data-single="status"></div>
+        </div>
+        <div class="q" data-q="want">
+          <div class="qt">Q2｜如果現在可以改善一件財務上的事，你最希望改善什麼？<span class="req">*</span></div>
+          <div class="qs">單選題</div>
+          <div class="opts" data-single="want"></div>
+        </div>
+        <div class="q" data-q="self">
+          <div class="qt">Q3｜如果財務狀況滿分是 10 分，你會給自己幾分？</div>
+          <div class="qs">拉動滑桿</div>
+          <div class="slider-row"><span>非常不滿意</span><b><span id="selfVal">5</span> / 10</b><span>非常滿意</span></div>
+          <input type="range" id="fSelf" min="0" max="10" step="1" value="5" aria-label="自評分數">
+        </div>
       </div>
-      <div class="q" data-key="income">
-        <label for="fIncome">每月收入<span class="req">*</span></label>
-        <div class="hint">薪水加其他固定收入，抓實際入帳的金額</div>
-        <div class="inp"><input id="fIncome" class="money" type="text" inputmode="numeric" placeholder="例如：50,000" autocomplete="off"><span class="u">元／月</span></div>
+
+      <div class="sec-h">B. 每月收入（第 4～5 題）</div>
+      <div class="qcard">
+        <div class="q" data-q="work_income">
+          <div class="qt">Q4｜你平均每個月的工作收入是多少？<span class="req">*</span></div>
+          <div class="qs">金額輸入｜以每月實際可支配的稅後收入為主</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="work_income" type="text" inputmode="numeric" placeholder="例如：80,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">包含薪資、獎金月均及自營工作收入。收入不固定者可填近 12 個月平均值。</div>
+        </div>
+        <div class="q" data-q="other_income">
+          <div class="qt">Q5｜除了工作收入，你每個月還有多少其他收入？</div>
+          <div class="qs">金額輸入｜了解非工作收入</div>
+          <div class="money-row"><div class="inp" id="otherInp"><input class="money" data-key="other_income" type="text" inputmode="numeric" placeholder="例如：15,000" autocomplete="off"><span class="u">元</span></div><button type="button" class="unk" id="otherUnk" aria-pressed="false">無法估算</button></div>
+          <div class="note">例如租金、利息、股息或其他經常性收入。沒有請填 0；不確定可選「無法估算」。</div>
+        </div>
       </div>
-      <div class="q" data-key="expense">
-        <label for="fExpense">每月生活支出<span class="req">*</span></label>
-        <div class="hint">吃、住、交通、保費、房租或房貸等全部加起來，不含存起來或拿去投資的錢</div>
-        <div class="inp"><input id="fExpense" class="money" type="text" inputmode="numeric" placeholder="例如：32,000" autocomplete="off"><span class="u">元／月</span></div>
+
+      <div class="sec-h">C. 每月支出與負債（第 6～11 題）</div>
+      <div class="qcard">
+        <div class="q" data-q="living">
+          <div class="qt">Q6｜你平均每個月的基本生活支出是多少？<span class="req">*</span></div>
+          <div class="qs">金額輸入</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="living" type="text" inputmode="numeric" placeholder="例如：25,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">飲食、交通、日用品、基本生活開銷。不含後面會另外填寫的保費、貸款及其他固定支出。</div>
+        </div>
+        <div class="q" data-q="insurance">
+          <div class="qt">Q7｜你每個月平均需要繳多少保險費？</div>
+          <div class="qs">金額輸入</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="insurance" type="text" inputmode="numeric" placeholder="例如：5,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">年繳保費除以 12、半年繳除以 6。此處統計現金支出，不代表保單資產價值。</div>
+        </div>
+        <div class="q" data-q="mortgage">
+          <div class="qt">Q8｜你目前每個月的房貸支出是多少？</div>
+          <div class="qs">金額輸入</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="mortgage" type="text" inputmode="numeric" placeholder="例如：30,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">填實際每月繳給銀行的金額，包含本金及利息。沒有房貸填 0。</div>
+        </div>
+        <div class="q" data-q="other_loan">
+          <div class="qt">Q9｜除了房貸，你每個月還有多少其他貸款支出？</div>
+          <div class="qs">金額輸入</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="other_loan" type="text" inputmode="numeric" placeholder="例如：8,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">信貸、車貸、學貸、卡費分期等每月要還的金額。沒有填 0。</div>
+        </div>
+        <div class="q" data-q="fixed">
+          <div class="qt">Q10｜除了以上項目，你每個月還有哪些固定支出？合計多少？</div>
+          <div class="qs">金額輸入</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="fixed" type="text" inputmode="numeric" placeholder="例如：6,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">例如房租、管理費、電信費、固定孝親費、訂閱服務等，已填過的項目不要重複。</div>
+        </div>
+        <div class="q" data-q="variable">
+          <div class="qt">Q11｜你每個月平均還有多少變動或非固定支出？</div>
+          <div class="qs">金額輸入</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="variable" type="text" inputmode="numeric" placeholder="例如：10,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">例如娛樂、購物、旅遊、聚餐、年度稅費及不定期支出折算月均；不包含前面已填過的費用。</div>
+        </div>
+        <div class="sum-live"><span>目前每月收入 <b id="liveIn">$0</b></span><span>每月支出 <b id="liveOut">$0</b></span></div>
       </div>
-      <div class="q" data-key="saving">
-        <label for="fSaving">每月固定存下或投資多少？</label>
-        <div class="hint">例如定期定額、儲蓄險、固定轉到存款帳戶；沒有就填 0</div>
-        <div class="inp"><input id="fSaving" class="money" type="text" inputmode="numeric" placeholder="例如：8,000" autocomplete="off"><span class="u">元／月</span></div>
+
+      <div class="sec-h">D. 現金儲備與資產（第 12～13 題）</div>
+      <div class="qcard">
+        <div class="q" data-q="cash">
+          <div class="qt">Q12｜你目前大約有多少可以隨時動用的現金或存款？</div>
+          <div class="qs">金額輸入｜計算財務續航力</div>
+          <div class="money-row"><div class="inp"><input class="money" data-key="cash" type="text" inputmode="numeric" placeholder="例如：300,000" autocomplete="off"><span class="u">元</span></div></div>
+          <div class="note">包含活存、現金及可即時動用的存款；不包含房產、股票、基金及不易即時領出的保單價值。</div>
+        </div>
+        <div class="q" data-q="property">
+          <div class="qt">Q13｜你目前有持有不動產嗎？<span class="req">*</span></div>
+          <div class="qs">單選題｜初步辨識資產類型</div>
+          <div class="opts" data-single="property"></div>
+          <div class="note">這題只做初步分類，不足以判定房產價值、負債狀況或是否適合活化。</div>
+        </div>
       </div>
-      <div class="q" data-key="cash">
-        <label for="fCash">目前的活存／存款</label>
-        <div class="hint">隨時可以動用的錢</div>
-        <div class="inp"><input id="fCash" class="money" type="text" inputmode="numeric" placeholder="例如：200,000" autocomplete="off"><span class="u">元</span></div>
+
+      <div class="sec-h">E. 財務安全感與未來目標（第 14～15 題）</div>
+      <div class="qcard">
+        <div class="q" data-q="worry">
+          <div class="qt">Q14｜如果明天開始沒有工作收入，你最擔心的是什麼？<span class="req">*</span></div>
+          <div class="qs">單選題｜辨識財務安全感</div>
+          <div class="opts" data-single="worry"></div>
+        </div>
+        <div class="q" data-q="goals">
+          <div class="qt">Q15｜未來三年，你最想完成的財務目標是什麼？<span class="req">*</span></div>
+          <div class="qs">複選題｜最多選 3 項</div>
+          <div class="opts" data-multi="goals"></div>
+          <div class="multi-count" id="goalsCount">已選 0 / 3 項</div>
+        </div>
       </div>
-      <div class="q" data-key="invest">
-        <label for="fInvest">目前的投資部位</label>
-        <div class="hint">股票、ETF、基金等目前的市值；沒有就填 0</div>
-        <div class="inp"><input id="fInvest" class="money" type="text" inputmode="numeric" placeholder="例如：150,000" autocomplete="off"><span class="u">元</span></div>
-      </div>
-      <div class="q" data-key="debt">
-        <label for="fDebt">負債餘額（不含房貸）</label>
-        <div class="hint">信貸、車貸、學貸、卡費分期等還沒還完的金額；沒有就填 0</div>
-        <div class="inp"><input id="fDebt" class="money" type="text" inputmode="numeric" placeholder="例如：0" autocomplete="off"><span class="u">元</span></div>
-      </div>
-      <div class="q" data-key="goal">
-        <div class="ql">現在最想達成的目標<span class="req">*</span></div>
-        <div class="chips" id="goalChips"></div>
-      </div>
-      <button type="submit" class="btn-main">下一步 →</button>
-      <div class="form-err" id="numsErr" role="alert"></div>
+
+      <button type="submit" class="btn-main">下一步：產生我的報告書 →</button>
+      <div class="form-err" id="qsErr" role="alert"></div>
     </form>
   </div>
 
@@ -169,70 +295,87 @@
   <div id="stepContact" hidden>
     <header class="hero-c">
       <div class="eyebrow">ALMOST DONE</div>
-      <h1>最後一步，報告就出來了</h1>
-      <div class="steps"><span class="on"></span><span class="on"></span></div>
-      <div class="step-lbl">第 2 步，共 2 步：怎麼稱呼你</div>
+      <h1>最後一步，報告書就出來了</h1>
     </header>
-    <form id="contactForm" class="card" novalidate>
+    <div class="progress"><div class="bar"><i style="width:100%"></i></div><div class="lbl"><span>15 題都完成了</span><span>第 2 步，共 2 步</span></div></div>
+    <form id="contactForm" class="card" novalidate style="margin-top:12px;">
       <div class="hp" aria-hidden="true"><label>網站<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
-      <div class="lock"><span>🔒</span><span>留下聯絡方式就能看到完整報告。<b class="advNameInline">顧問</b> 也會免費幫你一對一解讀報告；你的資料只有 <b class="advNameInline">顧問</b> 本人看得到。</span></div>
-      <div class="q" data-key="name">
-        <label for="fName">怎麼稱呼你？<span class="req">*</span></label>
-        <input type="text" id="fName" maxlength="40" autocomplete="name" placeholder="例如：王小姐、阿明">
+      <div class="lock"><span>🔒</span><span>留下聯絡方式就能看到完整報告書。<b class="advNameInline">顧問</b> 也會免費幫你一對一解讀；你的資料只有 <b class="advNameInline">顧問</b> 本人看得到。</span></div>
+      <div class="field" data-f="name">
+        <label for="fName">怎麼稱呼你？<span style="color:#B3402A">*</span></label>
+        <input type="text" class="q-input" id="fName" maxlength="40" autocomplete="name" placeholder="例如：王小姐、阿明">
       </div>
-      <div class="q" data-key="contact">
-        <label for="fContact">怎麼聯絡你？<span class="req">*</span></label>
+      <div class="field" data-f="contact">
+        <label for="fContact">怎麼聯絡你？<span style="color:#B3402A">*</span></label>
         <div class="hint">LINE ID、手機或 IG 帳號，擇一即可</div>
-        <input type="text" id="fContact" maxlength="80" autocomplete="off" placeholder="例如：LINE ID：wang123">
+        <input type="text" class="q-input" id="fContact" maxlength="80" autocomplete="off" placeholder="例如：LINE ID：wang123">
       </div>
-      <div class="q consent" data-key="consent">
-        <label><input type="checkbox" id="fConsent"> <span>我已閱讀並同意下方的個人資料蒐集告知事項<span class="req">*</span></span></label>
+      <div class="consent">
+        <label><input type="checkbox" id="fConsent"> <span>我已閱讀並同意下方的個人資料蒐集告知事項<span style="color:#B3402A">*</span></span></label>
         <details>
           <summary>查看個人資料蒐集告知事項</summary>
           <div class="body">
             <p><b>蒐集者：</b><span class="advNameInline">顧問</span>（透過 Vicauria 平台提供的表單蒐集）。</p>
-            <p><b>蒐集目的：</b>產生你的簡易財務健診報告，並由顧問與你聯繫、說明報告內容。</p>
-            <p><b>蒐集的資料：</b>你填寫的稱呼、聯絡方式、年齡，以及收入、支出、存款、投資、負債等數字與目標。</p>
+            <p><b>蒐集目的：</b>產生你的簡易財務健檢報告書，並由顧問與你聯繫、說明報告內容。</p>
+            <p><b>蒐集的資料：</b>你填寫的稱呼、聯絡方式，以及 15 題健檢的回答（財務現況、收入、支出、貸款、存款、不動產持有情形與目標）。</p>
             <p><b>使用方式與對象：</b>只有顧問本人可以看到這些資料，不會提供給其他顧問或第三方，也不會用於上述目的以外的用途。</p>
             <p><b>保存期間：</b>最長保存 180 天；你也可以隨時要求提前刪除。</p>
             <p><b>你的權利：</b>你可以向顧問請求查詢、閱覽、更正、停止使用或刪除你的資料，也可以來信 <a href="mailto:jess818200228@gmail.com">jess818200228@gmail.com</a>。</p>
-            <p><b>不提供的影響：</b>如果不填寫必填欄位或不同意，將無法產生報告。</p>
-            <p>本健診僅為教育性的財務概況參考，不構成任何投資、保險或財務建議。</p>
+            <p><b>不提供的影響：</b>如果不填寫必填欄位或不同意，將無法產生報告書。</p>
+            <p>本健檢僅為教育性的財務概況參考，不構成任何投資、保險或財務建議。</p>
           </div>
         </details>
       </div>
-      <button type="submit" class="btn-main" id="submitBtn">看我的健診報告 →</button>
+      <button type="submit" class="btn-main" id="submitBtn">看我的健檢報告書 →</button>
       <div class="form-err" id="contactErr" role="alert"></div>
-      <button type="button" class="btn-back" id="backBtn">← 回上一步修改數字</button>
+      <button type="button" class="btn-back" id="backBtn">← 回上一步修改答案</button>
     </form>
   </div>
 
-  <!-- 報告 -->
+  <!-- 報告書 -->
   <div id="stepReport" hidden>
-    <div class="card r-head">
-      <div class="who" id="rWho">你的財務健診報告</div>
+    <div class="rep-cover">
+      <div class="eb">FINANCIAL CHECK REPORT · STAGE 1</div>
+      <h1>簡易財務健檢報告書</h1>
+      <div class="who" id="rWho"></div>
       <div class="ring">
-        <svg viewBox="0 0 168 168"><circle cx="84" cy="84" r="72" fill="none" stroke="#E4EAEB" stroke-width="14"/><circle id="ringArc" cx="84" cy="84" r="72" fill="none" stroke="#2E7391" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 999"/></svg>
+        <svg viewBox="0 0 164 164"><circle cx="82" cy="82" r="70" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="14"/><circle id="ringArc" cx="82" cy="82" r="70" fill="none" stroke="#8EE0B5" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 999"/></svg>
         <div class="c"><b id="rScore">0</b><small>財務體質分數</small></div>
       </div>
       <span class="grade" id="rGrade"></span>
       <p id="rGradeText"></p>
+      <div id="rSelf"></div>
     </div>
 
-    <div class="sec-t">四個關鍵指標</div>
-    <div class="mgrid" id="rMetrics"></div>
+    <div class="rsec">一、每月現金流</div>
+    <div class="rcard">
+      <div class="flow" id="rFlow"></div>
+      <div class="stack" id="rStack"></div>
+      <div class="legend" id="rLegend"></div>
+      <div class="stack-note" id="rStackNote"></div>
+    </div>
 
-    <div class="sec-t">最值得優先注意的事</div>
+    <div class="rsec">二、四個關鍵指標</div>
+    <div class="mgrid" id="rMetrics"></div>
+    <div class="rcard parts" id="rParts"></div>
+
+    <div class="rsec">三、最值得優先注意的事</div>
     <div id="rInsights"></div>
 
-    <div class="sec-t">20 年後會差多少？</div>
-    <div class="proj" id="rProj"></div>
+    <div class="rsec" id="rGoalsH">四、你的三年目標</div>
+    <div id="rGoals"></div>
+    <div class="rcard" id="rThree" style="margin-top:10px;"></div>
 
     <div class="cta">
-      <h2>想知道該怎麼調整？</h2>
-      <p><b class="advNameInline">顧問</b> 已經收到你的報告，會透過你留的聯絡方式和你聯繫，免費幫你一對一解讀：</p>
+      <div class="eb">NEXT · STAGE 2</div>
+      <h2>第二階段：一對一完整財務健檢</h2>
+      <p><b class="advNameInline">顧問</b> 已經收到你的報告書，會透過你留的聯絡方式和你聯繫：</p>
       <div class="contact" id="rContact"></div>
-      <p style="margin-top:12px;">見面時會依你的目標，算出更具體的每月金額與步驟。</p>
+      <ul>
+        <li>免費一對一解讀這份報告書</li>
+        <li>把資產、負債與目標一起整理成完整報告</li>
+        <li>依你的三年目標，算出更具體的每月金額與步驟</li>
+      </ul>
     </div>
 
     <div class="tools">
@@ -240,11 +383,11 @@
       <a href="inflation-calculator.html">🔥 通膨試算：存款的購買力剩多少</a>
     </div>
 
-    <div class="disc">本報告依你填寫的數字自動試算，僅供了解財務概況的教育性參考，不構成任何投資、保險或財務建議；報酬率試算為假設情境，不代表任何商品的實際報酬，實際結果可能不同。</div>
+    <div class="disc">本報告書依你填寫的答案自動試算，僅供了解財務概況的教育性參考，不構成任何投資、保險或財務建議；實際規劃請與顧問討論。</div>
   </div>
 </div>
 
-<footer><div class="wrap">健診由 Vicauria 提供・<a href="legal.html">服務資訊與條款</a></div></footer>
+<footer><div class="wrap">健檢由 Vicauria 提供・<a href="legal.html">服務資訊與條款</a></div></footer>
 
 <script src="vendor/supabase-js-2.117.2.js"></script>
 <script src="supabase-config.js"></script>
@@ -254,91 +397,142 @@
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
   var slug = (new URLSearchParams(location.search).get('c') || '').trim().toLowerCase();
-  var goal = '', advName = '顧問', answers = null;
+  var advName = '顧問', answers = null;
+  var ans = { status:'', want:'', self:5, work_income:null, other_income:null, other_unknown:false,
+              living:null, insurance:null, mortgage:null, other_loan:null, fixed:null, variable:null, cash:null,
+              property:'', worry:'', goals:[] };
+  var touchedSelf = false;
 
   function show(id){
-    ['stateLoading', 'stateInvalid', 'stepNums', 'stepContact', 'stepReport'].forEach(function(x){ $(x).hidden = x !== id; });
+    ['stateLoading', 'stateInvalid', 'stepQs', 'stepContact', 'stepReport'].forEach(function(x){ $(x).hidden = x !== id; });
     window.scrollTo(0, 0);
   }
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
   function digits(s){ return String(s || '').replace(/[^\d]/g, ''); }
-  function num(id){ var d = digits($(id).value); return d ? Number(d) : null; }
+  function clearInvalid(key){ var q = document.querySelector('.q[data-q="' + key + '"]'); if(q) q.classList.remove('invalid'); }
 
-  // 金額欄位：邊打邊加千分位
+  /* ---------- 單選／複選 ---------- */
+  document.querySelectorAll('.opts').forEach(function(box){
+    var key = box.dataset.single || box.dataset.multi, multi = !!box.dataset.multi;
+    VCQuick.Q[key].forEach(function(label){
+      var b = el('button', 'opt' + (multi ? ' multi' : '')); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.appendChild(el('span', 'dot')); b.appendChild(el('span', '', label));
+      b.addEventListener('click', function(){
+        if(multi){
+          var i = ans[key].indexOf(label);
+          if(i > -1) ans[key].splice(i, 1); else if(ans[key].length < 3) ans[key].push(label);
+          box.querySelectorAll('.opt').forEach(function(o){
+            var on = ans[key].indexOf(o.lastChild.textContent) > -1;
+            o.setAttribute('aria-pressed', on ? 'true' : 'false');
+            o.disabled = !on && ans[key].length >= 3;
+          });
+          $('goalsCount').textContent = '已選 ' + ans[key].length + ' / 3 項';
+        } else {
+          ans[key] = label;
+          box.querySelectorAll('.opt').forEach(function(o){ o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+        }
+        clearInvalid(key); progress();
+      });
+      box.appendChild(b);
+    });
+  });
+
+  /* ---------- 滑桿 ---------- */
+  $('fSelf').addEventListener('input', function(){ ans.self = Number(this.value); $('selfVal').textContent = this.value; touchedSelf = true; progress(); });
+
+  /* ---------- 金額：邊打邊加千分位 ---------- */
   document.querySelectorAll('input.money').forEach(function(inp){
     inp.addEventListener('input', function(){
       var fromEnd = inp.value.length - inp.selectionStart;
-      var d = digits(inp.value).replace(/^0+(?=\d)/, '').slice(0, 12);
+      var d = digits(inp.value).replace(/^0+(?=\d)/, '').slice(0, 11);
       inp.value = d ? Number(d).toLocaleString('en-US') : '';
-      var pos = Math.max(0, inp.value.length - fromEnd);
-      try{ inp.setSelectionRange(pos, pos); }catch(e){}
-      inp.closest('.q').classList.remove('invalid');
+      try{ var pos = Math.max(0, inp.value.length - fromEnd); inp.setSelectionRange(pos, pos); }catch(e){}
+      ans[inp.dataset.key] = d === '' ? null : Number(d);
+      clearInvalid(inp.dataset.key); live(); progress();
     });
   });
-  $('fAge').addEventListener('input', function(){ this.value = digits(this.value).slice(0, 3); this.closest('.q').classList.remove('invalid'); });
-
-  VCQuick.GOALS.forEach(function(g){
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip'; b.textContent = g; b.setAttribute('aria-pressed', 'false');
-    b.addEventListener('click', function(){
-      goal = g;
-      document.querySelectorAll('#goalChips .chip').forEach(function(c){ c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
-      b.closest('.q').classList.remove('invalid');
-    });
-    $('goalChips').appendChild(b);
+  $('otherUnk').addEventListener('click', function(){
+    ans.other_unknown = !ans.other_unknown;
+    this.setAttribute('aria-pressed', ans.other_unknown ? 'true' : 'false');
+    var inp = document.querySelector('input[data-key="other_income"]');
+    inp.disabled = ans.other_unknown; $('otherInp').classList.toggle('off', ans.other_unknown);
+    if(ans.other_unknown){ inp.value = ''; ans.other_income = null; }
+    live(); progress();
   });
 
-  function mark(keys){
-    document.querySelectorAll('.q').forEach(function(q){ q.classList.remove('invalid'); });
-    keys.forEach(function(k){ var q = document.querySelector('.q[data-key="' + k + '"]'); if(q) q.classList.add('invalid'); });
-    var first = document.querySelector('.q.invalid');
-    if(first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+  function live(){
+    var inc = (ans.work_income || 0) + (ans.other_unknown ? 0 : (ans.other_income || 0));
+    var out = ['living','insurance','mortgage','other_loan','fixed','variable'].reduce(function(s, k){ return s + (ans[k] || 0); }, 0);
+    $('liveIn').textContent = VCQuick.money(inc); $('liveOut').textContent = VCQuick.money(out);
+  }
+  function doneCount(){
+    var c = 0;
+    if(ans.status) c++; if(ans.want) c++; if(touchedSelf) c++;
+    if(ans.work_income !== null) c++; if(ans.other_income !== null || ans.other_unknown) c++;
+    ['living','insurance','mortgage','other_loan','fixed','variable','cash'].forEach(function(k){ if(ans[k] !== null) c++; });
+    if(ans.property) c++; if(ans.worry) c++; if(ans.goals.length) c++;
+    return c;
+  }
+  function progress(){
+    var c = doneCount();
+    $('progBar').style.width = (c / 15 * 100) + '%';
+    $('progTxt').textContent = '已完成 ' + c + ' / 15 題';
+    if($('qsErr').textContent && !document.querySelector('.q.invalid')) $('qsErr').textContent = '';
   }
 
-  $('numsForm').addEventListener('submit', function(e){
+  /* ---------- 送出第 1 步 ---------- */
+  $('qsForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var bad = [], age = num('fAge'), income = num('fIncome'), expense = num('fExpense');
-    if(!age || age < 15 || age > 100) bad.push('age');
-    if(!income) bad.push('income');
-    if(expense === null) bad.push('expense');
-    if(!goal) bad.push('goal');
+    var bad = [];
+    if(!ans.status) bad.push('status');
+    if(!ans.want) bad.push('want');
+    if(!ans.work_income) bad.push('work_income');
+    if(ans.living === null) bad.push('living');
+    if(!ans.property) bad.push('property');
+    if(!ans.worry) bad.push('worry');
+    if(!ans.goals.length) bad.push('goals');
+    document.querySelectorAll('.q').forEach(function(q){ q.classList.toggle('invalid', bad.indexOf(q.dataset.q) > -1); });
     if(bad.length){
-      $('numsErr').textContent = bad.indexOf('age') > -1 && age ? '年齡請填 15～100 之間的數字。' : '還有標示 * 的項目沒有填，請再看一下。';
-      mark(bad); return;
+      $('qsErr').textContent = '還有 ' + bad.length + ' 題必填（標示 *）沒有完成，請再看一下。';
+      var first = document.querySelector('.q.invalid'); if(first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
     }
-    var saving = num('fSaving') || 0;
-    if(saving > income){ $('numsErr').textContent = '每月存下的錢比收入還多，請再確認一下數字。'; mark(['saving']); return; }
-    $('numsErr').textContent = '';
-    answers = { age: age, income: income, expense: expense || 0, saving: saving, cash: num('fCash') || 0, invest: num('fInvest') || 0, debt: num('fDebt') || 0, goal: goal };
+    $('qsErr').textContent = '';
+    answers = {
+      status: ans.status, want: ans.want, self: ans.self,
+      work_income: ans.work_income || 0, other_income: ans.other_unknown ? 0 : (ans.other_income || 0), other_unknown: ans.other_unknown,
+      living: ans.living || 0, insurance: ans.insurance || 0, mortgage: ans.mortgage || 0, other_loan: ans.other_loan || 0,
+      fixed: ans.fixed || 0, variable: ans.variable || 0, cash: ans.cash || 0,
+      property: ans.property, worry: ans.worry, goals: ans.goals.slice()
+    };
     show('stepContact');
   });
-  $('backBtn').addEventListener('click', function(){ show('stepNums'); });
-  ['fName', 'fContact', 'fConsent'].forEach(function(id){
-    $(id).addEventListener(id === 'fConsent' ? 'change' : 'input', function(){ var q = this.closest('.q'); if(q) q.classList.remove('invalid'); $('contactErr').textContent = ''; });
+  $('backBtn').addEventListener('click', function(){ show('stepQs'); });
+  ['fName', 'fContact'].forEach(function(id){
+    $(id).addEventListener('input', function(){ this.closest('.field').classList.remove('invalid'); $('contactErr').textContent = ''; });
   });
+  $('fConsent').addEventListener('change', function(){ $('contactErr').textContent = ''; });
 
   var ERR = {
     LINK_INVALID: '這個連結已經暫停使用，請向分享連結給你的人索取最新的連結。',
     CONSENT_REQUIRED: '請先勾選同意個人資料蒐集告知事項。',
     MISSING_FIELDS: '請填寫稱呼和聯絡方式。',
-    BAD_NUMBERS: '數字格式有誤，請回上一步確認。',
+    BAD_NUMBERS: '有答案的格式不正確，請回上一步確認。',
     RATE_LIMIT: '目前填寫的人太多了，請稍後再試一次。'
   };
 
   $('contactForm').addEventListener('submit', async function(e){
     e.preventDefault();
     $('contactErr').textContent = '';
-    var name = $('fName').value.trim(), contact = $('fContact').value.trim(), bad = [];
-    if(!name) bad.push('name');
-    if(!contact) bad.push('contact');
-    if(!$('fConsent').checked) bad.push('consent');
-    if(bad.length){
-      $('contactErr').textContent = bad.length === 1 && bad[0] === 'consent' ? ERR.CONSENT_REQUIRED : '請填寫稱呼和聯絡方式，並勾選同意。';
-      mark(bad); return;
-    }
+    var name = $('fName').value.trim(), contact = $('fContact').value.trim();
+    document.querySelector('.field[data-f="name"]').classList.toggle('invalid', !name);
+    document.querySelector('.field[data-f="contact"]').classList.toggle('invalid', !contact);
+    if(!name || !contact){ $('contactErr').textContent = '請填寫稱呼和聯絡方式。'; return; }
+    if(!$('fConsent').checked){ $('contactErr').textContent = ERR.CONSENT_REQUIRED; return; }
     var report = VCQuick.compute(answers);
     if($('hpWebsite').value){ renderReport(report, name, contact); return; } // 機器人填了隱藏欄位：不送出
     var btn = $('submitBtn');
-    btn.disabled = true; btn.textContent = '產生報告中…';
+    btn.disabled = true; btn.textContent = '產生報告書中…';
     try{
       var res = await supabaseClient.rpc('vc_submit_quick_check', { p_slug: slug, p: Object.assign({ name: name, contact: contact, consent: true, score: report.score }, answers) });
       if(res.error){
@@ -347,52 +541,81 @@
       } else {
         renderReport(report, name, contact);
       }
-    }catch(err){
-      $('contactErr').textContent = '送出失敗，請檢查網路後再試一次。';
-    }
-    btn.disabled = false; btn.textContent = '看我的健診報告 →';
+    }catch(err){ $('contactErr').textContent = '送出失敗，請檢查網路後再試一次。'; }
+    btn.disabled = false; btn.textContent = '看我的健檢報告書 →';
   });
 
-  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
-
+  /* ---------- 報告書 ---------- */
   function renderReport(r, name, contact){
-    $('rWho').textContent = name + ' 的財務健診報告';
-    $('rGrade').textContent = r.grade.label;
-    $('rGrade').className = 'grade ' + r.grade.key;
+    var M = VCQuick.money, P = VCQuick.pct, v = r.values;
+    var d = new Date();
+    $('rWho').textContent = name + '｜' + d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+    $('rGrade').textContent = r.grade.label; $('rGrade').className = 'grade ' + r.grade.key;
     $('rGradeText').textContent = r.grade.text;
-    var color = { a:'#2E7D5B', b:'#2E7391', c:'#C97B3D', d:'#B3402A' }[r.grade.key];
-    var C = 2 * Math.PI * 72, arc = $('ringArc');
-    arc.setAttribute('stroke', color);
-    arc.setAttribute('stroke-dasharray', '0 ' + C);
-    $('rScore').textContent = '0';
+    var selfBox = $('rSelf'); selfBox.textContent = '';
+    if(r.selfGap){
+      var sc = el('div', 'selfcmp');
+      var a1 = el('div'); a1.appendChild(el('b', '', r.selfGap.self + ' / 10')); a1.appendChild(document.createTextNode('你給自己'));
+      var a2 = el('div'); a2.appendChild(el('b', '', r.selfGap.sys + ' / 10')); a2.appendChild(document.createTextNode('健檢結果'));
+      sc.appendChild(a1); sc.appendChild(a2); selfBox.appendChild(sc);
+      selfBox.appendChild(el('div', 'selfnote', r.selfGap.text));
+    }
 
+    // 一、現金流
+    var flow = $('rFlow'); flow.textContent = '';
+    [['每月收入', M(v.income), ''], ['每月支出', M(v.expense), ''], ['每月結餘', M(v.surplus), v.surplus < 0 ? 'neg' : 'pos']].forEach(function(x){
+      var c = el('div'); c.appendChild(el('div', 'k', x[0])); c.appendChild(el('div', 'v ' + x[2], x[1])); flow.appendChild(c);
+    });
+    var st = $('rStack'), lg = $('rLegend'); st.textContent = ''; lg.textContent = '';
+    r.structure.forEach(function(s){
+      var i = el('i'); i.style.width = (s.share * 100) + '%'; i.style.background = s.color; i.title = s.label; st.appendChild(i);
+      var row = el('div'); var sw = el('s'); sw.style.background = s.color;
+      row.appendChild(sw); row.appendChild(el('span', '', s.label)); row.appendChild(el('em', '', P(s.share))); lg.appendChild(row);
+    });
+    $('rStackNote').textContent = v.surplus >= 0 ? '以每月收入為 100%，看每一塊錢的去處。' : '支出超過收入，以每月支出為 100% 顯示。';
+
+    // 二、指標
     var mg = $('rMetrics'); mg.textContent = '';
     var tag = { good:'良好', warn:'留意', bad:'優先處理' };
     r.metrics.forEach(function(m){
-      var d = el('div', 'm ' + m.status);
+      var c = el('div', 'm ' + m.status);
       var k = el('div', 'k'); k.appendChild(el('span', '', m.label)); k.appendChild(el('i', '', tag[m.status]));
-      d.appendChild(k); d.appendChild(el('div', 'v', m.value)); d.appendChild(el('div', 's', m.sub)); d.appendChild(el('div', 't', m.target));
-      mg.appendChild(d);
+      c.appendChild(k); c.appendChild(el('div', 'v', m.value)); c.appendChild(el('div', 's', m.sub)); c.appendChild(el('div', 't', m.target));
+      mg.appendChild(c);
+    });
+    var pt = $('rParts'); pt.textContent = '';
+    pt.appendChild(el('div', '', '分數怎麼來的')).style.cssText = 'font-weight:700;color:var(--navy);font-size:14px;';
+    r.parts.forEach(function(p){
+      var row = el('div', 'row'); row.appendChild(el('span', '', p.label));
+      var bar = el('div', 'bar'), i = el('i'); i.style.width = (p.got / p.max * 100) + '%'; bar.appendChild(i);
+      row.appendChild(bar); row.appendChild(el('b', '', p.got + '/' + p.max)); pt.appendChild(row);
     });
 
+    // 三、建議
     var ins = $('rInsights'); ins.textContent = '';
     r.insights.forEach(function(x, i){
-      var d = el('div', 'ins'); d.appendChild(el('div', 'no', String(i + 1)));
-      var b = el('div'); b.appendChild(el('h3', '', x.title)); b.appendChild(el('p', '', x.body));
-      d.appendChild(b); ins.appendChild(d);
+      var c = el('div', 'ins'); c.appendChild(el('div', 'no', String(i + 1)));
+      var b = el('div'); b.appendChild(el('h3', '', x.title)); b.appendChild(el('p', '', x.body)); c.appendChild(b); ins.appendChild(c);
     });
 
-    var p = $('rProj'); p.textContent = '';
-    var v = r.values, row = function(label, val, hl){ var d = el('div', 'row' + (hl ? ' hl' : '')); d.appendChild(el('span', '', label)); d.appendChild(el('b', '', val)); p.appendChild(d); };
-    row('照現在每月固定存 ' + VCQuick.money(Math.min(v.saving, Math.max(v.surplus, 0))), VCQuick.wan(r.projection.planned));
-    if(v.unplanned > 0) row('把沒有安排的 ' + VCQuick.money(v.unplanned) + ' 也存下來', VCQuick.wan(r.projection.withUnplanned), true);
-    p.appendChild(el('div', 'note', '以每月固定投入、年化 4% 試算 20 年，僅為假設情境的示意，不代表任何商品的實際報酬。'));
+    // 四、三年目標
+    var gl = $('rGoals'); gl.textContent = '';
+    r.goals.forEach(function(g){ var c = el('div', 'goal'); c.appendChild(el('b', '', g.goal)); c.appendChild(el('span', '', g.note)); gl.appendChild(c); });
+    var th = $('rThree'); th.textContent = '';
+    if(r.threeYear){
+      var row = function(k, val){ var c = el('div', 'three'); c.appendChild(el('span', '', k)); c.appendChild(el('b', '', val)); th.appendChild(c); };
+      row('每月結餘全部存下，3 年可以多存', VCQuick.wan(r.threeYear.saved));
+      row('加上現有存款，3 年後約有', VCQuick.wan(r.threeYear.total));
+      th.appendChild(el('div', 'stack-note', '未計任何投資報酬與通膨，僅為依目前收支的簡單推算。'));
+    } else {
+      th.appendChild(el('div', '', '目前每月沒有結餘，三年目標要先從讓收支打平開始。'));
+    }
 
     $('rContact').textContent = contact;
     document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
     show('stepReport');
-    // 分數圓環動畫
-    var t0 = null, target = r.score;
+    var C = 2 * Math.PI * 70, arc = $('ringArc'), target = r.score, t0 = null;
+    arc.setAttribute('stroke', { a:'#8EE0B5', b:'#9FD6EA', c:'#F2C08F', d:'#F7A592' }[r.grade.key]);
     function step(ts){
       if(!t0) t0 = ts;
       var k = Math.min(1, (ts - t0) / 900), e = 1 - Math.pow(1 - k, 3);
@@ -410,12 +633,8 @@
       if(res.error || !res.data){ show('stateInvalid'); return; }
       advName = res.data.advisor_name || '顧問';
       document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
-      if(res.data.intro){
-        $('introName').textContent = advName;
-        $('introText').textContent = res.data.intro;
-        $('introBox').hidden = false;
-      }
-      show('stepNums');
+      if(res.data.intro){ $('introName').textContent = advName; $('introText').textContent = res.data.intro; $('introBox').hidden = false; }
+      show('stepQs');
     }catch(e){ show('stateInvalid'); }
   }
   init();
