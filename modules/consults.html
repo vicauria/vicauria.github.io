@@ -94,8 +94,20 @@
   .setup{display:none;}
 
   /* 諮詢申請 ／ 財務健檢 切換 */
-  body.view-quick #app, body.view-quick #setupMsg, body.view-quick #notLoggedIn{display:none !important;}
+  body.view-quick #app, body.view-quick #setupMsg, body.view-quick #notLoggedIn,
+  body.view-property #app, body.view-property #setupMsg, body.view-property #notLoggedIn{display:none !important;}
   body:not(.view-quick) #qcApp{display:none !important;}
+  body:not(.view-property) #pcApp{display:none !important;}
+  .view-switch button[hidden]{display:none;}
+  .pc-contacts{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;}
+  .pc-contacts > div{background:var(--paper); border-radius:12px; padding:10px 12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; border:2px solid transparent;}
+  .pc-contacts > div.pref{border-color:var(--warm); background:var(--warm-tint);}
+  .pc-contacts .k{font-size:12.5px; color:var(--ink-soft); flex-basis:100%;}
+  .pc-contacts .k b{color:var(--warm-deep); margin-left:6px;}
+  .pc-contacts .v{font-weight:700; color:var(--navy); font-size:15px; overflow-wrap:anywhere; flex:1; min-width:0;}
+  .pc-bar{display:flex; height:22px; border-radius:11px; overflow:hidden; margin:12px 0 6px; background:#EEF2F2; font-size:11.5px; font-weight:700; color:#fff;}
+  .pc-bar i{display:flex; align-items:center; justify-content:center; font-style:normal; white-space:nowrap; overflow:hidden;}
+  @media (max-width:620px){ .pc-contacts{grid-template-columns:1fr;} }
   .view-switch{display:flex; gap:6px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:5px; margin-bottom:16px; box-shadow:0 6px 20px rgba(22,50,63,.05);}
   .view-switch[hidden]{display:none;}
   .view-switch button{flex:1; border:none; background:none; border-radius:10px; padding:11px 10px; font:inherit; font-size:14.5px; font-weight:700; color:var(--ink-soft); cursor:pointer; min-height:44px;}
@@ -156,6 +168,24 @@
   .qc-raw{margin-top:14px; border-top:1px dashed var(--line); padding-top:10px;}
   .qc-raw summary{cursor:pointer; color:var(--teal-deep); font-weight:700; font-size:13.5px;}
   @media (max-width:620px){ .qc-legend{grid-template-columns:1fr;} .qc-flow{grid-template-columns:1fr;} .qc-mind > div{grid-template-columns:1fr; gap:0;} }
+  /* 熱度（預約諮詢／房產活化共用） */
+  .heat-pill{font-size:12px; font-weight:700; border-radius:10px; padding:2px 8px; flex-shrink:0;}
+  .heat-pill.h{background:#FBE7E2; color:var(--negative);} .heat-pill.m{background:var(--warm-tint); color:var(--warm-deep);} .heat-pill.l{background:var(--paper); color:var(--ink-soft);}
+  .heat{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; align-items:center; border-radius:12px; padding:12px 14px; margin-top:14px; background:var(--paper); border-left:4px solid #CBD5D6;}
+  .heat.h{background:#FDF1EE; border-left-color:var(--negative);} .heat.m{background:var(--warm-tint); border-left-color:var(--warm);}
+  .heat .lv{grid-row:span 2; text-align:center; min-width:62px;}
+  .heat .lv b{display:block; font-size:22px; font-weight:900; color:var(--navy); line-height:1.1;}
+  .heat .lv span{font-size:11.5px; color:var(--ink-soft);}
+  .heat .dots{letter-spacing:2px; font-size:12px; color:#CBD5D6;}
+  .heat.h .dots, .heat.m .dots{color:var(--warm);}
+  .heat .why{display:flex; flex-wrap:wrap; gap:6px;}
+  .heat .why span{background:#fff; border-radius:10px; padding:2px 9px; font-size:12.5px; font-weight:700; color:var(--navy);}
+  .heat .next{font-size:13.5px; font-weight:700; color:var(--ink);}
+  .mini-metrics > div.hot{border-top-color:var(--negative);}
+  .mini-metrics.txt .v, .qc-flow.txt .v{font-family:"Noto Sans TC",sans-serif !important;}
+  .msg-box{white-space:pre-wrap; background:var(--warm-tint); border-left:4px solid var(--warm); border-radius:0 10px 10px 0; padding:10px 12px; font-size:14.5px; overflow-wrap:anywhere;}
+  .sum-strip{display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:13px; color:var(--ink-soft); margin:-4px 0 12px;}
+  .sum-strip .sort{margin-left:auto;}
 </style>
 </head>
 <body>
@@ -178,6 +208,7 @@
   <div class="view-switch" id="viewSwitch" hidden role="group" aria-label="切換">
     <button type="button" data-view="consult" aria-pressed="true">諮詢申請<span class="n" id="vsConsultN" hidden></span></button>
     <button type="button" data-view="quick" aria-pressed="false">財務健檢<span class="beta">測試</span><span class="n" id="vsQuickN" hidden></span></button>
+    <button type="button" data-view="property" aria-pressed="false" hidden>房產活化<span class="beta">測試</span><span class="n" id="vsPropN" hidden></span></button>
   </div>
 
   <div id="app" style="display:none;">
@@ -241,11 +272,43 @@
       <div id="qcList"></div>
     </section>
   </div>
+
+  <div id="pcApp">
+    <section class="card" aria-label="房產活化評估連結">
+      <h2>房產活化潛力評估連結</h2>
+      <div class="muted">網友不用註冊，回答 9 題房產問題並留下 IG 與 Line／手機，就能看到簡易的房產活化評估；他的資料會出現在下面，只有你看得到。</div>
+      <div class="link-row">
+        <div class="link-box" id="pcLinkBox">產生中…</div>
+        <button class="btn" id="pcCopyBtn" type="button">複製連結</button>
+        <a class="btn ghost" id="pcPreviewBtn" target="_blank" rel="noopener" href="#">預覽</a>
+      </div>
+      <div class="link-meta">
+        <label class="switch"><input type="checkbox" id="pcEnabledChk"> <span id="pcEnabledLbl">開放填寫</span></label>
+        <button class="linkish" id="pcRegenBtn" type="button">換一個新連結</button>
+      </div>
+      <details class="intro-edit">
+        <summary>評估開頭的自我介紹（選填）</summary>
+        <textarea id="pcIntroTxt" maxlength="300" placeholder="例如：嗨，我是 Jess。很多人的資產都卡在房子裡，花 2 分鐘看看你的房子還能怎麼用！"></textarea>
+        <div class="actions"><button class="btn small" id="pcIntroSave" type="button">儲存自我介紹</button><span class="muted">最多 300 字，會顯示在評估最上方。</span></div>
+      </details>
+      <ul class="tips">
+        <li>同一個 IG 或 Line／手機 24 小時內重填，只會更新同一筆</li>
+        <li>超過 180 天的紀錄會自動刪除（評估上的個資說明也是這樣寫的）</li>
+      </ul>
+    </section>
+
+    <section class="card" aria-label="房產活化名單">
+      <h2>填寫名單</h2>
+      <div class="tabs" id="pcTabs" role="group" aria-label="依處理狀態篩選"></div>
+      <div id="pcList"></div>
+    </section>
+  </div>
 </main>
 
 <script src="../vendor/supabase-js-2.117.2.js"></script>
 <script src="../supabase-config.js"></script>
 <script src="../quick-check-core.js"></script>
+<script src="../property-check-core.js"></script>
 <script>
 (function(){
   'use strict';
@@ -328,6 +391,35 @@
     if(value instanceof Node) d.appendChild(value); else d.appendChild(el('div', 'v', value || '—'));
     return d;
   }
+  /* 熱度：希望開始時間＋每月可規劃金額＋閒置資金（只是排優先順序的參考） */
+  var T_PTS = { '一個月內':3, '三個月內':2, '半年內':1, '還在了解':0 };
+  var B_PTS = { '5 千以下':0, '5 千–1 萬':1, '1–3 萬':2, '3–5 萬':3, '5 萬以上':3, '還不確定':0 };
+  var F_PTS = { '沒有':0, '50 萬以下':1, '50–100 萬':2, '100–300 萬':3, '300 萬以上':3, '不方便透露':1 };
+  var TALK = {
+    '退休規劃':'退休缺口試算', '存第一桶金':'存錢節奏與目標拆解', '被動收入／現金流':'現金流結構盤點',
+    '子女教育金':'教育金時程與金額', '購屋規劃':'頭期款與房貸負擔', '保障檢視':'保障缺口盤點',
+    '資產傳承':'傳承安排的順序', '其他':'先聽他想解決什麼'
+  };
+  function heatOf(r){
+    var t = T_PTS[r.timeline] || 0, b = B_PTS[r.monthly_budget] || 0, f = F_PTS[r.idle_funds] || 0, n = t + b + f;
+    var why = [];
+    if(t >= 2) why.push(r.timeline + '想開始');
+    if(b >= 2) why.push('每月可規劃 ' + r.monthly_budget);
+    if(f >= 2) why.push('閒置資金 ' + r.idle_funds);
+    if(r.message) why.push('有留言');
+    var lv = n >= 6 ? 'h' : n >= 3 ? 'm' : 'l';
+    return { n: n, lv: lv, label: { h:'高', m:'中', l:'低' }[lv], why: why,
+      next: { h:'建議盡快聯絡，直接約時間', m:'先聊需求，再約諮詢', l:'先分享資訊、建立信任，之後再追蹤' }[lv] };
+  }
+  function talkOf(r){
+    var t = (r.needs || []).map(function(n){ return TALK[n]; }).filter(Boolean);
+    if(r.current_planning === '還沒有') t.push('從零建立財務架構');
+    if(r.current_planning === '不太確定') t.push('先整理手上已有的規劃');
+    if(r.monthly_budget === '還不確定') t.push('先做收支盤點');
+    return t.filter(function(x, i){ return t.indexOf(x) === i; }).slice(0, 5);
+  }
+  var sortBy = 'new';
+
   function renderList(){
     var st = STATUS.find(function(s){ return s.key === filter; });
     var list = $('list'); list.textContent = '';
@@ -336,40 +428,89 @@
       list.appendChild(el('div', 'empty', rows.length ? '這個分類目前沒有申請。' : '還沒有收到申請。把上面的專屬連結貼出去，網友填完就會出現在這裡。'));
       return;
     }
+    // 熱度統計＋排序
+    var cnt = { h:0, m:0, l:0 };
+    shown.forEach(function(r){ cnt[heatOf(r).lv]++; });
+    var strip = el('div', 'sum-strip');
+    strip.appendChild(el('span', '', '共 ' + shown.length + ' 位：'));
+    [['h','高熱度'], ['m','中'], ['l','低']].forEach(function(x){ if(cnt[x[0]]) strip.appendChild(el('span', 'heat-pill ' + x[0], x[1] + ' ' + cnt[x[0]])); });
+    var sb = el('button', 'linkish sort', sortBy === 'heat' ? '排序：熱度高的在前' : '排序：最新的在前'); sb.type = 'button';
+    sb.addEventListener('click', function(){ sortBy = sortBy === 'heat' ? 'new' : 'heat'; renderList(); });
+    strip.appendChild(sb);
+    list.appendChild(strip);
+    if(sortBy === 'heat') shown = shown.slice().sort(function(a, b){ return heatOf(b).n - heatOf(a).n || (b.created_at > a.created_at ? 1 : -1); });
     shown.forEach(function(r){ list.appendChild(renderRow(r)); });
   }
   function renderRow(r){
+    var h = heatOf(r), dash = function(x){ return x ? x : '—'; };
     var wrap = el('div', 'req' + (r.status === 'new' ? ' is-new' : ''));
     var head = el('button', 'req-head'); head.type = 'button'; head.setAttribute('aria-expanded', 'false');
     head.appendChild(el('span', 'nm', r.name));
     if(r.status === 'new') head.appendChild(el('span', 'badge-new', 'NEW'));
     else head.appendChild(el('span', 'status-pill ' + r.status, STATUS_LABEL[r.status] || ''));
-    head.appendChild(el('span', 'sum', [r.age_range, r.monthly_budget && ('每月 ' + r.monthly_budget), r.timeline].filter(Boolean).join('・')));
+    head.appendChild(el('span', 'heat-pill ' + h.lv, '熱度 ' + h.label));
+    head.appendChild(el('span', 'sum', [(r.needs || []).slice(0, 2).join('、'), r.timeline].filter(Boolean).join('・')));
     head.appendChild(el('span', 'when', fmtTime(r.created_at)));
     head.appendChild(el('span', 'chev', '▾'));
     var body = el('div', 'req-body');
 
-    var grid = el('div', 'grid');
-    var contact = el('div', 'contact-row');
+    // ---------- 熱度＋建議下一步 ----------
+    var hb = el('div', 'heat ' + h.lv);
+    var lv = el('div', 'lv'); lv.appendChild(el('b', '', h.label)); lv.appendChild(el('span', 'dots', { h:'●●●', m:'●●○', l:'●○○' }[h.lv])); lv.appendChild(el('span', '', '熱度'));
+    hb.appendChild(lv);
+    hb.appendChild(el('div', 'next', '→ ' + h.next));
+    var why = el('div', 'why'); h.why.forEach(function(w){ why.appendChild(el('span', '', w)); });
+    if(!h.why.length) why.appendChild(el('span', '', '還在了解階段'));
+    hb.appendChild(why);
+    body.appendChild(hb);
+
+    // ---------- 聯絡方式 ----------
+    var contact = el('div', 'contact-row qc-contact');
+    contact.appendChild(el('span', 'k', '聯絡方式'));
     contact.appendChild(el('span', 'v', r.contact));
     var cp = el('button', 'btn small ghost', '複製'); cp.type = 'button';
     cp.addEventListener('click', async function(){ try{ await navigator.clipboard.writeText(r.contact); vcToast('已複製聯絡方式'); }catch(e){} });
     contact.appendChild(cp);
-    grid.appendChild(kv('聯絡方式', contact, true));
+    body.appendChild(contact);
+
+    // ---------- 四張關鍵卡 ----------
+    body.appendChild(el('div', 'section-label', '一眼看懂'));
+    var mm = el('div', 'mini-metrics txt');
+    var lvl = function(p){ return p >= 3 ? 'hot' : p >= 2 ? 'warn' : ''; };
+    [['希望開始', r.timeline, lvl(T_PTS[r.timeline] || 0)],
+     ['每月可規劃', r.monthly_budget, lvl(B_PTS[r.monthly_budget] || 0)],
+     ['閒置資金', r.idle_funds, lvl(F_PTS[r.idle_funds] || 0)],
+     ['年齡', r.age_range, '']].forEach(function(x){
+      var d = el('div', x[2]); var k = el('div', 'k'); k.appendChild(el('span', '', x[0]));
+      d.appendChild(k); d.appendChild(el('div', 'v', dash(x[1]))); mm.appendChild(d);
+    });
+    body.appendChild(mm);
+
+    // ---------- 需求＋切入點 ----------
+    body.appendChild(el('div', 'section-label', '最想解決的問題'));
     var needs = el('div', 'needs');
     (r.needs || []).forEach(function(n){ needs.appendChild(el('span', '', n)); });
-    if(!(r.needs || []).length) needs.appendChild(el('div', 'v', '—'));
-    grid.appendChild(kv('最想解決的問題', needs, true));
-    grid.appendChild(kv('年齡', r.age_range));
-    grid.appendChild(kv('每月可規劃金額', r.monthly_budget));
-    grid.appendChild(kv('閒置資金', r.idle_funds));
-    grid.appendChild(kv('希望開始時間', r.timeline));
-    grid.appendChild(kv('目前的規劃', r.current_planning));
-    grid.appendChild(kv('方便時段', r.preferred_time));
-    grid.appendChild(kv('諮詢方式', r.meeting_mode));
-    grid.appendChild(kv('從哪裡知道你', r.source));
-    if(r.message) grid.appendChild(kv('想先讓你知道的事', el('div', 'v msg', r.message), true));
-    body.appendChild(grid);
+    if(!(r.needs || []).length) needs.appendChild(el('span', 'muted', '—'));
+    body.appendChild(needs);
+    var tk = talkOf(r);
+    if(tk.length){
+      body.appendChild(el('div', 'section-label', '聊天切入點'));
+      var talk = el('div', 'talk'); tk.forEach(function(t){ talk.appendChild(el('span', '', t)); });
+      body.appendChild(talk);
+    }
+
+    // ---------- 怎麼約他 ----------
+    body.appendChild(el('div', 'section-label', '怎麼約他'));
+    var mind = el('div', 'qc-mind');
+    [['方便時段', r.preferred_time], ['諮詢方式', r.meeting_mode], ['目前的規劃', r.current_planning], ['從哪裡知道你', r.source],
+     ['填寫時間', new Date(r.created_at).toLocaleString('zh-TW', { hour12:false })]].forEach(function(x){
+      var row = el('div'); row.appendChild(el('span', 'k', x[0])); row.appendChild(el('span', 'v', dash(x[1]))); mind.appendChild(row);
+    });
+    body.appendChild(mind);
+    if(r.message){
+      body.appendChild(el('div', 'section-label', '他想先讓你知道的事'));
+      body.appendChild(el('div', 'msg-box', r.message));
+    }
 
     body.appendChild(el('div', 'section-label', '處理狀態'));
     var sb = el('div', 'status-btns');
@@ -521,14 +662,16 @@
 
   /* ---------- 切換：諮詢申請 ／ 財務健檢 ---------- */
   window.vcSetViewBadge = function(view, n){
-    var b = $(view === 'quick' ? 'vsQuickN' : 'vsConsultN');
+    var b = $(view === 'quick' ? 'vsQuickN' : view === 'property' ? 'vsPropN' : 'vsConsultN');
     if(!b) return; b.textContent = n; b.hidden = !n;
   };
   function setView(v){
     document.querySelectorAll('#viewSwitch button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.view === v ? 'true' : 'false'); });
     document.body.classList.toggle('view-quick', v === 'quick');
+    document.body.classList.toggle('view-property', v === 'property');
     try{ sessionStorage.setItem('vc_consults_view', v); }catch(e){}
   }
+  window.vcSetConsultView = setView;
   document.querySelectorAll('#viewSwitch button').forEach(function(b){ b.addEventListener('click', function(){ setView(b.dataset.view); }); });
 
   /* ---------- 連結 ---------- */
@@ -812,6 +955,295 @@
     try{ await loadRows(); }catch(e){ $('qcList').textContent = '讀取名單失敗，請重新整理再試一次。'; }
     var want = ''; try{ want = sessionStorage.getItem('vc_consults_view') || ''; }catch(e){}
     if(want === 'quick' || /[?&#]view=quick/.test(location.search + location.hash)) setView('quick');
+  })();
+})();
+</script>
+<script>
+/* ---------- 房產活化潛力評估（目前只開放給管理者＋測試名單） ---------- */
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var myId = null, rows = [], link = null, filter = 'todo', sortBy = 'new';
+  var STATUS = [
+    { key:'todo',      label:'待處理',   match:function(s){ return s === 'new' || s === 'read'; } },
+    { key:'contacted', label:'已聯絡',   match:function(s){ return s === 'contacted'; } },
+    { key:'booked',    label:'已約諮詢', match:function(s){ return s === 'booked'; } },
+    { key:'declined',  label:'暫不約',   match:function(s){ return s === 'declined'; } },
+    { key:'all',       label:'全部',     match:function(){ return true; } }
+  ];
+  var STATUS_LABEL = { new:'新填寫', read:'待處理', contacted:'已聯絡', booked:'已約諮詢', declined:'暫不約' };
+  var pad = function(n){ return String(n).padStart(2, '0'); };
+  function fmtTime(iso){
+    var d = new Date(iso), now = new Date(), mins = Math.round((now - d) / 60000);
+    if(mins < 1) return '剛剛';
+    if(mins < 60) return mins + ' 分鐘前';
+    if(mins < 60 * 24 && d.getDate() === now.getDate()) return '今天 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+  function refreshParentBadge(){ try{ window.parent && window.parent.vcRefreshConsultBadge && window.parent.vcRefreshConsultBadge(); }catch(e){} }
+  function formURL(slug){ return new URL('../property-check.html?c=' + encodeURIComponent(slug), location.href).href; }
+  function who(r){ return r.name || r.ig || '（未留稱呼）'; }
+  function setBadge(){ window.vcSetViewBadge && window.vcSetViewBadge('property', rows.filter(function(r){ return r.status === 'new'; }).length); }
+
+  /* ---------- 連結 ---------- */
+  function renderLink(){
+    var url = formURL(link.slug);
+    $('pcLinkBox').textContent = url; $('pcLinkBox').title = url; $('pcPreviewBtn').href = url;
+    $('pcEnabledChk').checked = !!link.enabled;
+    $('pcEnabledLbl').textContent = link.enabled ? '開放填寫' : '已暫停填寫';
+    $('pcEnabledLbl').className = link.enabled ? '' : 'paused';
+    if(document.activeElement !== $('pcIntroTxt')) $('pcIntroTxt').value = link.intro || '';
+  }
+  async function saveLink(enabled, intro, regenerate){
+    var res = await supabaseClient.rpc('vc_set_property_check_link', { p_enabled: enabled, p_intro: intro, p_regenerate: !!regenerate });
+    if(res.error){ vcToast('儲存失敗，請稍後再試', 'err'); return false; }
+    link = res.data; renderLink(); return true;
+  }
+  $('pcCopyBtn').addEventListener('click', async function(){
+    try{ await navigator.clipboard.writeText(formURL(link.slug)); vcToast('已複製連結'); }
+    catch(e){ var r = document.createRange(); r.selectNodeContents($('pcLinkBox')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); vcToast('請按 Ctrl／⌘ + C 複製'); }
+  });
+  $('pcEnabledChk').addEventListener('change', async function(){
+    var on = this.checked;
+    if(await saveLink(on, null, false)) vcToast(on ? '已開放填寫' : '已暫停，網友打開連結會看到「暫停使用」');
+  });
+  $('pcIntroSave').addEventListener('click', async function(){ if(await saveLink(null, $('pcIntroTxt').value.trim(), false)) vcToast('已儲存自我介紹'); });
+  $('pcRegenBtn').addEventListener('click', async function(){
+    var ok = await vcConfirm('換新連結後，舊的連結會立刻失效，之前貼出去的地方都要換成新連結。確定要換嗎？', { okText:'換新連結' });
+    if(ok && await saveLink(null, null, true)) vcToast('已換成新連結，記得更新你貼出去的地方');
+  });
+
+  /* ---------- 名單 ---------- */
+  function renderTabs(){
+    var box = $('pcTabs'); box.textContent = '';
+    STATUS.forEach(function(st){
+      var n = rows.filter(function(r){ return st.match(r.status); }).length;
+      var b = el('button', 'tab'); b.type = 'button';
+      b.setAttribute('aria-pressed', filter === st.key ? 'true' : 'false');
+      b.appendChild(document.createTextNode(st.label)); b.appendChild(el('span', 'n', String(n)));
+      b.addEventListener('click', function(){ filter = st.key; renderTabs(); renderList(); });
+      box.appendChild(b);
+    });
+    setBadge();
+  }
+  function renderList(){
+    var st = STATUS.find(function(x){ return x.key === filter; });
+    var list = $('pcList'); list.textContent = '';
+    var shown = rows.filter(function(r){ return st.match(r.status); });
+    if(!shown.length){
+      list.appendChild(el('div', 'empty', rows.length ? '這個分類目前沒有名單。' : '還沒有人填寫。把上面的連結放到自媒體留言或限動，填完就會出現在這裡。'));
+      return;
+    }
+    var cnt = { h:0, m:0, l:0 };
+    shown.forEach(function(r){ r._rep = VCProp.compute(r.answers || {}); cnt[r._rep.heat.lv]++; });
+    var strip = el('div', 'sum-strip');
+    strip.appendChild(el('span', '', '共 ' + shown.length + ' 位：'));
+    [['h','高熱度'], ['m','中'], ['l','低']].forEach(function(x){ if(cnt[x[0]]) strip.appendChild(el('span', 'heat-pill ' + x[0], x[1] + ' ' + cnt[x[0]])); });
+    var sb = el('button', 'linkish sort', sortBy === 'heat' ? '排序：熱度高的在前' : '排序：最新的在前'); sb.type = 'button';
+    sb.addEventListener('click', function(){ sortBy = sortBy === 'heat' ? 'new' : 'heat'; renderList(); });
+    strip.appendChild(sb);
+    list.appendChild(strip);
+    if(sortBy === 'heat') shown = shown.slice().sort(function(a, b){ return b._rep.heat.n - a._rep.heat.n; });
+    shown.forEach(function(r){ list.appendChild(renderRow(r)); });
+  }
+  function copyBtn(text, label){
+    var b = el('button', 'btn small ghost', '複製'); b.type = 'button';
+    b.addEventListener('click', async function(){ try{ await navigator.clipboard.writeText(text); vcToast('已複製' + label); }catch(e){} });
+    return b;
+  }
+  function renderRow(r){
+    var rep = r._rep || VCProp.compute(r.answers || {}), a = rep.answers, h = rep.heat;
+    var dash = function(x){ return x ? x : '—'; };
+    var wrap = el('div', 'req' + (r.status === 'new' ? ' is-new' : ''));
+    var head = el('button', 'req-head'); head.type = 'button'; head.setAttribute('aria-expanded', 'false');
+    head.appendChild(el('span', 'nm', who(r)));
+    if(r.status === 'new') head.appendChild(el('span', 'badge-new', 'NEW'));
+    else head.appendChild(el('span', 'status-pill ' + r.status, STATUS_LABEL[r.status] || ''));
+    head.appendChild(el('span', 'heat-pill ' + h.lv, '熱度 ' + h.label));
+    head.appendChild(el('span', 'sum', [a.city, a.value && ('房產 ' + a.value), a.timeline].filter(Boolean).join('・')));
+    head.appendChild(el('span', 'when', fmtTime(r.updated_at || r.created_at)));
+    head.appendChild(el('span', 'chev', '▾'));
+    var body = el('div', 'req-body');
+
+    // ---------- 熱度 ----------
+    var hb = el('div', 'heat ' + h.lv);
+    var lv = el('div', 'lv'); lv.appendChild(el('b', '', h.label)); lv.appendChild(el('span', 'dots', { h:'●●●', m:'●●○', l:'●○○' }[h.lv])); lv.appendChild(el('span', '', '熱度'));
+    hb.appendChild(lv); hb.appendChild(el('div', 'next', '→ ' + h.next));
+    var why = el('div', 'why'); h.why.forEach(function(w){ why.appendChild(el('span', '', w)); });
+    if(!h.why.length) why.appendChild(el('span', '', '先了解可能性'));
+    hb.appendChild(why); body.appendChild(hb);
+
+    // ---------- 聯絡方式（偏好的那個框起來） ----------
+    var cs = el('div', 'pc-contacts');
+    [['IG', r.ig, r.contact_pref === 'IG'], ['Line／手機', r.line_phone, r.contact_pref !== 'IG']].forEach(function(x){
+      var d = el('div', x[2] ? 'pref' : '');
+      var k = el('div', 'k', x[0]); if(x[2]) k.appendChild(el('b', '', '偏好用 ' + r.contact_pref + ' 聯絡'));
+      d.appendChild(k); d.appendChild(el('span', 'v', x[1])); d.appendChild(copyBtn(x[1], x[0]));
+      cs.appendChild(d);
+    });
+    body.appendChild(cs);
+
+    if(rep.talk.length){
+      body.appendChild(el('div', 'section-label', '聊天切入點'));
+      var talk = el('div', 'talk'); rep.talk.forEach(function(t){ talk.appendChild(el('span', '', t)); });
+      body.appendChild(talk);
+    }
+
+    // ---------- 房產概況 ----------
+    body.appendChild(el('div', 'section-label', '房產概況'));
+    var box = el('div', 'qc-box');
+    var flow = el('div', 'qc-flow txt');
+    [['房產價值', a.value, ''], ['剩餘貸款', a.loan, ''], ['淨值粗估', rep.equity ? rep.equity.text : '待估算', 'pos']].forEach(function(x){
+      var c = el('div'); c.appendChild(el('div', 'k', x[0])); var v = el('div', 'v ' + x[2], dash(x[1])); v.style.fontSize = '15px'; c.appendChild(v); flow.appendChild(c);
+    });
+    box.appendChild(flow);
+    if(rep.equity){
+      var lp = Math.round(rep.equity.ratio * 100), bar = el('div', 'pc-bar');
+      var ln = el('i', '', lp >= 12 ? '貸款 ' + lp + '%' : ''); ln.style.width = lp + '%'; ln.style.background = '#C97B3D';
+      var eq = el('i', '', 100 - lp >= 12 ? '淨值 ' + (100 - lp) + '%' : ''); eq.style.width = (100 - lp) + '%'; eq.style.background = '#2E7D5B';
+      bar.appendChild(ln); bar.appendChild(eq); box.appendChild(bar);
+      box.appendChild(el('div', 'muted', '以區間中間值粗估，貸款約占房價 ' + rep.equity.ratioText + '。'));
+    } else box.appendChild(el('div', 'muted', '房價或貸款填「不確定」，需要協助估算。'));
+    var mind0 = el('div', 'qc-mind'); mind0.style.marginTop = '10px';
+    [['縣市', a.city], ['房產數量', a.count], ['使用狀況', a.usage.join('、')]].forEach(function(x){
+      var row = el('div'); row.appendChild(el('span', 'k', x[0])); row.appendChild(el('span', 'v', dash(x[1]))); mind0.appendChild(row);
+    });
+    box.appendChild(mind0);
+    body.appendChild(box);
+
+    // ---------- 目標 ----------
+    body.appendChild(el('div', 'section-label', '想透過房產活化達成'));
+    var gs = el('div', 'needs'); a.goals.forEach(function(g){ gs.appendChild(el('span', '', g)); });
+    if(!a.goals.length) gs.appendChild(el('span', 'muted', '—'));
+    body.appendChild(gs);
+
+    // ---------- 怎麼約他 ----------
+    body.appendChild(el('div', 'section-label', '怎麼約他'));
+    var mind = el('div', 'qc-mind');
+    [['希望開始', a.timeline], ['想了解的方式', a.method.join('、')], ['方便聯繫時段', a.times.join('、')],
+     ['填寫時間', new Date(r.updated_at || r.created_at).toLocaleString('zh-TW', { hour12:false })]].forEach(function(x){
+      var row = el('div'); row.appendChild(el('span', 'k', x[0])); row.appendChild(el('span', 'v', dash(x[1]))); mind.appendChild(row);
+    });
+    body.appendChild(mind);
+
+    body.appendChild(el('div', 'section-label', '他在評估結果上看到的重點'));
+    var seen = el('ol', 'seen'); rep.points.forEach(function(x){ seen.appendChild(el('li', '', x.t)); });
+    body.appendChild(seen);
+
+    // ---------- 狀態／備註／動作 ----------
+    body.appendChild(el('div', 'section-label', '處理狀態'));
+    var sb = el('div', 'status-btns');
+    [['read','待處理'], ['contacted','已聯絡'], ['booked','已約諮詢'], ['declined','暫不約']].forEach(function(o){
+      var b = el('button', '', o[1]); b.type = 'button';
+      b.setAttribute('aria-pressed', (r.status === o[0] || (o[0] === 'read' && r.status === 'new')) ? 'true' : 'false');
+      b.addEventListener('click', function(){ setStatus(r, o[0]); });
+      sb.appendChild(b);
+    });
+    body.appendChild(sb);
+
+    body.appendChild(el('div', 'section-label', '我的備註（只有你看得到）'));
+    var note = el('textarea', 'note'); note.maxLength = 1000; note.value = r.advisor_note || '';
+    note.placeholder = '例如：台北自住＋一間閒置，週末白天用 Line 約線上診斷';
+    note.addEventListener('blur', async function(){
+      if(note.value === (r.advisor_note || '')) return;
+      var res = await supabaseClient.from('property_checks').update({ advisor_note: note.value }).eq('id', r.id).eq('advisor_id', myId);
+      if(res.error){ vcToast('備註儲存失敗', 'err'); return; }
+      r.advisor_note = note.value; vcToast('已儲存備註');
+    });
+    body.appendChild(note);
+
+    var act = el('div', 'actions');
+    var toList = el('button', 'btn small', '＋ 轉入名單'); toList.type = 'button';
+    var pick = el('span', 'tier-pick');
+    pick.appendChild(el('span', 'muted', '放進：'));
+    ['A','B','C'].forEach(function(t){
+      var b = el('button', 'btn small ghost', t + ' 名單'); b.type = 'button';
+      b.addEventListener('click', function(){ addToNameList(r, rep, t, b); });
+      pick.appendChild(b);
+    });
+    toList.addEventListener('click', function(){ pick.classList.toggle('show'); });
+    var del = el('button', 'btn small danger', '刪除'); del.type = 'button';
+    del.addEventListener('click', function(){ removeRow(r); });
+    act.appendChild(toList); act.appendChild(pick); act.appendChild(del);
+    body.appendChild(act);
+
+    head.addEventListener('click', function(){
+      var open = !wrap.classList.contains('open');
+      wrap.classList.toggle('open', open);
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if(open && r.status === 'new') markRead(r, wrap, head);
+    });
+    wrap.appendChild(head); wrap.appendChild(body);
+    return wrap;
+  }
+  async function markRead(r, wrap, head){
+    var res = await supabaseClient.from('property_checks').update({ status:'read' }).eq('id', r.id).eq('advisor_id', myId);
+    if(res.error) return;
+    r.status = 'read'; wrap.classList.remove('is-new');
+    var b = head.querySelector('.badge-new'); if(b) b.replaceWith(el('span', 'status-pill read', STATUS_LABEL.read));
+    renderTabs(); refreshParentBadge();
+  }
+  async function setStatus(r, status){
+    var res = await supabaseClient.from('property_checks').update({ status: status }).eq('id', r.id).eq('advisor_id', myId);
+    if(res.error){ vcToast('更新失敗，請稍後再試', 'err'); return; }
+    r.status = status; vcToast('已標記為「' + STATUS_LABEL[status] + '」');
+    renderTabs(); renderList(); refreshParentBadge();
+  }
+  async function removeRow(r){
+    var ok = await vcConfirm('確定要刪除「' + who(r) + '」的房產評估紀錄嗎？刪除後無法復原。', { okText:'刪除', danger:true });
+    if(!ok) return;
+    var res = await supabaseClient.from('property_checks').delete().eq('id', r.id).eq('advisor_id', myId);
+    if(res.error){ vcToast('刪除失敗，請稍後再試', 'err'); return; }
+    rows = rows.filter(function(x){ return x.id !== r.id; });
+    vcToast('已刪除'); renderTabs(); renderList(); refreshParentBadge();
+  }
+  async function addToNameList(r, rep, tier, btn){
+    btn.disabled = true;
+    var a = rep.answers;
+    var note = ['房產活化', r.contact_pref + '：' + (r.contact_pref === 'IG' ? r.ig : r.line_phone), a.city, a.value && ('房產 ' + a.value), a.goals.slice(0, 2).join('、')]
+      .filter(Boolean).join('｜').slice(0, 500);
+    var all = await supabaseClient.from('name_list_entries').select('id, name, note, sort_order').eq('advisor_id', myId).eq('tier', tier).order('sort_order', { ascending:true });
+    var list = (all.data || []).slice().sort(function(x, y){ return (x.sort_order || 0) - (y.sort_order || 0); });
+    var blank = list.find(function(x){ return !(x.name || '').trim() && !(x.note || '').trim(); });
+    var res;
+    if(blank) res = await supabaseClient.from('name_list_entries').update({ name: who(r), note: note }).eq('id', blank.id).eq('advisor_id', myId);
+    else {
+      var next = list.reduce(function(m, x){ return Math.max(m, x.sort_order || 0); }, 0) + 1;
+      res = await supabaseClient.from('name_list_entries').insert({ advisor_id: myId, tier: tier, name: who(r), note: note, sort_order: next });
+    }
+    btn.disabled = false;
+    if(res.error){ vcToast('轉入名單失敗，請稍後再試', 'err'); return; }
+    vcToast('已加入 ' + tier + ' 名單');
+    try{
+      var f = window.parent && window.parent.document.getElementById('frame-namelist');
+      if(f && f.contentWindow && typeof f.contentWindow.loadEntries === 'function') f.contentWindow.loadEntries();
+    }catch(e){}
+    if(r.status === 'new' || r.status === 'read') setStatus(r, 'contacted');
+  }
+  async function loadRows(){
+    var res = await supabaseClient.from('property_checks').select('*').eq('advisor_id', myId).order('updated_at', { ascending:false });
+    if(res.error) throw res.error;
+    var cutoff = Date.now() - 180 * 86400000;
+    rows = (res.data || []).filter(function(r){ return new Date(r.created_at).getTime() >= cutoff; });
+    renderTabs(); renderList(); refreshParentBadge();
+  }
+  window.refreshPropertyChecks = function(){ if(myId && link) loadRows().catch(function(){}); };
+
+  (async function init(){
+    var s = await supabaseClient.auth.getSession();
+    var session = s && s.data && s.data.session;
+    if(!session) return;
+    myId = session.user.id;
+    var lr = await supabaseClient.rpc('vc_my_property_check_link');
+    if(lr.error || !lr.data) return;          // 沒有開通（或資料表還沒建立）：完全不顯示
+    link = lr.data;
+    $('viewSwitch').hidden = false;
+    document.querySelector('#viewSwitch button[data-view="property"]').hidden = false;
+    renderLink();
+    try{ await loadRows(); }catch(e){ $('pcList').textContent = '讀取名單失敗，請重新整理再試一次。'; }
+    var want = ''; try{ want = sessionStorage.getItem('vc_consults_view') || ''; }catch(e){}
+    if((want === 'property' || /[?&#]view=property/.test(location.search + location.hash)) && window.vcSetConsultView) window.vcSetConsultView('property');
   })();
 })();
 </script>

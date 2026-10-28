@@ -240,7 +240,7 @@ window.vcShowConsultAlert = function(n, quickN){
   if(!a) return;
   document.getElementById('consultAlertN').textContent = n;
   const lbl = document.getElementById('consultAlertLbl');
-  if(lbl) lbl.textContent = quickN > 0 ? (quickN === n ? '健檢名單' : '諮詢申請／健檢名單') : '諮詢申請';
+  if(lbl) lbl.textContent = quickN > 0 ? (quickN === n ? '表單名單' : '諮詢申請／表單名單') : '諮詢申請';
   a.hidden = !(n > 0);
 };
 
@@ -276,7 +276,7 @@ window.vcShowConsultAlert = function(n, quickN){
   };
   { const cnt = t => supabaseClient.from(t).select('id', { count:'exact', head:true }).eq('advisor_id', myId).eq('status', 'new')
       .then(r => r && !r.error ? (r.count || 0) : 0, () => 0);
-    Promise.all([cnt('consult_requests'), cnt('quick_checks')]).then(([a, b]) => window.vcShowConsultAlert(a + b, b)); }
+    Promise.all([cnt('consult_requests'), cnt('quick_checks'), cnt('property_checks')]).then(([a, b, c]) => window.vcShowConsultAlert(a + b + c, b + c)); }
   const [ev, wk, cl, rp, py, nm] = await Promise.all(Object.values(q).map(p => Promise.resolve(p).catch(e=>({ error:e }))));
 
   const events = (ev && ev.data) || [];
