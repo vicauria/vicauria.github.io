@@ -657,6 +657,11 @@
             <span class="name"><span class="num">◆</span>行事曆</span>
             <span class="desc">約訪行程／團隊公告</span>
           </button>
+          <button class="mod-btn" data-target="frame-progress">
+            <span class="collapsed-icon">📌</span>
+            <span class="name"><span class="num">◆</span>進程回報</span>
+            <span class="desc">每次會面回報／案件推進追蹤</span>
+          </button>
           <button class="mod-btn" data-target="frame-team">
             <span class="collapsed-icon">👥</span>
             <span class="name"><span class="num">◆</span>團隊</span>
@@ -740,7 +745,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.32.0</span>
+        <span class="user-version-tag" id="userVersionTag">v3.33.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -807,6 +812,7 @@
     <iframe id="frame-loan" data-src="modules/loan.html" title="貸款試算室"></iframe>
     <iframe id="frame-efficiency" data-src="modules/efficiency.html" title="資金效率健檢"></iframe>
     <iframe id="frame-team" data-src="modules/team.html" title="團隊"></iframe>
+    <iframe id="frame-progress" data-src="modules/progress.html" title="進程回報"></iframe>
     <iframe id="frame-feedback" data-src="modules/feedback.html" title="意見箱"></iframe>
     <iframe id="frame-marketnews" data-src="modules/market-news.html" title="市場快訊"></iframe>
     <iframe id="frame-marketoverview" data-src="modules/market-overview.html" title="市場概況"></iframe>
@@ -1433,7 +1439,7 @@
   }
   window.vcEnsureFrame = ensureFrame;
   const PRELOAD_ORDER = ['frame-blueprint','frame-clientrecords','frame-calendar','frame-simulation','frame-namelist','frame-consults','frame-contracts',
-    'frame-guide','frame-team','frame-cashflow','frame-balance','frame-loan','frame-efficiency','frame-marketoverview','frame-marketnews','frame-feedback'];
+    'frame-guide','frame-team','frame-progress','frame-cashflow','frame-balance','frame-loan','frame-efficiency','frame-marketoverview','frame-marketnews','frame-feedback'];
   function startPreload(){
     const c = navigator.connection;
     if(c && (c.saveData || /2g/.test(c.effectiveType || ''))) return; // 省流量模式或網路很慢時不預載
