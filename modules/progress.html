@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<!-- 資安：限制網頁只能載入信任來源的程式與資料（CSP），並防止被其他網站嵌入（點擊劫持） -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://inmtoymzpkprpmympaek.supabase.co wss://inmtoymzpkprpmympaek.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script src="../vc-icons.js"></script>
+<script src="../ui-kit.js"></script>
+<script>(function(){try{if(window.top!==window.self&&window.top.location.origin!==window.location.origin)throw 0;}catch(e){document.documentElement.style.display="none";try{window.top.location=window.location.href;}catch(x){}}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>進程回報</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16323F; --teal:#2E7391; --teal-deep:#1F5C73; --teal-tint:#E6F0F2; --teal-light-text:#BFE0EA;
+    --warm:#C97B3D; --warm-deep:#A85F27; --warm-tint:#FBEFE2;
+    --paper:#F5F7F6; --card:#FFFFFF; --ink:#182226; --ink-soft:#5B6B70; --line:#E1E7E7;
+    --negative:#B3492F; --positive:#2E7D5B; --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:"Noto Sans TC",sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Noto Serif TC",serif; margin:0; color:var(--navy);}
+  .wrap{width:100%; max-width:920px; margin:0 auto; padding:0 24px;}
+  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--teal-deep) 60%,var(--teal) 100%); color:#fff; padding:30px 0 40px;}
+  header.hero .eyebrow{font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal-light-text); font-weight:700; margin-bottom:8px;}
+  header.hero h1{color:#fff; font-size:clamp(20px,2.6vw,26px); font-weight:700; margin-bottom:6px;}
+  header.hero p{color:#DCEAEE; font-size:13.5px; line-height:1.8; margin:0;}
+  main{margin-top:-20px; position:relative; z-index:10; padding-bottom:120px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:16px; box-shadow:0 6px 20px rgba(22,50,63,.05);}
+  .card h2{font-size:17px; margin-bottom:6px;}
+  .muted{color:var(--ink-soft); font-size:13px;}
+
+  /* 上方簡述 */
+  .why p{margin:0 0 10px; font-size:14.5px;}
+  .why-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:6px 0 12px;}
+  .why-grid div{background:var(--paper); border-radius:12px; padding:10px 12px; font-size:13.5px; font-weight:700; color:var(--navy); display:flex; gap:8px; align-items:flex-start;}
+  .why-grid i{font-style:normal; color:var(--warm-deep); font-family:"Roboto Mono",monospace;}
+  .why .motto{font-family:"Noto Serif TC",serif; color:var(--navy); font-weight:700; font-size:15px; margin:0;}
+  .why .motto span{display:block; font-family:"Noto Sans TC",sans-serif; color:var(--warm-deep); font-size:14px; margin-top:2px;}
+  @media (max-width:700px){ .why-grid{grid-template-columns:1fr 1fr;} }
+
+  /* 週次＋統計 */
+  .weekbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .weekbar .lbl{font-weight:700; color:var(--navy); font-size:15px; min-width:13em; text-align:center; font-family:"Roboto Mono","Noto Sans TC",monospace;}
+  .nav-btn{border:1.5px solid var(--line); background:#fff; color:var(--navy); border-radius:18px; padding:6px 14px; font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; min-height:38px;}
+  .nav-btn:disabled{opacity:.4; cursor:default;}
+  .stats{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:14px;}
+  .stats > div{background:var(--paper); border-radius:12px; padding:10px 12px; border-top:3px solid #CBD5D6;}
+  .stats > div.warm{border-top-color:var(--warm);} .stats > div.bad{border-top-color:var(--negative);} .stats > div.good{border-top-color:var(--positive);}
+  .stats .k{font-size:12px; color:var(--ink-soft);}
+  .stats .v{font-family:"Roboto Mono",monospace; font-size:24px; font-weight:700; color:var(--navy); line-height:1.2;}
+  @media (max-width:620px){ .stats{grid-template-columns:1fr 1fr;} }
+
+  .toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .seg{display:inline-flex; background:#fff; border:1px solid var(--line); border-radius:12px; padding:4px;}
+  .seg button{border:none; background:none; border-radius:9px; padding:7px 14px; font:inherit; font-size:13.5px; font-weight:700; color:var(--ink-soft); cursor:pointer;}
+  .seg button[aria-pressed="true"]{background:var(--navy); color:#fff;}
+  .btn{border:1.5px solid var(--navy); background:var(--navy); color:#fff; border-radius:10px; padding:10px 18px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; min-height:44px;}
+  .btn.warm{background:var(--warm); border-color:var(--warm);}
+  .btn.ghost{background:#fff; color:var(--navy);}
+  .btn:disabled{opacity:.55; cursor:wait;}
+  .spacer{flex:1;}
+  .day-h{font-size:13px; font-weight:700; color:var(--ink-soft); margin:16px 0 8px; display:flex; align-items:center; gap:8px;}
+  .day-h::after{content:""; flex:1; height:1px; background:var(--line);}
+  .empty{text-align:center; color:var(--ink-soft); padding:28px 10px; font-size:14px;}
+
+  /* 依案件 */
+  .case{background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; display:grid; grid-template-columns:1fr auto; gap:6px 14px; align-items:center;}
+  .case.flag{border-color:rgba(201,123,61,.55); box-shadow:0 0 0 3px rgba(201,123,61,.08);}
+  .case .nm{font-weight:700; color:var(--navy); font-size:15.5px;}
+  .case .nm small{font-weight:500; color:var(--ink-soft); font-size:12.5px; margin-left:8px;}
+  .case .path{font-size:13px; color:var(--ink-soft);}
+  .case .path b{color:var(--navy);}
+  .case .tags{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+  .tag{font-size:12px; font-weight:700; border-radius:10px; padding:2px 9px; background:var(--paper); color:var(--ink-soft); white-space:nowrap;}
+  .tag.late{background:#FBE7E2; color:var(--negative);} .tag.warm{background:var(--warm-tint); color:var(--warm-deep);} .tag.good{background:#E3F2EA; color:var(--positive);}
+  .case .acts{grid-column:1/-1; display:flex; gap:8px; flex-wrap:wrap;}
+  @media (max-width:560px){ .case{grid-template-columns:1fr;} .case .tags{justify-content:flex-start;} }
+
+  /* 表單 */
+  .form-card{border:2px solid var(--teal); }
+  .form-card[hidden]{display:none;}
+  .fgrid{display:grid; grid-template-columns:1fr 1fr; gap:16px 18px;}
+  .f{display:flex; flex-direction:column; gap:6px; min-width:0;}
+  .f.full{grid-column:1/-1;}
+  .f label, .f .lb{font-size:14.5px; font-weight:700; color:var(--navy);}
+  .f .req{color:#B3402A; margin-left:3px;}
+  .f .hint{font-size:12.5px; color:var(--ink-soft); margin-top:-2px;}
+  .f input[type=text], .f input[type=number], .f input[type=date], .f textarea{width:100%; border:1.5px solid #CBD5D6; border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; color:var(--ink); background:#fff;}
+  .f textarea{min-height:72px; resize:vertical;}
+  .f input:focus, .f textarea:focus{outline:none; border-color:var(--teal); box-shadow:0 0 0 3px rgba(46,115,145,.18);}
+  .f.invalid input, .f.invalid textarea{border-color:#B3402A;}
+  .f.invalid .lb::after, .f.invalid label::after{content:"　← 請填寫"; color:#B3402A; font-size:12.5px; font-weight:600;}
+  .f.invalid .chk-grid, .f.invalid .hearts{outline:1.5px solid #B3402A; outline-offset:4px; border-radius:10px;}
+  .chk-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px;}
+  .chk{display:flex; align-items:center; gap:10px; border:1.5px solid #E1E7E7; border-radius:10px; padding:9px 12px; cursor:pointer; font-size:14.5px; background:#fff;}
+  .chk input{width:18px; height:18px; accent-color:var(--navy); flex-shrink:0;}
+  .chk.on{border-color:var(--navy); background:#F3F7F8;}
+  .other-row{display:flex; gap:8px; align-items:center; grid-column:1/-1;}
+  .other-row input{flex:1;}
+  .hearts{display:flex; gap:4px; flex-wrap:wrap;}
+  .hearts button{width:44px; height:52px; border:1.5px solid #E1E7E7; border-radius:10px; background:#fff; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; font:inherit; font-size:12px; color:var(--ink-soft); gap:1px; padding:0;}
+  .hearts button span{font-size:18px; line-height:1; color:#C3CDCE;}
+  .hearts button.on{border-color:var(--warm); background:var(--warm-tint); color:var(--warm-deep);}
+  .hearts button.on span{color:var(--warm);}
+  .quick{display:flex; gap:6px; flex-wrap:wrap;}
+  .quick button{border:1px solid var(--line); background:var(--paper); color:var(--teal-deep); border-radius:14px; padding:4px 11px; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .prefill-note{background:var(--teal-tint); color:var(--teal-deep); border-radius:10px; padding:8px 12px; font-size:13px; font-weight:600;}
+  .prefill-note[hidden]{display:none;}
+  .privacy{background:var(--warm-tint); color:#5C3714; border-radius:10px; padding:10px 12px; font-size:13px; margin-top:16px;}
+  .form-actions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center;}
+  .form-err{color:#B3402A; font-weight:700; font-size:14px;}
+  @media (max-width:620px){ .fgrid{grid-template-columns:1fr;} .chk-grid{grid-template-columns:1fr;} .hearts button{width:calc(20% - 4px);} }
+  .setup{display:none;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Progress Report · 進程推進回報</div>
+    <h1>進程推進回報</h1>
+    <p>每次會面後花兩分鐘記下來。加入團隊的話，團隊主管每週可以一次看到你的進度，需要支援的地方也能即時幫上忙。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card" id="setupMsg" style="display:none;">
+    <h2>這個功能還沒開通</h2>
+    <p class="muted">系統的資料表還沒建立好，請稍後再試；如果你是管理者，請先執行「supabase-progress-report.sql」。</p>
+  </div>
+  <div class="card" id="notLoggedIn" style="display:none;">目前沒有偵測到登入狀態，請重新整理這個頁面，或重新登入後再試一次。</div>
+
+  <div id="app" style="display:none;">
+    <section class="card why" aria-label="為什麼要回報">
+      <p>進程推進回報表的目的，不純粹是檢核你今天做了多少事，而是幫助你每天清楚知道：</p>
+      <div class="why-grid">
+        <div><i>❶</i>自己目前在哪個成交階段？</div>
+        <div><i>❷</i>哪些案子正在前進？</div>
+        <div><i>❸</i>哪些案子需要突破？</div>
+        <div><i>❹</i>下一步推進點是什麼？</div>
+      </div>
+      <p class="motto">成交不是偶然，而是每天微小推進的累積。<span>這張表，是你對自己負責的工具！</span></p>
+    </section>
+
+    <!-- 新增／編輯回報 -->
+    <section class="card form-card" id="formCard" hidden aria-label="填寫回報">
+      <h2 id="formTitle">新增進程回報</h2>
+      <p class="muted" style="margin:0 0 14px;">標示 <span style="color:#B3402A">*</span> 的都要填。</p>
+      <form id="prForm" novalidate>
+        <div class="fgrid">
+          <div class="f" data-f="meet_date">
+            <label for="fDate">會面日期<span class="req">*</span></label>
+            <input type="date" id="fDate">
+          </div>
+          <div class="f" data-f="advisor_name">
+            <label for="fAdvisor">顧問名<span class="req">*</span></label>
+            <input type="text" id="fAdvisor" maxlength="40">
+          </div>
+          <div class="f full" data-f="contact_name">
+            <label for="fContact">會面人名稱<span class="req">*</span></label>
+            <div class="hint">回報過的人會出現在選單；選了會自動帶入關係、年齡、職業，會面次數自動 +1</div>
+            <input type="text" id="fContact" maxlength="40" list="contactList" autocomplete="off" placeholder="例如：王先生、小美">
+            <datalist id="contactList"></datalist>
+            <div class="prefill-note" id="prefillNote" hidden></div>
+          </div>
+          <div class="f full" data-f="purposes">
+            <div class="lb">拜訪目的<span class="req">*</span></div>
+            <div class="hint">可複選</div>
+            <div class="chk-grid" id="purposeBox"></div>
+          </div>
+          <div class="f" data-f="meet_no">
+            <label for="fNo">進程上會面次數（第 X 次）<span class="req">*</span></label>
+            <input type="number" id="fNo" min="1" max="999" inputmode="numeric" placeholder="例如：1">
+          </div>
+          <div class="f" data-f="relation">
+            <label for="fRelation">關係<span class="req">*</span></label>
+            <input type="text" id="fRelation" maxlength="40" placeholder="例如：朋友、同事、客戶轉介">
+          </div>
+          <div class="f" data-f="age">
+            <label for="fAge">年齡<span class="req">*</span></label>
+            <input type="number" id="fAge" min="1" max="120" inputmode="numeric" placeholder="例如：32">
+          </div>
+          <div class="f" data-f="job">
+            <label for="fJob">職業<span class="req">*</span></label>
+            <input type="text" id="fJob" maxlength="40" placeholder="例如：工程師">
+          </div>
+          <div class="f full" data-f="trust">
+            <div class="lb">信任度評分<span class="req">*</span></div>
+            <div class="hint">1 分最低，10 分最高</div>
+            <div class="hearts" id="hearts"></div>
+          </div>
+          <div class="f full" data-f="summary">
+            <label for="fSummary">目前案件進程總結（主要需求、關注點，抗拒 or 卡關點……）<span class="req">*</span></label>
+            <textarea id="fSummary" maxlength="1000"></textarea>
+          </div>
+          <div class="f full" data-f="next_plan">
+            <label for="fNext">下一步推進計畫<span class="req">*</span></label>
+            <textarea id="fNext" maxlength="500"></textarea>
+          </div>
+          <div class="f" data-f="next_contact">
+            <label for="fNextDate">預計下一次接觸時間<span class="req">*</span></label>
+            <input type="date" id="fNextDate">
+            <div class="quick" id="nextQuick"></div>
+          </div>
+          <div class="f" data-f="need_support">
+            <label for="fSupport">需要社群 or 領導人支援<span class="req">*</span></label>
+            <input type="text" id="fSupport" maxlength="300" placeholder="例如：需要主管陪同提案">
+            <div class="quick"><button type="button" id="noSupport">目前不需要</button></div>
+          </div>
+          <div class="f full" data-f="tomorrow_plan">
+            <label for="fTomorrow">明日排訪及安排</label>
+            <textarea id="fTomorrow" maxlength="500"></textarea>
+          </div>
+        </div>
+        <div class="privacy">🔒 這份回報只有你自己和你加入的團隊主管看得到（主管只能看、不能修改）。</div>
+        <div class="form-actions">
+          <button type="submit" class="btn warm" id="submitBtn">提交回報</button>
+          <button type="button" class="btn ghost" id="cancelBtn">取消</button>
+          <span class="form-err" id="formErr" role="alert"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-label="本週進度">
+      <div class="weekbar">
+        <button class="nav-btn" id="prevWeek" type="button">← 上週</button>
+        <span class="lbl" id="weekLbl"></span>
+        <button class="nav-btn" id="nextWeek" type="button">下週 →</button>
+        <button class="nav-btn" id="thisWeek" type="button">回到本週</button>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="card" aria-label="回報紀錄">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="檢視方式">
+          <button type="button" data-v="date" aria-pressed="true">這週的回報</button>
+          <button type="button" data-v="case" aria-pressed="false">依案件追蹤</button>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn warm" id="addBtn" type="button">＋ 新增回報</button>
+      </div>
+      <div id="list"></div>
+    </section>
+  </div>
+</main>
+
+<script src="../vendor/supabase-js-2.117.2.js"></script>
+<script src="../supabase-config.js"></script>
+<script src="../progress-core.js"></script>
+<script>
+(function(){
+  'use strict';
+  var P = VCProgress; P.injectCSS();
+  var $ = function(id){ return document.getElementById(id); };
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+  var myId = null, myName = '', rows = [], week = P.weekStart(new Date()), view = 'date', editing = null, trust = 0;
+
+  /* ---------- 表單 ---------- */
+  P.PURPOSES.forEach(function(p){
+    var l = el('label', 'chk'); var c = el('input'); c.type = 'checkbox'; c.value = p;
+    l.appendChild(c); l.appendChild(document.createTextNode(p === '其他' ? '其他：' : p));
+    c.addEventListener('change', function(){
+      l.classList.toggle('on', c.checked);
+      if(p === '其他'){ $('fOther').disabled = !c.checked; if(c.checked) $('fOther').focus(); }
+      clearInvalid('purposes');
+    });
+    $('purposeBox').appendChild(l);
+  });
+  (function(){
+    var row = el('div', 'other-row'); var i = el('input'); i.type = 'text'; i.id = 'fOther'; i.maxLength = 60; i.disabled = true; i.placeholder = '勾選「其他」後填寫目的';
+    i.addEventListener('input', function(){ clearInvalid('purposes'); });
+    row.appendChild(i); $('purposeBox').appendChild(row);
+  })();
+  for(var n = 1; n <= 10; n++){
+    (function(v){
+      var b = el('button'); b.type = 'button'; b.setAttribute('aria-label', v + ' 分');
+      b.appendChild(el('span', '', '♥')); b.appendChild(document.createTextNode(String(v)));
+      b.addEventListener('click', function(){ setTrust(v); clearInvalid('trust'); });
+      $('hearts').appendChild(b);
+    })(n);
+  }
+  function setTrust(v){ trust = v; Array.prototype.forEach.call($('hearts').children, function(b, i){ b.classList.toggle('on', i < v); b.setAttribute('aria-pressed', i + 1 === v ? 'true' : 'false'); }); }
+  [['明天', 1], ['3 天後', 3], ['下週', 7], ['兩週後', 14]].forEach(function(q){
+    var b = el('button', '', q[0]); b.type = 'button';
+    b.addEventListener('click', function(){ $('fNextDate').value = P.ymd(P.addDays(P.today(), q[1])); clearInvalid('next_contact'); });
+    $('nextQuick').appendChild(b);
+  });
+  $('noSupport').addEventListener('click', function(){ $('fSupport').value = '目前不需要'; clearInvalid('need_support'); });
+  function clearInvalid(k){ var f = document.querySelector('.f[data-f="' + k + '"]'); if(f) f.classList.remove('invalid'); if(!document.querySelector('.f.invalid')) $('formErr').textContent = ''; }
+  document.querySelectorAll('#prForm input, #prForm textarea').forEach(function(i){
+    i.addEventListener('input', function(){ var f = i.closest('.f'); if(f) clearInvalid(f.dataset.f); });
+  });
+
+  // 會面人：選到回報過的人，自動帶入關係、年齡、職業，次數 +1
+  function contactsMap(){
+    var m = {};
+    rows.forEach(function(r){ var k = r.contact_name.trim(); if(!m[k] || r.meet_no > m[k].meet_no || (r.meet_no === m[k].meet_no && r.meet_date > m[k].meet_date)) m[k] = r; });
+    return m;
+  }
+  function refreshDatalist(){
+    var dl = $('contactList'); dl.textContent = '';
+    Object.keys(contactsMap()).sort().forEach(function(k){ var o = el('option'); o.value = k; dl.appendChild(o); });
+  }
+  $('fContact').addEventListener('change', function(){
+    if(editing) return;
+    var last = contactsMap()[this.value.trim()];
+    if(!last){ $('prefillNote').hidden = true; return; }
+    if(!$('fRelation').value) $('fRelation').value = last.relation;
+    if(!$('fAge').value) $('fAge').value = last.age;
+    if(!$('fJob').value) $('fJob').value = last.job;
+    $('fNo').value = last.meet_no + 1;
+    if(!trust) setTrust(last.trust);
+    $('prefillNote').textContent = '上次是 ' + P.md(last.meet_date) + ' 第 ' + last.meet_no + ' 次會面，已帶入關係、年齡、職業與信任度，會面次數改成第 ' + (last.meet_no + 1) + ' 次（都可以再改）。';
+    $('prefillNote').hidden = false;
+    ['relation','age','job','meet_no','trust'].forEach(clearInvalid);
+  });
+
+  function resetForm(){
+    $('prForm').reset(); editing = null; setTrust(0);
+    document.querySelectorAll('#purposeBox .chk').forEach(function(l){ l.classList.remove('on'); });
+    $('fOther').disabled = true; $('prefillNote').hidden = true;
+    document.querySelectorAll('.f.invalid').forEach(function(f){ f.classList.remove('invalid'); });
+    $('formErr').textContent = '';
+    $('fDate').value = P.ymd(P.today());
+    $('fAdvisor').value = myName;
+  }
+  function fill(r, asNew){
+    resetForm();
+    if(!asNew) editing = r;
+    $('fDate').value = asNew ? P.ymd(P.today()) : r.meet_date;
+    $('fAdvisor').value = asNew ? myName : r.advisor_name;
+    $('fContact').value = r.contact_name;
+    document.querySelectorAll('#purposeBox input[type=checkbox]').forEach(function(c){
+      c.checked = !asNew && (r.purposes || []).indexOf(c.value) > -1; c.closest('.chk').classList.toggle('on', c.checked);
+    });
+    $('fOther').disabled = asNew || (r.purposes || []).indexOf('其他') < 0;
+    $('fOther').value = asNew ? '' : (r.purpose_other || '');
+    $('fNo').value = asNew ? r.meet_no + 1 : r.meet_no;
+    $('fRelation').value = r.relation; $('fAge').value = r.age; $('fJob').value = r.job;
+    setTrust(r.trust);
+    if(!asNew){
+      $('fSummary').value = r.summary; $('fNext').value = r.next_plan; $('fNextDate').value = r.next_contact;
+      $('fSupport').value = r.need_support; $('fTomorrow').value = r.tomorrow_plan || '';
+    } else {
+      $('fSummary').value = r.summary; // 帶入上次的總結，方便接著改
+      $('prefillNote').textContent = '接續 ' + P.md(r.meet_date) + ' 第 ' + r.meet_no + ' 次的回報：已帶入基本資料和上次的總結，記得更新這次的進度。';
+      $('prefillNote').hidden = false;
+    }
+  }
+  function openForm(r, asNew){
+    if(r) fill(r, asNew); else resetForm();
+    $('formTitle').textContent = editing ? '修改回報' : (r ? '再回報一次：' + r.contact_name : '新增進程回報');
+    $('submitBtn').textContent = editing ? '儲存修改' : '提交回報';
+    $('formCard').hidden = false;
+    $('formCard').scrollIntoView({ behavior:'smooth', block:'start' });
+    setTimeout(function(){ (r ? $('fSummary') : $('fContact')).focus({ preventScroll:true }); }, 350);
+  }
+  $('addBtn').addEventListener('click', function(){ openForm(null); });
+  $('cancelBtn').addEventListener('click', function(){ $('formCard').hidden = true; resetForm(); });
+
+  function collect(){
+    var purposes = Array.prototype.filter.call(document.querySelectorAll('#purposeBox input[type=checkbox]'), function(c){ return c.checked; }).map(function(c){ return c.value; });
+    var v = {
+      meet_date: $('fDate').value, advisor_name: $('fAdvisor').value.trim(), contact_name: $('fContact').value.trim(),
+      purposes: purposes, purpose_other: purposes.indexOf('其他') > -1 ? $('fOther').value.trim() : null,
+      meet_no: parseInt($('fNo').value, 10), relation: $('fRelation').value.trim(), age: parseInt($('fAge').value, 10),
+      job: $('fJob').value.trim(), trust: trust, summary: $('fSummary').value.trim(), next_plan: $('fNext').value.trim(),
+      next_contact: $('fNextDate').value, need_support: $('fSupport').value.trim(), tomorrow_plan: $('fTomorrow').value.trim() || null
+    };
+    var bad = [];
+    if(!v.meet_date) bad.push('meet_date');
+    if(!v.advisor_name) bad.push('advisor_name');
+    if(!v.contact_name) bad.push('contact_name');
+    if(!v.purposes.length || (v.purposes.indexOf('其他') > -1 && !v.purpose_other)) bad.push('purposes');
+    if(!(v.meet_no >= 1 && v.meet_no <= 999)) bad.push('meet_no');
+    if(!v.relation) bad.push('relation');
+    if(!(v.age >= 1 && v.age <= 120)) bad.push('age');
+    if(!v.job) bad.push('job');
+    if(!(v.trust >= 1)) bad.push('trust');
+    if(!v.summary) bad.push('summary');
+    if(!v.next_plan) bad.push('next_plan');
+    if(!v.next_contact) bad.push('next_contact');
+    if(!v.need_support) bad.push('need_support');
+    return { v: v, bad: bad };
+  }
+  $('prForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var c = collect();
+    document.querySelectorAll('.f').forEach(function(f){ f.classList.toggle('invalid', c.bad.indexOf(f.dataset.f) > -1); });
+    if(c.bad.length){
+      $('formErr').textContent = '還有 ' + c.bad.length + ' 個必填欄位沒有完成。';
+      var first = document.querySelector('.f.invalid'); if(first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    var btn = $('submitBtn'); btn.disabled = true;
+    var res = editing
+      ? await supabaseClient.from('progress_reports').update(c.v).eq('id', editing.id).eq('advisor_id', myId)
+      : await supabaseClient.from('progress_reports').insert(Object.assign({ advisor_id: myId }, c.v));
+    btn.disabled = false;
+    if(res.error){ $('formErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
+    vcToast(editing ? '已儲存修改' : '已提交回報');
+    var d = P.parse(c.v.meet_date);
+    $('formCard').hidden = true; resetForm();
+    week = P.weekStart(d);
+    await load();
+  });
+
+  /* ---------- 列表 ---------- */
+  function weekRows(){
+    var a = P.ymd(week), b = P.ymd(P.addDays(week, 6));
+    return rows.filter(function(r){ return r.meet_date >= a && r.meet_date <= b; });
+  }
+  function renderWeek(){
+    $('weekLbl').textContent = P.weekLabel(week);
+    var isThis = P.ymd(week) === P.ymd(P.weekStart(new Date()));
+    $('thisWeek').disabled = isThis; $('nextWeek').disabled = isThis;
+    var w = weekRows();
+    var people = {}; w.forEach(function(r){ people[r.contact_name.trim()] = 1; });
+    var support = w.filter(function(r){ return P.needsSupport(r.need_support); }).length;
+    var latest = contactsMap(), late = Object.keys(latest).filter(function(k){ return P.daysFromToday(latest[k].next_contact) < 0; }).length;
+    var st = $('stats'); st.textContent = '';
+    [['這週回報', w.length, w.length ? 'good' : ''], ['這週會面人數', Object.keys(people).length, ''],
+     ['需要支援', support, support ? 'warm' : ''], ['下次接觸已逾期', late, late ? 'bad' : '']].forEach(function(x){
+      var d = el('div', x[2]); d.appendChild(el('div', 'k', x[0])); d.appendChild(el('div', 'v', String(x[1]))); st.appendChild(d);
+    });
+  }
+  function actions(){
+    return [
+      { label:'再回報一次', cls:'primary', onClick:function(r){ openForm(r, true); } },
+      { label:'修改', onClick:function(r){ openForm(r, false); } },
+      { label:'刪除', cls:'danger', onClick: removeRow }
+    ];
+  }
+  function renderList(){
+    var list = $('list'); list.textContent = '';
+    if(view === 'date'){
+      var w = weekRows();
+      if(!w.length){ list.appendChild(el('div', 'empty', rows.length ? '這週還沒有回報。會面完按「＋ 新增回報」記下來吧！' : '還沒有任何回報。每次會面後按「＋ 新增回報」，花兩分鐘記下進度。')); return; }
+      var lastDay = null;
+      w.forEach(function(r){
+        if(r.meet_date !== lastDay){ lastDay = r.meet_date; list.appendChild(el('div', 'day-h', P.md(r.meet_date))); }
+        list.appendChild(P.card(r, { actions: actions() }));
+      });
+      return;
+    }
+    // 依案件：每位會面人只看最新一次
+    var m = contactsMap(), keys = Object.keys(m);
+    if(!keys.length){ list.appendChild(el('div', 'empty', '還沒有任何回報。')); return; }
+    var counts = {}; rows.forEach(function(r){ var k = r.contact_name.trim(); counts[k] = (counts[k] || 0) + 1; });
+    keys.sort(function(a, b){ return m[a].next_contact < m[b].next_contact ? -1 : m[a].next_contact > m[b].next_contact ? 1 : 0; });
+    list.appendChild(el('p', 'muted', '每位會面人只顯示最新一次的狀態，依「預計下次接觸」由近到遠排序；橘框是需要突破的案子（下次接觸已逾期、信任度 4 分以下，或需要支援）。'));
+    keys.forEach(function(k){
+      var r = m[k], first = rows.filter(function(x){ return x.contact_name.trim() === k; }).sort(function(a, b){ return a.meet_no - b.meet_no; })[0];
+      var late = P.daysFromToday(r.next_contact) < 0, sup = P.needsSupport(r.need_support);
+      var c = el('div', 'case' + (late || r.trust <= 4 || sup ? ' flag' : ''));
+      var left = el('div');
+      var nm = el('div', 'nm', k); nm.appendChild(el('small', '', [r.relation, r.age + ' 歲', r.job].join('・'))); left.appendChild(nm);
+      var path = el('div', 'path');
+      path.appendChild(document.createTextNode('第 ' + r.meet_no + ' 次・最近：'));
+      path.appendChild(el('b', '', (r.purposes || []).map(function(p){ return p === '其他' && r.purpose_other ? r.purpose_other : p; }).join('、')));
+      path.appendChild(document.createTextNode('・信任度 ' + (first && first !== r && first.trust !== r.trust ? first.trust + ' → ' : '') + r.trust));
+      left.appendChild(path);
+      left.appendChild(el('div', 'path', '下一步：' + r.next_plan));
+      c.appendChild(left);
+      var tags = el('div', 'tags'), nb = P.nextBadge(r.next_contact);
+      tags.appendChild(el('span', 'tag ' + (nb.cls === 'late' ? 'late' : nb.cls ? 'warm' : ''), '下次接觸 ' + P.md(r.next_contact) + '・' + nb.text));
+      if(sup) tags.appendChild(el('span', 'tag warm', '需要支援'));
+      if((r.purposes || []).indexOf('提案、建議書說明') > -1) tags.appendChild(el('span', 'tag good', '提案階段'));
+      tags.appendChild(el('span', 'tag', '共回報 ' + counts[k] + ' 次'));
+      c.appendChild(tags);
+      var acts = el('div', 'acts');
+      var b1 = el('button', 'pr-btn primary', '再回報一次'); b1.type = 'button'; b1.addEventListener('click', function(){ openForm(r, true); });
+      var b2 = el('button', 'pr-btn', '看這次的回報'); b2.type = 'button';
+      b2.addEventListener('click', function(){ week = P.weekStart(P.parse(r.meet_date)); setView('date'); });
+      acts.appendChild(b1); acts.appendChild(b2); c.appendChild(acts);
+      list.appendChild(c);
+    });
+  }
+  function render(){ renderWeek(); renderList(); refreshDatalist(); }
+  function setView(v){
+    view = v;
+    document.querySelectorAll('.seg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false'); });
+    render();
+  }
+  document.querySelectorAll('.seg button').forEach(function(b){ b.addEventListener('click', function(){ setView(b.dataset.v); }); });
+  $('prevWeek').addEventListener('click', function(){ week = P.addDays(week, -7); render(); });
+  $('nextWeek').addEventListener('click', function(){ week = P.addDays(week, 7); render(); });
+  $('thisWeek').addEventListener('click', function(){ week = P.weekStart(new Date()); render(); });
+
+  async function removeRow(r){
+    var ok = await vcConfirm('確定要刪除 ' + P.md(r.meet_date) + ' 跟「' + r.contact_name + '」的這筆回報嗎？刪除後無法復原。', { okText:'刪除', danger:true });
+    if(!ok) return;
+    var res = await supabaseClient.from('progress_reports').delete().eq('id', r.id).eq('advisor_id', myId);
+    if(res.error){ vcToast('刪除失敗，請稍後再試', 'err'); return; }
+    rows = rows.filter(function(x){ return x.id !== r.id; });
+    vcToast('已刪除'); render();
+  }
+
+  async function load(){
+    var res = await supabaseClient.from('progress_reports').select('*').eq('advisor_id', myId)
+      .order('meet_date', { ascending:false }).order('created_at', { ascending:false }).limit(2000);
+    if(res.error) throw res.error;
+    rows = res.data || [];
+    render();
+  }
+
+  (async function init(){
+    var s = await supabaseClient.auth.getSession();
+    var session = s && s.data && s.data.session;
+    if(!session){ $('notLoggedIn').style.display = 'block'; return; }
+    myId = session.user.id;
+    var meta = session.user.user_metadata || {};
+    myName = (meta.display_name || '').trim() || String(session.user.email || '').split('@')[0];
+    try{ await load(); }
+    catch(e){ $('setupMsg').style.display = 'block'; return; }
+    $('app').style.display = 'block';
+    resetForm();
+  })();
+})();
+</script>
+</body>
+</html>

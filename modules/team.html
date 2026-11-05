@@ -153,6 +153,39 @@
   .btn-comment-submit:hover{background:var(--teal-deep);}
 
   .empty-hint{color:var(--ink-soft); font-size:13px; text-align:center; padding:24px;}
+
+  /* 夥伴進程週報 */
+  .pg-weekbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0 14px;}
+  .pg-weekbar .lbl{font-weight:700; color:var(--navy); font-size:14px; min-width:12.5em; text-align:center; font-family:"Roboto Mono","Noto Sans TC",monospace;}
+  .pg-nav{border:1.5px solid var(--line); background:#fff; color:var(--navy); border-radius:16px; padding:5px 12px; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .pg-nav:disabled{opacity:.4; cursor:default;}
+  .pg-kpis{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:14px;}
+  .pg-kpis > div{background:var(--paper); border-radius:10px; padding:9px 12px; border-top:3px solid #CBD5D6;}
+  .pg-kpis > div.warm{border-top-color:var(--warm);} .pg-kpis > div.bad{border-top-color:var(--negative);} .pg-kpis > div.good{border-top-color:var(--positive);}
+  .pg-kpis .k{font-size:11.5px; color:var(--ink-soft);}
+  .pg-kpis .v{font-family:"Roboto Mono",monospace; font-size:20px; font-weight:700; color:var(--navy);}
+  @media (max-width:620px){ .pg-kpis{grid-template-columns:1fr 1fr;} }
+  .pg-alert{background:var(--warm-tint); border-left:4px solid var(--warm); border-radius:0 10px 10px 0; padding:10px 14px; margin-bottom:14px; font-size:13px; color:#5C3714;}
+  .pg-alert b{display:block; margin-bottom:4px; color:var(--warm-deep);}
+  .pg-alert li{margin:2px 0;}
+  .pg-member{border:1px solid var(--line); border-radius:12px; margin-bottom:8px; overflow:hidden; background:#fff;}
+  .pg-member.none{border-color:rgba(179,73,47,.35);}
+  .pg-head{display:grid; grid-template-columns:minmax(0,1.3fr) auto auto minmax(0,1.2fr) auto; gap:12px; align-items:center; width:100%; padding:12px 14px; background:none; border:none; font:inherit; text-align:left; cursor:pointer; color:var(--ink);}
+  .pg-head .nm{font-weight:700; color:var(--navy); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .pg-head .nm small{display:block; font-weight:500; font-size:11.5px; color:var(--ink-soft);}
+  .pg-head .nm small.late{color:var(--negative); font-weight:700;}
+  .pg-num{font-family:"Roboto Mono",monospace; font-size:12.5px; color:var(--ink-soft); white-space:nowrap; text-align:center;}
+  .pg-num b{display:block; font-size:17px; color:var(--navy);}
+  .pg-days{display:flex; gap:4px;}
+  .pg-days span{flex:1; min-width:22px; text-align:center; font-size:11px; color:var(--ink-soft);}
+  .pg-days span i{display:block; height:20px; border-radius:6px; background:#EEF2F2; margin-bottom:2px; font-style:normal; font-family:"Roboto Mono",monospace; font-weight:700; color:#fff; line-height:20px; font-size:11.5px;}
+  .pg-days span i.on{background:var(--teal);}
+  .pg-chev{color:var(--ink-soft); transition:transform .2s;}
+  .pg-member.open .pg-chev{transform:rotate(180deg);}
+  .pg-body{display:none; padding:4px 14px 14px; border-top:1px solid var(--line); background:var(--paper);}
+  .pg-member.open .pg-body{display:block;}
+  .pg-body .pr-card{margin-top:10px;}
+  @media (max-width:700px){ .pg-head{grid-template-columns:1fr auto auto; } .pg-days{grid-column:1/-1; order:5;} .pg-head .pg-chev{display:none;} }
   .success-msg{
     display:none; background:rgba(46,125,91,0.08); border:1px solid rgba(46,125,91,0.25);
     color:var(--positive); font-size:12.5px; padding:10px 12px; border-radius:8px; margin-top:14px;
@@ -171,7 +204,7 @@
   <div class="wrap">
     <div class="eyebrow">Team · 團隊</div>
     <h1>團隊</h1>
-    <p><b>團隊工作量監控</b>。只看得到數字（各狀態幾位客戶、有幾筆待追蹤），完全看不到客戶姓名、筆記或問卷內容，保護每位顧問手上客戶的隱私。</p>
+    <p><b>團隊工作量監控</b>。客戶資料只看得到數字（各狀態幾位客戶、有幾筆待追蹤），看不到客戶姓名、筆記或問卷內容；夥伴自己在「進程回報」填寫的內容，主管可以在「夥伴進程週報」看到。</p>
   </div>
 </header>
 
@@ -205,11 +238,23 @@
       <h3 style="font-size:14px;">團隊工作量</h3>
       <div id="workloadArea"></div>
     </div>
+
+    <div style="margin-top:32px;" id="progressSection">
+      <h3 style="font-size:14px;">夥伴進程週報</h3>
+      <div class="sub" style="margin-bottom:0;">夥伴在「進程回報」填的每一次會面都會出現在這裡，一次看一週。點夥伴可以展開看每一筆回報（只能看、不能修改）。</div>
+      <div class="pg-weekbar">
+        <button class="pg-nav" id="pgPrev" type="button">← 上週</button>
+        <span class="lbl" id="pgWeekLbl"></span>
+        <button class="pg-nav" id="pgNext" type="button">下週 →</button>
+        <button class="pg-nav" id="pgThis" type="button">回到本週</button>
+      </div>
+      <div id="progressArea"><div class="empty-hint">載入中…</div></div>
+    </div>
   </div>
 
   <div class="card" id="joinCard">
     <h3>加入其他顧問的團隊</h3>
-    <div class="sub">如果有人邀請你加入他的團隊，把邀請碼輸入在這裡就好；你的客戶資料內容不會因此被對方看到，只有工作量數字會被統計。</div>
+    <div class="sub">如果有人邀請你加入他的團隊，把邀請碼輸入在這裡就好；你的客戶資料內容不會因此被對方看到，只有工作量數字會被統計；你在「進程回報」填的回報，團隊主管看得到。</div>
     <div class="join-row">
       <input type="text" id="joinCodeInput" placeholder="輸入邀請碼，例如 A1B2C3D4" maxlength="12">
       <button class="btn" id="btnJoinTeam">加入團隊</button>
@@ -245,6 +290,7 @@
 <script src="../supabase-config.js"></script>
 <script src="../plan-utils.js"></script>
 <script src="../theme-config.js"></script>
+<script src="../progress-core.js"></script>
 <script>
 // 資安：把使用者／外部資料放進畫面前先轉義，避免被塞入惡意程式碼（XSS）
 function vcEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -454,6 +500,93 @@ async function openMasterSection(team){
   });
 
   loadWorkload(team.id);
+  initTeamProgress(team.id);
+}
+
+/* ---------------- 夥伴進程週報（主管看轄下夥伴的進程回報） ---------------- */
+let pgTeamId = null, pgWeek = null;
+function initTeamProgress(teamId){
+  pgTeamId = teamId;
+  VCProgress.injectCSS();
+  pgWeek = VCProgress.weekStart(new Date());
+  document.getElementById('pgPrev').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, -7); loadTeamProgress(); });
+  document.getElementById('pgNext').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, 7); loadTeamProgress(); });
+  document.getElementById('pgThis').addEventListener('click', ()=>{ pgWeek = VCProgress.weekStart(new Date()); loadTeamProgress(); });
+  loadTeamProgress();
+}
+async function loadTeamProgress(){
+  const P = VCProgress, area = document.getElementById('progressArea');
+  const from = P.ymd(pgWeek), to = P.ymd(P.addDays(pgWeek, 6));
+  document.getElementById('pgWeekLbl').textContent = P.weekLabel(pgWeek);
+  const isThis = from === P.ymd(P.weekStart(new Date()));
+  document.getElementById('pgThis').disabled = isThis;
+  document.getElementById('pgNext').disabled = isThis;
+  area.innerHTML = '<div class="empty-hint">載入中…</div>';
+  const { data, error } = await supabaseClient.rpc('vc_team_progress', { p_team_id: pgTeamId, p_from: from, p_to: to });
+  if(error){
+    area.innerHTML = /could not find|PGRST202/i.test((error.code||'') + (error.message||''))
+      ? '<div class="empty-hint">進程週報還沒開通，請管理者先執行 supabase-progress-report.sql。</div>'
+      : '<div class="empty-hint">讀取進程週報失敗，請稍後再試。</div>';
+    return;
+  }
+  renderTeamProgress(data || {}, from);
+}
+function renderTeamProgress(d, from){
+  const P = VCProgress, area = document.getElementById('progressArea');
+  const members = d.members || [], reports = d.reports || [];
+  area.textContent = '';
+  if(!members.length){ area.innerHTML = '<div class="empty-hint">目前團隊裡還沒有其他顧問加入。</div>'; return; }
+  const el = (t, c, x)=>{ const e = document.createElement(t); if(c) e.className = c; if(x != null) e.textContent = x; return e; };
+  const byMember = {}; reports.forEach(r=>{ (byMember[r.advisor_id] = byMember[r.advisor_id] || []).push(r); });
+  const nameOf = {}; members.forEach(m=>{ nameOf[m.advisor_id] = m.name; });
+
+  // KPI
+  const people = new Set(reports.map(r=> r.advisor_id + '|' + r.contact_name.trim()));
+  const support = reports.filter(r=> P.needsSupport(r.need_support));
+  const silent = members.filter(m=> !(byMember[m.advisor_id] || []).length);
+  const kp = el('div', 'pg-kpis');
+  [['這週回報', reports.length, reports.length ? 'good' : ''], ['會面人次', people.size, ''],
+   ['需要支援', support.length, support.length ? 'warm' : ''], ['這週還沒回報', silent.length + ' 位', silent.length ? 'bad' : '']].forEach(x=>{
+    const c = el('div', x[2]); c.appendChild(el('div', 'k', x[0])); c.appendChild(el('div', 'v', String(x[1]))); kp.appendChild(c);
+  });
+  area.appendChild(kp);
+
+  // 需要支援的清單放最上面
+  if(support.length){
+    const al = el('div', 'pg-alert'); al.appendChild(el('b', '', '🙋 需要你支援的案子'));
+    const ul = el('ul'); ul.style.cssText = 'margin:0;padding-left:18px;';
+    support.forEach(r=> ul.appendChild(el('li', '', (nameOf[r.advisor_id] || '夥伴') + '｜' + r.contact_name + '（第 ' + r.meet_no + ' 次，' + P.md(r.meet_date) + '）：' + r.need_support)));
+    al.appendChild(ul); area.appendChild(al);
+  }
+
+  // 每位夥伴：沒回報的排前面，其次回報多的
+  const sorted = members.slice().sort((a, b)=> (byMember[a.advisor_id] || []).length - (byMember[b.advisor_id] || []).length);
+  sorted.forEach(m=>{
+    const list = byMember[m.advisor_id] || [];
+    const box = el('div', 'pg-member' + (list.length ? '' : ' none'));
+    const head = el('button', 'pg-head'); head.type = 'button';
+    const nm = el('div', 'nm', m.name);
+    if(!list.length) nm.appendChild(el('small', 'late', m.last_report ? '這週還沒回報・最近一次 ' + P.md(m.last_report) : '還沒有任何回報'));
+    else nm.appendChild(el('small', '', '最近一次 ' + P.md(list[0].meet_date)));
+    head.appendChild(nm);
+    const n1 = el('div', 'pg-num'); n1.appendChild(el('b', '', String(list.length))); n1.appendChild(document.createTextNode('回報')); head.appendChild(n1);
+    const ppl = new Set(list.map(r=> r.contact_name.trim()));
+    const n2 = el('div', 'pg-num'); n2.appendChild(el('b', '', String(ppl.size))); n2.appendChild(document.createTextNode('會面人')); head.appendChild(n2);
+    const days = el('div', 'pg-days');
+    for(let i = 0; i < 7; i++){
+      const day = P.ymd(P.addDays(P.parse(from), i)), c = list.filter(r=> r.meet_date === day).length;
+      const s = el('span'); const dot = el('i', c ? 'on' : '', c ? String(c) : ''); s.appendChild(dot);
+      s.appendChild(document.createTextNode(P.DOW[(i + 1) % 7])); days.appendChild(s);
+    }
+    head.appendChild(days);
+    head.appendChild(el('span', 'pg-chev', '▾'));
+    const body = el('div', 'pg-body');
+    if(!list.length) body.appendChild(el('div', 'empty-hint', '這週沒有回報。'));
+    list.forEach(r=> body.appendChild(P.card(r)));
+    head.addEventListener('click', ()=> box.classList.toggle('open'));
+    box.appendChild(head); box.appendChild(body);
+    area.appendChild(box);
+  });
 }
 
 /* ---------------- 加入其他顧問的團隊 ---------------- */
