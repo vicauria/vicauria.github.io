@@ -113,6 +113,35 @@
     var s = document.createElement('style'); s.id = 'vcProgressCSS'; s.textContent = CSS; document.head.appendChild(s);
   }
 
+  /* ---------- 每日 KPI／案件推進 ---------- */
+  var METRICS = [
+    { k:'leads', l:'新增名單' }, { k:'invites', l:'邀約' }, { k:'appts', l:'約訪成功' },
+    { k:'meetings', l:'面談（需求分析）', s:'面談' }, { k:'proposals', l:'提案／規劃書', s:'提案' },
+    { k:'deals', l:'成交' }, { k:'referrals', l:'轉介紹' }
+  ];
+  var STAGES = ['名單','接觸','約訪','需求分析','提案','成交','售後／轉介','暫停／流失'];
+  var ACTIVE = STAGES.slice(0, 5);
+  var SOURCES = ['人脈','轉介紹','自媒體','活動','其他'];
+  var DEFAULT_KPI = { targets:{ leads:3, invites:10, appts:2, meetings:1, proposals:0, deals:0, referrals:0 }, reward_days:4, penalty_days:2 };
+  // 所有有目標（>0）的項目都達到才算當日達標
+  function dayMet(rec, targets){
+    targets = targets || {};
+    var keys = METRICS.filter(function(m){ return (targets[m.k] || 0) > 0; });
+    if(!rec || !keys.length) return false;
+    return keys.every(function(m){ return (rec[m.k] || 0) >= targets[m.k]; });
+  }
+  // 進行中案件的警示：沒有下一步、已逾期、14 天以上沒更新
+  function caseFlags(c){
+    if(ACTIVE.indexOf(c.stage) < 0) return [];
+    var f = [], t = ymd(today());
+    if(!c.next_date || !c.next_action) f.push(['bad', '沒有下一步']);
+    else if(c.next_date < t) f.push(['bad', '逾期 ' + (-daysFromToday(c.next_date)) + ' 天']);
+    if(c.updated_on){ var n = -daysFromToday(c.updated_on); if(n >= 14) f.push(['warn', n + ' 天沒更新']); }
+    return f;
+  }
+  function isWon(c){ return c.stage === '成交' || c.stage === '售後／轉介'; }
+
   window.VCProgress = { PURPOSES: PURPOSES, ymd: ymd, parse: parse, addDays: addDays, today: today, weekStart: weekStart,
-    md: md, weekLabel: weekLabel, daysFromToday: daysFromToday, needsSupport: needsSupport, nextBadge: nextBadge, card: card, injectCSS: injectCSS, DOW: DOW };
+    md: md, weekLabel: weekLabel, daysFromToday: daysFromToday, needsSupport: needsSupport, nextBadge: nextBadge, card: card, injectCSS: injectCSS, DOW: DOW,
+    METRICS: METRICS, STAGES: STAGES, ACTIVE: ACTIVE, SOURCES: SOURCES, DEFAULT_KPI: DEFAULT_KPI, dayMet: dayMet, caseFlags: caseFlags, isWon: isWon };
 })();
