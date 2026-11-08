@@ -186,6 +186,35 @@
   .pg-member.open .pg-body{display:block;}
   .pg-body .pr-card{margin-top:10px;}
   @media (max-width:700px){ .pg-head{grid-template-columns:1fr auto auto; } .pg-days{grid-column:1/-1; order:5;} .pg-head .pg-chev{display:none;} }
+  .wk-h{font-size:14px; color:var(--navy); margin:22px 0 10px; font-family:"Noto Serif TC",serif;}
+  .kpi-box{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:#fff;}
+  .kpi-box table{border-collapse:collapse; width:100%; font-size:13px; min-width:820px;}
+  .kpi-box th, .kpi-box td{padding:9px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap;}
+  .kpi-box th{font-weight:700; color:var(--ink-soft); font-size:12px; background:var(--paper);}
+  .kpi-box th:first-child, .kpi-box td:first-child{text-align:left; position:sticky; left:0; background:#fff;}
+  .kpi-box th:first-child{background:var(--paper);}
+  .kpi-box td.num{font-family:"Roboto Mono",monospace;}
+  .kpi-box td.tags{text-align:left; white-space:normal; min-width:170px;}
+  .kpi-box tr:last-child td{border-bottom:0;}
+  .kpi-box tr.total td{font-weight:700; background:var(--paper);}
+  .kp{display:inline-block; font-size:11.5px; font-weight:700; border-radius:10px; padding:1px 8px; margin:1px 2px; background:var(--paper); color:var(--ink-soft); white-space:nowrap;}
+  .kp.good{background:#E3F2EA; color:var(--positive);} .kp.warn{background:var(--warm-tint); color:var(--warm-deep);} .kp.bad{background:#FBE7E2; color:var(--negative);}
+  .kpi-two{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;}
+  .kpi-two > div{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#fff;}
+  .kpi-two h5{margin:0 0 8px; font-size:13px; color:var(--navy);}
+  @media (max-width:700px){ .kpi-two{grid-template-columns:1fr;} }
+  .fbar{display:grid; grid-template-columns:5.5em 1fr 2.6em; gap:8px; align-items:center; font-size:12.5px; margin-bottom:5px;}
+  .fbar .bar{height:12px; border-radius:4px; background:var(--teal-tint); overflow:hidden;}
+  .fbar .bar span{display:block; height:100%; background:var(--teal);}
+  .fbar .n{font-family:"Roboto Mono",monospace; text-align:right;}
+  .kli{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:2px 10px; border-bottom:1px solid var(--line); padding:7px 0; font-size:13px;}
+  .kli:last-child{border-bottom:0;}
+  .kli small{grid-column:1/-1; color:var(--ink-soft);}
+  .kpi-set{border:1px solid var(--line); border-radius:12px; padding:10px 14px; margin-top:12px; background:var(--paper);}
+  .kpi-set summary{cursor:pointer; font-weight:700; color:var(--teal-deep); font-size:13.5px;}
+  .kpi-set-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(118px,1fr)); gap:8px;}
+  .kpi-set-grid label{display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--ink-soft);}
+  .kpi-set-grid input{border:1.5px solid #CBD5D6; border-radius:8px; padding:7px 9px; font:inherit; font-size:14px; background:#fff;}
   .success-msg{
     display:none; background:rgba(46,125,91,0.08); border:1px solid rgba(46,125,91,0.25);
     color:var(--positive); font-size:12.5px; padding:10px 12px; border-radius:8px; margin-top:14px;
@@ -204,7 +233,7 @@
   <div class="wrap">
     <div class="eyebrow">Team · 團隊</div>
     <h1>團隊</h1>
-    <p><b>團隊工作量監控</b>。客戶資料只看得到數字（各狀態幾位客戶、有幾筆待追蹤），看不到客戶姓名、筆記或問卷內容；夥伴自己在「進程回報」填寫的內容，主管可以在「夥伴進程週報」看到。</p>
+    <p><b>團隊工作量監控</b>。客戶資料只看得到數字（各狀態幾位客戶、有幾筆待追蹤），看不到客戶姓名、筆記或問卷內容；夥伴自己在「進程回報」填寫的內容，包括每日 KPI、案件推進（案件代號、階段、下一步）和會面回報，主管可以在「團隊週報」看到。</p>
   </div>
 </header>
 
@@ -240,21 +269,46 @@
     </div>
 
     <div style="margin-top:32px;" id="progressSection">
-      <h3 style="font-size:14px;">夥伴進程週報</h3>
-      <div class="sub" style="margin-bottom:0;">夥伴在「進程回報」填的每一次會面都會出現在這裡，一次看一週。點夥伴可以展開看每一筆回報（只能看、不能修改）。</div>
+      <h3 style="font-size:14px;">團隊週報</h3>
+      <div class="sub" style="margin-bottom:0;">夥伴在「進程回報」填的每日 KPI、案件推進、會面回報都會出現在這裡，一次看一週（只能看、不能修改）。週一會議順序：看數字 → 處理紅色案件 → 每人說本週承諾。</div>
       <div class="pg-weekbar">
         <button class="pg-nav" id="pgPrev" type="button">← 上週</button>
         <span class="lbl" id="pgWeekLbl"></span>
         <button class="pg-nav" id="pgNext" type="button">下週 →</button>
         <button class="pg-nav" id="pgThis" type="button">回到本週</button>
       </div>
+
+      <h4 class="wk-h">① 每日 KPI</h4>
+      <div id="kpiArea"><div class="empty-hint">載入中…</div></div>
+      <details class="kpi-set" id="kpiSet">
+        <summary>設定每日目標與獎懲門檻</summary>
+        <p class="sub" style="margin:8px 0 10px;">設為 0 表示不列入達標判斷。每天所有有目標的項目都達到，才算「當日達標」。目標會套用到你團隊的每位夥伴。</p>
+        <div class="kpi-set-grid" id="kpiTargets"></div>
+        <div class="kpi-set-grid" style="margin-top:10px;">
+          <label>一週達標幾天可得獎勵<input type="number" id="kpiReward" min="1" max="7"></label>
+          <label>一週漏填幾天列入懲罰<input type="number" id="kpiPenalty" min="1" max="7"></label>
+        </div>
+        <ul class="sub" style="margin:10px 0 0; padding-left:18px;">
+          <li>工作日（週一到週五）沒填日報算漏填，當天不算。</li>
+          <li>隔天之後才補填，會標成「補填」。</li>
+          <li>建議獎懲綁「有沒有誠實填寫」，業績達標只給獎勵、不罰。</li>
+        </ul>
+        <div style="margin-top:12px;"><button class="btn" id="kpiSave" type="button">儲存設定</button></div>
+      </details>
+
+      <h4 class="wk-h">② 需處理的案件</h4>
+      <div class="sub" style="margin:-4px 0 8px;">沒有下一步、已逾期，或 14 天以上沒更新的進行中案件。</div>
+      <div id="kpiCases"></div>
+
+      <h4 class="wk-h">③ 會面回報</h4>
+      <div class="sub" style="margin:-4px 0 8px;">點夥伴可以展開看每一筆會面回報。</div>
       <div id="progressArea"><div class="empty-hint">載入中…</div></div>
     </div>
   </div>
 
   <div class="card" id="joinCard">
     <h3>加入其他顧問的團隊</h3>
-    <div class="sub">如果有人邀請你加入他的團隊，把邀請碼輸入在這裡就好；你的客戶資料內容不會因此被對方看到，只有工作量數字會被統計；你在「進程回報」填的回報，團隊主管看得到。</div>
+    <div class="sub">如果有人邀請你加入他的團隊，把邀請碼輸入在這裡就好；你的客戶資料內容不會因此被對方看到，只有工作量數字會被統計；你在「進程回報」填的每日 KPI、案件推進和會面回報，團隊主管看得到。</div>
     <div class="join-row">
       <input type="text" id="joinCodeInput" placeholder="輸入邀請碼，例如 A1B2C3D4" maxlength="12">
       <button class="btn" id="btnJoinTeam">加入團隊</button>
@@ -509,10 +563,130 @@ function initTeamProgress(teamId){
   pgTeamId = teamId;
   VCProgress.injectCSS();
   pgWeek = VCProgress.weekStart(new Date());
-  document.getElementById('pgPrev').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, -7); loadTeamProgress(); });
-  document.getElementById('pgNext').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, 7); loadTeamProgress(); });
-  document.getElementById('pgThis').addEventListener('click', ()=>{ pgWeek = VCProgress.weekStart(new Date()); loadTeamProgress(); });
-  loadTeamProgress();
+  const both = ()=>{ loadTeamProgress(); loadTeamKpi(); };
+  document.getElementById('pgPrev').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, -7); both(); });
+  document.getElementById('pgNext').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, 7); both(); });
+  document.getElementById('pgThis').addEventListener('click', ()=>{ pgWeek = VCProgress.weekStart(new Date()); both(); });
+  document.getElementById('kpiSave').addEventListener('click', saveKpiSettings);
+  both();
+}
+
+/* ---------------- 每日 KPI 週報＋需處理案件 ---------------- */
+let kpiSettingsLoaded = false;
+async function loadTeamKpi(){
+  const P = VCProgress, area = document.getElementById('kpiArea');
+  const from = P.ymd(pgWeek), to = P.ymd(P.addDays(pgWeek, 6));
+  area.innerHTML = '<div class="empty-hint">載入中…</div>';
+  const { data, error } = await supabaseClient.rpc('vc_team_kpi', { p_team_id: pgTeamId, p_from: from, p_to: to });
+  if(error){
+    const msg = /could not find|PGRST202/i.test((error.code||'') + (error.message||''))
+      ? '每日 KPI 還沒開通，請管理者先執行 supabase-kpi.sql。' : '讀取每日 KPI 失敗，請稍後再試。';
+    area.innerHTML = '<div class="empty-hint"></div>'; area.firstChild.textContent = msg;
+    document.getElementById('kpiCases').textContent = ''; document.getElementById('kpiSet').hidden = true;
+    return;
+  }
+  renderTeamKpi(data || {});
+}
+function fillKpiSettings(st){
+  if(kpiSettingsLoaded) return; kpiSettingsLoaded = true;
+  const P = VCProgress, box = document.getElementById('kpiTargets'); box.textContent = '';
+  P.METRICS.forEach(m=>{
+    const l = document.createElement('label'); l.textContent = m.l;
+    const i = document.createElement('input'); i.type = 'number'; i.min = '0'; i.max = '999'; i.id = 'kt-' + m.k;
+    i.value = (st.targets || {})[m.k] || 0; l.appendChild(i); box.appendChild(l);
+  });
+  document.getElementById('kpiReward').value = st.reward_days || 4;
+  document.getElementById('kpiPenalty').value = st.penalty_days || 2;
+}
+async function saveKpiSettings(){
+  const P = VCProgress, t = {};
+  P.METRICS.forEach(m=>{ t[m.k] = Math.max(0, Math.min(999, parseInt(document.getElementById('kt-' + m.k).value, 10) || 0)); });
+  const btn = document.getElementById('kpiSave'); btn.disabled = true;
+  const { error } = await supabaseClient.rpc('vc_set_team_kpi_settings', { p_team_id: pgTeamId, p_targets: t,
+    p_reward: parseInt(document.getElementById('kpiReward').value, 10) || 4, p_penalty: parseInt(document.getElementById('kpiPenalty').value, 10) || 2 });
+  btn.disabled = false;
+  if(error){ vcToast('儲存失敗，請稍後再試', 'err'); return; }
+  vcToast('已儲存每日目標'); loadTeamKpi();
+}
+function renderTeamKpi(d){
+  const P = VCProgress, area = document.getElementById('kpiArea');
+  const el = (t, c, x)=>{ const e = document.createElement(t); if(c) e.className = c; if(x != null) e.textContent = x; return e; };
+  const st = d.settings || P.DEFAULT_KPI, targets = st.targets || {};
+  fillKpiSettings(st);
+  const members = d.members || [], days = d.days || [], cases = d.cases || [];
+  const today = d.today || P.ymd(P.today());
+  area.textContent = '';
+  if(!members.length){ area.appendChild(el('div', 'empty-hint', '目前團隊裡還沒有其他顧問加入。')); document.getElementById('kpiCases').textContent = ''; return; }
+  const name = {}; members.forEach(m=> name[m.advisor_id] = m.name);
+  const workdays = [0,1,2,3,4].map(i=> P.ymd(P.addDays(pgWeek, i))).filter(x=> x <= today);
+  const total = {}; P.METRICS.forEach(m=> total[m.k] = 0);
+  const blockers = [];
+  const box = el('div', 'kpi-box'), table = el('table'), head = el('tr');
+  ['顧問','填寫'].concat(P.METRICS.map(m=> m.s || m.l), ['達標天','進行案件','獎懲']).forEach(h=> head.appendChild(el('th', '', h)));
+  table.appendChild(head);
+  members.forEach(m=>{
+    const mine = days.filter(x=> x.advisor_id === m.advisor_id);
+    const by = {}; mine.forEach(x=> by[x.day] = x);
+    const filled = workdays.filter(x=> by[x]).length;
+    const missed = workdays.filter(x=> x < today && !by[x]).length;
+    const met = mine.filter(x=> P.dayMet(x, targets)).length;
+    const late = mine.filter(x=> x.first_saved_on > x.day).length;
+    const act = cases.filter(c=> c.advisor_id === m.advisor_id && P.ACTIVE.indexOf(c.stage) > -1);
+    const nFlag = act.filter(c=> P.caseFlags(c).length).length;
+    mine.forEach(x=>{ if(x.blocker) blockers.push({ who: m.name, day: x.day, text: x.blocker }); });
+    const tr = el('tr');
+    tr.appendChild(el('td', '', m.name));
+    tr.appendChild(el('td', 'num', filled + '/' + workdays.length));
+    P.METRICS.forEach(k=>{ const v = mine.reduce((s, x)=> s + (x[k.k] || 0), 0); total[k.k] += v; tr.appendChild(el('td', 'num', String(v))); });
+    tr.appendChild(el('td', 'num', String(met)));
+    const tdc = el('td', 'num', String(act.length)); if(nFlag) tdc.appendChild(el('span', 'kp bad', '需處理 ' + nFlag)); tr.appendChild(tdc);
+    const tags = el('td', 'tags');
+    if(workdays.filter(x=> x < today).length && missed === 0 && filled) tags.appendChild(el('span', 'kp good', '全勤'));
+    if(met >= (st.reward_days || 4)) tags.appendChild(el('span', 'kp good', '達標獎勵'));
+    if(missed >= (st.penalty_days || 2)) tags.appendChild(el('span', 'kp bad', '漏填 ' + missed + ' 天・懲罰'));
+    else if(missed > 0) tags.appendChild(el('span', 'kp warn', '漏填 ' + missed + ' 天'));
+    if(late) tags.appendChild(el('span', 'kp', '補填 ' + late + ' 次'));
+    if(!tags.childNodes.length) tags.textContent = '—';
+    tr.appendChild(tags);
+    table.appendChild(tr);
+  });
+  const tot = el('tr', 'total'); tot.appendChild(el('td', '', '團隊合計')); tot.appendChild(el('td', '', ''));
+  P.METRICS.forEach(k=> tot.appendChild(el('td', 'num', String(total[k.k]))));
+  ['','',''].forEach(()=> tot.appendChild(el('td', '', ''))); table.appendChild(tot);
+  box.appendChild(table); area.appendChild(box);
+
+  // 漏斗＋卡點
+  const two = el('div', 'kpi-two');
+  const f = el('div'); f.appendChild(el('h5', '', '團隊漏斗（本週合計）'));
+  const fk = ['leads','invites','appts','meetings','proposals','deals'], max = Math.max(1, ...fk.map(k=> total[k]));
+  fk.forEach(k=>{
+    const m = P.METRICS.find(x=> x.k === k), row = el('div', 'fbar');
+    row.appendChild(el('span', '', m.s || m.l)); const bar = el('div', 'bar'), sp = el('span'); sp.style.width = (total[k] / max * 100) + '%'; bar.appendChild(sp);
+    row.appendChild(bar); row.appendChild(el('span', 'n', String(total[k]))); f.appendChild(row);
+  });
+  if(total.invites) f.appendChild(el('div', 'sub', '邀約 → 約訪轉換率 ' + Math.round(total.appts / total.invites * 100) + '%'));
+  two.appendChild(f);
+  const b = el('div'); b.appendChild(el('h5', '', '本週卡點'));
+  blockers.sort((x, y)=> y.day.localeCompare(x.day));
+  if(!blockers.length) b.appendChild(el('div', 'sub', '本週沒有人寫卡點。'));
+  blockers.slice(0, 15).forEach(x=>{ const li = el('div', 'kli'); li.appendChild(el('span', '', x.text)); li.appendChild(el('span', 'kp', x.who)); li.appendChild(el('small', '', P.md(x.day))); b.appendChild(li); });
+  two.appendChild(b); area.appendChild(two);
+
+  // 需處理的案件
+  const cb = document.getElementById('kpiCases'); cb.textContent = '';
+  const flagged = cases.filter(c=> P.caseFlags(c).length).sort((x, y)=> String(x.next_date || '0').localeCompare(String(y.next_date || '0')));
+  if(!flagged.length){ cb.appendChild(el('div', 'empty-hint', '沒有需要處理的案件。')); return; }
+  const wrap = el('div', 'kpi-two'); wrap.style.gridTemplateColumns = '1fr'; const inner = el('div');
+  flagged.forEach(c=>{
+    const li = el('div', 'kli');
+    const l = el('span'); l.appendChild(el('b', '', c.code)); l.appendChild(document.createTextNode('　' + c.stage + (c.amount != null ? '・' + Number(c.amount).toLocaleString('en-US') + ' 萬' : '')));
+    li.appendChild(l); li.appendChild(el('span', 'kp', name[c.advisor_id] || '夥伴'));
+    const sm = el('small');
+    P.caseFlags(c).forEach(x=> sm.appendChild(el('span', 'kp ' + x[0], x[1])));
+    sm.appendChild(document.createTextNode('　下一步：' + (c.next_action || '未填') + (c.next_date ? '（' + P.md(c.next_date) + '）' : '') + (c.blocker ? '　卡關：' + c.blocker : '')));
+    li.appendChild(sm); inner.appendChild(li);
+  });
+  wrap.appendChild(inner); cb.appendChild(wrap);
 }
 async function loadTeamProgress(){
   const P = VCProgress, area = document.getElementById('progressArea');
