@@ -37,7 +37,9 @@
     who.appendChild(el('b', '', r.contact_name));
     who.appendChild(el('span', 'pr-no', '第 ' + r.meet_no + ' 次會面'));
     head.appendChild(who);
-    head.appendChild(el('span', 'pr-date', md(r.meet_date) + (opts.showAdvisor ? '・' + opts.showAdvisor : '')));
+    var right = el('span', 'pr-date', md(r.meet_date) + (opts.showAdvisor ? '・' + opts.showAdvisor : ''));
+    if(r.stage) right.appendChild(el('em', 'pr-stage' + (isWon(r) ? ' won' : r.stage === '暫停／流失' ? ' lost' : ''), r.stage));
+    head.appendChild(right);
     c.appendChild(head);
     c.appendChild(el('div', 'pr-meta', [r.relation, r.age ? r.age + ' 歲' : '', r.job].filter(Boolean).join('・')));
 
@@ -59,10 +61,13 @@
     var rows = el('div', 'pr-rows');
     function row(k, v, cls){ var d = el('div', 'pr-row' + (cls ? ' ' + cls : '')); d.appendChild(el('span', 'k', k)); d.appendChild(el('span', 'v', v)); rows.appendChild(d); return d; }
     row('案件進程總結', r.summary);
-    row('下一步推進計畫', r.next_plan);
-    var nb = nextBadge(r.next_contact);
-    var nr = row('預計下次接觸', md(r.next_contact));
-    nr.querySelector('.v').appendChild(el('em', 'pr-badge ' + nb.cls, nb.text));
+    if(r.next_plan) row('下一步推進計畫', r.next_plan);
+    if(r.amount != null) row('預估金額', Number(r.amount).toLocaleString('en-US') + ' 萬');
+    if(r.next_contact){
+      var nb = nextBadge(r.next_contact);
+      var nr = row('預計下次接觸', md(r.next_contact));
+      nr.querySelector('.v').appendChild(el('em', 'pr-badge ' + nb.cls, nb.text));
+    }
     row('需要支援', r.need_support, needsSupport(r.need_support) ? 'support' : '');
     if(r.tomorrow_plan) row('明日排訪及安排', r.tomorrow_plan);
     c.appendChild(rows);
@@ -86,6 +91,8 @@
     '.pr-who b{font-size:16px;color:#16323F;}' +
     '.pr-no{font-size:12px;font-weight:700;color:#1F5C73;background:#E6F0F2;border-radius:10px;padding:1px 9px;}' +
     '.pr-date{font-size:12.5px;color:#5B6B70;font-family:"Roboto Mono",monospace;}' +
+    '.pr-stage{font-style:normal;font-family:"Noto Sans TC",sans-serif;font-size:12px;font-weight:700;border-radius:10px;padding:1px 9px;margin-left:8px;background:#E6F0F2;color:#1F5C73;}' +
+    '.pr-stage.won{background:#E3F2EA;color:#2E7D5B;}.pr-stage.lost{background:#F1F4F4;color:#5B6B70;}' +
     '.pr-meta{font-size:13px;color:#5B6B70;margin-top:2px;}' +
     '.pr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px;}' +
     '.pr-chips span{font-size:12.5px;font-weight:700;border-radius:12px;padding:2px 10px;background:#F1F4F4;color:#16323F;}' +
@@ -113,35 +120,63 @@
     var s = document.createElement('style'); s.id = 'vcProgressCSS'; s.textContent = CSS; document.head.appendChild(s);
   }
 
-  /* ---------- 每日 KPI／案件推進 ---------- */
+  /* ---------- 每日進程／每週成績 ---------- */
+  // auto:true 的項目由當天的會面自動計算，其他由顧問手動填
   var METRICS = [
     { k:'leads', l:'新增名單' }, { k:'invites', l:'邀約' }, { k:'appts', l:'約訪成功' },
-    { k:'meetings', l:'面談（需求分析）', s:'面談' }, { k:'proposals', l:'提案／規劃書', s:'提案' },
-    { k:'deals', l:'成交' }, { k:'referrals', l:'轉介紹' }
+    { k:'meetings', l:'面談（會面）', s:'面談', auto:true }, { k:'proposals', l:'提案', auto:true },
+    { k:'deals', l:'成交', auto:true }, { k:'referrals', l:'轉介紹' }
   ];
   var STAGES = ['名單','接觸','約訪','需求分析','提案','成交','售後／轉介','暫停／流失'];
   var ACTIVE = STAGES.slice(0, 5);
-  var SOURCES = ['人脈','轉介紹','自媒體','活動','其他'];
-  var DEFAULT_KPI = { targets:{ leads:3, invites:10, appts:2, meetings:1, proposals:0, deals:0, referrals:0 }, reward_days:4, penalty_days:2 };
-  // 所有有目標（>0）的項目都達到才算當日達標
-  function dayMet(rec, targets){
-    targets = targets || {};
-    var keys = METRICS.filter(function(m){ return (targets[m.k] || 0) > 0; });
-    if(!rec || !keys.length) return false;
-    return keys.every(function(m){ return (rec[m.k] || 0) >= targets[m.k]; });
+  var DEFAULT_KPI = { targets:{ leads:15, invites:50, appts:10, meetings:5, proposals:2, deals:0, referrals:0 }, reward_days:4, penalty_days:2 };
+  function isWon(c){ return c.stage === '成交' || c.stage === '售後／轉介'; }
+  function isActive(c){ return !c.stage || ACTIVE.indexOf(c.stage) > -1; }   // 舊資料沒有階段，當作進行中
+  // 會面自動算：面談＝會面筆數、提案＝拜訪目的有「提案、建議書說明」、成交＝這次階段是成交
+  function autoCount(meets){
+    return { meetings: meets.length,
+      proposals: meets.filter(function(r){ return (r.purposes || []).indexOf('提案、建議書說明') > -1; }).length,
+      deals: meets.filter(function(r){ return r.stage === '成交'; }).length };
   }
-  // 進行中案件的警示：沒有下一步、已逾期、14 天以上沒更新
+  // 一段期間的合計：days＝日報、meets＝會面
+  function totals(days, meets){
+    var t = {}; METRICS.forEach(function(m){ t[m.k] = 0; });
+    (days || []).forEach(function(d){ METRICS.forEach(function(m){ if(!m.auto) t[m.k] += d[m.k] || 0; }); });
+    var a = autoCount(meets || []); t.meetings = a.meetings; t.proposals = a.proposals; t.deals = a.deals;
+    return t;
+  }
+  // 每週成績：有目標（>0）的項目各自算達成率
+  function score(t, targets){
+    targets = targets || {};
+    var items = METRICS.filter(function(m){ return (targets[m.k] || 0) > 0; }).map(function(m){
+      return { k:m.k, l:m.s || m.l, v:t[m.k] || 0, goal:targets[m.k], ok:(t[m.k] || 0) >= targets[m.k] };
+    });
+    var met = items.filter(function(x){ return x.ok; }).length;
+    return { items:items, met:met, total:items.length, all: items.length > 0 && met === items.length };
+  }
+  // 工作日（週一到週五）且 <= today
+  function workdays(ws, todayStr){ var a = []; for(var i = 0; i < 5; i++){ var d = ymd(addDays(ws, i)); if(d <= todayStr) a.push(d); } return a; }
+  // 案件＝每位會面對象最新一次的會面
+  function latestByContact(reports){
+    var m = {};
+    (reports || []).forEach(function(r){
+      var k = (r.advisor_id || '') + '|' + String(r.contact_name || '').trim(), o = m[k];
+      if(!o || r.meet_date > o.meet_date || (r.meet_date === o.meet_date && r.meet_no > o.meet_no)) m[k] = r;
+    });
+    return Object.keys(m).map(function(k){ return m[k]; });
+  }
+  // 進行中案件的警示：沒有下一步、已逾期、14 天以上沒有會面
   function caseFlags(c){
-    if(ACTIVE.indexOf(c.stage) < 0) return [];
+    if(!isActive(c)) return [];
     var f = [], t = ymd(today());
-    if(!c.next_date || !c.next_action) f.push(['bad', '沒有下一步']);
-    else if(c.next_date < t) f.push(['bad', '逾期 ' + (-daysFromToday(c.next_date)) + ' 天']);
-    if(c.updated_on){ var n = -daysFromToday(c.updated_on); if(n >= 14) f.push(['warn', n + ' 天沒更新']); }
+    if(!c.next_contact || !c.next_plan) f.push(['bad', '沒有下一步']);
+    else if(c.next_contact < t) f.push(['bad', '逾期 ' + (-daysFromToday(c.next_contact)) + ' 天']);
+    if(c.meet_date){ var n = -daysFromToday(c.meet_date); if(n >= 14) f.push(['warn', n + ' 天沒推進']); }
     return f;
   }
-  function isWon(c){ return c.stage === '成交' || c.stage === '售後／轉介'; }
 
   window.VCProgress = { PURPOSES: PURPOSES, ymd: ymd, parse: parse, addDays: addDays, today: today, weekStart: weekStart,
     md: md, weekLabel: weekLabel, daysFromToday: daysFromToday, needsSupport: needsSupport, nextBadge: nextBadge, card: card, injectCSS: injectCSS, DOW: DOW,
-    METRICS: METRICS, STAGES: STAGES, ACTIVE: ACTIVE, SOURCES: SOURCES, DEFAULT_KPI: DEFAULT_KPI, dayMet: dayMet, caseFlags: caseFlags, isWon: isWon };
+    METRICS: METRICS, STAGES: STAGES, ACTIVE: ACTIVE, DEFAULT_KPI: DEFAULT_KPI, isWon: isWon, isActive: isActive,
+    autoCount: autoCount, totals: totals, score: score, workdays: workdays, latestByContact: latestByContact, caseFlags: caseFlags };
 })();
