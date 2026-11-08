@@ -69,6 +69,7 @@
       nr.querySelector('.v').appendChild(el('em', 'pr-badge ' + nb.cls, nb.text));
     }
     row('需要支援', r.need_support, needsSupport(r.need_support) ? 'support' : '');
+    if(r.blocker) row('今天最大的卡點', r.blocker);
     if(r.tomorrow_plan) row('明日排訪及安排', r.tomorrow_plan);
     c.appendChild(rows);
 
