@@ -169,6 +169,44 @@
   .f select{width:100%; border:1.5px solid #CBD5D6; border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; color:var(--ink); background:#fff;}
   .note-tip{font-size:12.5px; color:var(--ink-soft);}
   .f.cinvalid input, .f.cinvalid select{border-color:#B3402A;}
+
+  /* v3.35 每日進程／週成績 */
+  .main-tabs{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .daynav{display:flex; align-items:center; gap:6px;}
+  .daynav input{border:1.5px solid #CBD5D6; border-radius:10px; padding:8px 10px; font:inherit; font-size:15px; color:var(--ink); background:#fff;}
+  .daynav .nav-btn{padding:6px 12px;}
+  .wday:disabled{opacity:.45; cursor:default;}
+  .wday small{display:block; font-size:11px; line-height:1.3;}
+  .nomeet{display:flex; align-items:center; gap:10px; border:1.5px dashed #CBD5D6; border-radius:12px; padding:12px 14px; cursor:pointer; font-weight:700; color:var(--navy); margin-top:6px;}
+  .nomeet input{width:20px; height:20px; accent-color:var(--navy);}
+  .nomeet.on{border-style:solid; border-color:var(--navy); background:#F3F7F8;}
+  .nomeet[hidden]{display:none;}
+  .metric.auto{background:#fff; border-style:dashed;}
+  .metric .av{font-family:"Roboto Mono",monospace; font-size:20px; font-weight:700; color:var(--navy); min-width:2.2em; text-align:right;}
+  .score{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin:14px 0 6px;}
+  .score .big{font-family:"Roboto Mono",monospace; font-size:34px; font-weight:700; color:var(--navy); line-height:1;}
+  .score .big small{font-size:16px; color:var(--ink-soft);}
+  .bars{display:grid; gap:10px; margin-top:12px;}
+  .barrow{display:grid; grid-template-columns:7.5em 1fr 6.5em; gap:10px; align-items:center; font-size:13.5px;}
+  .barrow .nm{font-weight:700; color:var(--navy);}
+  .barrow .nm em{font-style:normal; font-size:11px; font-weight:700; color:var(--teal-deep); background:var(--teal-tint); border-radius:8px; padding:0 6px; margin-left:4px;}
+  .barrow .bar{height:12px; background:var(--paper); border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .barrow .bar i{display:block; height:100%; background:var(--teal);}
+  .barrow.ok .bar i{background:var(--positive);}
+  .barrow .n{font-family:"Roboto Mono",monospace; text-align:right; color:var(--ink);}
+  .barrow.ok .n{color:var(--positive); font-weight:700;}
+  .barrow.none .n{color:var(--ink-soft);}
+  .tbl{overflow-x:auto;}
+  .tbl table{border-collapse:collapse; width:100%; min-width:640px; font-size:13px;}
+  .tbl th, .tbl td{padding:8px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap;}
+  .tbl th{font-size:12px; color:var(--ink-soft); background:var(--paper);}
+  .tbl th:first-child, .tbl td:first-child{text-align:left;}
+  .tbl td.num{font-family:"Roboto Mono",monospace;}
+  .tbl tr.total td{font-weight:700; background:var(--paper);}
+  .blk{border-bottom:1px solid var(--line); padding:8px 0; font-size:14px;} .blk:last-child{border-bottom:0;}
+  .blk small{color:var(--ink-soft); font-family:"Roboto Mono",monospace; margin-right:8px;}
+  .f select{width:100%;}
+  @media (max-width:560px){ .barrow{grid-template-columns:5.5em 1fr 5.5em;} }
 </style>
 </head>
 <body>
@@ -177,14 +215,14 @@
   <div class="wrap">
     <div class="eyebrow">Progress Report · 進程推進回報</div>
     <h1>進程推進回報</h1>
-    <p>每天記工作量、每次會面記一筆、每個案子記到哪一步。加入團隊的話，團隊主管每週可以一次看到你的進度，需要支援的地方也能即時幫上忙。</p>
+    <p>每天花幾分鐘填「每日進程」：今天見了誰、推到哪一步；沒有會面就勾「無」。每週的成績會自動算好。加入團隊的話，團隊主管每週可以一次看到你的進度，需要支援的地方也能即時幫上忙。</p>
   </div>
 </header>
 
 <main class="wrap">
   <div class="card" id="setupMsg" style="display:none;">
     <h2>這個功能還沒開通</h2>
-    <p class="muted">系統的資料表還沒建立好，請稍後再試；如果你是管理者，請先執行「supabase-progress-report.sql」。</p>
+    <p class="muted">系統的資料表還沒建立好，請稍後再試；如果你是管理者，請先執行「supabase-progress-report.sql」和「supabase-kpi.sql」。</p>
   </div>
   <div class="card" id="notLoggedIn" style="display:none;">目前沒有偵測到登入狀態，請重新整理這個頁面，或重新登入後再試一次。</div>
 
@@ -201,67 +239,165 @@
     </section>
 
     <div class="main-tabs" role="tablist" aria-label="進程回報分類">
-      <button type="button" role="tab" data-tab="daily" aria-selected="true"><b>每日 KPI</b><span>每天的工作量和達標</span></button>
-      <button type="button" role="tab" data-tab="meet" aria-selected="false"><b>會面回報</b><span>每次會面記一筆</span></button>
-      <button type="button" role="tab" data-tab="cases" aria-selected="false"><b>案件推進</b><span>每個案子推到哪一步</span></button>
+      <button type="button" role="tab" data-tab="daily" aria-selected="true"><b>每日進程</b><span>每天填：會面＋今天的數字</span></button>
+      <button type="button" role="tab" data-tab="week" aria-selected="false"><b>週成績</b><span>本週 KPI 達成多少</span></button>
+      <button type="button" role="tab" data-tab="cases" aria-selected="false"><b>案件總覽</b><span>每個案子推到哪一步</span></button>
     </div>
 
-    <!-- ================= 每日 KPI ================= -->
+    <!-- ================= 每日進程 ================= -->
     <div class="panel" id="panelDaily" role="tabpanel">
-      <section class="card" aria-label="每日工作量">
-        <div class="row-between">
-          <div>
-            <h2>每日工作量</h2>
-            <div class="muted">填完按儲存，當天可以再修改。隔天之後才補填會標示「補填」。</div>
-            <div class="goal-src" id="goalSrc"></div>
+      <section class="card" aria-label="選擇日期">
+        <div class="row-between" style="align-items:center; margin-bottom:12px;">
+          <div><h2 style="margin:0;">每日進程</h2><div class="muted">每天都要填；沒有會面就勾「今天沒有會面」。隔天之後才補會標示「補填」。</div></div>
+          <div class="daynav">
+            <button class="nav-btn" id="dPrev" type="button" aria-label="前一天">‹</button>
+            <input type="date" id="dDate" aria-label="日期">
+            <button class="nav-btn" id="dNext" type="button" aria-label="後一天">›</button>
           </div>
-          <div class="f" style="width:180px;"><label for="dDate">日期</label><input type="date" id="dDate"></div>
-        </div>
-        <div class="metrics" id="dMetrics"></div>
-        <div class="f"><label for="dBlocker">今天最大的卡點（一句話）</label><input type="text" id="dBlocker" maxlength="120" placeholder="例如：客戶說要回家跟另一半討論"></div>
-        <div class="form-actions" style="justify-content:space-between;">
-          <span class="pill mute" id="dState">尚未填寫</span>
-          <button type="button" class="btn warm" id="dSave">儲存日報</button>
-        </div>
-      </section>
-      <section class="card" aria-label="本週紀錄">
-        <div class="row-between" style="align-items:center; margin-bottom:10px;">
-          <h2 style="margin:0;">本週紀錄</h2>
-          <span class="pill" id="dStreak">連續填寫 0 個工作日</span>
         </div>
         <div class="week" id="dWeek"></div>
-        <p class="legend">綠色＝達標，藍色＝已填，紅色＝工作日漏填；數字是當天的邀約數。點一天可以查看或補填。</p>
+        <p class="legend">綠色＝已填，紅色＝工作日漏填；點一天可以查看或補填。</p>
+      </section>
+
+      <!-- 新增／編輯會面 -->
+      <section class="card form-card" id="formCard" hidden aria-label="填寫會面">
+        <h2 id="formTitle">新增會面</h2>
+        <p class="muted" style="margin:0 0 14px;">標示 <span style="color:#B3402A">*</span> 的都要填。</p>
+        <form id="prForm" novalidate>
+          <div class="fgrid">
+            <div class="f" data-f="meet_date">
+              <label for="fDate">會面日期<span class="req">*</span></label>
+              <input type="date" id="fDate">
+            </div>
+            <div class="f" data-f="advisor_name">
+              <label for="fAdvisor">顧問名<span class="req">*</span></label>
+              <input type="text" id="fAdvisor" maxlength="40">
+            </div>
+            <div class="f full" data-f="contact_name">
+              <label for="fContact">會面人名稱<span class="req">*</span></label>
+              <div class="hint">同一個人就是同一個案件；見過的人會出現在選單，選了會自動帶入基本資料和目前階段，會面次數自動 +1</div>
+              <input type="text" id="fContact" maxlength="40" list="contactList" autocomplete="off" placeholder="例如：王先生、小美">
+              <datalist id="contactList"></datalist>
+              <div class="prefill-note" id="prefillNote" hidden></div>
+            </div>
+            <div class="f full" data-f="purposes">
+              <div class="lb">拜訪目的<span class="req">*</span></div>
+              <div class="hint">可複選；勾「提案、建議書說明」會自動算進本週的提案數</div>
+              <div class="chk-grid" id="purposeBox"></div>
+            </div>
+            <div class="f" data-f="stage">
+              <label for="fStage">這次會面後，案件在哪個階段<span class="req">*</span></label>
+              <select id="fStage"></select>
+              <div class="hint">選「成交」會自動算進本週的成交數</div>
+            </div>
+            <div class="f" data-f="amount">
+              <label for="fAmount">預估金額（萬元）</label>
+              <input type="number" id="fAmount" min="0" step="1" inputmode="numeric">
+            </div>
+            <div class="f" data-f="meet_no">
+              <label for="fNo">進程上會面次數（第 X 次）<span class="req">*</span></label>
+              <input type="number" id="fNo" min="1" max="999" inputmode="numeric" placeholder="例如：1">
+            </div>
+            <div class="f" data-f="relation">
+              <label for="fRelation">關係<span class="req">*</span></label>
+              <input type="text" id="fRelation" maxlength="40" placeholder="例如：朋友、同事、客戶轉介">
+            </div>
+            <div class="f" data-f="age">
+              <label for="fAge">年齡<span class="req">*</span></label>
+              <input type="number" id="fAge" min="1" max="120" inputmode="numeric" placeholder="例如：32">
+            </div>
+            <div class="f" data-f="job">
+              <label for="fJob">職業<span class="req">*</span></label>
+              <input type="text" id="fJob" maxlength="40" placeholder="例如：工程師">
+            </div>
+            <div class="f full" data-f="trust">
+              <div class="lb">信任度評分<span class="req">*</span></div>
+              <div class="hint">1 分最低，10 分最高</div>
+              <div class="hearts" id="hearts"></div>
+            </div>
+            <div class="f full" data-f="summary">
+              <label for="fSummary">目前案件進程總結（主要需求、關注點，抗拒 or 卡關點……）<span class="req">*</span></label>
+              <textarea id="fSummary" maxlength="1000"></textarea>
+            </div>
+            <div class="f full" data-f="next_plan">
+              <label for="fNext">下一步推進計畫<span class="req nreq">*</span></label>
+              <textarea id="fNext" maxlength="500"></textarea>
+            </div>
+            <div class="f" data-f="next_contact">
+              <label for="fNextDate">預計下一次接觸時間<span class="req nreq">*</span></label>
+              <input type="date" id="fNextDate">
+              <div class="quick" id="nextQuick"></div>
+            </div>
+            <div class="f" data-f="need_support">
+              <label for="fSupport">需要社群 or 領導人支援<span class="req">*</span></label>
+              <input type="text" id="fSupport" maxlength="300" placeholder="例如：需要主管陪同提案">
+              <div class="quick"><button type="button" id="noSupport">目前不需要</button></div>
+            </div>
+          </div>
+          <div class="privacy">🔒 這份回報只有你自己和你加入的團隊主管看得到（主管只能看、不能修改）。</div>
+          <div class="form-actions">
+            <button type="submit" class="btn warm" id="submitBtn">儲存會面</button>
+            <button type="button" class="btn ghost" id="cancelBtn">取消</button>
+            <span class="form-err" id="formErr" role="alert"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="card" aria-label="當天的會面">
+        <div class="row-between" style="align-items:center; margin-bottom:10px;">
+          <h2 style="margin:0;" id="dMeetTitle">今天的會面</h2>
+          <button class="btn warm" id="addBtn" type="button">＋ 新增會面</button>
+        </div>
+        <div id="dMeets"></div>
+        <label class="nomeet" id="noMeetBox"><input type="checkbox" id="dNoMeet">今天沒有會面（無）</label>
+      </section>
+
+      <section class="card" aria-label="當天的數字">
+        <h2>今天的數字</h2>
+        <div class="muted">面談、提案、成交會從上面的會面自動算，其他四項自己填。</div>
+        <div class="metrics" id="dMetrics"></div>
+        <div class="fgrid">
+          <div class="f"><label for="dBlocker">今天最大的卡點（一句話）</label><input type="text" id="dBlocker" maxlength="120" placeholder="例如：客戶說要回家跟另一半討論"></div>
+          <div class="f"><label for="dTomorrow">明日排訪及安排</label><input type="text" id="dTomorrow" maxlength="500" placeholder="例如：10 點王先生二次面談"></div>
+        </div>
+        <div class="form-actions" style="justify-content:space-between;">
+          <span class="pill mute" id="dState">尚未送出</span>
+          <span class="form-err" id="dErr" role="alert"></span>
+          <button type="button" class="btn warm" id="dSave">送出今日進程</button>
+        </div>
       </section>
     </div>
 
-    <!-- ================= 案件推進 ================= -->
-    <div class="panel" id="panelCases" role="tabpanel" hidden>
-      <section class="card form-card" id="caseForm" hidden aria-label="案件">
-        <div class="row-between" style="align-items:center;"><h2 id="cfTitle">新增案件</h2><button type="button" class="btn ghost" id="cfClose" style="min-height:36px;padding:6px 14px;">關閉</button></div>
-        <p class="muted" style="margin:0 0 14px;">客戶請用代號（例如：王小姐-竹北），不要寫全名。進行中的案件一定要填下一步和日期。</p>
-        <div class="fgrid">
-          <div class="f" data-c="code"><label for="cfCode">客戶代號<span class="req">*</span></label><input type="text" id="cfCode" maxlength="30"></div>
-          <div class="f"><label for="cfSource">來源</label><select id="cfSource"></select></div>
-          <div class="f"><label for="cfStage">目前階段</label><select id="cfStage"></select></div>
-          <div class="f"><label for="cfProduct">商品／需求</label><input type="text" id="cfProduct" maxlength="40" placeholder="例如：退休現金流、保本規劃"></div>
-          <div class="f"><label for="cfAmount">預估金額（萬元）</label><input type="number" id="cfAmount" min="0" step="1" inputmode="numeric"></div>
-          <div class="f" data-c="next_date"><label for="cfNextDate">下一步日期<span class="req" id="cfReq1">*</span></label><input type="date" id="cfNextDate"></div>
-          <div class="f full" data-c="next_action"><label for="cfNext">下一步行動<span class="req" id="cfReq2">*</span></label><input type="text" id="cfNext" maxlength="80" placeholder="例如：週四晚上帶規劃書二次面談"></div>
-          <div class="f full"><label for="cfBlock">卡關原因</label><input type="text" id="cfBlock" maxlength="80"></div>
-          <div class="f full"><label for="cfNote">這次更新的紀錄</label><textarea id="cfNote" maxlength="300" placeholder="今天跟客戶談了什麼？會存進進度歷程。"></textarea></div>
+    <!-- ================= 週成績 ================= -->
+    <div class="panel" id="panelWeek" role="tabpanel" hidden>
+      <section class="card" aria-label="本週成績">
+        <div class="weekbar">
+          <button class="nav-btn" id="wPrev" type="button">← 上週</button>
+          <span class="lbl" id="wLbl"></span>
+          <button class="nav-btn" id="wNext" type="button">下週 →</button>
+          <button class="nav-btn" id="wThis" type="button">回到本週</button>
         </div>
-        <div class="form-actions">
-          <button type="button" class="btn warm" id="cfSave">儲存案件</button>
-          <button type="button" class="btn ghost" id="cfDel" hidden style="color:var(--negative);border-color:rgba(179,73,47,.45);">刪除案件</button>
-          <span class="form-err" id="cfErr" role="alert"></span>
-        </div>
-        <div id="cfHistWrap" hidden style="margin-top:16px;"><h2 style="font-size:15px;">進度歷程</h2><div class="hist" id="cfHist"></div></div>
+        <div class="score" id="wScore"></div>
+        <div class="goal-src" id="goalSrc"></div>
+        <div class="bars" id="wBars"></div>
+        <div class="stats" id="wStats"></div>
       </section>
-      <section class="card" aria-label="案件推進">
-        <div class="row-between" style="align-items:center;">
-          <div><h2 style="margin:0;">案件推進</h2><div class="muted" id="cSummary">—</div></div>
-          <button type="button" class="btn warm" id="cNew">＋ 新增案件</button>
-        </div>
+      <section class="card" aria-label="每日明細">
+        <h2>每日明細</h2>
+        <div class="tbl" id="wTable"></div>
+      </section>
+      <section class="card" aria-label="本週卡點">
+        <h2>本週卡點</h2>
+        <div id="wBlockers"></div>
+      </section>
+    </div>
+
+    <!-- ================= 案件總覽 ================= -->
+    <div class="panel" id="panelCases" role="tabpanel" hidden>
+      <section class="card" aria-label="案件總覽">
+        <h2 style="margin:0;">案件總覽</h2>
+        <div class="muted" id="cSummary">—</div>
+        <div class="muted" style="margin-top:4px;">每位會面對象就是一個案件，顯示最新一次會面的狀態，不用另外填。</div>
         <div class="filters" id="cFilters">
           <button type="button" data-f="active" aria-pressed="true">進行中</button>
           <button type="button" data-f="flag" aria-pressed="false">需處理</button>
@@ -270,111 +406,6 @@
         </div>
       </section>
       <div id="cList"></div>
-      <div class="privacy">🔒 每日 KPI 和案件推進只有你自己和你加入的團隊主管看得到（主管只能看、不能修改）。</div>
-    </div>
-
-    <!-- ================= 會面回報（v3.33） ================= -->
-    <div class="panel" id="panelMeet" role="tabpanel" hidden>
-    <!-- 新增／編輯回報 -->
-    <section class="card form-card" id="formCard" hidden aria-label="填寫回報">
-      <h2 id="formTitle">新增進程回報</h2>
-      <p class="muted" style="margin:0 0 14px;">標示 <span style="color:#B3402A">*</span> 的都要填。</p>
-      <form id="prForm" novalidate>
-        <div class="fgrid">
-          <div class="f" data-f="meet_date">
-            <label for="fDate">會面日期<span class="req">*</span></label>
-            <input type="date" id="fDate">
-          </div>
-          <div class="f" data-f="advisor_name">
-            <label for="fAdvisor">顧問名<span class="req">*</span></label>
-            <input type="text" id="fAdvisor" maxlength="40">
-          </div>
-          <div class="f full" data-f="contact_name">
-            <label for="fContact">會面人名稱<span class="req">*</span></label>
-            <div class="hint">回報過的人會出現在選單；選了會自動帶入關係、年齡、職業，會面次數自動 +1</div>
-            <input type="text" id="fContact" maxlength="40" list="contactList" autocomplete="off" placeholder="例如：王先生、小美">
-            <datalist id="contactList"></datalist>
-            <div class="prefill-note" id="prefillNote" hidden></div>
-          </div>
-          <div class="f full" data-f="purposes">
-            <div class="lb">拜訪目的<span class="req">*</span></div>
-            <div class="hint">可複選</div>
-            <div class="chk-grid" id="purposeBox"></div>
-          </div>
-          <div class="f" data-f="meet_no">
-            <label for="fNo">進程上會面次數（第 X 次）<span class="req">*</span></label>
-            <input type="number" id="fNo" min="1" max="999" inputmode="numeric" placeholder="例如：1">
-          </div>
-          <div class="f" data-f="relation">
-            <label for="fRelation">關係<span class="req">*</span></label>
-            <input type="text" id="fRelation" maxlength="40" placeholder="例如：朋友、同事、客戶轉介">
-          </div>
-          <div class="f" data-f="age">
-            <label for="fAge">年齡<span class="req">*</span></label>
-            <input type="number" id="fAge" min="1" max="120" inputmode="numeric" placeholder="例如：32">
-          </div>
-          <div class="f" data-f="job">
-            <label for="fJob">職業<span class="req">*</span></label>
-            <input type="text" id="fJob" maxlength="40" placeholder="例如：工程師">
-          </div>
-          <div class="f full" data-f="trust">
-            <div class="lb">信任度評分<span class="req">*</span></div>
-            <div class="hint">1 分最低，10 分最高</div>
-            <div class="hearts" id="hearts"></div>
-          </div>
-          <div class="f full" data-f="summary">
-            <label for="fSummary">目前案件進程總結（主要需求、關注點，抗拒 or 卡關點……）<span class="req">*</span></label>
-            <textarea id="fSummary" maxlength="1000"></textarea>
-          </div>
-          <div class="f full" data-f="next_plan">
-            <label for="fNext">下一步推進計畫<span class="req">*</span></label>
-            <textarea id="fNext" maxlength="500"></textarea>
-          </div>
-          <div class="f" data-f="next_contact">
-            <label for="fNextDate">預計下一次接觸時間<span class="req">*</span></label>
-            <input type="date" id="fNextDate">
-            <div class="quick" id="nextQuick"></div>
-          </div>
-          <div class="f" data-f="need_support">
-            <label for="fSupport">需要社群 or 領導人支援<span class="req">*</span></label>
-            <input type="text" id="fSupport" maxlength="300" placeholder="例如：需要主管陪同提案">
-            <div class="quick"><button type="button" id="noSupport">目前不需要</button></div>
-          </div>
-          <div class="f full" data-f="tomorrow_plan">
-            <label for="fTomorrow">明日排訪及安排</label>
-            <textarea id="fTomorrow" maxlength="500"></textarea>
-          </div>
-        </div>
-        <div class="privacy">🔒 這份回報只有你自己和你加入的團隊主管看得到（主管只能看、不能修改）。</div>
-        <div class="form-actions">
-          <button type="submit" class="btn warm" id="submitBtn">提交回報</button>
-          <button type="button" class="btn ghost" id="cancelBtn">取消</button>
-          <span class="form-err" id="formErr" role="alert"></span>
-        </div>
-      </form>
-    </section>
-
-    <section class="card" aria-label="本週進度">
-      <div class="weekbar">
-        <button class="nav-btn" id="prevWeek" type="button">← 上週</button>
-        <span class="lbl" id="weekLbl"></span>
-        <button class="nav-btn" id="nextWeek" type="button">下週 →</button>
-        <button class="nav-btn" id="thisWeek" type="button">回到本週</button>
-      </div>
-      <div class="stats" id="stats"></div>
-    </section>
-
-    <section class="card" aria-label="回報紀錄">
-      <div class="toolbar">
-        <div class="seg" role="group" aria-label="檢視方式">
-          <button type="button" data-v="date" aria-pressed="true">這週的回報</button>
-          <button type="button" data-v="case" aria-pressed="false">依案件追蹤</button>
-        </div>
-        <span class="spacer"></span>
-        <button class="btn warm" id="addBtn" type="button">＋ 新增回報</button>
-      </div>
-      <div id="list"></div>
-    </section>
     </div>
   </div>
 </main>
@@ -388,9 +419,24 @@
   var P = VCProgress; P.injectCSS();
   var $ = function(id){ return document.getElementById(id); };
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
-  var myId = null, myName = '', rows = [], week = P.weekStart(new Date()), view = 'date', editing = null, trust = 0;
+  var myId = null, myName = '', rows = [], days = {}, settings = P.DEFAULT_KPI;
+  var sel = P.ymd(P.today()), wk = P.weekStart(new Date()), editing = null, trust = 0, caseFilter = 'active';
+  var MANUAL = P.METRICS.filter(function(m){ return !m.auto; });
+  function todayStr(){ return P.ymd(P.today()); }
+  function meetsOn(d){ return rows.filter(function(r){ return r.meet_date === d; }); }
 
-  /* ---------- 表單 ---------- */
+  /* ================= 分頁 ================= */
+  var tabs = document.querySelectorAll('.main-tabs button');
+  function showTab(t){
+    tabs.forEach(function(b){ b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false'); });
+    $('panelDaily').hidden = t !== 'daily'; $('panelWeek').hidden = t !== 'week'; $('panelCases').hidden = t !== 'cases';
+    try{ sessionStorage.setItem('vc_progress_tab2', t); }catch(e){}
+    if(t === 'week') renderWeek();
+    if(t === 'cases') renderCases();
+  }
+  tabs.forEach(function(b){ b.addEventListener('click', function(){ showTab(b.dataset.tab); }); });
+
+  /* ================= 會面表單 ================= */
   P.PURPOSES.forEach(function(p){
     var l = el('label', 'chk'); var c = el('input'); c.type = 'checkbox'; c.value = p;
     l.appendChild(c); l.appendChild(document.createTextNode(p === '其他' ? '其他：' : p));
@@ -405,6 +451,10 @@
     var row = el('div', 'other-row'); var i = el('input'); i.type = 'text'; i.id = 'fOther'; i.maxLength = 60; i.disabled = true; i.placeholder = '勾選「其他」後填寫目的';
     i.addEventListener('input', function(){ clearInvalid('purposes'); });
     row.appendChild(i); $('purposeBox').appendChild(row);
+  })();
+  (function(){
+    var o = el('option', '', '請選擇'); o.value = ''; $('fStage').appendChild(o);
+    P.STAGES.forEach(function(st){ var x = el('option', '', st); x.value = st; $('fStage').appendChild(x); });
   })();
   for(var n = 1; n <= 10; n++){
     (function(v){
@@ -421,15 +471,18 @@
     $('nextQuick').appendChild(b);
   });
   $('noSupport').addEventListener('click', function(){ $('fSupport').value = '目前不需要'; clearInvalid('need_support'); });
-  function clearInvalid(k){ var f = document.querySelector('.f[data-f="' + k + '"]'); if(f) f.classList.remove('invalid'); if(!document.querySelector('.f.invalid')) $('formErr').textContent = ''; }
+  function needNext(){ var st = $('fStage').value; return !st || P.ACTIVE.indexOf(st) > -1; }
+  function syncNextReq(){ document.querySelectorAll('.nreq').forEach(function(x){ x.hidden = !needNext(); }); if(!needNext()){ clearInvalid('next_plan'); clearInvalid('next_contact'); } }
+  $('fStage').addEventListener('change', function(){ clearInvalid('stage'); syncNextReq(); });
+  function clearInvalid(k){ var f = document.querySelector('#prForm .f[data-f="' + k + '"]'); if(f) f.classList.remove('invalid'); if(!document.querySelector('#prForm .f.invalid')) $('formErr').textContent = ''; }
   document.querySelectorAll('#prForm input, #prForm textarea').forEach(function(i){
     i.addEventListener('input', function(){ var f = i.closest('.f'); if(f) clearInvalid(f.dataset.f); });
   });
 
-  // 會面人：選到回報過的人，自動帶入關係、年齡、職業，次數 +1
+  // 會面人＝案件：選到見過的人，自動帶入基本資料、目前階段，次數 +1
   function contactsMap(){
     var m = {};
-    rows.forEach(function(r){ var k = r.contact_name.trim(); if(!m[k] || r.meet_no > m[k].meet_no || (r.meet_no === m[k].meet_no && r.meet_date > m[k].meet_date)) m[k] = r; });
+    P.latestByContact(rows).forEach(function(r){ m[r.contact_name.trim()] = r; });
     return m;
   }
   function refreshDatalist(){
@@ -445,24 +498,27 @@
     if(!$('fJob').value) $('fJob').value = last.job;
     $('fNo').value = last.meet_no + 1;
     if(!trust) setTrust(last.trust);
-    $('prefillNote').textContent = '上次是 ' + P.md(last.meet_date) + ' 第 ' + last.meet_no + ' 次會面，已帶入關係、年齡、職業與信任度，會面次數改成第 ' + (last.meet_no + 1) + ' 次（都可以再改）。';
+    if(!$('fStage').value && last.stage){ $('fStage').value = last.stage; syncNextReq(); }
+    if(!$('fAmount').value && last.amount != null) $('fAmount').value = last.amount;
+    $('prefillNote').textContent = '上次是 ' + P.md(last.meet_date) + ' 第 ' + last.meet_no + ' 次會面' + (last.stage ? '（' + last.stage + '）' : '') + '，已帶入基本資料、信任度和階段，會面次數改成第 ' + (last.meet_no + 1) + ' 次（都可以再改）。';
     $('prefillNote').hidden = false;
-    ['relation','age','job','meet_no','trust'].forEach(clearInvalid);
+    ['relation','age','job','meet_no','trust','stage'].forEach(clearInvalid);
   });
 
   function resetForm(){
     $('prForm').reset(); editing = null; setTrust(0);
     document.querySelectorAll('#purposeBox .chk').forEach(function(l){ l.classList.remove('on'); });
     $('fOther').disabled = true; $('prefillNote').hidden = true;
-    document.querySelectorAll('.f.invalid').forEach(function(f){ f.classList.remove('invalid'); });
+    document.querySelectorAll('#prForm .f.invalid').forEach(function(f){ f.classList.remove('invalid'); });
     $('formErr').textContent = '';
-    $('fDate').value = P.ymd(P.today());
+    $('fDate').value = sel; $('fDate').max = todayStr();
     $('fAdvisor').value = myName;
+    syncNextReq();
   }
   function fill(r, asNew){
     resetForm();
     if(!asNew) editing = r;
-    $('fDate').value = asNew ? P.ymd(P.today()) : r.meet_date;
+    $('fDate').value = asNew ? sel : r.meet_date;
     $('fAdvisor').value = asNew ? myName : r.advisor_name;
     $('fContact').value = r.contact_name;
     document.querySelectorAll('#purposeBox input[type=checkbox]').forEach(function(c){
@@ -472,20 +528,22 @@
     $('fOther').value = asNew ? '' : (r.purpose_other || '');
     $('fNo').value = asNew ? r.meet_no + 1 : r.meet_no;
     $('fRelation').value = r.relation; $('fAge').value = r.age; $('fJob').value = r.job;
+    $('fStage').value = r.stage || ''; $('fAmount').value = r.amount != null ? r.amount : '';
     setTrust(r.trust);
+    $('fSummary').value = r.summary;
     if(!asNew){
-      $('fSummary').value = r.summary; $('fNext').value = r.next_plan; $('fNextDate').value = r.next_contact;
-      $('fSupport').value = r.need_support; $('fTomorrow').value = r.tomorrow_plan || '';
+      $('fNext').value = r.next_plan || ''; $('fNextDate').value = r.next_contact || '';
+      $('fSupport').value = r.need_support;
     } else {
-      $('fSummary').value = r.summary; // 帶入上次的總結，方便接著改
-      $('prefillNote').textContent = '接續 ' + P.md(r.meet_date) + ' 第 ' + r.meet_no + ' 次的回報：已帶入基本資料和上次的總結，記得更新這次的進度。';
+      $('prefillNote').textContent = '接續 ' + P.md(r.meet_date) + ' 第 ' + r.meet_no + ' 次會面：已帶入基本資料、階段和上次的總結，記得更新這次的進度。';
       $('prefillNote').hidden = false;
     }
+    syncNextReq();
   }
   function openForm(r, asNew){
     if(r) fill(r, asNew); else resetForm();
-    $('formTitle').textContent = editing ? '修改回報' : (r ? '再回報一次：' + r.contact_name : '新增進程回報');
-    $('submitBtn').textContent = editing ? '儲存修改' : '提交回報';
+    $('formTitle').textContent = editing ? '修改會面' : (r ? '再記一次：' + r.contact_name : '新增會面');
+    $('submitBtn').textContent = editing ? '儲存修改' : '儲存會面';
     $('formCard').hidden = false;
     $('formCard').scrollIntoView({ behavior:'smooth', block:'start' });
     setTimeout(function(){ (r ? $('fSummary') : $('fContact')).focus({ preventScroll:true }); }, 350);
@@ -495,148 +553,282 @@
 
   function collect(){
     var purposes = Array.prototype.filter.call(document.querySelectorAll('#purposeBox input[type=checkbox]'), function(c){ return c.checked; }).map(function(c){ return c.value; });
+    var amt = $('fAmount').value === '' ? null : Math.max(0, Number($('fAmount').value));
     var v = {
       meet_date: $('fDate').value, advisor_name: $('fAdvisor').value.trim(), contact_name: $('fContact').value.trim(),
       purposes: purposes, purpose_other: purposes.indexOf('其他') > -1 ? $('fOther').value.trim() : null,
+      stage: $('fStage').value || null, amount: isFinite(amt) ? amt : null,
       meet_no: parseInt($('fNo').value, 10), relation: $('fRelation').value.trim(), age: parseInt($('fAge').value, 10),
-      job: $('fJob').value.trim(), trust: trust, summary: $('fSummary').value.trim(), next_plan: $('fNext').value.trim(),
-      next_contact: $('fNextDate').value, need_support: $('fSupport').value.trim(), tomorrow_plan: $('fTomorrow').value.trim() || null
+      job: $('fJob').value.trim(), trust: trust, summary: $('fSummary').value.trim(), next_plan: $('fNext').value.trim() || null,
+      next_contact: $('fNextDate').value || null, need_support: $('fSupport').value.trim()
     };
     var bad = [];
-    if(!v.meet_date) bad.push('meet_date');
+    if(!v.meet_date || v.meet_date > todayStr()) bad.push('meet_date');
     if(!v.advisor_name) bad.push('advisor_name');
     if(!v.contact_name) bad.push('contact_name');
     if(!v.purposes.length || (v.purposes.indexOf('其他') > -1 && !v.purpose_other)) bad.push('purposes');
+    if(!v.stage) bad.push('stage');
     if(!(v.meet_no >= 1 && v.meet_no <= 999)) bad.push('meet_no');
     if(!v.relation) bad.push('relation');
     if(!(v.age >= 1 && v.age <= 120)) bad.push('age');
     if(!v.job) bad.push('job');
     if(!(v.trust >= 1)) bad.push('trust');
     if(!v.summary) bad.push('summary');
-    if(!v.next_plan) bad.push('next_plan');
-    if(!v.next_contact) bad.push('next_contact');
+    if(needNext()){ if(!v.next_plan) bad.push('next_plan'); if(!v.next_contact) bad.push('next_contact'); }
     if(!v.need_support) bad.push('need_support');
     return { v: v, bad: bad };
   }
   $('prForm').addEventListener('submit', async function(e){
     e.preventDefault();
     var c = collect();
-    document.querySelectorAll('.f').forEach(function(f){ f.classList.toggle('invalid', c.bad.indexOf(f.dataset.f) > -1); });
+    document.querySelectorAll('#prForm .f').forEach(function(f){ f.classList.toggle('invalid', c.bad.indexOf(f.dataset.f) > -1); });
     if(c.bad.length){
       $('formErr').textContent = '還有 ' + c.bad.length + ' 個必填欄位沒有完成。';
-      var first = document.querySelector('.f.invalid'); if(first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+      var first = document.querySelector('#prForm .f.invalid'); if(first) first.scrollIntoView({ behavior:'smooth', block:'center' });
       return;
     }
     var btn = $('submitBtn'); btn.disabled = true;
     var res = editing
       ? await supabaseClient.from('progress_reports').update(c.v).eq('id', editing.id).eq('advisor_id', myId)
       : await supabaseClient.from('progress_reports').insert(Object.assign({ advisor_id: myId }, c.v));
+    if(res.error){ btn.disabled = false; $('formErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
+    // 那天原本勾了「沒有會面」，改回有會面
+    if(days[c.v.meet_date] && days[c.v.meet_date].no_meet){
+      await supabaseClient.from('kpi_daily').update({ no_meet: false }).eq('advisor_id', myId).eq('day', c.v.meet_date);
+      days[c.v.meet_date].no_meet = false;
+    }
     btn.disabled = false;
-    if(res.error){ $('formErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
-    vcToast(editing ? '已儲存修改' : '已提交回報');
-    var d = P.parse(c.v.meet_date);
+    vcToast(editing ? '已儲存修改' : '已記下這次會面');
+    sel = c.v.meet_date;
     $('formCard').hidden = true; resetForm();
-    week = P.weekStart(d);
-    await load();
+    await loadMeets(); await loadDays();
+    renderDay();
   });
 
-  /* ---------- 列表 ---------- */
-  function weekRows(){
-    var a = P.ymd(week), b = P.ymd(P.addDays(week, 6));
-    return rows.filter(function(r){ return r.meet_date >= a && r.meet_date <= b; });
-  }
-  function renderWeek(){
-    $('weekLbl').textContent = P.weekLabel(week);
-    var isThis = P.ymd(week) === P.ymd(P.weekStart(new Date()));
-    $('thisWeek').disabled = isThis; $('nextWeek').disabled = isThis;
-    var w = weekRows();
-    var people = {}; w.forEach(function(r){ people[r.contact_name.trim()] = 1; });
-    var support = w.filter(function(r){ return P.needsSupport(r.need_support); }).length;
-    var latest = contactsMap(), late = Object.keys(latest).filter(function(k){ return P.daysFromToday(latest[k].next_contact) < 0; }).length;
-    var st = $('stats'); st.textContent = '';
-    [['這週回報', w.length, w.length ? 'good' : ''], ['這週會面人數', Object.keys(people).length, ''],
-     ['需要支援', support, support ? 'warm' : ''], ['下次接觸已逾期', late, late ? 'bad' : '']].forEach(function(x){
-      var d = el('div', x[2]); d.appendChild(el('div', 'k', x[0])); d.appendChild(el('div', 'v', String(x[1]))); st.appendChild(d);
-    });
-  }
-  function actions(){
-    return [
-      { label:'再回報一次', cls:'primary', onClick:function(r){ openForm(r, true); } },
-      { label:'修改', onClick:function(r){ openForm(r, false); } },
-      { label:'刪除', cls:'danger', onClick: removeRow }
-    ];
-  }
-  function renderList(){
-    var list = $('list'); list.textContent = '';
-    if(view === 'date'){
-      var w = weekRows();
-      if(!w.length){ list.appendChild(el('div', 'empty', rows.length ? '這週還沒有回報。會面完按「＋ 新增回報」記下來吧！' : '還沒有任何回報。每次會面後按「＋ 新增回報」，花兩分鐘記下進度。')); return; }
-      var lastDay = null;
-      w.forEach(function(r){
-        if(r.meet_date !== lastDay){ lastDay = r.meet_date; list.appendChild(el('div', 'day-h', P.md(r.meet_date))); }
-        list.appendChild(P.card(r, { actions: actions() }));
-      });
-      return;
-    }
-    // 依案件：每位會面人只看最新一次
-    var m = contactsMap(), keys = Object.keys(m);
-    if(!keys.length){ list.appendChild(el('div', 'empty', '還沒有任何回報。')); return; }
-    var counts = {}; rows.forEach(function(r){ var k = r.contact_name.trim(); counts[k] = (counts[k] || 0) + 1; });
-    keys.sort(function(a, b){ return m[a].next_contact < m[b].next_contact ? -1 : m[a].next_contact > m[b].next_contact ? 1 : 0; });
-    list.appendChild(el('p', 'muted', '每位會面人只顯示最新一次的狀態，依「預計下次接觸」由近到遠排序；橘框是需要突破的案子（下次接觸已逾期、信任度 4 分以下，或需要支援）。'));
-    keys.forEach(function(k){
-      var r = m[k], first = rows.filter(function(x){ return x.contact_name.trim() === k; }).sort(function(a, b){ return a.meet_no - b.meet_no; })[0];
-      var late = P.daysFromToday(r.next_contact) < 0, sup = P.needsSupport(r.need_support);
-      var c = el('div', 'case' + (late || r.trust <= 4 || sup ? ' flag' : ''));
-      var left = el('div');
-      var nm = el('div', 'nm', k); nm.appendChild(el('small', '', [r.relation, r.age + ' 歲', r.job].join('・'))); left.appendChild(nm);
-      var path = el('div', 'path');
-      path.appendChild(document.createTextNode('第 ' + r.meet_no + ' 次・最近：'));
-      path.appendChild(el('b', '', (r.purposes || []).map(function(p){ return p === '其他' && r.purpose_other ? r.purpose_other : p; }).join('、')));
-      path.appendChild(document.createTextNode('・信任度 ' + (first && first !== r && first.trust !== r.trust ? first.trust + ' → ' : '') + r.trust));
-      left.appendChild(path);
-      left.appendChild(el('div', 'path', '下一步：' + r.next_plan));
-      c.appendChild(left);
-      var tags = el('div', 'tags'), nb = P.nextBadge(r.next_contact);
-      tags.appendChild(el('span', 'tag ' + (nb.cls === 'late' ? 'late' : nb.cls ? 'warm' : ''), '下次接觸 ' + P.md(r.next_contact) + '・' + nb.text));
-      if(sup) tags.appendChild(el('span', 'tag warm', '需要支援'));
-      if((r.purposes || []).indexOf('提案、建議書說明') > -1) tags.appendChild(el('span', 'tag good', '提案階段'));
-      tags.appendChild(el('span', 'tag', '共回報 ' + counts[k] + ' 次'));
-      c.appendChild(tags);
-      var acts = el('div', 'acts');
-      var b1 = el('button', 'pr-btn primary', '再回報一次'); b1.type = 'button'; b1.addEventListener('click', function(){ openForm(r, true); });
-      var b2 = el('button', 'pr-btn', '看這次的回報'); b2.type = 'button';
-      b2.addEventListener('click', function(){ week = P.weekStart(P.parse(r.meet_date)); setView('date'); });
-      acts.appendChild(b1); acts.appendChild(b2); c.appendChild(acts);
-      list.appendChild(c);
-    });
-  }
-  function render(){ renderWeek(); renderList(); refreshDatalist(); }
-  function setView(v){
-    view = v;
-    document.querySelectorAll('.seg button').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false'); });
-    render();
-  }
-  document.querySelectorAll('.seg button').forEach(function(b){ b.addEventListener('click', function(){ setView(b.dataset.v); }); });
-  $('prevWeek').addEventListener('click', function(){ week = P.addDays(week, -7); render(); });
-  $('nextWeek').addEventListener('click', function(){ week = P.addDays(week, 7); render(); });
-  $('thisWeek').addEventListener('click', function(){ week = P.weekStart(new Date()); render(); });
-
   async function removeRow(r){
-    var ok = await vcConfirm('確定要刪除 ' + P.md(r.meet_date) + ' 跟「' + r.contact_name + '」的這筆回報嗎？刪除後無法復原。', { okText:'刪除', danger:true });
+    var ok = await vcConfirm('確定要刪除 ' + P.md(r.meet_date) + ' 跟「' + r.contact_name + '」的這筆會面嗎？刪除後無法復原。', { okText:'刪除', danger:true });
     if(!ok) return;
     var res = await supabaseClient.from('progress_reports').delete().eq('id', r.id).eq('advisor_id', myId);
     if(res.error){ vcToast('刪除失敗，請稍後再試', 'err'); return; }
     rows = rows.filter(function(x){ return x.id !== r.id; });
-    vcToast('已刪除'); render();
+    vcToast('已刪除'); renderDay();
   }
 
-  async function load(){
+  /* ================= 每日進程 ================= */
+  MANUAL.forEach(function(m){
+    var box = el('div', 'metric'); box.id = 'm-' + m.k;
+    var l = el('div'); l.appendChild(el('div', 'nm', m.l)); l.appendChild(el('div', 'gl', '自己填')); box.appendChild(l);
+    var st = el('div', 'step');
+    var minus = el('button', '', '−'); minus.type = 'button'; minus.setAttribute('aria-label', m.l + '減一');
+    var inp = el('input'); inp.id = 'v-' + m.k; inp.inputMode = 'numeric'; inp.value = '0'; inp.setAttribute('aria-label', m.l);
+    var plus = el('button', '', '＋'); plus.type = 'button'; plus.setAttribute('aria-label', m.l + '加一');
+    minus.addEventListener('click', function(){ inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) - 1); });
+    plus.addEventListener('click', function(){ inp.value = Math.min(999, (parseInt(inp.value, 10) || 0) + 1); });
+    inp.addEventListener('input', function(){ inp.value = inp.value.replace(/\D/g, '').slice(0, 3); });
+    st.appendChild(minus); st.appendChild(inp); st.appendChild(plus); box.appendChild(st);
+    $('dMetrics').appendChild(box);
+  });
+  P.METRICS.filter(function(m){ return m.auto; }).forEach(function(m){
+    var box = el('div', 'metric auto');
+    var l = el('div'); l.appendChild(el('div', 'nm', m.l)); l.appendChild(el('div', 'gl', '從會面自動算')); box.appendChild(l);
+    var v = el('div', 'av', '0'); v.id = 'a-' + m.k; box.appendChild(v);
+    $('dMetrics').appendChild(box);
+  });
+  $('dNoMeet').addEventListener('change', function(){ $('noMeetBox').classList.toggle('on', this.checked); $('dErr').textContent = ''; });
+
+  function dayStatus(d){
+    var rec = days[d], cnt = meetsOn(d).length, t = todayStr();
+    if(rec) return { cls:'ok', txt: rec.no_meet && !cnt ? '無' : cnt + ' 位', late: rec.first_saved_on > d };
+    if(cnt) return { cls:'ok', txt: cnt + ' 位' };
+    var dow = P.parse(d).getDay();
+    if(d < t && dow >= 1 && dow <= 5) return { cls:'miss', txt:'漏填' };
+    return { cls:'', txt: d > t ? '' : '—' };
+  }
+  function renderStrip(){
+    var ws = P.weekStart(P.parse(sel)), box = $('dWeek'), t = todayStr(); box.textContent = '';
+    for(var i = 0; i < 7; i++){
+      (function(d){
+        var s = dayStatus(d), b = el('button', 'wday ' + s.cls + (d === t ? ' today' : '') + (d === sel ? ' sel' : ''));
+        b.type = 'button'; b.disabled = d > t;
+        b.appendChild(document.createTextNode(P.DOW[P.parse(d).getDay()]));
+        b.appendChild(el('b', '', String(P.parse(d).getDate())));
+        b.appendChild(el('small', '', s.txt + (s.late ? '・補' : '')));
+        b.addEventListener('click', function(){ sel = d; renderDay(); });
+        box.appendChild(b);
+      })(P.ymd(P.addDays(ws, i)));
+    }
+  }
+  function renderDay(){
+    var t = todayStr();
+    $('dDate').value = sel; $('dDate').max = t; $('dNext').disabled = sel >= t;
+    renderStrip();
+    var isToday = sel === t, lbl = isToday ? '今天' : P.md(sel);
+    $('dMeetTitle').textContent = lbl + '的會面';
+    var ms = meetsOn(sel), list = $('dMeets'); list.textContent = '';
+    if(!ms.length) list.appendChild(el('div', 'empty', '這天還沒有記錄會面。有見人就按「＋ 新增會面」，沒有就勾下面的「今天沒有會面」。'));
+    ms.forEach(function(r){
+      list.appendChild(P.card(r, { actions: [
+        { label:'修改', onClick:function(x){ openForm(x, false); } },
+        { label:'刪除', cls:'danger', onClick: removeRow }
+      ] }));
+    });
+    var rec = days[sel];
+    $('noMeetBox').hidden = ms.length > 0;
+    $('dNoMeet').checked = !ms.length && !!(rec && rec.no_meet);
+    $('noMeetBox').classList.toggle('on', $('dNoMeet').checked);
+    MANUAL.forEach(function(m){ $('v-' + m.k).value = rec ? (rec[m.k] || 0) : 0; });
+    var a = P.autoCount(ms); ['meetings','proposals','deals'].forEach(function(k){ $('a-' + k).textContent = a[k]; });
+    $('dBlocker').value = rec && rec.blocker || ''; $('dTomorrow').value = rec && rec.tomorrow_plan || '';
+    var pill = $('dState');
+    if(!rec && ms.length){ pill.className = 'pill warn'; pill.textContent = '已記會面，記得送出今天的數字'; }
+    else if(rec){ pill.className = 'pill good'; pill.textContent = '已送出' + (rec.first_saved_on > sel ? '・補填' : ''); }
+    else { pill.className = 'pill ' + (dayStatus(sel).cls === 'miss' ? 'bad' : 'mute'); pill.textContent = dayStatus(sel).cls === 'miss' ? '漏填，可以補填' : '尚未送出'; }
+    $('dSave').textContent = rec ? '更新' + (isToday ? '今日' : '這天的') + '進程' : '送出' + (isToday ? '今日' : '這天的') + '進程';
+    $('dErr').textContent = '';
+    refreshDatalist();
+  }
+  $('dDate').addEventListener('change', function(){ if(this.value && this.value <= todayStr()){ sel = this.value; renderDay(); } });
+  $('dPrev').addEventListener('click', function(){ sel = P.ymd(P.addDays(P.parse(sel), -1)); renderDay(); });
+  $('dNext').addEventListener('click', function(){ if(sel < todayStr()){ sel = P.ymd(P.addDays(P.parse(sel), 1)); renderDay(); } });
+
+  $('dSave').addEventListener('click', async function(){
+    var ms = meetsOn(sel);
+    if(!ms.length && !$('dNoMeet').checked){ $('dErr').textContent = '這天有會面就先新增會面；沒有的話請勾「今天沒有會面」。'; return; }
+    var v = { no_meet: !ms.length, blocker: $('dBlocker').value.trim() || null, tomorrow_plan: $('dTomorrow').value.trim() || null };
+    MANUAL.forEach(function(m){ v[m.k] = Math.min(999, parseInt($('v-' + m.k).value, 10) || 0); });
+    var a = P.autoCount(ms); v.meetings = Math.min(999, a.meetings); v.proposals = Math.min(999, a.proposals); v.deals = Math.min(999, a.deals);
+    var btn = this; btn.disabled = true;
+    var res = days[sel]
+      ? await supabaseClient.from('kpi_daily').update(v).eq('advisor_id', myId).eq('day', sel)
+      : await supabaseClient.from('kpi_daily').insert(Object.assign({ advisor_id: myId, day: sel }, v));
+    btn.disabled = false;
+    if(res.error){ $('dErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
+    vcToast('已送出' + (sel === todayStr() ? '今日' : P.md(sel)) + '進程');
+    await loadDays(); renderDay();
+  });
+
+  /* ================= 週成績 ================= */
+  function renderWeek(){
+    var t = todayStr(), from = P.ymd(wk), to = P.ymd(P.addDays(wk, 6));
+    $('wLbl').textContent = P.weekLabel(wk);
+    var isThis = from === P.ymd(P.weekStart(new Date()));
+    $('wThis').disabled = isThis; $('wNext').disabled = isThis;
+    var dArr = Object.keys(days).filter(function(d){ return d >= from && d <= to; }).map(function(d){ return days[d]; });
+    var mArr = rows.filter(function(r){ return r.meet_date >= from && r.meet_date <= to; });
+    var tot = P.totals(dArr, mArr), targets = settings.targets || {}, sc = P.score(tot, targets);
+
+    var s = $('wScore'); s.textContent = '';
+    var big = el('div', 'big', String(sc.met)); big.appendChild(el('small', '', ' / ' + sc.total + ' 項達標')); s.appendChild(big);
+    if(!sc.total) s.appendChild(el('span', 'pill mute', '還沒有設定每週目標'));
+    else if(sc.all) s.appendChild(el('span', 'pill good', '本週目標全部達成 🎉'));
+    else s.appendChild(el('span', 'pill ' + (isThis ? 'warn' : 'bad'), (isThis ? '還差 ' : '沒達成 ') + (sc.total - sc.met) + ' 項'));
+
+    var bars = $('wBars'); bars.textContent = '';
+    P.METRICS.forEach(function(m){
+      var g = targets[m.k] || 0, v = tot[m.k] || 0, ok = g > 0 && v >= g;
+      var r = el('div', 'barrow' + (ok ? ' ok' : g ? '' : ' none'));
+      var nm = el('div', 'nm', m.s || m.l); if(m.auto) nm.appendChild(el('em', '', '自動')); r.appendChild(nm);
+      var bar = el('div', 'bar'), fillI = el('i'); fillI.style.width = (g ? Math.min(100, v / g * 100) : 0) + '%'; bar.appendChild(fillI); r.appendChild(bar);
+      r.appendChild(el('div', 'n', g ? v + ' / ' + g + (ok ? ' ✓' : '') : v + '・無目標'));
+      bars.appendChild(r);
+    });
+
+    var wd = P.workdays(wk, t);
+    var filled = wd.filter(function(d){ return days[d] || meetsOn(d).length; }).length;
+    var missed = wd.filter(function(d){ return d < t && !days[d] && !meetsOn(d).length; }).length;
+    var late = dArr.filter(function(x){ return x.first_saved_on > x.day; }).length;
+    var people = {}; mArr.forEach(function(r){ people[r.contact_name.trim()] = 1; });
+    var st = $('wStats'); st.textContent = '';
+    [['日報填寫（工作日）', filled + ' / ' + wd.length, missed ? '' : (wd.length ? 'good' : '')], ['漏填', missed + ' 天', missed ? 'bad' : ''],
+     ['補填', late + ' 次', late ? 'warm' : ''], ['見了幾位', Object.keys(people).length + ' 位', '']].forEach(function(x){
+      var d = el('div', x[2]); d.appendChild(el('div', 'k', x[0])); d.appendChild(el('div', 'v', x[1])); d.querySelector('.v').style.fontSize = '20px'; st.appendChild(d);
+    });
+
+    // 每日明細
+    var tb = el('table'), hr = el('tr');
+    ['日期'].concat(P.METRICS.map(function(m){ return m.s || m.l; }), ['狀態']).forEach(function(h){ hr.appendChild(el('th', '', h)); });
+    tb.appendChild(hr);
+    for(var i = 0; i < 7; i++){
+      var d = P.ymd(P.addDays(wk, i)), rec = days[d], dt = P.totals(rec ? [rec] : [], meetsOn(d)), tr = el('tr');
+      tr.appendChild(el('td', '', P.md(d)));
+      P.METRICS.forEach(function(m){ tr.appendChild(el('td', 'num', rec || meetsOn(d).length ? String(dt[m.k]) : '')); });
+      var ds = dayStatus(d), stt = el('td');
+      if(rec) stt.appendChild(el('span', 'pill good', rec.no_meet && !meetsOn(d).length ? '無會面' : '已填'));
+      else if(ds.cls === 'miss') stt.appendChild(el('span', 'pill bad', '漏填'));
+      else if(ds.cls === 'ok') stt.appendChild(el('span', 'pill good', '已填'));
+      if(rec && rec.first_saved_on > d) stt.appendChild(el('span', 'pill warn', '補填'));
+      tr.appendChild(stt); tb.appendChild(tr);
+    }
+    var tr2 = el('tr', 'total'); tr2.appendChild(el('td', '', '合計'));
+    P.METRICS.forEach(function(m){ tr2.appendChild(el('td', 'num', String(tot[m.k]))); }); tr2.appendChild(el('td', '', ''));
+    tb.appendChild(tr2);
+    $('wTable').textContent = ''; $('wTable').appendChild(tb);
+
+    var bl = $('wBlockers'); bl.textContent = '';
+    var bs = dArr.filter(function(x){ return x.blocker; }).sort(function(a, b){ return a.day < b.day ? -1 : 1; });
+    if(!bs.length) bl.appendChild(el('div', 'muted', '這週沒有寫卡點。'));
+    bs.forEach(function(x){ var r = el('div', 'blk'); r.appendChild(el('small', '', P.md(x.day))); r.appendChild(document.createTextNode(x.blocker)); bl.appendChild(r); });
+  }
+  $('wPrev').addEventListener('click', function(){ wk = P.addDays(wk, -7); renderWeek(); });
+  $('wNext').addEventListener('click', function(){ wk = P.addDays(wk, 7); renderWeek(); });
+  $('wThis').addEventListener('click', function(){ wk = P.weekStart(new Date()); renderWeek(); });
+
+  /* ================= 案件總覽 ================= */
+  function stagePill(c){ return el('span', 'pill ' + (P.isWon(c) ? 'good' : c.stage === '暫停／流失' ? 'mute' : ''), c.stage || '未標階段'); }
+  function track(st){
+    var t = el('div', 'track'), idx = P.STAGES.indexOf(st);
+    for(var i = 0; i < 6; i++) t.appendChild(el('i', i <= idx && idx < 7 ? 'on' : ''));
+    return t;
+  }
+  function renderCases(){
+    var all = P.latestByContact(rows), counts = {};
+    rows.forEach(function(r){ var k = r.contact_name.trim(); counts[k] = (counts[k] || 0) + 1; });
+    var act = all.filter(P.isActive), flag = act.filter(function(c){ return P.caseFlags(c).length; }), won = all.filter(P.isWon);
+    $('cSummary').textContent = '進行中 ' + act.length + ' 件・需處理 ' + flag.length + ' 件・已成交 ' + won.length + ' 件';
+    var list = caseFilter === 'active' ? act : caseFilter === 'flag' ? flag : caseFilter === 'won' ? won : all;
+    list = list.slice().sort(function(a, b){ return String(a.next_contact || '0').localeCompare(String(b.next_contact || '0')); });
+    var box = $('cList'); box.textContent = '';
+    if(!list.length){ box.appendChild(el('div', 'card empty', all.length ? '這個分類目前沒有案件。' : '還沒有案件。到「每日進程」新增會面，見過的人就會自動出現在這裡。')); return; }
+    list.forEach(function(c){
+      var fl = P.caseFlags(c);
+      var k = el('div', 'kc' + (fl.some(function(x){ return x[0] === 'bad'; }) ? ' flag' : fl.length ? ' warnf' : ''));
+      var top = el('div', 'top'); var nm = el('span', 'code', c.contact_name); top.appendChild(nm); top.appendChild(stagePill(c)); k.appendChild(top);
+      k.appendChild(track(c.stage));
+      var meta = [c.relation, c.age ? c.age + ' 歲' : '', c.job, '見過 ' + counts[c.contact_name.trim()] + ' 次', '信任度 ' + c.trust].filter(Boolean).join('・');
+      k.appendChild(el('div', 'nx', meta + (c.amount != null ? '・預估 ' + Number(c.amount).toLocaleString('en-US') + ' 萬' : '')));
+      var nx = el('div', 'nx'); nx.appendChild(document.createTextNode('下一步：')); nx.appendChild(el('b', '', c.next_plan || '—'));
+      if(c.next_contact) nx.appendChild(document.createTextNode('（' + P.md(c.next_contact) + '）'));
+      k.appendChild(nx);
+      var tg = el('div', 'tg'); tg.appendChild(el('span', 'pill mute', '最近會面 ' + P.md(c.meet_date)));
+      fl.forEach(function(x){ tg.appendChild(el('span', 'pill ' + x[0], x[1])); });
+      if(P.needsSupport(c.need_support)) tg.appendChild(el('span', 'pill warn', '需要支援'));
+      k.appendChild(tg);
+      var acts = el('div', 'pr-actions');
+      var b1 = el('button', 'pr-btn primary', '記一次會面'); b1.type = 'button';
+      b1.addEventListener('click', function(){ sel = todayStr(); showTab('daily'); renderDay(); openForm(c, true); });
+      acts.appendChild(b1); k.appendChild(acts);
+      box.appendChild(k);
+    });
+  }
+  document.querySelectorAll('#cFilters button').forEach(function(b){
+    b.addEventListener('click', function(){
+      caseFilter = b.dataset.f;
+      document.querySelectorAll('#cFilters button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      renderCases();
+    });
+  });
+
+  /* ================= 載入 ================= */
+  async function loadMeets(){
     var res = await supabaseClient.from('progress_reports').select('*').eq('advisor_id', myId)
       .order('meet_date', { ascending:false }).order('created_at', { ascending:false }).limit(2000);
     if(res.error) throw res.error;
     rows = res.data || [];
-    render();
+  }
+  async function loadDays(){
+    var res = await supabaseClient.from('kpi_daily').select('*').eq('advisor_id', myId).order('day', { ascending:false }).limit(400);
+    if(res.error) throw res.error;
+    days = {}; (res.data || []).forEach(function(r){ days[r.day] = r; });
   }
 
   (async function init(){
@@ -646,242 +838,18 @@
     myId = session.user.id;
     var meta = session.user.user_metadata || {};
     myName = (meta.display_name || '').trim() || String(session.user.email || '').split('@')[0];
-    try{ await load(); }
-    catch(e){ $('setupMsg').style.display = 'block'; return; }
+    try{
+      await loadMeets(); await loadDays();
+      var st = await supabaseClient.rpc('vc_my_kpi_settings');
+      if(st.error) throw st.error;
+      if(st.data && st.data.targets) settings = st.data;
+      $('goalSrc').textContent = st.data && st.data.source === 'member' ? '每週目標由「' + (st.data.team_name || '團隊') + '」的主管設定'
+        : st.data && st.data.source === 'owner' ? '每週目標是你在團隊頁設定的' : '目前是系統預設的每週目標；加入團隊後會改用主管設定的目標';
+    }catch(e){ $('setupMsg').style.display = 'block'; return; }
     $('app').style.display = 'block';
-    resetForm();
-  })();
-})();
-</script>
-<script>
-/* ---------- 分頁切換 ---------- */
-(function(){
-  var tabs = document.querySelectorAll('.main-tabs button');
-  function show(t){
-    tabs.forEach(function(b){ b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false'); });
-    document.getElementById('panelDaily').hidden = t !== 'daily';
-    document.getElementById('panelMeet').hidden = t !== 'meet';
-    document.getElementById('panelCases').hidden = t !== 'cases';
-    try{ sessionStorage.setItem('vc_progress_tab', t); }catch(e){}
-  }
-  tabs.forEach(function(b){ b.addEventListener('click', function(){ show(b.dataset.tab); }); });
-  var want = ''; try{ want = sessionStorage.getItem('vc_progress_tab') || ''; }catch(e){}
-  if(/^(daily|meet|cases)$/.test(want)) show(want);
-})();
-
-/* ---------- 每日 KPI＋案件推進 ---------- */
-(function(){
-  'use strict';
-  var P = VCProgress;
-  var $ = function(id){ return document.getElementById(id); };
-  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
-  var myId = null, settings = P.DEFAULT_KPI, days = {}, cases = [], caseFilter = 'active', editing = null, delArmed = false;
-  var todayStr = function(){ return P.ymd(P.today()); };
-
-  /* ===== 每日 KPI ===== */
-  P.METRICS.forEach(function(m){
-    var box = el('div', 'metric'); box.id = 'm-' + m.k;
-    var l = el('div'); l.appendChild(el('div', 'nm', m.l)); var g = el('div', 'gl'); g.id = 'g-' + m.k; l.appendChild(g); box.appendChild(l);
-    var st = el('div', 'step');
-    var minus = el('button', '', '−'); minus.type = 'button'; minus.setAttribute('aria-label', m.l + '減一');
-    var inp = el('input'); inp.id = 'v-' + m.k; inp.inputMode = 'numeric'; inp.value = '0'; inp.setAttribute('aria-label', m.l);
-    var plus = el('button', '', '＋'); plus.type = 'button'; plus.setAttribute('aria-label', m.l + '加一');
-    minus.addEventListener('click', function(){ inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) - 1); markMet(); });
-    plus.addEventListener('click', function(){ inp.value = Math.min(999, (parseInt(inp.value, 10) || 0) + 1); markMet(); });
-    inp.addEventListener('input', function(){ inp.value = inp.value.replace(/\D/g, '').slice(0, 3); markMet(); });
-    st.appendChild(minus); st.appendChild(inp); st.appendChild(plus); box.appendChild(st);
-    $('dMetrics').appendChild(box);
-  });
-  function readForm(){ var r = {}; P.METRICS.forEach(function(m){ r[m.k] = Math.min(999, parseInt($('v-' + m.k).value, 10) || 0); }); return r; }
-  function markMet(){
-    var t = settings.targets || {}, r = readForm();
-    P.METRICS.forEach(function(m){
-      var g = t[m.k] || 0;
-      $('g-' + m.k).textContent = g ? (r[m.k] >= g ? '✓ 目標 ' + g : '目標 ' + g) : '不設目標';
-      $('m-' + m.k).classList.toggle('met', g > 0 && r[m.k] >= g);
-    });
-  }
-  function fillDaily(){
-    var d = $('dDate').value, rec = days[d];
-    P.METRICS.forEach(function(m){ $('v-' + m.k).value = rec ? (rec[m.k] || 0) : 0; });
-    $('dBlocker').value = rec ? (rec.blocker || '') : '';
-    var st = $('dState');
-    if(rec){
-      var met = P.dayMet(rec, settings.targets), late = rec.first_saved_on > rec.day;
-      st.className = 'pill ' + (met ? 'good' : ''); st.textContent = (met ? '已填・達標' : '已填寫') + (late ? '・補填' : '');
-    } else { st.className = 'pill mute'; st.textContent = d === todayStr() ? '今天還沒填' : '這天沒有紀錄'; }
-    $('dSave').textContent = rec ? '更新日報' : '儲存日報';
-    markMet(); renderWeek();
-  }
-  $('dDate').addEventListener('change', function(){ if(this.value > todayStr()) this.value = todayStr(); fillDaily(); });
-  function renderWeek(){
-    var ws = P.weekStart(new Date()), t = todayStr(), sel = $('dDate').value, box = $('dWeek');
-    box.textContent = '';
-    for(var i = 0; i < 7; i++){
-      var ds = P.ymd(P.addDays(ws, i)), rec = days[ds], cls = 'wday';
-      if(rec) cls += P.dayMet(rec, settings.targets) ? ' ok' : ' filled';
-      else if(i < 5 && ds < t) cls += ' miss';
-      if(ds === t) cls += ' today';
-      if(ds === sel) cls += ' sel';
-      var b = el('button', cls); b.type = 'button';
-      b.appendChild(document.createTextNode('週' + P.DOW[(i + 1) % 7]));
-      b.appendChild(el('b', '', rec ? String(rec.invites || 0) : '—'));
-      b.appendChild(document.createTextNode(rec ? '邀約' : (ds > t ? '' : '未填')));
-      b.disabled = ds > t;
-      (function(day){ b.addEventListener('click', function(){ $('dDate').value = day; fillDaily(); }); })(ds);
-      box.appendChild(b);
-    }
-    // 連續填寫的工作日（今天還沒填不算中斷）
-    var n = 0, d = P.today(); if(!days[P.ymd(d)]) d = P.addDays(d, -1);
-    for(var k = 0; k < 120; k++){ var wd = (d.getDay() + 6) % 7; if(wd < 5){ if(days[P.ymd(d)]) n++; else break; } d = P.addDays(d, -1); }
-    $('dStreak').textContent = '連續填寫 ' + n + ' 個工作日';
-    $('dStreak').className = 'pill ' + (n >= 5 ? 'good' : '');
-  }
-  $('dSave').addEventListener('click', async function(){
-    var d = $('dDate').value; if(!d) return;
-    if(d > todayStr()){ vcToast('不能填未來的日期', 'err'); return; }
-    var body = Object.assign({ advisor_id: myId, day: d, blocker: $('dBlocker').value.trim() || null }, readForm());
-    var btn = this; btn.disabled = true;
-    var res = days[d]
-      ? await supabaseClient.from('kpi_daily').update(body).eq('advisor_id', myId).eq('day', d)
-      : await supabaseClient.from('kpi_daily').insert(body);
-    btn.disabled = false;
-    if(res.error){ vcToast('儲存失敗，請稍後再試', 'err'); return; }
-    await loadDays();
-    vcToast(P.dayMet(days[d] || body, settings.targets) ? '已儲存，這天達標！' : '已儲存');
-  });
-  async function loadDays(){
-    var res = await supabaseClient.from('kpi_daily').select('*').eq('advisor_id', myId).order('day', { ascending:false }).limit(120);
-    if(res.error) throw res.error;
-    days = {}; (res.data || []).forEach(function(r){ days[r.day] = r; });
-    fillDaily();
-  }
-
-  /* ===== 案件推進 ===== */
-  P.SOURCES.forEach(function(x){ var o = el('option', '', x); o.value = x; $('cfSource').appendChild(o); });
-  P.STAGES.forEach(function(x){ var o = el('option', '', x); o.value = x; $('cfStage').appendChild(o); });
-  function syncReq(){ var need = P.ACTIVE.indexOf($('cfStage').value) > -1; $('cfReq1').hidden = !need; $('cfReq2').hidden = !need; }
-  $('cfStage').addEventListener('change', syncReq);
-  document.querySelectorAll('#cFilters button').forEach(function(b){
-    b.addEventListener('click', function(){
-      caseFilter = b.dataset.f;
-      document.querySelectorAll('#cFilters button').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-      renderCases();
-    });
-  });
-  function stagePill(st){ return el('span', 'pill ' + (P.isWon({ stage: st }) ? 'good' : st === '暫停／流失' ? 'mute' : ''), st); }
-  function track(st){
-    var i = P.STAGES.indexOf(st), t = el('div', 'track');
-    for(var j = 0; j < 6; j++) t.appendChild(el('i', j <= i && i < 7 ? 'on' : ''));
-    return t;
-  }
-  function renderCases(){
-    var active = cases.filter(function(c){ return P.ACTIVE.indexOf(c.stage) > -1; });
-    var flagged = active.filter(function(c){ return P.caseFlags(c).length; });
-    var won = cases.filter(P.isWon);
-    $('cSummary').textContent = '進行中 ' + active.length + ' 件・需處理 ' + flagged.length + ' 件・已成交 ' + won.length + ' 件';
-    var list = caseFilter === 'active' ? active : caseFilter === 'flag' ? flagged : caseFilter === 'won' ? won : cases.slice();
-    list.sort(function(a, b){ return P.caseFlags(b).length - P.caseFlags(a).length || String(a.next_date || '9').localeCompare(String(b.next_date || '9')); });
-    var box = $('cList'); box.textContent = '';
-    if(!list.length){ box.appendChild(el('div', 'card empty', cases.length ? '這個分類沒有案件。' : '還沒有案件。按「＋ 新增案件」建立第一個客戶，記得填下一步和日期。')); return; }
-    list.forEach(function(c){
-      var f = P.caseFlags(c);
-      var b = el('button', 'kc' + (f.some(function(x){ return x[0] === 'bad'; }) ? ' flag' : f.length ? ' warnf' : '')); b.type = 'button';
-      var top = el('div', 'top'); top.appendChild(el('span', 'code', c.code)); top.appendChild(stagePill(c.stage)); b.appendChild(top);
-      var nx = el('div', 'nx'); nx.appendChild(document.createTextNode('下一步：')); nx.appendChild(el('b', '', c.next_action || '未填'));
-      if(c.next_date) nx.appendChild(document.createTextNode('・' + P.md(c.next_date)));
-      b.appendChild(nx);
-      var tg = el('div', 'tg');
-      f.forEach(function(x){ tg.appendChild(el('span', 'pill ' + x[0], x[1])); });
-      if(c.blocker) tg.appendChild(el('span', 'pill warn', '卡關：' + c.blocker));
-      if(c.product) tg.appendChild(el('span', 'pill mute', c.product));
-      if(c.amount != null) tg.appendChild(el('span', 'pill mute', Number(c.amount).toLocaleString('en-US') + ' 萬'));
-      tg.appendChild(el('span', 'pill mute', c.source));
-      b.appendChild(tg);
-      b.appendChild(track(c.stage));
-      b.addEventListener('click', function(){ openCase(c); });
-      box.appendChild(b);
-    });
-  }
-  function openCase(c){
-    editing = c || null; delArmed = false;
-    $('caseForm').hidden = false; $('cfTitle').textContent = c ? '更新：' + c.code : '新增案件';
-    $('cfCode').value = c ? c.code : ''; $('cfSource').value = c ? c.source : '人脈'; $('cfStage').value = c ? c.stage : '名單';
-    $('cfProduct').value = c ? (c.product || '') : ''; $('cfAmount').value = c && c.amount != null ? c.amount : '';
-    $('cfNext').value = c ? (c.next_action || '') : ''; $('cfNextDate').value = c ? (c.next_date || '') : ''; $('cfBlock').value = c ? (c.blocker || '') : '';
-    $('cfNote').value = ''; $('cfErr').textContent = '';
-    $('cfDel').hidden = !c; $('cfDel').textContent = '刪除案件';
-    document.querySelectorAll('#caseForm .f.cinvalid').forEach(function(f){ f.classList.remove('cinvalid'); });
-    var h = (c && c.history) || [];
-    $('cfHistWrap').hidden = !h.length; $('cfHist').textContent = '';
-    h.slice().reverse().forEach(function(x){
-      var d = el('div'); d.appendChild(el('span', 'd', x.on)); d.appendChild(stagePill(x.stage));
-      if(x.note) d.appendChild(document.createTextNode(' ' + x.note)); $('cfHist').appendChild(d);
-    });
-    syncReq();
-    $('caseForm').scrollIntoView({ behavior:'smooth', block:'start' });
-    setTimeout(function(){ $('cfCode').focus({ preventScroll:true }); }, 350);
-  }
-  $('cNew').addEventListener('click', function(){ openCase(null); });
-  $('cfClose').addEventListener('click', function(){ $('caseForm').hidden = true; editing = null; });
-  ['cfCode','cfNext','cfNextDate'].forEach(function(id){ $(id).addEventListener('input', function(){ this.closest('.f').classList.remove('cinvalid'); $('cfErr').textContent = ''; }); });
-  $('cfSave').addEventListener('click', async function(){
-    var code = $('cfCode').value.trim(), stage = $('cfStage').value, next = $('cfNext').value.trim(), nd = $('cfNextDate').value;
-    var need = P.ACTIVE.indexOf(stage) > -1, bad = [];
-    if(!code) bad.push('code');
-    if(need && !next) bad.push('next_action');
-    if(need && !nd) bad.push('next_date');
-    document.querySelectorAll('#caseForm .f[data-c]').forEach(function(f){ f.classList.toggle('cinvalid', bad.indexOf(f.dataset.c) > -1); });
-    if(bad.length){ $('cfErr').textContent = !code ? '請填客戶代號。' : '進行中的案件一定要填下一步和日期。'; return; }
-    var old = editing, note = $('cfNote').value.trim(), hist = ((old && old.history) || []).slice();
-    if(!old || old.stage !== stage || note) hist.push({ on: todayStr(), stage: stage, note: note || (old ? '階段改為' + stage : '建立案件') });
-    var amt = $('cfAmount').value;
-    var body = { code: code, source: $('cfSource').value, stage: stage, product: $('cfProduct').value.trim() || null,
-      amount: amt === '' ? null : Math.max(0, Number(amt)), next_action: next || null, next_date: nd || null,
-      blocker: $('cfBlock').value.trim() || null, history: hist.slice(-60) };
-    var btn = this; btn.disabled = true;
-    var res = old
-      ? await supabaseClient.from('kpi_cases').update(body).eq('id', old.id).eq('advisor_id', myId)
-      : await supabaseClient.from('kpi_cases').insert(Object.assign({ advisor_id: myId }, body));
-    btn.disabled = false;
-    if(res.error){ $('cfErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
-    vcToast(old ? '案件已更新' : '案件已建立');
-    $('caseForm').hidden = true; editing = null;
-    await loadCases();
-  });
-  $('cfDel').addEventListener('click', async function(){
-    if(!editing) return;
-    if(!delArmed){ delArmed = true; this.textContent = '再按一次確認刪除'; return; }
-    var res = await supabaseClient.from('kpi_cases').delete().eq('id', editing.id).eq('advisor_id', myId);
-    if(res.error){ vcToast('刪除失敗，請稍後再試', 'err'); return; }
-    vcToast('已刪除'); $('caseForm').hidden = true; editing = null; await loadCases();
-  });
-  async function loadCases(){
-    var res = await supabaseClient.from('kpi_cases').select('*').eq('advisor_id', myId).order('updated_at', { ascending:false }).limit(1000);
-    if(res.error) throw res.error;
-    cases = res.data || []; renderCases();
-  }
-
-  (async function init(){
-    var s = await supabaseClient.auth.getSession();
-    var session = s && s.data && s.data.session; if(!session) return;
-    myId = session.user.id;
-    $('dDate').value = todayStr(); $('dDate').max = todayStr();
-    var st = await supabaseClient.rpc('vc_my_kpi_settings');
-    if(st.error){
-      ['panelDaily','panelCases'].forEach(function(id){
-        var p = $(id); p.textContent = '';
-        var c = el('div', 'card'); c.appendChild(el('h2', '', '這個功能還沒開通'));
-        c.appendChild(el('p', 'muted', '系統的資料表還沒建立好；如果你是管理者，請先執行「supabase-kpi.sql」。')); p.appendChild(c);
-      });
-      return;
-    }
-    settings = Object.assign({}, P.DEFAULT_KPI, st.data || {});
-    $('goalSrc').textContent = settings.source === 'member' ? '每日目標由「' + (settings.team_name || '你的團隊') + '」主管設定。'
-      : settings.source === 'owner' ? '這是你帶的團隊「' + (settings.team_name || '') + '」的目標，可以在「團隊」頁修改。'
-      : '你還沒加入團隊，先用系統預設的目標。';
-    try{ await Promise.all([loadDays(), loadCases()]); }
-    catch(e){ vcToast('讀取資料失敗，請重新整理', 'err'); }
+    resetForm(); renderDay();
+    var want = ''; try{ want = sessionStorage.getItem('vc_progress_tab2') || ''; }catch(e){}
+    if(want === 'week' || want === 'cases') showTab(want);
   })();
 })();
 </script>
