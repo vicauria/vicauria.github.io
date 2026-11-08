@@ -215,7 +215,7 @@
   <div class="wrap">
     <div class="eyebrow">Progress Report · 進程推進回報</div>
     <h1>進程推進回報</h1>
-    <p>每天花幾分鐘填「每日進程」：今天見了誰、推到哪一步；沒有會面就勾「無」。每週的成績會自動算好。加入團隊的話，團隊主管每週可以一次看到你的進度，需要支援的地方也能即時幫上忙。</p>
+    <p>每天花幾分鐘填「今日紀錄」：今天見了誰、推到哪一步、卡在哪裡、明天怎麼排；沒有會面就勾「無」。每週的狀況會自動整理好。加入團隊的話，團隊主管每週可以一次看到你的進度，需要支援的地方也能即時幫上忙。</p>
   </div>
 </header>
 
@@ -239,8 +239,8 @@
     </section>
 
     <div class="main-tabs" role="tablist" aria-label="進程回報分類">
-      <button type="button" role="tab" data-tab="daily" aria-selected="true"><b>每日進程</b><span>每天填：會面＋今天的數字</span></button>
-      <button type="button" role="tab" data-tab="week" aria-selected="false"><b>週成績</b><span>本週 KPI 達成多少</span></button>
+      <button type="button" role="tab" data-tab="daily" aria-selected="true"><b>每日進程</b><span>每天填今日紀錄</span></button>
+      <button type="button" role="tab" data-tab="week" aria-selected="false"><b>週報</b><span>本週會面與填寫狀況</span></button>
       <button type="button" role="tab" data-tab="cases" aria-selected="false"><b>案件總覽</b><span>每個案子推到哪一步</span></button>
     </div>
 
@@ -260,8 +260,8 @@
       </section>
 
       <!-- 新增／編輯會面 -->
-      <section class="card form-card" id="formCard" hidden aria-label="填寫會面">
-        <h2 id="formTitle">新增會面</h2>
+      <section class="card form-card" id="formCard" hidden aria-label="填寫今日紀錄">
+        <h2 id="formTitle">今日紀錄</h2>
         <p class="muted" style="margin:0 0 14px;">標示 <span style="color:#B3402A">*</span> 的都要填。</p>
         <form id="prForm" novalidate>
           <div class="fgrid">
@@ -333,53 +333,57 @@
               <input type="text" id="fSupport" maxlength="300" placeholder="例如：需要主管陪同提案">
               <div class="quick"><button type="button" id="noSupport">目前不需要</button></div>
             </div>
+            <div class="f" data-f="blocker">
+              <label for="fBlocker">今天最大的卡點（一句話）</label>
+              <input type="text" id="fBlocker" maxlength="120" placeholder="例如：客戶說要回家跟另一半討論">
+            </div>
+            <div class="f" data-f="tomorrow_plan">
+              <label for="fTomorrow">明日排訪及安排</label>
+              <input type="text" id="fTomorrow" maxlength="500" placeholder="例如：10 點王先生二次面談">
+            </div>
           </div>
           <div class="privacy">🔒 這份回報只有你自己和你加入的團隊主管看得到（主管只能看、不能修改）。</div>
           <div class="form-actions">
-            <button type="submit" class="btn warm" id="submitBtn">儲存會面</button>
+            <button type="submit" class="btn warm" id="submitBtn">儲存今日紀錄</button>
             <button type="button" class="btn ghost" id="cancelBtn">取消</button>
             <span class="form-err" id="formErr" role="alert"></span>
           </div>
         </form>
       </section>
 
-      <section class="card" aria-label="當天的會面">
+      <section class="card" aria-label="今日紀錄">
         <div class="row-between" style="align-items:center; margin-bottom:10px;">
-          <h2 style="margin:0;" id="dMeetTitle">今天的會面</h2>
-          <button class="btn warm" id="addBtn" type="button">＋ 新增會面</button>
+          <h2 style="margin:0;" id="dMeetTitle">今日紀錄</h2>
+          <button class="btn warm" id="addBtn" type="button">＋ 今日紀錄</button>
         </div>
         <div id="dMeets"></div>
-        <label class="nomeet" id="noMeetBox"><input type="checkbox" id="dNoMeet">今天沒有會面（無）</label>
+        <div id="noMeetBox">
+          <label class="nomeet" id="noMeetLbl"><input type="checkbox" id="dNoMeet">今天沒有會面（無）</label>
+          <div id="noMeetMore" hidden>
+            <div class="fgrid" style="margin-top:12px;">
+              <div class="f"><label for="dBlocker">今天最大的卡點（一句話）</label><input type="text" id="dBlocker" maxlength="120" placeholder="例如：名單不夠"></div>
+              <div class="f"><label for="dTomorrow">明日排訪及安排</label><input type="text" id="dTomorrow" maxlength="500" placeholder="例如：整理名單、打 10 通邀約電話"></div>
+            </div>
+            <div class="form-actions" style="justify-content:space-between;">
+              <span class="pill mute" id="dState">尚未送出</span>
+              <span class="form-err" id="dErr" role="alert"></span>
+              <button type="button" class="btn warm" id="dSave">送出</button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="card" aria-label="當天的數字">
-        <h2>今天的數字</h2>
-        <div class="muted">面談、提案、成交會從上面的會面自動算，其他四項自己填。</div>
-        <div class="metrics" id="dMetrics"></div>
-        <div class="fgrid">
-          <div class="f"><label for="dBlocker">今天最大的卡點（一句話）</label><input type="text" id="dBlocker" maxlength="120" placeholder="例如：客戶說要回家跟另一半討論"></div>
-          <div class="f"><label for="dTomorrow">明日排訪及安排</label><input type="text" id="dTomorrow" maxlength="500" placeholder="例如：10 點王先生二次面談"></div>
-        </div>
-        <div class="form-actions" style="justify-content:space-between;">
-          <span class="pill mute" id="dState">尚未送出</span>
-          <span class="form-err" id="dErr" role="alert"></span>
-          <button type="button" class="btn warm" id="dSave">送出今日進程</button>
-        </div>
-      </section>
     </div>
 
-    <!-- ================= 週成績 ================= -->
+    <!-- ================= 週報 ================= -->
     <div class="panel" id="panelWeek" role="tabpanel" hidden>
-      <section class="card" aria-label="本週成績">
+      <section class="card" aria-label="本週週報">
         <div class="weekbar">
           <button class="nav-btn" id="wPrev" type="button">← 上週</button>
           <span class="lbl" id="wLbl"></span>
           <button class="nav-btn" id="wNext" type="button">下週 →</button>
           <button class="nav-btn" id="wThis" type="button">回到本週</button>
         </div>
-        <div class="score" id="wScore"></div>
-        <div class="goal-src" id="goalSrc"></div>
-        <div class="bars" id="wBars"></div>
         <div class="stats" id="wStats"></div>
       </section>
       <section class="card" aria-label="每日明細">
@@ -419,9 +423,8 @@
   var P = VCProgress; P.injectCSS();
   var $ = function(id){ return document.getElementById(id); };
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
-  var myId = null, myName = '', rows = [], days = {}, settings = P.DEFAULT_KPI;
+  var myId = null, myName = '', rows = [], days = {};
   var sel = P.ymd(P.today()), wk = P.weekStart(new Date()), editing = null, trust = 0, caseFilter = 'active';
-  var MANUAL = P.METRICS.filter(function(m){ return !m.auto; });
   function todayStr(){ return P.ymd(P.today()); }
   function meetsOn(d){ return rows.filter(function(r){ return r.meet_date === d; }); }
 
@@ -534,6 +537,7 @@
     if(!asNew){
       $('fNext').value = r.next_plan || ''; $('fNextDate').value = r.next_contact || '';
       $('fSupport').value = r.need_support;
+      $('fBlocker').value = r.blocker || ''; $('fTomorrow').value = r.tomorrow_plan || '';
     } else {
       $('prefillNote').textContent = '接續 ' + P.md(r.meet_date) + ' 第 ' + r.meet_no + ' 次會面：已帶入基本資料、階段和上次的總結，記得更新這次的進度。';
       $('prefillNote').hidden = false;
@@ -542,8 +546,8 @@
   }
   function openForm(r, asNew){
     if(r) fill(r, asNew); else resetForm();
-    $('formTitle').textContent = editing ? '修改會面' : (r ? '再記一次：' + r.contact_name : '新增會面');
-    $('submitBtn').textContent = editing ? '儲存修改' : '儲存會面';
+    $('formTitle').textContent = editing ? '修改今日紀錄' : (r ? '今日紀錄：' + r.contact_name : '今日紀錄');
+    $('submitBtn').textContent = editing ? '儲存修改' : '儲存今日紀錄';
     $('formCard').hidden = false;
     $('formCard').scrollIntoView({ behavior:'smooth', block:'start' });
     setTimeout(function(){ (r ? $('fSummary') : $('fContact')).focus({ preventScroll:true }); }, 350);
@@ -560,7 +564,8 @@
       stage: $('fStage').value || null, amount: isFinite(amt) ? amt : null,
       meet_no: parseInt($('fNo').value, 10), relation: $('fRelation').value.trim(), age: parseInt($('fAge').value, 10),
       job: $('fJob').value.trim(), trust: trust, summary: $('fSummary').value.trim(), next_plan: $('fNext').value.trim() || null,
-      next_contact: $('fNextDate').value || null, need_support: $('fSupport').value.trim()
+      next_contact: $('fNextDate').value || null, need_support: $('fSupport').value.trim(),
+      blocker: $('fBlocker').value.trim() || null, tomorrow_plan: $('fTomorrow').value.trim() || null
     };
     var bad = [];
     if(!v.meet_date || v.meet_date > todayStr()) bad.push('meet_date');
@@ -598,10 +603,10 @@
       days[c.v.meet_date].no_meet = false;
     }
     btn.disabled = false;
-    vcToast(editing ? '已儲存修改' : '已記下這次會面');
+    vcToast(editing ? '已儲存修改' : '已儲存今日紀錄');
     sel = c.v.meet_date;
     $('formCard').hidden = true; resetForm();
-    await loadMeets(); await loadDays();
+    await loadMeets();
     renderDay();
   });
 
@@ -615,26 +620,7 @@
   }
 
   /* ================= 每日進程 ================= */
-  MANUAL.forEach(function(m){
-    var box = el('div', 'metric'); box.id = 'm-' + m.k;
-    var l = el('div'); l.appendChild(el('div', 'nm', m.l)); l.appendChild(el('div', 'gl', '自己填')); box.appendChild(l);
-    var st = el('div', 'step');
-    var minus = el('button', '', '−'); minus.type = 'button'; minus.setAttribute('aria-label', m.l + '減一');
-    var inp = el('input'); inp.id = 'v-' + m.k; inp.inputMode = 'numeric'; inp.value = '0'; inp.setAttribute('aria-label', m.l);
-    var plus = el('button', '', '＋'); plus.type = 'button'; plus.setAttribute('aria-label', m.l + '加一');
-    minus.addEventListener('click', function(){ inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) - 1); });
-    plus.addEventListener('click', function(){ inp.value = Math.min(999, (parseInt(inp.value, 10) || 0) + 1); });
-    inp.addEventListener('input', function(){ inp.value = inp.value.replace(/\D/g, '').slice(0, 3); });
-    st.appendChild(minus); st.appendChild(inp); st.appendChild(plus); box.appendChild(st);
-    $('dMetrics').appendChild(box);
-  });
-  P.METRICS.filter(function(m){ return m.auto; }).forEach(function(m){
-    var box = el('div', 'metric auto');
-    var l = el('div'); l.appendChild(el('div', 'nm', m.l)); l.appendChild(el('div', 'gl', '從會面自動算')); box.appendChild(l);
-    var v = el('div', 'av', '0'); v.id = 'a-' + m.k; box.appendChild(v);
-    $('dMetrics').appendChild(box);
-  });
-  $('dNoMeet').addEventListener('change', function(){ $('noMeetBox').classList.toggle('on', this.checked); $('dErr').textContent = ''; });
+  $('dNoMeet').addEventListener('change', function(){ $('noMeetLbl').classList.toggle('on', this.checked); $('noMeetMore').hidden = !this.checked; $('dErr').textContent = ''; });
 
   function dayStatus(d){
     var rec = days[d], cnt = meetsOn(d).length, t = todayStr();
@@ -663,9 +649,9 @@
     $('dDate').value = sel; $('dDate').max = t; $('dNext').disabled = sel >= t;
     renderStrip();
     var isToday = sel === t, lbl = isToday ? '今天' : P.md(sel);
-    $('dMeetTitle').textContent = lbl + '的會面';
+    $('dMeetTitle').textContent = lbl + '的紀錄';
     var ms = meetsOn(sel), list = $('dMeets'); list.textContent = '';
-    if(!ms.length) list.appendChild(el('div', 'empty', '這天還沒有記錄會面。有見人就按「＋ 新增會面」，沒有就勾下面的「今天沒有會面」。'));
+    if(!ms.length) list.appendChild(el('div', 'empty', '這天還沒有紀錄。有見人就按「＋ 今日紀錄」，沒有就勾下面的「今天沒有會面」。'));
     ms.forEach(function(r){
       list.appendChild(P.card(r, { actions: [
         { label:'修改', onClick:function(x){ openForm(x, false); } },
@@ -675,15 +661,13 @@
     var rec = days[sel];
     $('noMeetBox').hidden = ms.length > 0;
     $('dNoMeet').checked = !ms.length && !!(rec && rec.no_meet);
-    $('noMeetBox').classList.toggle('on', $('dNoMeet').checked);
-    MANUAL.forEach(function(m){ $('v-' + m.k).value = rec ? (rec[m.k] || 0) : 0; });
-    var a = P.autoCount(ms); ['meetings','proposals','deals'].forEach(function(k){ $('a-' + k).textContent = a[k]; });
+    $('noMeetLbl').classList.toggle('on', $('dNoMeet').checked);
+    $('noMeetMore').hidden = !$('dNoMeet').checked;
     $('dBlocker').value = rec && rec.blocker || ''; $('dTomorrow').value = rec && rec.tomorrow_plan || '';
     var pill = $('dState');
-    if(!rec && ms.length){ pill.className = 'pill warn'; pill.textContent = '已記會面，記得送出今天的數字'; }
-    else if(rec){ pill.className = 'pill good'; pill.textContent = '已送出' + (rec.first_saved_on > sel ? '・補填' : ''); }
+    if(rec && rec.no_meet){ pill.className = 'pill good'; pill.textContent = '已送出' + (rec.first_saved_on > sel ? '・補填' : ''); }
     else { pill.className = 'pill ' + (dayStatus(sel).cls === 'miss' ? 'bad' : 'mute'); pill.textContent = dayStatus(sel).cls === 'miss' ? '漏填，可以補填' : '尚未送出'; }
-    $('dSave').textContent = rec ? '更新' + (isToday ? '今日' : '這天的') + '進程' : '送出' + (isToday ? '今日' : '這天的') + '進程';
+    $('dSave').textContent = rec && rec.no_meet ? '更新' : '送出';
     $('dErr').textContent = '';
     refreshDatalist();
   }
@@ -692,22 +676,20 @@
   $('dNext').addEventListener('click', function(){ if(sel < todayStr()){ sel = P.ymd(P.addDays(P.parse(sel), 1)); renderDay(); } });
 
   $('dSave').addEventListener('click', async function(){
-    var ms = meetsOn(sel);
-    if(!ms.length && !$('dNoMeet').checked){ $('dErr').textContent = '這天有會面就先新增會面；沒有的話請勾「今天沒有會面」。'; return; }
-    var v = { no_meet: !ms.length, blocker: $('dBlocker').value.trim() || null, tomorrow_plan: $('dTomorrow').value.trim() || null };
-    MANUAL.forEach(function(m){ v[m.k] = Math.min(999, parseInt($('v-' + m.k).value, 10) || 0); });
-    var a = P.autoCount(ms); v.meetings = Math.min(999, a.meetings); v.proposals = Math.min(999, a.proposals); v.deals = Math.min(999, a.deals);
+    if(meetsOn(sel).length) return;
+    if(!$('dNoMeet').checked){ $('dErr').textContent = '請先勾「今天沒有會面」。'; return; }
+    var v = { no_meet: true, blocker: $('dBlocker').value.trim() || null, tomorrow_plan: $('dTomorrow').value.trim() || null };
     var btn = this; btn.disabled = true;
     var res = days[sel]
       ? await supabaseClient.from('kpi_daily').update(v).eq('advisor_id', myId).eq('day', sel)
       : await supabaseClient.from('kpi_daily').insert(Object.assign({ advisor_id: myId, day: sel }, v));
     btn.disabled = false;
     if(res.error){ $('dErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
-    vcToast('已送出' + (sel === todayStr() ? '今日' : P.md(sel)) + '進程');
+    vcToast('已送出' + (sel === todayStr() ? '今天' : P.md(sel)) + '的紀錄');
     await loadDays(); renderDay();
   });
 
-  /* ================= 週成績 ================= */
+  /* ================= 週報 ================= */
   function renderWeek(){
     var t = todayStr(), from = P.ymd(wk), to = P.ymd(P.addDays(wk, 6));
     $('wLbl').textContent = P.weekLabel(wk);
@@ -715,24 +697,7 @@
     $('wThis').disabled = isThis; $('wNext').disabled = isThis;
     var dArr = Object.keys(days).filter(function(d){ return d >= from && d <= to; }).map(function(d){ return days[d]; });
     var mArr = rows.filter(function(r){ return r.meet_date >= from && r.meet_date <= to; });
-    var tot = P.totals(dArr, mArr), targets = settings.targets || {}, sc = P.score(tot, targets);
-
-    var s = $('wScore'); s.textContent = '';
-    var big = el('div', 'big', String(sc.met)); big.appendChild(el('small', '', ' / ' + sc.total + ' 項達標')); s.appendChild(big);
-    if(!sc.total) s.appendChild(el('span', 'pill mute', '還沒有設定每週目標'));
-    else if(sc.all) s.appendChild(el('span', 'pill good', '本週目標全部達成 🎉'));
-    else s.appendChild(el('span', 'pill ' + (isThis ? 'warn' : 'bad'), (isThis ? '還差 ' : '沒達成 ') + (sc.total - sc.met) + ' 項'));
-
-    var bars = $('wBars'); bars.textContent = '';
-    P.METRICS.forEach(function(m){
-      var g = targets[m.k] || 0, v = tot[m.k] || 0, ok = g > 0 && v >= g;
-      var r = el('div', 'barrow' + (ok ? ' ok' : g ? '' : ' none'));
-      var nm = el('div', 'nm', m.s || m.l); if(m.auto) nm.appendChild(el('em', '', '自動')); r.appendChild(nm);
-      var bar = el('div', 'bar'), fillI = el('i'); fillI.style.width = (g ? Math.min(100, v / g * 100) : 0) + '%'; bar.appendChild(fillI); r.appendChild(bar);
-      r.appendChild(el('div', 'n', g ? v + ' / ' + g + (ok ? ' ✓' : '') : v + '・無目標'));
-      bars.appendChild(r);
-    });
-
+    var wa = P.autoCount(mArr);
     var wd = P.workdays(wk, t);
     var filled = wd.filter(function(d){ return days[d] || meetsOn(d).length; }).length;
     var missed = wd.filter(function(d){ return d < t && !days[d] && !meetsOn(d).length; }).length;
@@ -740,34 +705,44 @@
     var people = {}; mArr.forEach(function(r){ people[r.contact_name.trim()] = 1; });
     var st = $('wStats'); st.textContent = '';
     [['日報填寫（工作日）', filled + ' / ' + wd.length, missed ? '' : (wd.length ? 'good' : '')], ['漏填', missed + ' 天', missed ? 'bad' : ''],
-     ['補填', late + ' 次', late ? 'warm' : ''], ['見了幾位', Object.keys(people).length + ' 位', '']].forEach(function(x){
+     ['會面', wa.meetings + ' 次', ''], ['見了幾位', Object.keys(people).length + ' 位', ''],
+     ['提案', wa.proposals + ' 次', ''], ['成交', wa.deals + ' 件', wa.deals ? 'good' : ''],
+     ['補填', late + ' 次', late ? 'warm' : '']].forEach(function(x){
       var d = el('div', x[2]); d.appendChild(el('div', 'k', x[0])); d.appendChild(el('div', 'v', x[1])); d.querySelector('.v').style.fontSize = '20px'; st.appendChild(d);
     });
 
     // 每日明細
     var tb = el('table'), hr = el('tr');
-    ['日期'].concat(P.METRICS.map(function(m){ return m.s || m.l; }), ['狀態']).forEach(function(h){ hr.appendChild(el('th', '', h)); });
+    ['日期','會面','提案','成交','見了誰','狀態'].forEach(function(h){ hr.appendChild(el('th', '', h)); });
     tb.appendChild(hr);
     for(var i = 0; i < 7; i++){
-      var d = P.ymd(P.addDays(wk, i)), rec = days[d], dt = P.totals(rec ? [rec] : [], meetsOn(d)), tr = el('tr');
+      var d = P.ymd(P.addDays(wk, i)), rec = days[d], ms = meetsOn(d), a = P.autoCount(ms), tr = el('tr');
       tr.appendChild(el('td', '', P.md(d)));
-      P.METRICS.forEach(function(m){ tr.appendChild(el('td', 'num', rec || meetsOn(d).length ? String(dt[m.k]) : '')); });
+      tr.appendChild(el('td', 'num', ms.length ? String(a.meetings) : ''));
+      tr.appendChild(el('td', 'num', ms.length ? String(a.proposals) : ''));
+      tr.appendChild(el('td', 'num', ms.length ? String(a.deals) : ''));
+      var who = el('td'); who.style.whiteSpace = 'normal'; who.style.textAlign = 'left';
+      who.textContent = ms.map(function(r){ return r.contact_name; }).join('、'); tr.appendChild(who);
       var ds = dayStatus(d), stt = el('td');
-      if(rec) stt.appendChild(el('span', 'pill good', rec.no_meet && !meetsOn(d).length ? '無會面' : '已填'));
+      if(ms.length) stt.appendChild(el('span', 'pill good', '已填'));
+      else if(rec && rec.no_meet) stt.appendChild(el('span', 'pill good', '無會面'));
       else if(ds.cls === 'miss') stt.appendChild(el('span', 'pill bad', '漏填'));
-      else if(ds.cls === 'ok') stt.appendChild(el('span', 'pill good', '已填'));
       if(rec && rec.first_saved_on > d) stt.appendChild(el('span', 'pill warn', '補填'));
       tr.appendChild(stt); tb.appendChild(tr);
     }
     var tr2 = el('tr', 'total'); tr2.appendChild(el('td', '', '合計'));
-    P.METRICS.forEach(function(m){ tr2.appendChild(el('td', 'num', String(tot[m.k]))); }); tr2.appendChild(el('td', '', ''));
+    [wa.meetings, wa.proposals, wa.deals].forEach(function(v){ tr2.appendChild(el('td', 'num', String(v))); });
+    tr2.appendChild(el('td', '', Object.keys(people).length + ' 位')); tr2.appendChild(el('td', '', ''));
     tb.appendChild(tr2);
     $('wTable').textContent = ''; $('wTable').appendChild(tb);
 
+    // 本週卡點：今日紀錄＋沒有會面那天寫的
     var bl = $('wBlockers'); bl.textContent = '';
-    var bs = dArr.filter(function(x){ return x.blocker; }).sort(function(a, b){ return a.day < b.day ? -1 : 1; });
+    var bs = mArr.filter(function(r){ return r.blocker; }).map(function(r){ return { day: r.meet_date, text: r.blocker, who: r.contact_name }; })
+      .concat(dArr.filter(function(x){ return x.no_meet && x.blocker; }).map(function(x){ return { day: x.day, text: x.blocker }; }))
+      .sort(function(a, b){ return a.day < b.day ? -1 : 1; });
     if(!bs.length) bl.appendChild(el('div', 'muted', '這週沒有寫卡點。'));
-    bs.forEach(function(x){ var r = el('div', 'blk'); r.appendChild(el('small', '', P.md(x.day))); r.appendChild(document.createTextNode(x.blocker)); bl.appendChild(r); });
+    bs.forEach(function(x){ var r = el('div', 'blk'); r.appendChild(el('small', '', P.md(x.day))); r.appendChild(document.createTextNode(x.text + (x.who ? '（' + x.who + '）' : ''))); bl.appendChild(r); });
   }
   $('wPrev').addEventListener('click', function(){ wk = P.addDays(wk, -7); renderWeek(); });
   $('wNext').addEventListener('click', function(){ wk = P.addDays(wk, 7); renderWeek(); });
@@ -840,11 +815,6 @@
     myName = (meta.display_name || '').trim() || String(session.user.email || '').split('@')[0];
     try{
       await loadMeets(); await loadDays();
-      var st = await supabaseClient.rpc('vc_my_kpi_settings');
-      if(st.error) throw st.error;
-      if(st.data && st.data.targets) settings = st.data;
-      $('goalSrc').textContent = st.data && st.data.source === 'member' ? '每週目標由「' + (st.data.team_name || '團隊') + '」的主管設定'
-        : st.data && st.data.source === 'owner' ? '每週目標是你在團隊頁設定的' : '目前是系統預設的每週目標；加入團隊後會改用主管設定的目標';
     }catch(e){ $('setupMsg').style.display = 'block'; return; }
     $('app').style.display = 'block';
     resetForm(); renderDay();
