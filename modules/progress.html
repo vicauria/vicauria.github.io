@@ -261,9 +261,9 @@
 
     <div class="main-tabs" role="tablist" aria-label="進程回報分類">
       <button type="button" role="tab" data-tab="daily" aria-selected="true"><b>每日進程</b><span>每天填今日紀錄</span></button>
+      <button type="button" role="tab" data-tab="score" aria-selected="false" hidden id="scoreTabBtn"><b>行動積分</b><span>每天的業務行動，每週 100 分</span></button>
       <button type="button" role="tab" data-tab="week" aria-selected="false"><b>週報</b><span>本週會面與填寫狀況</span></button>
       <button type="button" role="tab" data-tab="cases" aria-selected="false"><b>案件總覽</b><span>每個案子推到哪一步</span></button>
-      <button type="button" role="tab" data-tab="score" aria-selected="false" hidden id="scoreTabBtn"><b>行動積分</b><span>每天的業務行動，每週 100 分</span></button>
     </div>
 
     <!-- ================= 每日進程 ================= -->
@@ -869,6 +869,7 @@
       st.appendChild(minus); st.appendChild(inp); st.appendChild(plus); row.appendChild(st);
     }
     row.appendChild(el('div', 'pts', '0 分'));
+    if(a.weekMax != null){ var cp = el('div', 'how cap', '本週已經算滿 ' + a.weekMax + ' 篇，超過的不再加分'); cp.hidden = true; cp.style.cssText = 'grid-column:1/-1;color:var(--warm-deep);font-weight:700;'; row.appendChild(cp); }
     $('sActs').appendChild(row);
   });
   function readCounts(){
@@ -879,23 +880,33 @@
     });
     return c;
   }
+  // 這一週的資料（可以把正在填的那天換成表單上的數字）
+  function weekRows(ws, overrideDay, overrideCounts){
+    var from = P.ymd(ws), to = P.ymd(P.addDays(ws, 6)), out = [];
+    Object.keys(scores).forEach(function(d){ if(d >= from && d <= to && d !== overrideDay) out.push({ day:d, counts:scores[d].counts }); });
+    if(overrideDay) out.push({ day:overrideDay, counts:overrideCounts });
+    return out;
+  }
   function updDayPts(){
-    var c = readCounts();
+    var c = readCounts(), ws = P.weekScore(weekRows(P.weekStart(P.parse(sSel)), sSel, c)), di = ws.perDayItem[sSel] || {};
     P.ACTIONS.forEach(function(a){
-      var v = c[a.k] || 0, row = $('act-' + a.k);
+      var v = c[a.k] || 0, row = $('act-' + a.k), x = di[a.k] || { counted:0, pts:0 };
       row.classList.toggle('on', v > 0);
-      row.querySelector('.pts').textContent = (v * a.p) + ' 分';
+      row.querySelector('.pts').textContent = x.pts + ' 分';
+      row.querySelector('.pts').title = x.counted < v ? '本週已達上限，超過的不計分' : '';
+      var cap = row.querySelector('.cap'); if(cap) cap.hidden = !(x.counted < v);
     });
-    $('sDayPts').textContent = P.actionPoints(c);
+    $('sDayPts').textContent = ws.perDay[sSel] || 0;
     $('sErr').textContent = '';
   }
   function renderScore(){
     var t = todayStr();
     $('sDate').value = sSel; $('sDate').max = t; $('sNext').disabled = sSel >= t;
     var ws = P.weekStart(P.parse(sSel)), box = $('sWeek'); box.textContent = '';
+    var saved = P.weekScore(weekRows(ws));
     for(var i = 0; i < 7; i++){
       (function(d){
-        var rec = scores[d], pts = rec ? P.actionPoints(rec.counts) : 0;
+        var rec = scores[d], pts = saved.perDay[d] || 0;
         var b = el('button', 'wday ' + (rec ? 'ok' : '') + (d === t ? ' today' : '') + (d === sSel ? ' sel' : ''));
         b.type = 'button'; b.disabled = d > t;
         b.appendChild(document.createTextNode(P.DOW[P.parse(d).getDay()]));
@@ -916,24 +927,20 @@
     $('sSave').textContent = (rec ? '更新' : '送出') + (isToday ? '今日' : '這天的') + '積分';
 
     // 本週
-    var from = P.ymd(ws), to = P.ymd(P.addDays(ws, 6)), sum = {}, total = 0;
-    Object.keys(scores).forEach(function(d){
-      if(d < from || d > to) return;
-      var cc = scores[d].counts || {}; P.ACTIONS.forEach(function(a){ sum[a.k] = (sum[a.k] || 0) + (cc[a.k] || 0); });
-      total += P.actionPoints(cc);
-    });
+    var from = P.ymd(ws), total = saved.total, items = saved.perItem;
     var isThisWeek = from === P.ymd(P.weekStart(new Date())), ok = total >= P.WEEK_GOAL;
     $('sWeekTitle').textContent = (isThisWeek ? '本週' : P.weekLabel(ws) + ' 這週') + '積分';
     var sc = $('sWkScore'); sc.textContent = '';
     var big = el('div', 'big', String(total)); big.appendChild(el('small', '', ' / ' + P.WEEK_GOAL + ' 分')); sc.appendChild(big);
     sc.appendChild(el('span', 'pill ' + (ok ? 'good' : isThisWeek ? 'warn' : 'bad'), ok ? '本週達標 🎉' : (isThisWeek ? '還差 ' : '差 ') + (P.WEEK_GOAL - total) + ' 分'));
     $('sWkBar').className = 'wk-bar' + (ok ? ' ok' : ''); $('sWkBar').firstChild.style.width = Math.min(100, total / P.WEEK_GOAL * 100) + '%';
-    $('sWkHint').textContent = '每週一到週日累計，' + P.WEEK_GOAL + ' 分達標。';
+    $('sWkHint').textContent = '每週一到週日累計，' + P.WEEK_GOAL + ' 分達標。Reels 或輪播貼文每週最多算 2 篇（10 分）。';
     var tb = el('table'), hr = el('tr');
     ['項目','每次','次數','得分'].forEach(function(h){ hr.appendChild(el('th', '', h)); }); tb.appendChild(hr);
     P.ACTIONS.forEach(function(a){
       var tr = el('tr'); tr.appendChild(el('td', '', a.l)); tr.appendChild(el('td', 'num', a.p + ' 分'));
-      tr.appendChild(el('td', 'num', String(sum[a.k] || 0))); tr.appendChild(el('td', 'num', String((sum[a.k] || 0) * a.p))); tb.appendChild(tr);
+      var it = items[a.k];
+      tr.appendChild(el('td', 'num', it.count + (it.counted < it.count ? '（計 ' + it.counted + '）' : ''))); tr.appendChild(el('td', 'num', String(it.pts))); tb.appendChild(tr);
     });
     var tt = el('tr', 'total'); tt.appendChild(el('td', '', '合計')); tt.appendChild(el('td', '', '')); tt.appendChild(el('td', '', '')); tt.appendChild(el('td', 'num', String(total))); tb.appendChild(tt);
     $('sWkTable').textContent = ''; $('sWkTable').appendChild(tb);
@@ -949,8 +956,10 @@
       : await supabaseClient.from('action_scores').insert(Object.assign({ advisor_id: myId, day: sSel }, v));
     btn.disabled = false;
     if(res.error){ $('sErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
-    vcToast('已送出' + (sSel === todayStr() ? '今日' : P.md(sSel)) + '積分：' + P.actionPoints(v.counts) + ' 分');
-    await loadScores(); renderScore();
+    await loadScores();
+    var got = P.weekScore(weekRows(P.weekStart(P.parse(sSel)))).perDay[sSel] || 0;
+    vcToast('已送出' + (sSel === todayStr() ? '今日' : P.md(sSel)) + '積分：' + got + ' 分');
+    renderScore();
   });
   async function loadScores(){
     var res = await supabaseClient.from('action_scores').select('*').eq('advisor_id', myId).order('day', { ascending:false }).limit(400);
