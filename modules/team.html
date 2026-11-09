@@ -309,6 +309,7 @@
         <button type="button" data-wk="kpi" aria-selected="true">週報總覽</button>
         <button type="button" data-wk="cases" aria-selected="false">需處理案件 <em id="wkCaseN" hidden></em></button>
         <button type="button" data-wk="meet" aria-selected="false">每日進程</button>
+        <button type="button" data-wk="score" aria-selected="false" id="wkScoreBtn" hidden>行動積分</button>
       </div>
 
       <div class="wk-panel" data-wk="kpi">
@@ -329,6 +330,11 @@
       <div class="wk-panel" data-wk="cases" hidden>
       <div class="sub" style="margin:0 0 8px;">夥伴每位會面對象就是一個案件；這裡列出沒有下一步、已逾期，或 14 天以上沒推進的進行中案件。</div>
       <div id="kpiCases"></div>
+      </div>
+
+      <div class="wk-panel" data-wk="score" hidden>
+      <div class="sub" style="margin:0 0 8px;">每位夥伴（含你自己）這週填的行動積分，每週 100 分達標；顧問彼此看不到，只有你看得到。</div>
+      <div id="scoreArea"></div>
       </div>
 
       <div class="wk-panel" data-wk="meet" hidden>
@@ -615,7 +621,7 @@ function initTeamProgress(teamId){
   wkBtns.forEach(b=> b.addEventListener('click', ()=> showWk(b.dataset.wk)));
   try{
     const t = sessionStorage.getItem('vc_team_tab'); if(t === 'weekly' || t === 'announce') showTm(t);
-    const w = sessionStorage.getItem('vc_team_wk'); if(w === 'cases' || w === 'meet') showWk(w);
+    const w = sessionStorage.getItem('vc_team_wk'); if(w === 'cases' || w === 'meet' || w === 'score') showWk(w);
   }catch(e){}
   const both = ()=> loadTeamKpi();
   document.getElementById('pgPrev').addEventListener('click', ()=>{ pgWeek = VCProgress.addDays(pgWeek, -7); both(); });
@@ -648,6 +654,54 @@ async function loadTeamKpi(){
   const d = data || {};
   renderTeamKpi(d);
   renderTeamProgress(d, from);
+  loadTeamScores(from, to);
+}
+
+/* ---------------- 行動積分（平台開通的團隊才有） ---------------- */
+async function loadTeamScores(from, to){
+  const btn = document.getElementById('wkScoreBtn'), area = document.getElementById('scoreArea');
+  const { data, error } = await supabaseClient.rpc('vc_team_action_scores', { p_team_id: pgTeamId, p_from: from, p_to: to });
+  const on = !error && data && data.enabled;
+  btn.hidden = !on;
+  if(!on){
+    area.textContent = '';
+    if(btn.getAttribute('aria-selected') === 'true') document.querySelector('.wk-tabs [data-wk="kpi"]').click();
+    return;
+  }
+  const P = VCProgress, el = (t, c, x)=>{ const e = document.createElement(t); if(c) e.className = c; if(x != null) e.textContent = x; return e; };
+  const members = data.members || [], rows = data.rows || [], today = data.today || P.ymd(P.today());
+  area.textContent = '';
+  const box = el('div', 'kpi-box'), table = el('table'), head = el('tr');
+  ['顧問'].concat(['一','二','三','四','五','六','日'], ['本週', '狀態']).forEach(h=> head.appendChild(el('th', '', h)));
+  table.appendChild(head);
+  const ranked = members.map(m=>{
+    const mine = rows.filter(r=> r.advisor_id === m.advisor_id);
+    return { m, mine, total: mine.reduce((s, r)=> s + P.actionPoints(r.counts), 0) };
+  }).sort((a, b)=> b.total - a.total);
+  ranked.forEach(({ m, mine, total })=>{
+    const tr = el('tr'); tr.appendChild(el('td', '', m.name + (m.is_owner ? '（你）' : '')));
+    for(let i = 0; i < 7; i++){
+      const d = P.ymd(P.addDays(pgWeek, i)), r = mine.find(x=> x.day === d);
+      const td = el('td', 'num', r ? String(P.actionPoints(r.counts)) : (d < today ? '·' : ''));
+      if(r && r.first_saved_on > d) td.title = '補填';
+      tr.appendChild(td);
+    }
+    tr.appendChild(el('td', 'num' + (total >= P.WEEK_GOAL ? ' hit' : ''), String(total)));
+    const st = el('td', 'tags'); st.appendChild(el('span', 'kp ' + (total >= P.WEEK_GOAL ? 'good' : 'warn'), total >= P.WEEK_GOAL ? '達標' : '差 ' + (P.WEEK_GOAL - total) + ' 分'));
+    tr.appendChild(st); table.appendChild(tr);
+  });
+  box.appendChild(table); area.appendChild(box);
+  // 各項目合計
+  const sum = {}; rows.forEach(r=> P.ACTIONS.forEach(a=> sum[a.k] = (sum[a.k] || 0) + ((r.counts || {})[a.k] || 0)));
+  const two = el('div', 'kpi-two'); two.style.gridTemplateColumns = '1fr';
+  const bi = el('div'); bi.appendChild(el('h5', '', '團隊本週各項行動（次數）'));
+  const max = Math.max(1, ...P.ACTIONS.map(a=> sum[a.k] || 0));
+  P.ACTIONS.forEach(a=>{
+    const row = el('div', 'fbar'); row.style.gridTemplateColumns = '8.5em 1fr 2.6em';
+    row.appendChild(el('span', '', a.l)); const bar = el('div', 'bar'), sp = el('span'); sp.style.width = ((sum[a.k] || 0) / max * 100) + '%'; bar.appendChild(sp);
+    row.appendChild(bar); row.appendChild(el('span', 'n', String(sum[a.k] || 0))); bi.appendChild(row);
+  });
+  two.appendChild(bi); area.appendChild(two);
 }
 let kpiTargetsKeep = null;
 function fillKpiSettings(st){

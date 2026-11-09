@@ -172,6 +172,27 @@
 
   /* v3.35 每日進程／週成績 */
   .main-tabs{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .main-tabs.four{grid-template-columns:repeat(4,minmax(0,1fr));}
+  /* 行動積分 */
+  .act-list{display:grid; gap:8px; margin-top:6px;}
+  .act{display:grid; grid-template-columns:minmax(0,1fr) auto 4.5em; gap:12px; align-items:center; border:1.5px solid var(--line); border-radius:12px; padding:10px 14px; background:#fff;}
+  .act.on{border-color:var(--teal); background:#F4F9FA;}
+  .act .nm{font-weight:700; color:var(--navy); font-size:15px;}
+  .act .nm em{font-style:normal; font-size:12px; font-weight:700; color:var(--warm-deep); background:var(--warm-tint); border-radius:9px; padding:1px 8px; margin-left:6px;}
+  .act .how{font-size:12.5px; color:var(--ink-soft);}
+  .act .pts{font-family:"Roboto Mono",monospace; font-weight:700; text-align:right; color:var(--ink-soft);}
+  .act.on .pts{color:var(--teal-deep);}
+  .act .tgl{display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; color:var(--navy); cursor:pointer;}
+  .act .tgl input{width:22px; height:22px; accent-color:var(--navy);}
+  .day-total{display:flex; align-items:baseline; gap:8px; font-weight:700; color:var(--navy);}
+  .day-total b{font-family:"Roboto Mono",monospace; font-size:28px;}
+  .wk-score{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .wk-score .big{font-family:"Roboto Mono",monospace; font-size:40px; font-weight:700; color:var(--navy); line-height:1;}
+  .wk-score .big small{font-size:16px; color:var(--ink-soft);}
+  .wk-bar{height:14px; border-radius:7px; background:var(--paper); border:1px solid var(--line); overflow:hidden; margin:12px 0 4px;}
+  .wk-bar i{display:block; height:100%; background:var(--teal);}
+  .wk-bar.ok i{background:var(--positive);}
+  @media (max-width:560px){ .act{grid-template-columns:minmax(0,1fr) auto; } .act .pts{grid-column:1/-1; text-align:left;} }
   .daynav{display:flex; align-items:center; gap:6px;}
   .daynav input{border:1.5px solid #CBD5D6; border-radius:10px; padding:8px 10px; font:inherit; font-size:15px; color:var(--ink); background:#fff;}
   .daynav .nav-btn{padding:6px 12px;}
@@ -242,6 +263,7 @@
       <button type="button" role="tab" data-tab="daily" aria-selected="true"><b>每日進程</b><span>每天填今日紀錄</span></button>
       <button type="button" role="tab" data-tab="week" aria-selected="false"><b>週報</b><span>本週會面與填寫狀況</span></button>
       <button type="button" role="tab" data-tab="cases" aria-selected="false"><b>案件總覽</b><span>每個案子推到哪一步</span></button>
+      <button type="button" role="tab" data-tab="score" aria-selected="false" hidden id="scoreTabBtn"><b>行動積分</b><span>每天的業務行動，每週 100 分</span></button>
     </div>
 
     <!-- ================= 每日進程 ================= -->
@@ -411,6 +433,40 @@
       </section>
       <div id="cList"></div>
     </div>
+
+    <!-- ================= 行動積分（平台開通的團隊才看得到） ================= -->
+    <div class="panel" id="panelScore" role="tabpanel" hidden>
+      <section class="card" aria-label="每日行動積分">
+        <div class="row-between" style="align-items:center; margin-bottom:12px;">
+          <div><h2 style="margin:0;">每日業務行動積分</h2><div class="muted">依今天的行程，勾選或填入做了幾次，系統自動算分；越接近成交的動作分數越高。</div></div>
+          <div class="daynav">
+            <button class="nav-btn" id="sPrev" type="button" aria-label="前一天">‹</button>
+            <input type="date" id="sDate" aria-label="日期">
+            <button class="nav-btn" id="sNext" type="button" aria-label="後一天">›</button>
+          </div>
+        </div>
+        <div class="week" id="sWeek"></div>
+        <p class="legend">每格顯示那天的分數；點一天可以查看或補填。</p>
+      </section>
+      <section class="card" aria-label="當天的行動">
+        <h2 id="sDayTitle">今天的行動</h2>
+        <div class="act-list" id="sActs"></div>
+        <div class="f" style="margin-top:12px;"><label for="sNote">備註（選填）</label><input type="text" id="sNote" maxlength="200" placeholder="例如：講座 7 人出席"></div>
+        <div class="form-actions" style="justify-content:space-between;">
+          <div class="day-total">當日 <b id="sDayPts">0</b> 分</div>
+          <span class="pill mute" id="sState">尚未送出</span>
+          <span class="form-err" id="sErr" role="alert"></span>
+          <button type="button" class="btn warm" id="sSave">送出今日積分</button>
+        </div>
+      </section>
+      <section class="card" aria-label="本週積分">
+        <h2 id="sWeekTitle">本週積分</h2>
+        <div class="wk-score" id="sWkScore"></div>
+        <div class="wk-bar" id="sWkBar"><i></i></div>
+        <div class="muted" id="sWkHint"></div>
+        <div class="tbl" id="sWkTable" style="margin-top:12px;"></div>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -432,10 +488,11 @@
   var tabs = document.querySelectorAll('.main-tabs button');
   function showTab(t){
     tabs.forEach(function(b){ b.setAttribute('aria-selected', b.dataset.tab === t ? 'true' : 'false'); });
-    $('panelDaily').hidden = t !== 'daily'; $('panelWeek').hidden = t !== 'week'; $('panelCases').hidden = t !== 'cases';
+    $('panelDaily').hidden = t !== 'daily'; $('panelWeek').hidden = t !== 'week'; $('panelCases').hidden = t !== 'cases'; $('panelScore').hidden = t !== 'score';
     try{ sessionStorage.setItem('vc_progress_tab2', t); }catch(e){}
     if(t === 'week') renderWeek();
     if(t === 'cases') renderCases();
+    if(t === 'score') renderScore();
   }
   tabs.forEach(function(b){ b.addEventListener('click', function(){ showTab(b.dataset.tab); }); });
 
@@ -793,6 +850,125 @@
     });
   });
 
+  /* ================= 行動積分 ================= */
+  var scores = {}, sSel = todayStr(), scoreOn = false;
+  P.ACTIONS.forEach(function(a){
+    var row = el('div', 'act'); row.id = 'act-' + a.k;
+    var l = el('div'); var nm = el('div', 'nm', a.l); nm.appendChild(el('em', '', a.p + ' 分')); l.appendChild(nm); l.appendChild(el('div', 'how', a.how)); row.appendChild(l);
+    if(a.once){
+      var tg = el('label', 'tgl'); var cb = el('input'); cb.type = 'checkbox'; cb.id = 'sv-' + a.k;
+      cb.addEventListener('change', updDayPts); tg.appendChild(cb); tg.appendChild(document.createTextNode('有做到')); row.appendChild(tg);
+    } else {
+      var st = el('div', 'step');
+      var minus = el('button', '', '−'); minus.type = 'button'; minus.setAttribute('aria-label', a.l + '減一');
+      var inp = el('input'); inp.id = 'sv-' + a.k; inp.inputMode = 'numeric'; inp.value = '0'; inp.setAttribute('aria-label', a.l + '次數');
+      var plus = el('button', '', '＋'); plus.type = 'button'; plus.setAttribute('aria-label', a.l + '加一');
+      minus.addEventListener('click', function(){ inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) - 1); updDayPts(); });
+      plus.addEventListener('click', function(){ inp.value = Math.min(99, (parseInt(inp.value, 10) || 0) + 1); updDayPts(); });
+      inp.addEventListener('input', function(){ inp.value = inp.value.replace(/\D/g, '').slice(0, 2); updDayPts(); });
+      st.appendChild(minus); st.appendChild(inp); st.appendChild(plus); row.appendChild(st);
+    }
+    row.appendChild(el('div', 'pts', '0 分'));
+    $('sActs').appendChild(row);
+  });
+  function readCounts(){
+    var c = {};
+    P.ACTIONS.forEach(function(a){
+      var i = $('sv-' + a.k), v = a.once ? (i.checked ? 1 : 0) : Math.min(99, parseInt(i.value, 10) || 0);
+      if(v) c[a.k] = v;
+    });
+    return c;
+  }
+  function updDayPts(){
+    var c = readCounts();
+    P.ACTIONS.forEach(function(a){
+      var v = c[a.k] || 0, row = $('act-' + a.k);
+      row.classList.toggle('on', v > 0);
+      row.querySelector('.pts').textContent = (v * a.p) + ' 分';
+    });
+    $('sDayPts').textContent = P.actionPoints(c);
+    $('sErr').textContent = '';
+  }
+  function renderScore(){
+    var t = todayStr();
+    $('sDate').value = sSel; $('sDate').max = t; $('sNext').disabled = sSel >= t;
+    var ws = P.weekStart(P.parse(sSel)), box = $('sWeek'); box.textContent = '';
+    for(var i = 0; i < 7; i++){
+      (function(d){
+        var rec = scores[d], pts = rec ? P.actionPoints(rec.counts) : 0;
+        var b = el('button', 'wday ' + (rec ? 'ok' : '') + (d === t ? ' today' : '') + (d === sSel ? ' sel' : ''));
+        b.type = 'button'; b.disabled = d > t;
+        b.appendChild(document.createTextNode(P.DOW[P.parse(d).getDay()]));
+        b.appendChild(el('b', '', String(P.parse(d).getDate())));
+        b.appendChild(el('small', '', rec ? pts + ' 分' : (d > t ? '' : '—')));
+        b.addEventListener('click', function(){ sSel = d; renderScore(); });
+        box.appendChild(b);
+      })(P.ymd(P.addDays(ws, i)));
+    }
+    var isToday = sSel === t, rec = scores[sSel], c = rec ? rec.counts || {} : {};
+    $('sDayTitle').textContent = (isToday ? '今天' : P.md(sSel)) + '的行動';
+    P.ACTIONS.forEach(function(a){ var i = $('sv-' + a.k); if(a.once) i.checked = !!c[a.k]; else i.value = c[a.k] || 0; });
+    $('sNote').value = rec && rec.note || '';
+    updDayPts();
+    var pill = $('sState');
+    if(rec){ pill.className = 'pill good'; pill.textContent = '已送出' + (rec.first_saved_on > sSel ? '・補填' : ''); }
+    else { pill.className = 'pill mute'; pill.textContent = '尚未送出'; }
+    $('sSave').textContent = (rec ? '更新' : '送出') + (isToday ? '今日' : '這天的') + '積分';
+
+    // 本週
+    var from = P.ymd(ws), to = P.ymd(P.addDays(ws, 6)), sum = {}, total = 0;
+    Object.keys(scores).forEach(function(d){
+      if(d < from || d > to) return;
+      var cc = scores[d].counts || {}; P.ACTIONS.forEach(function(a){ sum[a.k] = (sum[a.k] || 0) + (cc[a.k] || 0); });
+      total += P.actionPoints(cc);
+    });
+    var isThisWeek = from === P.ymd(P.weekStart(new Date())), ok = total >= P.WEEK_GOAL;
+    $('sWeekTitle').textContent = (isThisWeek ? '本週' : P.weekLabel(ws) + ' 這週') + '積分';
+    var sc = $('sWkScore'); sc.textContent = '';
+    var big = el('div', 'big', String(total)); big.appendChild(el('small', '', ' / ' + P.WEEK_GOAL + ' 分')); sc.appendChild(big);
+    sc.appendChild(el('span', 'pill ' + (ok ? 'good' : isThisWeek ? 'warn' : 'bad'), ok ? '本週達標 🎉' : (isThisWeek ? '還差 ' : '差 ') + (P.WEEK_GOAL - total) + ' 分'));
+    $('sWkBar').className = 'wk-bar' + (ok ? ' ok' : ''); $('sWkBar').firstChild.style.width = Math.min(100, total / P.WEEK_GOAL * 100) + '%';
+    $('sWkHint').textContent = '每週一到週日累計，' + P.WEEK_GOAL + ' 分達標。';
+    var tb = el('table'), hr = el('tr');
+    ['項目','每次','次數','得分'].forEach(function(h){ hr.appendChild(el('th', '', h)); }); tb.appendChild(hr);
+    P.ACTIONS.forEach(function(a){
+      var tr = el('tr'); tr.appendChild(el('td', '', a.l)); tr.appendChild(el('td', 'num', a.p + ' 分'));
+      tr.appendChild(el('td', 'num', String(sum[a.k] || 0))); tr.appendChild(el('td', 'num', String((sum[a.k] || 0) * a.p))); tb.appendChild(tr);
+    });
+    var tt = el('tr', 'total'); tt.appendChild(el('td', '', '合計')); tt.appendChild(el('td', '', '')); tt.appendChild(el('td', '', '')); tt.appendChild(el('td', 'num', String(total))); tb.appendChild(tt);
+    $('sWkTable').textContent = ''; $('sWkTable').appendChild(tb);
+  }
+  $('sDate').addEventListener('change', function(){ if(this.value && this.value <= todayStr()){ sSel = this.value; renderScore(); } });
+  $('sPrev').addEventListener('click', function(){ sSel = P.ymd(P.addDays(P.parse(sSel), -1)); renderScore(); });
+  $('sNext').addEventListener('click', function(){ if(sSel < todayStr()){ sSel = P.ymd(P.addDays(P.parse(sSel), 1)); renderScore(); } });
+  $('sSave').addEventListener('click', async function(){
+    var v = { counts: readCounts(), note: $('sNote').value.trim() || null };
+    var btn = this; btn.disabled = true;
+    var res = scores[sSel]
+      ? await supabaseClient.from('action_scores').update(v).eq('advisor_id', myId).eq('day', sSel)
+      : await supabaseClient.from('action_scores').insert(Object.assign({ advisor_id: myId, day: sSel }, v));
+    btn.disabled = false;
+    if(res.error){ $('sErr').textContent = '儲存失敗，請檢查網路後再試一次。'; return; }
+    vcToast('已送出' + (sSel === todayStr() ? '今日' : P.md(sSel)) + '積分：' + P.actionPoints(v.counts) + ' 分');
+    await loadScores(); renderScore();
+  });
+  async function loadScores(){
+    var res = await supabaseClient.from('action_scores').select('*').eq('advisor_id', myId).order('day', { ascending:false }).limit(400);
+    if(res.error) throw res.error;
+    scores = {}; (res.data || []).forEach(function(r){ scores[r.day] = r; });
+  }
+  // 只有平台開通的團隊才顯示這個分頁
+  async function initScore(){
+    try{
+      var f = await supabaseClient.rpc('vc_my_features');
+      if(f.error || !f.data || !f.data.action_score) return false;
+      await loadScores();
+    }catch(e){ return false; }
+    scoreOn = true;
+    $('scoreTabBtn').hidden = false; document.querySelector('.main-tabs').classList.add('four');
+    return true;
+  }
+
   /* ================= 載入 ================= */
   async function loadMeets(){
     var res = await supabaseClient.from('progress_reports').select('*').eq('advisor_id', myId)
@@ -818,8 +994,9 @@
     }catch(e){ $('setupMsg').style.display = 'block'; return; }
     $('app').style.display = 'block';
     resetForm(); renderDay();
+    await initScore();
     var want = ''; try{ want = sessionStorage.getItem('vc_progress_tab2') || ''; }catch(e){}
-    if(want === 'week' || want === 'cases') showTab(want);
+    if(want === 'week' || want === 'cases' || (want === 'score' && scoreOn)) showTab(want);
   })();
 })();
 </script>
