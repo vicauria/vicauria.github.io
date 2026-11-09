@@ -179,7 +179,7 @@
   /* ---------- 每日業務行動積分（平台開通的團隊才有） ---------- */
   var ACTIONS = [
     { k:'story', l:'限時動態', p:1, how:'當天發滿 4 篇', once:true },
-    { k:'reels', l:'Reels 或輪播貼文', p:5, how:'發 1 篇' },
+    { k:'reels', l:'Reels 或輪播貼文', p:5, how:'發 1 篇；每週最多算 2 篇（10 分）', weekMax:2 },
     { k:'online_appt', l:'線上約訪成功', p:3, how:'對方確定見面時間' },
     { k:'meet', l:'實際見面', p:5, how:'跟客戶當面見到' },
     { k:'wealth_map', l:'填寫財富地圖', p:10, how:'跟客戶一起填完' },
@@ -189,14 +189,33 @@
     { k:'hk_self', l:'自己赴港考察', p:10, how:'沒有帶客戶' }
   ];
   var WEEK_GOAL = 100;
+  // 一週的積分：依日期先後計算，有每週上限的項目（Reels／輪播）超過的次數不計分
+  // rows：[{ day, counts }]（同一位顧問、同一週）
+  function weekScore(rows){
+    var used = {}, perDay = {}, perDayItem = {}, perItem = {}, total = 0;
+    ACTIONS.forEach(function(a){ used[a.k] = 0; perItem[a.k] = { count:0, counted:0, pts:0 }; });
+    (rows || []).slice().sort(function(x, y){ return x.day < y.day ? -1 : x.day > y.day ? 1 : 0; }).forEach(function(r){
+      var c = r.counts || {}, dp = 0, di = {};
+      ACTIONS.forEach(function(a){
+        var n = Math.min(a.once ? 1 : 99, c[a.k] || 0), k = n;
+        if(a.weekMax != null) k = Math.max(0, Math.min(n, a.weekMax - used[a.k]));
+        used[a.k] += k; di[a.k] = { count:n, counted:k, pts:k * a.p };
+        perItem[a.k].count += n; perItem[a.k].counted += k; perItem[a.k].pts += k * a.p;
+        dp += k * a.p;
+      });
+      perDay[r.day] = (perDay[r.day] || 0) + dp; perDayItem[r.day] = di; total += dp;
+    });
+    return { total:total, perDay:perDay, perDayItem:perDayItem, perItem:perItem };
+  }
+  // 單日不考慮每週上限的分數（只在沒有一週資料時用）
   function actionPoints(counts){
     counts = counts || {}; var t = 0;
-    ACTIONS.forEach(function(a){ t += Math.min(a.once ? 1 : 99, counts[a.k] || 0) * a.p; });
+    ACTIONS.forEach(function(a){ t += Math.min(a.once ? 1 : (a.weekMax != null ? a.weekMax : 99), counts[a.k] || 0) * a.p; });
     return t;
   }
 
   window.VCProgress = { PURPOSES: PURPOSES, ymd: ymd, parse: parse, addDays: addDays, today: today, weekStart: weekStart,
     md: md, weekLabel: weekLabel, daysFromToday: daysFromToday, needsSupport: needsSupport, nextBadge: nextBadge, card: card, injectCSS: injectCSS, DOW: DOW,
     METRICS: METRICS, STAGES: STAGES, ACTIVE: ACTIVE, DEFAULT_KPI: DEFAULT_KPI, isWon: isWon, isActive: isActive,
-    autoCount: autoCount, totals: totals, ACTIONS: ACTIONS, WEEK_GOAL: WEEK_GOAL, actionPoints: actionPoints, score: score, workdays: workdays, latestByContact: latestByContact, caseFlags: caseFlags };
+    autoCount: autoCount, totals: totals, ACTIONS: ACTIONS, WEEK_GOAL: WEEK_GOAL, actionPoints: actionPoints, weekScore: weekScore, score: score, workdays: workdays, latestByContact: latestByContact, caseFlags: caseFlags };
 })();
