@@ -123,6 +123,12 @@
   .when-abs{font-size:11.5px; color:var(--ink-soft);}
   .muted{color:var(--ink-soft);}
 
+  .feat-box{margin-bottom:22px;}
+  .feat-head{display:flex; flex-direction:column; gap:2px; margin-bottom:10px;}
+  .feat-head b{font-size:15px; color:var(--navy);}
+  .feat-head span{font-size:13px; color:var(--ink-soft);}
+  .feat-msg{font-size:13px; color:var(--ink-soft); margin-top:6px; min-height:1.4em;}
+  .feat-tg{width:20px; height:20px; accent-color:var(--navy); cursor:pointer;}
   .tag{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:10px; margin:0 4px 4px 0; white-space:nowrap;}
   .tag.admin{background:var(--navy); color:#fff;}
   .tag.warn{background:rgba(184,121,30,.14); color:var(--warn);}
@@ -304,6 +310,16 @@
 
     <!-- 團隊 -->
     <section class="panel" id="panel-teams">
+      <div class="feat-box">
+        <div class="feat-head"><b>團隊功能開關</b><span>勾選的團隊，主管和成員在「進程回報」會多一個「行動積分」分頁；沒勾的團隊看不到。</span></div>
+        <div class="table-wrap">
+          <table class="data" style="min-width:560px;">
+            <thead><tr><th>團隊名稱</th><th>主管</th><th class="num">成員數</th><th style="text-align:center;">每日行動積分</th></tr></thead>
+            <tbody id="featRows"><tr><td colspan="4" class="empty">載入中…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="feat-msg" id="featMsg" role="status"></div>
+      </div>
       <div class="table-wrap">
         <table class="data" style="min-width:640px;">
           <thead><tr><th>團隊名稱</th><th>主管</th><th class="num">成員數</th><th class="num">討論篇數</th><th>建立日期</th></tr></thead>
@@ -443,7 +459,7 @@ async function loadAll(){
   state.users = us.data || [];
   state.feedback = fb.data || [];
   state.teams = tm.data || [];
-  renderOverview(); renderUsers(); renderFeedback(); renderTeams();
+  renderOverview(); renderUsers(); renderFeedback(); renderTeams(); loadTeamFeatures();
   loadUsage(); // 功能使用另外載入：還沒跑 SQL 也不會影響其他分頁
   loadForms(); // 表單漏斗另外載入：還沒跑 supabase-form-funnel.sql 時只有這個分頁會提示
   loadOrgs();  // 企業也是另外載入：還沒跑 vicauria-enterprise.sql 時只有這個分頁會提示
@@ -688,6 +704,33 @@ document.getElementById('orgCreateForm').addEventListener('submit', async e=>{
   if(error){ alert('建立失敗：' + error.message); return; }
   input.value = ''; await loadOrgs();
 });
+
+/* ---------------- 團隊功能開關 ---------------- */
+async function loadTeamFeatures(){
+  const tbody = document.getElementById('featRows'), msg = document.getElementById('featMsg');
+  const { data, error } = await supabaseClient.rpc('vc_admin_team_features');
+  if(error){
+    tbody.innerHTML = `<tr><td colspan="4" class="empty">${/could not find|PGRST202/i.test((error.code||'') + (error.message||'')) ? '請先在 Supabase 執行 supabase-action-score.sql' : '讀取失敗，請稍後再試'}</td></tr>`;
+    return;
+  }
+  const list = data || [];
+  if(!list.length){ tbody.innerHTML = `<tr><td colspan="4" class="empty">還沒有人建立團隊</td></tr>`; return; }
+  tbody.innerHTML = list.map(t=>`<tr>
+    <td class="user-name">${esc(t.name)}</td>
+    <td>${esc(t.owner_name)}<div class="user-email">${esc(t.owner_email)}</div></td>
+    <td class="num">${fmtNum(t.member_count)}</td>
+    <td style="text-align:center;"><input type="checkbox" class="feat-tg" data-team="${esc(t.team_id)}" data-name="${esc(t.name)}" ${t.action_score ? 'checked' : ''} aria-label="${esc(t.name)} 開啟每日行動積分"></td>
+  </tr>`).join('');
+  const on = list.filter(t=> t.action_score).length;
+  msg.textContent = on ? `目前開啟 ${on} 個團隊。` : '目前沒有團隊開啟。';
+  tbody.querySelectorAll('.feat-tg').forEach(cb=> cb.addEventListener('change', async ()=>{
+    cb.disabled = true;
+    const { error } = await supabaseClient.rpc('vc_admin_set_team_feature', { p_team_id: cb.dataset.team, p_feature: 'action_score', p_on: cb.checked });
+    cb.disabled = false;
+    if(error){ cb.checked = !cb.checked; msg.textContent = '儲存失敗，請稍後再試。'; return; }
+    msg.textContent = `已${cb.checked ? '開啟' : '關閉'}「${cb.dataset.name}」的每日行動積分。`;
+  }));
+}
 
 /* ---------------- 團隊 ---------------- */
 function renderTeams(){

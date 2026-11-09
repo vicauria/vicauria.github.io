@@ -176,8 +176,27 @@
     return f;
   }
 
+  /* ---------- 每日業務行動積分（平台開通的團隊才有） ---------- */
+  var ACTIONS = [
+    { k:'story', l:'限時動態', p:1, how:'當天發滿 4 篇', once:true },
+    { k:'reels', l:'Reels 或輪播貼文', p:5, how:'發 1 篇' },
+    { k:'online_appt', l:'線上約訪成功', p:3, how:'對方確定見面時間' },
+    { k:'meet', l:'實際見面', p:5, how:'跟客戶當面見到' },
+    { k:'wealth_map', l:'填寫財富地圖', p:10, how:'跟客戶一起填完' },
+    { k:'seminar', l:'開講座', p:20, how:'主講或主辦，客戶出席 5 人以上' },
+    { k:'deal', l:'簽約成交', p:30, how:'送件受理' },
+    { k:'hk_with', l:'帶人赴港考察', p:30, how:'帶至少 1 位客戶同行' },
+    { k:'hk_self', l:'自己赴港考察', p:10, how:'沒有帶客戶' }
+  ];
+  var WEEK_GOAL = 100;
+  function actionPoints(counts){
+    counts = counts || {}; var t = 0;
+    ACTIONS.forEach(function(a){ t += Math.min(a.once ? 1 : 99, counts[a.k] || 0) * a.p; });
+    return t;
+  }
+
   window.VCProgress = { PURPOSES: PURPOSES, ymd: ymd, parse: parse, addDays: addDays, today: today, weekStart: weekStart,
     md: md, weekLabel: weekLabel, daysFromToday: daysFromToday, needsSupport: needsSupport, nextBadge: nextBadge, card: card, injectCSS: injectCSS, DOW: DOW,
     METRICS: METRICS, STAGES: STAGES, ACTIVE: ACTIVE, DEFAULT_KPI: DEFAULT_KPI, isWon: isWon, isActive: isActive,
-    autoCount: autoCount, totals: totals, score: score, workdays: workdays, latestByContact: latestByContact, caseFlags: caseFlags };
+    autoCount: autoCount, totals: totals, ACTIONS: ACTIONS, WEEK_GOAL: WEEK_GOAL, actionPoints: actionPoints, score: score, workdays: workdays, latestByContact: latestByContact, caseFlags: caseFlags };
 })();
