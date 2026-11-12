@@ -75,8 +75,9 @@
     '.ns-err{color:#B3492F;font-size:13.5px;min-height:1.4em;margin:8px 0 4px;font-weight:700;}' +
     '.ns-done{text-align:center;padding:6px 0;}' +
     '.ns-done .ok{width:52px;height:52px;border-radius:50%;background:#E3F2EA;color:#2E7D5B;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:26px;font-weight:700;}' +
-    '.ns-done b{display:block;font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);}' +
+    '.ns-done > b{display:block;font-family:"Noto Serif TC",serif;font-size:19px;color:var(--navy);}' +
     '.ns-done p{margin:8px 0 0;color:var(--ink-soft);font-size:14px;line-height:1.75;}' +
+    '.ns-done .sum b{font-weight:700;color:var(--navy);}' +
     '.ns-done .sum{display:inline-block;text-align:left;background:var(--paper);border-radius:12px;padding:10px 14px;margin-top:12px;font-size:13.5px;line-height:1.9;}' +
     '.ns-link{background:none;border:none;color:var(--teal-deep);text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:13.5px;cursor:pointer;margin-top:10px;}' +
     '@media (max-width:620px){.ns-row{grid-template-columns:1fr;} .ns-cmp{grid-template-columns:1fr;}}';
@@ -177,8 +178,9 @@
       if(!sel.level){ err.textContent = '請先選擇你想怎麼繼續。'; return; }
       if(sel.level !== 'low' && (!sel.focus || (timeWrap && !sel.time))){ err.textContent = '請回答「' + c.focusQ.replace('？', '') + '」' + (timeWrap ? '和方便的聯繫時段' : '') + '。'; return; }
       go.disabled = true; go.textContent = '送出中…';
-      var ok = true;
-      if(cfg.token && typeof supabaseClient !== 'undefined'){
+      // 沒有拿到 token（例如資料庫還沒更新）就不能假裝送出成功，否則顧問那邊會一直顯示「未表態」
+      var ok = !!cfg.token && typeof supabaseClient !== 'undefined';
+      if(ok){
         try{
           var res = await supabaseClient.rpc('vc_set_check_intent', { p_kind: cfg.kind, p_token: cfg.token, p_level: sel.level, p_focus: sel.focus || null, p_time: sel.time || null });
           if(res.error) ok = false;
