@@ -168,6 +168,15 @@
   .qc-raw{margin-top:14px; border-top:1px dashed var(--line); padding-top:10px;}
   .qc-raw summary{cursor:pointer; color:var(--teal-deep); font-weight:700; font-size:13.5px;}
   @media (max-width:620px){ .qc-legend{grid-template-columns:1fr;} .qc-flow{grid-template-columns:1fr;} .qc-mind > div{grid-template-columns:1fr; gap:0;} }
+  /* 預約意願（財務健檢／房產活化） */
+  .intent-pill{font-size:12px; font-weight:700; border-radius:10px; padding:2px 8px; flex-shrink:0;}
+  .intent-pill.h{background:#2E7D5B; color:#fff;} .intent-pill.m{background:#E3F2EA; color:#2E7D5B;} .intent-pill.l{background:var(--paper); color:var(--ink-soft);}
+  .intent-pill.none{background:none; border:1px dashed #CBD5D6; color:var(--ink-soft); font-weight:500;}
+  .intent-box{border-radius:12px; padding:12px 14px; margin-top:14px; background:var(--paper); border-left:4px solid #CBD5D6;}
+  .intent-box.h{background:#EAF5EF; border-left-color:#2E7D5B;} .intent-box.m{background:#F3F9F5; border-left-color:#7DBF9C;}
+  .intent-box b{font-size:15px; color:var(--navy);} .intent-box .act{font-size:13.5px; font-weight:700; color:var(--ink); margin-top:2px;}
+  .intent-box .meta{font-size:13px; color:var(--ink-soft); margin-top:4px;}
+  .intent-box.none b{color:var(--ink-soft);}
   /* 熱度（預約諮詢／房產活化共用） */
   .heat-pill{font-size:12px; font-weight:700; border-radius:10px; padding:2px 8px; flex-shrink:0;}
   .heat-pill.h{background:#FBE7E2; color:var(--negative);} .heat-pill.m{background:var(--warm-tint); color:var(--warm-deep);} .heat-pill.l{background:var(--paper); color:var(--ink-soft);}
@@ -635,11 +644,37 @@
 })();
 </script>
 <script>
+/* ---------- 預約意願（財務健檢／房產活化共用）：網友在報告最下面選的，顧問依此優先聯絡 ---------- */
+window.VCIntent = (function(){
+  var L = { high:{ cls:'h', label:'高意願', act:'想預約 → 優先安排聯繫與時間', n:3 },
+            mid:{ cls:'m', label:'中意願', act:'想了解 → 先提供服務說明', n:2 },
+            low:{ cls:'l', label:'低意願', act:'暫時不用 → 不強迫預約，依授權後續聯繫', n:1 } };
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+  return {
+    rank: function(r){ return r.intent && L[r.intent] ? L[r.intent].n : 0; },
+    pill: function(r){ var x = L[r.intent]; return x ? el('span', 'intent-pill ' + x.cls, x.label) : el('span', 'intent-pill none', '未表態'); },
+    box: function(r){
+      var x = L[r.intent], b = el('div', 'intent-box ' + (x ? x.cls : 'none'));
+      b.appendChild(el('b', '', x ? x.label : '還沒表態'));
+      b.appendChild(el('div', 'act', x ? x.act : '網友看完報告還沒選預約意願，可以照一般順序聯絡。'));
+      var meta = [r.intent_focus && ('最想整理：' + r.intent_focus), r.intent_time && ('方便時段：' + r.intent_time)].filter(Boolean);
+      if(meta.length) b.appendChild(el('div', 'meta', meta.join('　')));
+      return b;
+    },
+    strip: function(rows, strip){
+      var c = { high:0, mid:0, low:0 };
+      rows.forEach(function(r){ if(c[r.intent] != null) c[r.intent]++; });
+      ['high','mid','low'].forEach(function(k){ if(c[k]) strip.appendChild(el('span', 'intent-pill ' + L[k].cls, L[k].label + ' ' + c[k])); });
+    }
+  };
+})();
+</script>
+<script>
 /* ---------- 15 題財務健檢（目前只開放給管理者帳號） ---------- */
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
-  var myId = null, rows = [], link = null, filter = 'todo';
+  var myId = null, rows = [], link = null, filter = 'todo', qSort = 'intent';
   var STATUS = [
     { key:'todo',      label:'待處理',   match:function(s){ return s === 'new' || s === 'read'; } },
     { key:'contacted', label:'已聯絡',   match:function(s){ return s === 'contacted'; } },
@@ -729,6 +764,13 @@
       list.appendChild(el('div', 'empty', rows.length ? '這個分類目前沒有名單。' : '還沒有人填寫。把上面的連結放到自媒體留言或限動，填完就會出現在這裡。'));
       return;
     }
+    var strip = el('div', 'sum-strip');
+    strip.appendChild(el('span', '', '共 ' + shown.length + ' 位：'));
+    VCIntent.strip(shown, strip);
+    var sb = el('button', 'linkish sort', qSort === 'intent' ? '排序：意願高的在前' : '排序：最新的在前'); sb.type = 'button';
+    sb.addEventListener('click', function(){ qSort = qSort === 'intent' ? 'new' : 'intent'; renderList(); });
+    strip.appendChild(sb); list.appendChild(strip);
+    if(qSort === 'intent') shown = shown.slice().sort(function(a, b){ return VCIntent.rank(b) - VCIntent.rank(a) || ((b.updated_at || b.created_at) > (a.updated_at || a.created_at) ? 1 : -1); });
     shown.forEach(function(r){ list.appendChild(renderRow(r)); });
   }
   function renderRow(r){
@@ -738,12 +780,14 @@
     head.appendChild(el('span', 'nm', r.name));
     if(r.status === 'new') head.appendChild(el('span', 'badge-new', 'NEW'));
     else head.appendChild(el('span', 'status-pill ' + r.status, STATUS_LABEL[r.status] || ''));
+    head.appendChild(VCIntent.pill(r));
     head.appendChild(el('span', 'score-pill', rep.score + ' 分'));
     head.appendChild(el('span', 'sum', ['月收 ' + VCQuick.wan(vals.income), '結餘 ' + VCQuick.wan(vals.surplus), a.want].filter(Boolean).join('・')));
     head.appendChild(el('span', 'when', fmtTime(r.updated_at || r.created_at)));
     head.appendChild(el('span', 'chev', '▾'));
     var body = el('div', 'req-body');
 
+    body.appendChild(VCIntent.box(r));
     // ---------- 分數＋自評 ----------
     var sc = el('div', 'qc-score');
     var num = el('div', 'num'); num.appendChild(document.createTextNode(String(rep.score))); num.appendChild(el('small', '', ' / 100'));
@@ -963,7 +1007,7 @@
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
-  var myId = null, rows = [], link = null, filter = 'todo', sortBy = 'new';
+  var myId = null, rows = [], link = null, filter = 'todo', sortBy = 'heat';
   var STATUS = [
     { key:'todo',      label:'待處理',   match:function(s){ return s === 'new' || s === 'read'; } },
     { key:'contacted', label:'已聯絡',   match:function(s){ return s === 'contacted'; } },
@@ -1039,12 +1083,13 @@
     shown.forEach(function(r){ r._rep = VCProp.compute(r.answers || {}); cnt[r._rep.heat.lv]++; });
     var strip = el('div', 'sum-strip');
     strip.appendChild(el('span', '', '共 ' + shown.length + ' 位：'));
+    VCIntent.strip(shown, strip);
     [['h','高熱度'], ['m','中'], ['l','低']].forEach(function(x){ if(cnt[x[0]]) strip.appendChild(el('span', 'heat-pill ' + x[0], x[1] + ' ' + cnt[x[0]])); });
-    var sb = el('button', 'linkish sort', sortBy === 'heat' ? '排序：熱度高的在前' : '排序：最新的在前'); sb.type = 'button';
+    var sb = el('button', 'linkish sort', sortBy === 'heat' ? '排序：意願、熱度高的在前' : '排序：最新的在前'); sb.type = 'button';
     sb.addEventListener('click', function(){ sortBy = sortBy === 'heat' ? 'new' : 'heat'; renderList(); });
     strip.appendChild(sb);
     list.appendChild(strip);
-    if(sortBy === 'heat') shown = shown.slice().sort(function(a, b){ return b._rep.heat.n - a._rep.heat.n; });
+    if(sortBy === 'heat') shown = shown.slice().sort(function(a, b){ return VCIntent.rank(b) - VCIntent.rank(a) || b._rep.heat.n - a._rep.heat.n; });
     shown.forEach(function(r){ list.appendChild(renderRow(r)); });
   }
   function copyBtn(text, label){
@@ -1060,6 +1105,7 @@
     head.appendChild(el('span', 'nm', who(r)));
     if(r.status === 'new') head.appendChild(el('span', 'badge-new', 'NEW'));
     else head.appendChild(el('span', 'status-pill ' + r.status, STATUS_LABEL[r.status] || ''));
+    head.appendChild(VCIntent.pill(r));
     head.appendChild(el('span', 'heat-pill ' + h.lv, '熱度 ' + h.label));
     head.appendChild(el('span', 'sum', [a.city, a.value && ('房產 ' + a.value), a.timeline].filter(Boolean).join('・')));
     head.appendChild(el('span', 'when', fmtTime(r.updated_at || r.created_at)));
@@ -1072,7 +1118,7 @@
     hb.appendChild(lv); hb.appendChild(el('div', 'next', '→ ' + h.next));
     var why = el('div', 'why'); h.why.forEach(function(w){ why.appendChild(el('span', '', w)); });
     if(!h.why.length) why.appendChild(el('span', '', '先了解可能性'));
-    hb.appendChild(why); body.appendChild(hb);
+    hb.appendChild(why); body.appendChild(VCIntent.box(r)); body.appendChild(hb);
 
     // ---------- 聯絡方式（偏好的那個框起來） ----------
     var cs = el('div', 'pc-contacts');
