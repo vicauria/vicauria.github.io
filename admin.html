@@ -127,6 +127,17 @@
   .appr-btn{border:1.5px solid var(--line); background:#fff; color:var(--navy); border-radius:9px; padding:6px 14px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; margin-left:6px;}
   .appr-btn.ok{background:var(--navy); border-color:var(--navy); color:#fff;}
   .appr-btn:disabled{opacity:.5;}
+  .appr-btn.del{color:#B3492F; border-color:rgba(179,73,47,.4);}
+  .appr-btn.del.go:not(:disabled){background:#B3492F; border-color:#B3492F; color:#fff;}
+  .del-ov{position:fixed; inset:0; z-index:9999; background:rgba(14,30,38,.55); display:flex; align-items:center; justify-content:center; padding:16px;}
+  .del-card{background:#fff; border-radius:16px; max-width:480px; width:100%; padding:22px 22px 18px; box-shadow:0 20px 50px rgba(0,0,0,.25);}
+  .del-card h3{margin:0 0 8px; color:#B3492F; font-size:18px;}
+  .del-card p{margin:0 0 8px; font-size:14.5px;}
+  .del-card ul{margin:0 0 12px; padding-left:20px; font-size:13.5px; color:var(--ink-soft); line-height:1.75;}
+  .del-card label{display:flex; flex-direction:column; gap:6px; font-size:13.5px; font-weight:700; color:var(--navy);}
+  .del-card input{border:1.5px solid #CBD5D6; border-radius:9px; padding:9px 11px; font:inherit; font-size:14px;}
+  .del-err{color:#B3492F; font-size:13px; min-height:1.3em; margin-top:6px; word-break:break-all;}
+  .del-act{display:flex; justify-content:flex-end; gap:8px; margin-top:8px;}
   .feat-head{display:flex; flex-direction:column; gap:2px; margin-bottom:10px;}
   .feat-head b{font-size:15px; color:var(--navy);}
   .feat-head span{font-size:13px; color:var(--ink-soft);}
@@ -300,7 +311,7 @@
         <table class="data">
           <thead><tr>
             <th>使用者</th><th>註冊</th><th>最後登入</th><th>最後活躍</th>
-            <th class="num">客戶數</th><th class="num">報告數</th><th>最近產出報告</th><th>團隊</th>
+            <th class="num">客戶數</th><th class="num">報告數</th><th>最近產出報告</th><th>團隊</th><th></th>
           </tr></thead>
           <tbody id="userRows"></tbody>
         </table>
@@ -451,6 +462,7 @@ async function init(){
     return;
   }
   document.getElementById('app').hidden = false;
+  state.myEmail = String(session.user.email || '').toLowerCase();
   await loadAll();
 }
 
@@ -542,7 +554,7 @@ function activityDot(iso){
 function renderUsers(){
   const rows = state.users.filter(userMatches);
   const tbody = document.getElementById('userRows');
-  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="8" class="empty">沒有符合條件的使用者</td></tr>`; return; }
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="9" class="empty">沒有符合條件的使用者</td></tr>`; return; }
   tbody.innerHTML = rows.map(u=>{
     const tags = [];
     if(u.is_admin) tags.push('<span class="tag admin">管理者</span>');
@@ -561,6 +573,7 @@ function renderUsers(){
       <td class="num">${fmtNum(u.report_count)}</td>
       <td>${u.last_report_at ? relTime(u.last_report_at) : '<span class="muted">還沒有</span>'}</td>
       <td>${teams.join('') || '<span class="muted">—</span>'}</td>
+      <td style="text-align:right;">${u.is_admin || String(u.email).toLowerCase() === state.myEmail ? '' : `<button class="appr-btn del" data-del="${esc(u.email)}" data-name="${esc(u.display_name || u.email)}" data-c="${Number(u.client_count) || 0}" data-r="${Number(u.report_count) || 0}">刪除</button>`}</td>
     </tr>`;
   }).join('');
 }
@@ -722,6 +735,53 @@ document.getElementById('orgCreateForm').addEventListener('submit', async e=>{
   input.value = ''; await loadOrgs();
 });
 
+/* ---------------- 刪除使用者 ---------------- */
+// 表格是重畫的，用事件委派：任何 data-del 按鈕都打開確認視窗
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-del]'); if(!b) return;
+  openDelete(b.dataset.del, b.dataset.name, +b.dataset.c || 0, +b.dataset.r || 0);
+});
+function openDelete(email, name, clients, reports){
+  const ov = document.createElement('div'); ov.className = 'del-ov'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+  const team = state.teams.find(t=> String(t.owner_email || '').toLowerCase() === String(email).toLowerCase());
+  ov.innerHTML = `<div class="del-card">
+    <h3>刪除使用者</h3>
+    <p>確定要刪除 <b>${esc(name)}</b>（${esc(email)}）嗎？</p>
+    <ul>
+      <li>帳號會被刪除，對方無法再登入，要用的話得重新註冊。</li>
+      <li>他名下的資料會一起刪除${clients || reports ? `（客戶 ${clients} 位、報告 ${reports} 份）` : ''}，包含健檢／房產評估名單、進程回報等，<b>無法復原</b>。</li>
+      <li>他帶領的團隊會解散，成員會自動退出${team ? `（${esc(team.name || '')}）` : ''}。</li>
+    </ul>
+    <label>請輸入對方的 Email 確認：<input type="text" class="del-in" autocomplete="off" placeholder="${esc(email)}"></label>
+    <div class="del-err" role="alert"></div>
+    <div class="del-act"><button type="button" class="appr-btn del-cancel">取消</button><button type="button" class="appr-btn del go" disabled>永久刪除</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const inp = ov.querySelector('.del-in'), go = ov.querySelector('.go'), err = ov.querySelector('.del-err');
+  const close = ()=> ov.remove();
+  inp.focus();
+  inp.addEventListener('input', ()=>{ go.disabled = inp.value.trim().toLowerCase() !== String(email).toLowerCase(); });
+  ov.querySelector('.del-cancel').addEventListener('click', close);
+  ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
+  ov.addEventListener('keydown', e=>{ if(e.key === 'Escape') close(); });
+  go.addEventListener('click', async ()=>{
+    go.disabled = true; go.textContent = '刪除中…';
+    const { error } = await supabaseClient.rpc('vc_admin_delete_user', { p_email: email });
+    if(error){
+      go.disabled = false; go.textContent = '永久刪除';
+      const m = error.message || '';
+      err.textContent = /could not find|PGRST202/i.test((error.code || '') + m) ? '請先在 Supabase 執行 supabase-admin-delete-user.sql。'
+        : /CANNOT_DELETE_ADMIN/.test(m) ? '不能刪除管理者帳號。'
+        : /CANNOT_DELETE_SELF/.test(m) ? '不能刪除自己的帳號。'
+        : /HAS_REFERENCES/.test(m) ? '還有其他資料連著這個帳號，刪不掉。請把這段訊息給工程協助：' + m
+        : '刪除失敗：' + m;
+      return;
+    }
+    close();
+    await loadAll();
+  });
+}
+
 /* ---------------- 帳號開通 ---------------- */
 state.approvals = {};
 // vc_admin_users 不一定有回傳 id，用 Email 對應
@@ -747,10 +807,11 @@ async function loadApprovals(){
     <td style="text-align:right; white-space:nowrap;">
       <button class="appr-btn ok" data-id="${esc(a.user_id)}" data-s="approved" data-name="${esc(a.display_name || a.email)}">開通</button>
       ${a.status === 'rejected' ? '' : `<button class="appr-btn" data-id="${esc(a.user_id)}" data-s="rejected" data-name="${esc(a.display_name || a.email)}">不開通</button>`}
+      <button class="appr-btn del" data-del="${esc(a.email)}" data-name="${esc(a.display_name || a.email)}" data-c="0" data-r="0">刪除</button>
     </td>
   </tr>`).join('');
   msg.textContent = pending.length ? `有 ${pending.length} 個帳號等待開通。` : '';
-  tbody.querySelectorAll('.appr-btn').forEach(b=> b.addEventListener('click', async ()=>{
+  tbody.querySelectorAll('.appr-btn:not(.del)').forEach(b=> b.addEventListener('click', async ()=>{
     b.disabled = true;
     const { error } = await supabaseClient.rpc('vc_admin_set_approval', { p_user_id: b.dataset.id, p_status: b.dataset.s });
     if(error){ b.disabled = false; msg.textContent = '儲存失敗，請稍後再試。'; return; }
