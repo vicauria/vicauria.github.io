@@ -319,6 +319,8 @@
       </ul>
     </div>
 
+    <div id="nsHost"></div>
+
     <div class="disc">本結果依你填寫的區間自動粗估，僅供了解房產概況的教育性參考；初步評估與諮詢不保證貸款額度、投資收益或特定財務成果，也不構成任何貸款、投資、保險或財務建議，實際情況請與顧問討論。</div>
   </div>
 </div>
@@ -329,12 +331,13 @@
 <script src="supabase-config.js"></script>
 <script src="property-check-core.js"></script>
 <script src="form-track.js"></script>
+<script src="next-step.js"></script>
 <script>
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
   var slug = (new URLSearchParams(location.search).get('c') || '').trim().toLowerCase();
-  var advName = '顧問', answers = null, pref = '';
+  var advName = '顧問', answers = null, pref = '', intentToken = null;
   var ans = { goals:[], city:'', usage:[], value:'', loan:'', count:'', timeline:'', method:[], times:[] };
   // 填寫進度回報（只記錄題號，不記錄答案）
   var T = window.VCFormTrack ? VCFormTrack('property') : { open:function(){}, step:function(){}, stage:function(){} };
@@ -465,6 +468,7 @@
         $('contactErr').textContent = code ? ERR[code] : '送出失敗，請檢查網路後再試一次。';
       } else {
         T.stage('submitted');
+        intentToken = res.data && res.data.token || null;
         renderReport(rep, name, pref, contactShown);
       }
     }catch(err){ $('contactErr').textContent = '送出失敗，請檢查網路後再試一次。'; }
@@ -519,6 +523,8 @@
       : '你選擇先完成評估。之後想進一步了解，' + advName + ' 會透過 ' + pref + ' 和你保持聯繫：';
     $('rContact').textContent = contact;
     document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
+    // 結果下方：房產效率診斷的說明＋預約意願（顧問依意願優先聯絡）
+    if(window.VCNextStep) VCNextStep.mount({ kind:'property', cta: $('rCta'), host: $('nsHost'), advName: advName, token: intentToken });
     show('stepReport');
   }
 

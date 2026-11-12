@@ -378,6 +378,8 @@
       </ul>
     </div>
 
+    <div id="nsHost"></div>
+
     <div class="tools">
       <a href="compound-interest-calculator.html">📈 複利計算機：看錢怎麼長大</a>
       <a href="inflation-calculator.html">🔥 通膨試算：存款的購買力剩多少</a>
@@ -393,12 +395,13 @@
 <script src="supabase-config.js"></script>
 <script src="quick-check-core.js"></script>
 <script src="form-track.js"></script>
+<script src="next-step.js"></script>
 <script>
 (function(){
   'use strict';
   var $ = function(id){ return document.getElementById(id); };
   var slug = (new URLSearchParams(location.search).get('c') || '').trim().toLowerCase();
-  var advName = '顧問', answers = null;
+  var advName = '顧問', answers = null, intentToken = null;
   var ans = { status:'', want:'', self:5, work_income:null, other_income:null, other_unknown:false,
               living:null, insurance:null, mortgage:null, other_loan:null, fixed:null, variable:null, cash:null,
               property:'', worry:'', goals:[] };
@@ -548,6 +551,7 @@
         $('contactErr').textContent = code ? ERR[code] : '送出失敗，請檢查網路後再試一次。';
       } else {
         T.stage('submitted');
+        intentToken = res.data && res.data.token || null;
         renderReport(report, name, contact);
       }
     }catch(err){ $('contactErr').textContent = '送出失敗，請檢查網路後再試一次。'; }
@@ -622,6 +626,8 @@
 
     $('rContact').textContent = contact;
     document.querySelectorAll('.advNameInline').forEach(function(x){ x.textContent = advName; });
+    // 報告下方：完整財務報表的說明＋預約意願（顧問依意願優先聯絡）
+    if(window.VCNextStep) VCNextStep.mount({ kind:'quick', cta: document.querySelector('#stepReport .cta'), host: $('nsHost'), advName: advName, token: intentToken });
     show('stepReport');
     var C = 2 * Math.PI * 70, arc = $('ringArc'), target = r.score, t0 = null;
     arc.setAttribute('stroke', { a:'#8EE0B5', b:'#9FD6EA', c:'#F2C08F', d:'#F7A592' }[r.grade.key]);
