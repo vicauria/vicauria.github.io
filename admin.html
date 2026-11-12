@@ -124,6 +124,9 @@
   .muted{color:var(--ink-soft);}
 
   .feat-box{margin-bottom:22px;}
+  .appr-btn{border:1.5px solid var(--line); background:#fff; color:var(--navy); border-radius:9px; padding:6px 14px; font:inherit; font-size:13px; font-weight:700; cursor:pointer; margin-left:6px;}
+  .appr-btn.ok{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .appr-btn:disabled{opacity:.5;}
   .feat-head{display:flex; flex-direction:column; gap:2px; margin-bottom:10px;}
   .feat-head b{font-size:15px; color:var(--navy);}
   .feat-head span{font-size:13px; color:var(--ink-soft);}
@@ -273,10 +276,21 @@
 
     <!-- 使用者 -->
     <section class="panel" id="panel-users">
+      <div class="feat-box" id="apprBox" hidden>
+        <div class="feat-head"><b>等待開通的帳號</b><span>新註冊的帳號要你按「開通」才能進入工作台；還沒驗證信箱的，建議等他驗證完再開通。</span></div>
+        <div class="table-wrap">
+          <table class="data" style="min-width:620px;">
+            <thead><tr><th>使用者</th><th>註冊時間</th><th>信箱</th><th>狀態</th><th style="text-align:right;">處理</th></tr></thead>
+            <tbody id="apprRows"></tbody>
+          </table>
+        </div>
+        <div class="feat-msg" id="apprMsg" role="status"></div>
+      </div>
       <div class="toolbar">
         <input class="search" id="userSearch" type="search" placeholder="搜尋名稱或 Email">
         <div class="pills" id="userFilter">
           <button class="pill active" data-f="all">全部</button>
+          <button class="pill" data-f="pending">待開通</button>
           <button class="pill" data-f="active">7 天內有活動</button>
           <button class="pill" data-f="unconfirmed">尚未驗證信箱</button>
           <button class="pill" data-f="idle">註冊後還沒用過</button>
@@ -459,7 +473,7 @@ async function loadAll(){
   state.users = us.data || [];
   state.feedback = fb.data || [];
   state.teams = tm.data || [];
-  renderOverview(); renderUsers(); renderFeedback(); renderTeams(); loadTeamFeatures();
+  renderOverview(); renderUsers(); renderFeedback(); renderTeams(); loadTeamFeatures(); loadApprovals();
   loadUsage(); // 功能使用另外載入：還沒跑 SQL 也不會影響其他分頁
   loadForms(); // 表單漏斗另外載入：還沒跑 supabase-form-funnel.sql 時只有這個分頁會提示
   loadOrgs();  // 企業也是另外載入：還沒跑 vicauria-enterprise.sql 時只有這個分頁會提示
@@ -513,6 +527,7 @@ function userMatches(u){
   const q = state.userQuery.trim().toLowerCase();
   if(q && !(`${u.display_name} ${u.email}`.toLowerCase().includes(q))) return false;
   switch(state.userFilter){
+    case 'pending': return !!apprOf(u);
     case 'active': return daysSince(activeAt(u)) <= 7;
     case 'unconfirmed': return !u.email_confirmed;
     case 'idle': return u.client_count == 0 && u.report_count == 0;
@@ -532,6 +547,8 @@ function renderUsers(){
     const tags = [];
     if(u.is_admin) tags.push('<span class="tag admin">管理者</span>');
     if(!u.email_confirmed) tags.push('<span class="tag warn">未驗證信箱</span>');
+    const ap = apprOf(u);
+    if(ap) tags.push(ap.status === 'rejected' ? '<span class="tag">未開通</span>' : '<span class="tag warn">待開通</span>');
     const teams = [];
     if(u.owned_team) teams.push(`<span class="tag owner">帶領：${esc(u.owned_team)}</span>`);
     if(u.joined_teams) u.joined_teams.split('、').forEach(t=> teams.push(`<span class="tag team">${esc(t)}</span>`));
@@ -704,6 +721,43 @@ document.getElementById('orgCreateForm').addEventListener('submit', async e=>{
   if(error){ alert('建立失敗：' + error.message); return; }
   input.value = ''; await loadOrgs();
 });
+
+/* ---------------- 帳號開通 ---------------- */
+state.approvals = {};
+// vc_admin_users 不一定有回傳 id，用 Email 對應
+function apprOf(u){ return state.approvals[String(u.email || '').toLowerCase()] || null; }
+async function loadApprovals(){
+  const box = document.getElementById('apprBox'), tbody = document.getElementById('apprRows'), msg = document.getElementById('apprMsg');
+  const { data, error } = await supabaseClient.rpc('vc_admin_approvals');
+  if(error){ box.hidden = true; return; }   // 還沒執行 supabase-approval.sql
+  const list = data || [];
+  state.approvals = {}; list.forEach(a=> state.approvals[String(a.email || '').toLowerCase()] = a);
+  const pending = list.filter(a=> a.status === 'pending');
+  const badge = document.getElementById('tabCountUsers');
+  badge.textContent = pending.length ? pending.length + ' 待開通' : (state.users.length || '');
+  badge.style.background = pending.length ? 'var(--warm, #C97B3D)' : 'var(--teal-deep)';
+  box.hidden = !list.length;
+  renderUsers();
+  if(!list.length) return;
+  tbody.innerHTML = list.map(a=>`<tr>
+    <td><div class="user-name">${esc(a.display_name || '（未命名）')}</div><div class="user-email">${esc(a.email)}</div></td>
+    <td>${fmtDate(a.requested_at)}<div class="when-abs">${relTime(a.requested_at)}</div></td>
+    <td>${a.email_confirmed ? '<span class="tag team">已驗證</span>' : '<span class="tag warn">未驗證</span>'}</td>
+    <td>${a.status === 'rejected' ? '<span class="tag">不開通</span>' : '<span class="tag warn">待開通</span>'}</td>
+    <td style="text-align:right; white-space:nowrap;">
+      <button class="appr-btn ok" data-id="${esc(a.user_id)}" data-s="approved" data-name="${esc(a.display_name || a.email)}">開通</button>
+      ${a.status === 'rejected' ? '' : `<button class="appr-btn" data-id="${esc(a.user_id)}" data-s="rejected" data-name="${esc(a.display_name || a.email)}">不開通</button>`}
+    </td>
+  </tr>`).join('');
+  msg.textContent = pending.length ? `有 ${pending.length} 個帳號等待開通。` : '';
+  tbody.querySelectorAll('.appr-btn').forEach(b=> b.addEventListener('click', async ()=>{
+    b.disabled = true;
+    const { error } = await supabaseClient.rpc('vc_admin_set_approval', { p_user_id: b.dataset.id, p_status: b.dataset.s });
+    if(error){ b.disabled = false; msg.textContent = '儲存失敗，請稍後再試。'; return; }
+    await loadApprovals();
+    msg.textContent = `已${b.dataset.s === 'approved' ? '開通' : '設為不開通'}「${b.dataset.name}」。`;
+  }));
+}
 
 /* ---------------- 團隊功能開關 ---------------- */
 async function loadTeamFeatures(){

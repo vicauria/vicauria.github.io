@@ -745,7 +745,7 @@
       <div class="user-info">
         <div class="user-name" id="userName">Jess</div>
         <span class="user-plan-badge free" id="userPlanBadge" style="display:none;">Free</span>
-        <span class="user-version-tag" id="userVersionTag">v3.39.1</span>
+        <span class="user-version-tag" id="userVersionTag">v3.40.0</span>
       </div>
 
       <div class="user-menu" id="userMenu">
@@ -975,6 +975,33 @@
       }
     });
   }
+  // 帳號還沒開通：整個工作台用一張說明卡蓋住，只能重新檢查或登出
+  function vcShowPending(status, email){
+    document.querySelectorAll('iframe').forEach(f=>{ f.removeAttribute('src'); f.removeAttribute('data-src'); });
+    const ov = document.createElement('div');
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#16323F 0%,#1F5C73 60%,#2E7391 100%);display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Noto Sans TC",sans-serif;';
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:20px;max-width:440px;width:100%;padding:32px 26px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25);';
+    const ic = document.createElement('div'); ic.textContent = status === 'rejected' ? '🔒' : '⏳'; ic.style.cssText = 'font-size:40px;margin-bottom:8px;';
+    const h = document.createElement('h2'); h.textContent = status === 'rejected' ? '帳號尚未開通' : '帳號審核中';
+    h.style.cssText = 'font-family:"Noto Serif TC",serif;color:#16323F;font-size:22px;margin:0 0 10px;';
+    const p1 = document.createElement('p'); p1.style.cssText = 'color:#3C4A4F;font-size:15px;line-height:1.8;margin:0;';
+    p1.textContent = status === 'rejected'
+      ? '這個帳號目前沒有開通 Vicauria 的使用權限。如果你覺得有誤，請聯繫邀請你使用的顧問或 Vicauria。'
+      : '你的帳號已經註冊完成，目前正在等待管理者開通。開通之後重新整理這個頁面，就可以開始使用工作台。';
+    const p2 = document.createElement('p'); p2.style.cssText = 'color:#5B6B70;font-size:13px;margin:14px 0 0;';
+    p2.textContent = '目前登入：' + (email || '');
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;';
+    const b1 = document.createElement('button'); b1.type = 'button'; b1.textContent = '重新檢查';
+    b1.style.cssText = 'border:none;background:#16323F;color:#fff;border-radius:12px;padding:11px 22px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;min-height:44px;';
+    b1.addEventListener('click', ()=> location.reload());
+    const b2 = document.createElement('button'); b2.type = 'button'; b2.textContent = '登出';
+    b2.style.cssText = 'border:1.5px solid #CBD5D6;background:#fff;color:#16323F;border-radius:12px;padding:11px 22px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;min-height:44px;';
+    b2.addEventListener('click', async ()=>{ await supabaseClient.auth.signOut(); location.href = 'login.html'; });
+    row.appendChild(b1); row.appendChild(b2);
+    card.append(ic, h, p1, p2, row); ov.appendChild(card); document.body.appendChild(ov);
+  }
   (async function checkAuth(){
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session){
@@ -982,6 +1009,11 @@
       return;
     }
     const user = session.user;
+    // 新註冊的帳號要等管理者開通（資料庫還沒設定時呼叫會失敗，就照常進入）
+    try{
+      const ap = await supabaseClient.rpc('vc_my_approval');
+      if(!ap.error && (ap.data === 'pending' || ap.data === 'rejected')){ vcShowPending(ap.data, user.email); return; }
+    }catch(e){}
     // 功能使用統計：一進工作台先記目前這一頁（通常是首頁），之後切換功能時會自動記
     (function(){
       const af = document.querySelector('iframe.active');
